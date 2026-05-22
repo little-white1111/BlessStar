@@ -1,6 +1,15 @@
 .vscode/
 .idea/
 
+# IDE / AI agent tooling (local only; not part of the framework deliverable)
+.cursor/
+.trae/
+.traecli/
+
+# Agent collaboration notes (local)
+一主二子agent模式搭建.md
+三智能体提示词.txt
+
 # OS
 Thumbs.db
 Desktop.ini
@@ -26,6 +35,7 @@ Source/
 # Build dirs
 build/
 build-*/
+blessstar_build/
 out/
 dist/
 
@@ -42,6 +52,10 @@ dist/
 *.ilk
 *.exp
 
+# Python
+__pycache__/
+*.py[cod]
+
 # Coverage
 *.gcda
 *.gcno
@@ -51,3 +65,6 @@ coverage/
 # Logs
 *.log
 
+# Local scratch / IO test debris
+test.txt
+bs_io_*.txt

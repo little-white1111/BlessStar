@@ -13,6 +13,9 @@ function(blessstar_add_unit_test name)
   if(MSVC)
     # Release tests must still execute assert() bodies (otherwise C4101 / false greens).
     target_compile_options(${name} PRIVATE $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/UNDEBUG>)
+  else()
+    # Linux/macOS Debug (e.g. CI Sanitizer) must not define NDEBUG for the same reason.
+    target_compile_options(${name} PRIVATE $<$<CONFIG:Debug>:-UNDEBUG>)
   endif()
   if(_arg_LIBS)
     target_link_libraries(${name} PRIVATE ${_arg_LIBS})

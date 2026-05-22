@@ -1,7 +1,0 @@
-{
-  "name": "subtask-a",
-  "version": "1.0.0",
-  "description": "子任务A（专属架构研析AI）。用来做方案对比研析并维护《架构方案选择记录.md》，不做工程落地。",
-  "author": "",
-  "license": "MIT"
-}
