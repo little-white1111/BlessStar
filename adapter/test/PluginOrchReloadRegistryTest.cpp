@@ -1,0 +1,38 @@
+/* IMPL-08-17 phase 3: orch-reload registers reload_batch factory in PathRegistry. */
+
+#include "bs/adapter/attach_context.h"
+#include "bs/adapter/orchestration/reload_batch_factory.h"
+#include "bs/adapter/orchestration/reload_gate_default.h"
+#include "bs/adapter/persistence/attach_store.h"
+#include "bs/adapter/registry_bootstrap.h"
+#include "bs/kernel/registry/registry_facade.h"
+
+#include <cassert>
+
+int main()
+{
+    AttachContext* ctx = bs_attach_context_create();
+    assert(ctx != nullptr);
+
+    assert(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
+    assert(bs_adapter_registry_bootstrap_freeze_ctx(ctx) == 0);
+
+    RegistryFacade* facade = bs_attach_context_registry(ctx);
+
+    Binding batch{};
+    assert(bs_registry_facade_resolve(facade, "/adapter/orchestration/reload_batch", &batch) ==
+           BS_REGISTRY_OK);
+    assert(batch.impl != nullptr);
+
+    ReloadBatchController* ctrl =
+        bs_reload_batch_controller_create_from_binding(&batch, 4);
+    assert(ctrl != nullptr);
+    bs_reload_batch_controller_use_default_gate(ctrl);
+    bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    assert(bs_reload_batch_add_path(ctrl, "file:///orch-registry-smoke") == 0);
+    assert(bs_reload_batch_run(ctrl) != 0); /* no read_fn wired; factory create ok */
+
+    bs_reload_batch_controller_destroy_from_binding(&batch, ctrl);
+    bs_attach_context_destroy(ctx);
+    return 0;
+}

@@ -1,0 +1,53 @@
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+compile_commands.json
+install_manifest.txt
+
+# Meson
+meson-private/
+meson-logs/
+meson-info/
+.mesonpy-*
+
+# Reference framework sources (local read-only; not shipped)
+Source/
+
+# Build dirs
+build/
+build-*/
+out/
+dist/
+
+# Artifacts
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.pdb
+*.ilk
+*.exp
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# Logs
+*.log
+

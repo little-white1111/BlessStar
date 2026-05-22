@@ -1,0 +1,7 @@
+{
+  "name": "subtask-b",
+  "version": "1.0.0",
+  "description": "子任务B（专属工程与生态铺垫AI）。用来按主任务决策进行工程落地：代码、测试、文档、脚本等。",
+  "author": "",
+  "license": "MIT"
+}

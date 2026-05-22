@@ -1,0 +1,22 @@
+bs_test_state_machine 1 24.0668
+bs_test_state_bus 1 9.32193
+bs_test_sharded_state_bus 1 0.659867
+bs_test_state_all 1 0.723377
+bs_test_ir 1 0.720438
+bs_test_requirements 1 0.70099
+bs_test_resolver 1 1.22108
+bs_test_requirement_filter 1 0.714706
+bs_test_pipeline 1 0.733679
+bs_test_report 1 0.744868
+bs_test_ir_boundary 1 16.9186
+bs_test_pipeline_boundary 1 0.745794
+bs_test_report_boundary 1 0.784571
+bs_test_state_boundary 1 0.763936
+bs_test_error 1 0.721043
+bs_test_metrics 1 0.746956
+bs_test_memory_pool 1 0.814245
+bs_test_plugin 1 0.749891
+bs_test_error_comprehensive 1 0.783537
+bs_test_memory_pool_comprehensive 1 0.848028
+bs_test_metrics_comprehensive 1 0.768904
+---

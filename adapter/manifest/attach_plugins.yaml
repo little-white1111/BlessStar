@@ -1,0 +1,29 @@
+# Attach P2 plugin list (SCHEMA-ATTACH-VIII-1 · IMPL-08-17)
+# Runtime: built-in table in plugin_loader.cpp must stay in sync with this file.
+
+attach_manifest_version: 1
+
+plugins:
+  - manifest_id: log-domains
+    load_phase: P2
+    enabled: true
+    depends_on: []
+    entry:
+      register_fn: bs_adapter_plugin_log_domains_register
+
+  - manifest_id: io-standard
+    load_phase: P2
+    enabled: true
+    depends_on:
+      - log-domains
+    entry:
+      register_fn: bs_adapter_plugin_io_register
+
+  - manifest_id: orch-reload
+    load_phase: P2
+    enabled: true
+    depends_on:
+      - io-standard
+      - log-domains
+    entry:
+      register_fn: bs_adapter_plugin_orch_register

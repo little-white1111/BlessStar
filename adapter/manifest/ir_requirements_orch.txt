@@ -1,0 +1,3 @@
+# PLUGIN-VIII-5 · orch-reload (default gate uses requirement_filter)
+test
+type1

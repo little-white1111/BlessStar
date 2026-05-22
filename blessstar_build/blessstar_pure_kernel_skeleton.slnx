@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+	<Configurations>
+		<BuildType Name="Debug"/>
+		<BuildType Name="Release"/>
+		<BuildType Name="MinSizeRel"/>
+		<BuildType Name="RelWithDebInfo"/>
+		<Platform Name="x64"/>
+	</Configurations>
+	<Project Path="ALL_BUILD.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f6c3ed51-feac-30cc-9fd5-e3980fc34a85" DefaultStartup="true">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_cli.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_ir.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_report.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_state.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+		<BuildDependency Project="bs_test_error.vcxproj"/>
+		<BuildDependency Project="bs_test_error_comprehensive.vcxproj"/>
+		<BuildDependency Project="bs_test_ir.vcxproj"/>
+		<BuildDependency Project="bs_test_ir_boundary.vcxproj"/>
+		<BuildDependency Project="bs_test_memory_pool.vcxproj"/>
+		<BuildDependency Project="bs_test_memory_pool_comprehensive.vcxproj"/>
+		<BuildDependency Project="bs_test_metrics.vcxproj"/>
+		<BuildDependency Project="bs_test_metrics_comprehensive.vcxproj"/>
+		<BuildDependency Project="bs_test_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_test_pipeline_boundary.vcxproj"/>
+		<BuildDependency Project="bs_test_plugin.vcxproj"/>
+		<BuildDependency Project="bs_test_report.vcxproj"/>
+		<BuildDependency Project="bs_test_report_boundary.vcxproj"/>
+		<BuildDependency Project="bs_test_sharded_state_bus.vcxproj"/>
+		<BuildDependency Project="bs_test_state_all.vcxproj"/>
+		<BuildDependency Project="bs_test_state_boundary.vcxproj"/>
+		<BuildDependency Project="bs_test_state_bus.vcxproj"/>
+		<BuildDependency Project="bs_test_state_machine.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="ZERO_CHECK.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="985d8286-8e24-3e7f-a8aa-95f7b4b818fc"/>
+	<Project Path="bs_adapter_cli.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="364be3fa-6716-37a1-a64c-084501d2fd34">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report.vcxproj"/>
+		<BuildDependency Project="purity_check.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_ir.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="519c2e69-a62c-334a-9da3-fb8abb078148">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_pipeline.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="e2106862-2ee2-3da7-a47d-6a835141f9fb">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_report.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="024dc34f-0fa0-34fa-88ae-dbc2f1879831">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_state.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f2bda334-7635-3ef1-bfc6-5765dbd7178e">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_common.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="dc50ecc8-4292-3730-abf7-f9260651fe94">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_ir.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="32498bcd-2fc9-301a-a5c7-6e2a08c9772c">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_pipeline.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="43518d41-f253-3ab7-a680-fba7debdca6a">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_report.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="cb96e975-5143-3efb-8918-0d9fdfc890ac">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_state.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="21d56337-0469-3d34-90cb-50a9bcf7f7b3">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_error.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="43719257-6fa2-3e05-a726-4b658452fe97">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_error_comprehensive.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="eb0ee99a-a8d0-319b-8730-abf72461fe75">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_ir.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="6a709790-edb2-39bb-ba26-e35f5ced4e7f">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_ir_boundary.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f96bc7c5-9dd8-3965-a95f-fb67d9f977ac">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_memory_pool.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ddd3f9e3-b472-3ac2-9e8c-3c7a2c8b297e">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_memory_pool_comprehensive.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a8b89712-040f-30ee-ac9a-9d9a5fbef3f4">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_metrics.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="4ce8255d-dcb5-32ef-8726-9dea9d1b0f2f">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_metrics_comprehensive.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="15637e50-62c5-3889-9667-dabef88279c4">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_pipeline.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ff3ae28d-c061-3c8f-b4d5-0f8138e2d418">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_pipeline_boundary.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="6997de6d-7c95-30a8-a553-69a92d3d1694">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_plugin.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="35cbc766-bcc0-39bc-a8ee-be905e479748">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_report.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3866e97e-7fdf-3a55-b355-41a92f33dd49">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_report_boundary.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="426c679a-49c1-36f4-aa71-c20fb1897398">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_sharded_state_bus.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f2d4eca3-b453-3909-88d3-380584840584">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_state_all.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="61fede1f-5a41-329b-92e5-5e3f80f12b1b">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_state_boundary.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="db2ce031-2985-37ec-8284-caa7bd4b1c2a">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_state_bus.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="8db8b0d4-cea4-35f2-9a22-85377bcf47fe">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_state_machine.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="4d375fec-e8d3-3ba7-a17c-cf0b284f0093">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="purity_check.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a23bd776-5a75-3c11-88e5-bcce88eaa34a">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+</Solution>

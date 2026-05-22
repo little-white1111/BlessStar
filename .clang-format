@@ -1,0 +1,81 @@
+# BlessStar C++ Coding Style
+# Based on LLVM style with modifications for kernel development
+
+Language: Cpp
+BasedOnStyle: LLVM
+
+# Indentation
+IndentWidth: 4
+UseTab: Never
+TabWidth: 4
+ContinuationIndentWidth: 4
+
+# Column limit
+ColumnLimit: 100
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# Brace style
+BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterClass: true
+
+  
+  AfterControlStatement: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+
+# Spaces
+SpaceBeforeAssignmentOperators: true
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceAfterCStyleCast: false
+
+# Pointer alignment
+PointerAlignment: Left
+
+# Sorting
+SortIncludes: true
+SortUsingDeclarations: true
+
+# Formatting
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+
+# Comments
+CommentPragmas: '^ IWYU pragma:'
+
+# Misc
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakConstructorInitializersBeforeComma: true
+IncludeBlocks: Regroup
+
+# #include 顺序与依赖方向一致：纯净内核 → 适配层 → 同模块短路径 → C++ 标准库 → C 系统头。
+# clang-format 对 IncludeCategories「先匹配者优先」，故从具体到宽泛排列。
+IncludeCategories:
+  - Regex:           '^"bs/kernel/'
+    Priority:        10
+  - Regex:           '^"bs/adapter/'
+    Priority:        20
+  - Regex:           '^"(?!bs/)'
+    Priority:        30
+  # <cassert>、<cstring> 等
+  - Regex:           '^<c[a-z]'
+    Priority:        40
+  # <stdlib.h>、<stddef.h> 等（须在泛型 '^<' 之前，否则会被 45 抢先匹配）
+  - Regex:           '^<[^/]+\.h>'
+    Priority:        42
+  # <vector>、<string> 等其余标准库
+  - Regex:           '^<'
+    Priority:        45
+
+# 与当前 .cpp/.cc 同名的主头文件（如 ir.cpp ↔ …/ir.h）优先归入首块。
+IncludeIsMainRegex: '([-_A-Za-z0-9]+)\.(h|hpp|H)$'

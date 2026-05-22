@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/little-white111/BlessStar/tools/normalize/blessstar_config_v1.schema.json",
+  "title": "BlessStar Config JSON v1",
+  "description": "Canonical configuration document consumed by the BlessStar main chain (parse → IR → ir_gate). Runtime allowed instruction types are defined by kernel builtin + merge_activation; this schema does not enumerate them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kernel_version", "adapter_version", "instructions"],
+  "properties": {
+    "kernel_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Must align with KernelBuiltinRequirements.kernel_version at attach time."
+    },
+    "adapter_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Checked by bs_adapter_requirement_filter_check_adapter_version."
+    },
+    "manual_requirements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Optional extension types; merged with builtin (builtin wins on duplicate type). Omit or use []."
+    },
+    "instructions": {
+      "type": "array",
+      "description": "IR payload; each item maps to IRInstruction. May be empty [].",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "name"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "description": "IRInstruction.type; must be allowed by merge_activation at runtime."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "IRInstruction.name"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Flat string map → IRMetadata chain (MVP: values are strings only)."
+          }
+        }
+      }
+    }
+  }
+}
