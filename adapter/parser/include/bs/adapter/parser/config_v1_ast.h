@@ -10,27 +10,27 @@ extern "C"
 
     typedef struct ConfigV1Metadata
     {
-        char*                key;
-        char*                value;
+        char*                    key;
+        char*                    value;
         struct ConfigV1Metadata* next;
     } ConfigV1Metadata;
 
     typedef struct ConfigV1Instruction
     {
-        char*                  type;
-        char*                  name;
-        ConfigV1Metadata*      metadata;
+        char*                       type;
+        char*                       name;
+        ConfigV1Metadata*           metadata;
         struct ConfigV1Instruction* next;
     } ConfigV1Instruction;
 
     typedef struct ConfigV1Ast
     {
-        char*               kernel_version;
-        char*               adapter_version;
-        char**              manual_requirements;
-        size_t              manual_requirements_count;
+        char*                kernel_version;
+        char*                adapter_version;
+        char**               manual_requirements;
+        size_t               manual_requirements_count;
         ConfigV1Instruction* instructions;
-        size_t              instructions_count;
+        size_t               instructions_count;
     } ConfigV1Ast;
 
     ConfigV1Ast* config_v1_ast_create(void);

@@ -1,7 +1,7 @@
+#include "bs/kernel/common/bs_status.h"
+
 #include "bs/adapter/parser/config_v1_ast.h"
 #include "bs/adapter/parser/json_parser.h"
-
-#include "bs/kernel/common/bs_status.h"
 
 #include <cassert>
 #include <cstring>
@@ -24,7 +24,7 @@ static const char kMinimal[] = R"({
 
 int main()
 {
-    ConfigV1Ast* ast = nullptr;
+    ConfigV1Ast* ast  = nullptr;
     size_t       line = 0;
     size_t       col  = 0;
     BsStatus     st   = json_parse_config_v1(kMinimal, strlen(kMinimal), &ast, &line, &col);
@@ -39,7 +39,7 @@ int main()
     ast = nullptr;
 
     const char kBad[] = "{";
-    st = json_parse_config_v1(kBad, strlen(kBad), &ast, &line, &col);
+    st                = json_parse_config_v1(kBad, strlen(kBad), &ast, &line, &col);
     assert(!bs_status_is_ok(st));
     assert(ast == nullptr);
     return 0;

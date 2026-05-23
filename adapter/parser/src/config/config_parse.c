@@ -1,5 +1,4 @@
 #include "bs/adapter/parser/config_parse.h"
-
 #include "bs/adapter/parser/config_v1_ir.h"
 #include "bs/adapter/parser/json_parser.h"
 #include "bs/adapter/requirement_filter.h"
@@ -14,10 +13,10 @@ void bs_config_parse_result_destroy(BsConfigParseResult* result)
         ir_instruction_list_destroy(result->instructions);
     if (result->active_requirements)
         bs_requirement_list_free(result->active_requirements);
-    result->instructions          = NULL;
-    result->active_requirements   = NULL;
-    result->error_line            = 0;
-    result->error_column          = 0;
+    result->instructions        = NULL;
+    result->active_requirements = NULL;
+    result->error_line          = 0;
+    result->error_column        = 0;
 }
 
 BsStatus bs_config_parse_bytes(const uint8_t* data, size_t len, BsConfigParseResult* out)
@@ -46,8 +45,7 @@ BsStatus bs_config_parse_bytes(const uint8_t* data, size_t len, BsConfigParseRes
         return bs_status_from_config_parse(BS_CONFIG_PARSE_ERR_PARSE);
     }
 
-    if (!ast->kernel_version ||
-        strcmp(ast->kernel_version, builtin->kernel_version) != 0)
+    if (!ast->kernel_version || strcmp(ast->kernel_version, builtin->kernel_version) != 0)
     {
         config_v1_ast_destroy(ast);
         return bs_status_from_config_parse(BS_CONFIG_PARSE_ERR_KERNEL_VER);

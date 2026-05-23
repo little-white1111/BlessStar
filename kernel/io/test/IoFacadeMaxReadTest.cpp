@@ -51,14 +51,15 @@ int main()
     entry.source          = BS_PATH_ENTRY_PLUGIN;
     entry.manifest_ref    = "io";
     entry.type_constraint = "io";
-    assert(bs_registry_facade_register_declaration(reg, "/adapter/io/local", &entry) == BS_REGISTRY_OK);
-    assert(bs_registry_facade_register_hub_mapping(reg, "adapter.io.local", "/adapter/io/local", 0) ==
+    assert(bs_registry_facade_register_declaration(reg, "/adapter/io/local", &entry) ==
            BS_REGISTRY_OK);
+    assert(bs_registry_facade_register_hub_mapping(reg, "adapter.io.local", "/adapter/io/local",
+                                                   0) == BS_REGISTRY_OK);
 
     static IoProviderBinding binding = {&kCapOps, nullptr};
     assert(bs_registry_facade_bind_instance(reg, "/adapter/io/local", &binding) == BS_REGISTRY_OK);
 
-    IoFacade* io = bs_io_facade_create(reg);
+    IoFacade*    io = bs_io_facade_create(reg);
     IoReadResult result{};
     assert(bs_io_facade_read(io, "file://cap", &result) == BS_IO_OK);
     assert(g_last_max_read == BS_IO_MAX_READ_BYTES);

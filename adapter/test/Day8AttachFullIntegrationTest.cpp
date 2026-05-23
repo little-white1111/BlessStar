@@ -6,20 +6,22 @@
  * -> reload (default ir_gate) + Report
  */
 
-#include "support/attach_test_fixture.h"
-#include "support/config_v1_golden.h"
-#include "support/day12_attach_fixture.h"
-
-#include "bs/adapter/orchestration/reload_with_report.h"
 #include "bs/kernel/common/bs_status.h"
 #include "bs/kernel/io/io_status_table.h"
 #include "bs/kernel/report/report.h"
 
+#include "bs/adapter/orchestration/reload_with_report.h"
+
 #include <cassert>
 #include <cstring>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
+
+#include "support/attach_test_fixture.h"
+#include "support/config_v1_golden.h"
+#include "support/day12_attach_fixture.h"
 
 namespace fs = std::filesystem;
 
@@ -42,15 +44,14 @@ int main()
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
 
     Binding local{};
-    BS_TEST_REQUIRE("resolve", bs_registry_facade_resolve(fix.facade, "/adapter/io/local", &local) ==
-                                  BS_REGISTRY_OK);
+    BS_TEST_REQUIRE("resolve", bs_registry_facade_resolve(fix.facade, "/adapter/io/local",
+                                                          &local) == BS_REGISTRY_OK);
     Binding db{};
-    BS_TEST_REQUIRE("resolve", bs_registry_facade_resolve(fix.facade, "adapter.io.db", &db) ==
-                                  BS_REGISTRY_OK);
-    Binding remote{};
     BS_TEST_REQUIRE("resolve",
-                  bs_registry_facade_resolve(fix.facade, "/adapter/io/remote", &remote) ==
-                      BS_REGISTRY_OK);
+                    bs_registry_facade_resolve(fix.facade, "adapter.io.db", &db) == BS_REGISTRY_OK);
+    Binding remote{};
+    BS_TEST_REQUIRE("resolve", bs_registry_facade_resolve(fix.facade, "/adapter/io/remote",
+                                                          &remote) == BS_REGISTRY_OK);
 
     const fs::path cfg_file = fs::absolute("bs_day8_attach_full_cfg.json");
     {
@@ -70,12 +71,11 @@ int main()
     BS_TEST_REQUIRE("io-read", bs_io_facade_read(fix.io, uri.c_str(), &read_result) == BS_IO_OK);
     BS_TEST_REQUIRE("io-read", read_result.length == kBlessStarConfigV1GoldenLen);
     BS_TEST_REQUIRE("io-read", read_result.data != nullptr);
-    BS_TEST_REQUIRE("io-read",
-                  std::memcmp(read_result.data, kBlessStarConfigV1Golden,
-                              kBlessStarConfigV1GoldenLen) == 0);
+    BS_TEST_REQUIRE("io-read", std::memcmp(read_result.data, kBlessStarConfigV1Golden,
+                                           kBlessStarConfigV1GoldenLen) == 0);
     bs_io_read_result_free(&read_result);
 
-    uint16_t io_domain = 0;
+    uint16_t                   io_domain = 0;
     BsStatusDomainRegistration reg{};
     reg.domain_qname  = "io";
     reg.table         = k_io_status_table;
@@ -84,9 +84,10 @@ int main()
     BS_TEST_REQUIRE("domain", bs_registry_facade_register_status_domain(fix.facade, &reg) ==
                                   BS_REGISTRY_ERR_FROZEN);
 
-    char fmt_buf[64];
+    char           fmt_buf[64];
     const BsStatus timeout_status = bs_status_make(1, 5);
-    BS_TEST_REQUIRE("format", bs_status_format(timeout_status, fix.facade, fmt_buf, sizeof(fmt_buf)) == 0);
+    BS_TEST_REQUIRE("format",
+                    bs_status_format(timeout_status, fix.facade, fmt_buf, sizeof(fmt_buf)) == 0);
     BS_TEST_REQUIRE("format", std::strcmp(fmt_buf, "io.TIMEOUT") == 0);
 
     ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);

@@ -1,8 +1,8 @@
+#include "bs/kernel/registry/path_normalize.h"
 #include "bs/kernel/registry/registry_hub.h"
 
-#include "bs/kernel/registry/path_normalize.h"
-
 #include <cstring>
+
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -51,8 +51,8 @@ static int parse_logical_id(const char* logical_id, char* domain, size_t domain_
     std::memcpy(domain, logical_id, domain_len);
     domain[domain_len] = '\0';
 
-    const char* cap_start = first_dot + 1;
-    const size_t cap_len  = static_cast<size_t>(last_dot - cap_start);
+    const char*  cap_start = first_dot + 1;
+    const size_t cap_len   = static_cast<size_t>(last_dot - cap_start);
     if (cap_len == 0 || cap_len + 1 > capability_size)
         return BS_REGISTRY_ERR_LOGICAL_ID;
     std::memcpy(capability, cap_start, cap_len);
@@ -65,7 +65,7 @@ static int parse_logical_id(const char* logical_id, char* domain, size_t domain_
         return BS_REGISTRY_ERR_LOGICAL_ID;
     std::strcpy(name, name_start);
 
-  /* <=3 hops: domain, capability, name */
+    /* <=3 hops: domain, capability, name */
     if (std::strchr(name, '.') != nullptr)
         return BS_REGISTRY_ERR_LOGICAL_ID;
 
@@ -79,8 +79,8 @@ int bs_registry_hub_register_mapping(RegistryHub* hub, const char* logical_id,
         return BS_REGISTRY_ERR_INVALID_ARG;
 
     char domain[64], capability[96], name[64];
-    if (parse_logical_id(logical_id, domain, sizeof(domain), capability, sizeof(capability),
-                         name, sizeof(name)) != BS_REGISTRY_OK)
+    if (parse_logical_id(logical_id, domain, sizeof(domain), capability, sizeof(capability), name,
+                         sizeof(name)) != BS_REGISTRY_OK)
         return BS_REGISTRY_ERR_LOGICAL_ID;
 
     char norm[BS_REGISTRY_MAX_PATH];
@@ -106,19 +106,19 @@ int bs_registry_hub_register_mapping(RegistryHub* hub, const char* logical_id,
     return BS_REGISTRY_OK;
 }
 
-int bs_registry_hub_resolve(const RegistryHub* hub, const char* logical_id, char* out_canonical_path,
-                            size_t out_size)
+int bs_registry_hub_resolve(const RegistryHub* hub, const char* logical_id,
+                            char* out_canonical_path, size_t out_size)
 {
     if (!hub || !logical_id || !out_canonical_path || out_size == 0)
         return BS_REGISTRY_ERR_INVALID_ARG;
 
     char domain[64], capability[96], name[64];
-    if (parse_logical_id(logical_id, domain, sizeof(domain), capability, sizeof(capability),
-                         name, sizeof(name)) != BS_REGISTRY_OK)
+    if (parse_logical_id(logical_id, domain, sizeof(domain), capability, sizeof(capability), name,
+                         sizeof(name)) != BS_REGISTRY_OK)
         return BS_REGISTRY_ERR_LOGICAL_ID;
 
     std::lock_guard<std::mutex> lock(hub->mutex);
-    const auto it = hub->mappings.find(logical_id);
+    const auto                  it = hub->mappings.find(logical_id);
     if (it == hub->mappings.end())
         return BS_REGISTRY_ERR_NOT_FOUND;
 

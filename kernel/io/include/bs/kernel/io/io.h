@@ -21,29 +21,29 @@ extern "C"
 
     typedef enum IoStatus
     {
-        BS_IO_OK                        = 0,
-        BS_IO_ERR_INVALID_URI           = -1,
-        BS_IO_ERR_UNSUPPORTED_SCHEME    = -2,
-        BS_IO_ERR_PROVIDER              = -3,
-        BS_IO_ERR_READ_LIMIT            = -4,
-        BS_IO_ERR_TIMEOUT               = -5,
-        BS_IO_ERR_NOT_FOUND             = -6,
-        BS_IO_ERR_INVALID_ARG           = -7,
-        BS_IO_ERR_REGISTRY              = -8,
-        BS_IO_ERR_NO_PROVIDER           = -9
+        BS_IO_OK                     = 0,
+        BS_IO_ERR_INVALID_URI        = -1,
+        BS_IO_ERR_UNSUPPORTED_SCHEME = -2,
+        BS_IO_ERR_PROVIDER           = -3,
+        BS_IO_ERR_READ_LIMIT         = -4,
+        BS_IO_ERR_TIMEOUT            = -5,
+        BS_IO_ERR_NOT_FOUND          = -6,
+        BS_IO_ERR_INVALID_ARG        = -7,
+        BS_IO_ERR_REGISTRY           = -8,
+        BS_IO_ERR_NO_PROVIDER        = -9
     } IoStatus;
 
     typedef struct IoReadResult
     {
-        int     status;
+        int      status;
         uint8_t* data;
-        size_t  length;
-        int     truncated;
-        char*   source_uri;
-        char*   mime_hint;
-        char*   encoding_hint;
-        char*   checksum;
-        char*   error_message;
+        size_t   length;
+        int      truncated;
+        char*    source_uri;
+        char*    mime_hint;
+        char*    encoding_hint;
+        char*    checksum;
+        char*    error_message;
     } IoReadResult;
 
     /**

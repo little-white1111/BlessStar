@@ -39,20 +39,20 @@ extern "C"
 
     /** @p expected_rev is revision at session start; 0 for first write. */
     int bs_attach_store_get_revision(const BsAttachStore* store, const char* uri,
-                                   uint64_t* rev_out);
+                                     uint64_t* rev_out);
 
     /** Canonical path from manifest (RES-IX-8 uri->path); empty if unknown. */
     int bs_attach_store_get_canonical_path(const BsAttachStore* store, const char* uri,
                                            char* out_path, size_t out_cap);
 
-    int bs_attach_store_commit_per_path(BsAttachStore* store, const char* uri,
-                                        const void* data, size_t len, uint64_t expected_rev);
+    int bs_attach_store_commit_per_path(BsAttachStore* store, const char* uri, const void* data,
+                                        size_t len, uint64_t expected_rev);
 
     void bs_attach_store_batch_begin(BsAttachStore* store);
     int  bs_attach_store_batch_stage(BsAttachStore* store, const char* uri, const void* data,
                                      size_t len, uint64_t expected_rev);
     /** Atomic manifest + all staged canonical files (RES-IX-10). */
-    int bs_attach_store_batch_commit(BsAttachStore* store);
+    int  bs_attach_store_batch_commit(BsAttachStore* store);
     void bs_attach_store_batch_abort(BsAttachStore* store);
 
     typedef void* (*BsAttachMallocFn)(size_t size);

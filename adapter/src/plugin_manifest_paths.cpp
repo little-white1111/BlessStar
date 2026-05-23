@@ -1,6 +1,5 @@
-#include "bs/adapter/plugin/plugin_manifest_paths.h"
-
 #include "bs/adapter/manifest/manifest_config.h"
+#include "bs/adapter/plugin/plugin_manifest_paths.h"
 
 #include <cstring>
 
@@ -33,7 +32,7 @@ int bs_adapter_plugin_manifest_path(const char* relative_or_absolute, char* out_
 
     std::strncpy(out_buf, base, out_buf_len - 1);
     out_buf[out_buf_len - 1] = '\0';
-    size_t pos = std::strlen(out_buf);
+    size_t pos               = std::strlen(out_buf);
     if (need_sep)
     {
         out_buf[pos++] = '/';

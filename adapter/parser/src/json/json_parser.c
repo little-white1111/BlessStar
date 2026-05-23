@@ -1,7 +1,6 @@
-#include "bs/adapter/parser/json_parser.h"
-
 #include "bs/adapter/parser/config_parse_status.h"
 #include "bs/adapter/parser/json_lexer.h"
+#include "bs/adapter/parser/json_parser.h"
 #include "bs/adapter/parser/json_utf8.h"
 
 #include <stdlib.h>
@@ -11,11 +10,11 @@
 
 typedef struct ParseCtx
 {
-    JsonLexer*    lex;
-    size_t*       error_line;
-    size_t*       error_column;
-    unsigned      depth;
-    int           err_code;
+    JsonLexer* lex;
+    size_t*    error_line;
+    size_t*    error_column;
+    unsigned   depth;
+    int        err_code;
 } ParseCtx;
 
 static void set_err(ParseCtx* ctx, int code, size_t line, size_t column)
@@ -58,7 +57,7 @@ static int keys_seen_add(KeysSeen* ks, const char* key, ParseCtx* ctx, size_t li
         return 0;
     }
     const size_t key_len = strlen(key);
-    char*       dup      = (char*)malloc(key_len + 1);
+    char*        dup     = (char*)malloc(key_len + 1);
     if (!dup)
     {
         set_err(ctx, BS_CONFIG_PARSE_ERR_OOM, 0, 0);
@@ -88,8 +87,8 @@ static char* decode_json_string(const JsonToken* tok)
     if (!tok || tok->type != JSON_TOK_STRING || tok->length < 2)
         return NULL;
 
-    const char* s = tok->start + 1;
-    const char* e = tok->start + tok->length - 1;
+    const char*  s   = tok->start + 1;
+    const char*  e   = tok->start + tok->length - 1;
     const size_t cap = BS_JSON_MAX_STRING_BYTES + 1u;
     char*        out = (char*)malloc(cap);
     if (!out)
@@ -258,7 +257,7 @@ static void leave_container(ParseCtx* ctx)
 }
 
 static const JsonToken* advance(ParseCtx* ctx);
-static int                expect(ParseCtx* ctx, JsonTokenType type);
+static int              expect(ParseCtx* ctx, JsonTokenType type);
 
 static int skip_json_value(ParseCtx* ctx);
 
@@ -410,7 +409,7 @@ static int parse_metadata_object(ParseCtx* ctx, ConfigV1Metadata** out_head)
         return 0;
     ConfigV1Metadata* head = NULL;
     ConfigV1Metadata* tail = NULL;
-    KeysSeen            seen = {0};
+    KeysSeen          seen = {0};
 
     const JsonToken* tok = peek(ctx);
     if (tok && tok->type == JSON_TOK_RBRACE)
@@ -499,10 +498,10 @@ static int parse_instruction_item(ParseCtx* ctx, ConfigV1Instruction** out_instr
         return 0;
     }
 
-    int saw_type     = 0;
-    int saw_name     = 0;
-    int saw_metadata = 0;
-    const JsonToken* tok = peek(ctx);
+    int              saw_type     = 0;
+    int              saw_name     = 0;
+    int              saw_metadata = 0;
+    const JsonToken* tok          = peek(ctx);
     if (tok && tok->type == JSON_TOK_RBRACE)
     {
         set_err(ctx, BS_CONFIG_PARSE_ERR_SCHEMA, tok->line, tok->column);
@@ -569,7 +568,7 @@ static int parse_instruction_item(ParseCtx* ctx, ConfigV1Instruction** out_instr
                 return 0;
             }
             saw_metadata = 1;
-            tok = peek(ctx);
+            tok          = peek(ctx);
             if (!tok || tok->type != JSON_TOK_LBRACE)
             {
                 set_err(ctx, BS_CONFIG_PARSE_ERR_SCHEMA, tok ? tok->line : 0,
@@ -667,8 +666,8 @@ static int parse_instructions_array(ParseCtx* ctx, ConfigV1Instruction** out_hea
     if (!enter_container(ctx) || !expect(ctx, JSON_TOK_LBRACKET))
         return 0;
 
-    ConfigV1Instruction* head = NULL;
-    ConfigV1Instruction* tail = NULL;
+    ConfigV1Instruction* head  = NULL;
+    ConfigV1Instruction* tail  = NULL;
     size_t               count = 0;
 
     const JsonToken* tok = peek(ctx);
@@ -686,8 +685,7 @@ static int parse_instructions_array(ParseCtx* ctx, ConfigV1Instruction** out_hea
         if (count >= BS_JSON_MAX_INSTRUCTIONS)
         {
             const JsonToken* lim = peek(ctx);
-            set_err(ctx, BS_CONFIG_PARSE_ERR_SCHEMA, lim ? lim->line : 0,
-                    lim ? lim->column : 0);
+            set_err(ctx, BS_CONFIG_PARSE_ERR_SCHEMA, lim ? lim->line : 0, lim ? lim->column : 0);
             free_instruction_list(head);
             leave_container(ctx);
             return 0;
@@ -733,7 +731,7 @@ static int parse_manual_array(ParseCtx* ctx, char*** out_items, size_t* out_coun
     if (!enter_container(ctx) || !expect(ctx, JSON_TOK_LBRACKET))
         return 0;
 
-    size_t cap  = 4;
+    size_t cap   = 4;
     size_t count = 0;
     char** items = (char**)calloc(cap, sizeof(char*));
     if (!items)
@@ -747,8 +745,8 @@ static int parse_manual_array(ParseCtx* ctx, char*** out_items, size_t* out_coun
     {
         advance(ctx);
         leave_container(ctx);
-        *out_items  = items;
-        *out_count  = 0;
+        *out_items = items;
+        *out_count = 0;
         return 1;
     }
 
@@ -757,8 +755,7 @@ static int parse_manual_array(ParseCtx* ctx, char*** out_items, size_t* out_coun
         if (count >= BS_JSON_MAX_MANUAL_ITEMS)
         {
             const JsonToken* lim = peek(ctx);
-            set_err(ctx, BS_CONFIG_PARSE_ERR_SCHEMA, lim ? lim->line : 0,
-                    lim ? lim->column : 0);
+            set_err(ctx, BS_CONFIG_PARSE_ERR_SCHEMA, lim ? lim->line : 0, lim ? lim->column : 0);
             for (size_t i = 0; i < count; ++i)
                 free(items[i]);
             free(items);
@@ -829,8 +826,8 @@ static int parse_root_object(ParseCtx* ctx, ConfigV1Ast* ast)
     if (!enter_container(ctx) || !expect(ctx, JSON_TOK_LBRACE))
         return 0;
 
-    int has_kernel = 0;
-    int has_adapter = 0;
+    int has_kernel       = 0;
+    int has_adapter      = 0;
     int has_instructions = 0;
 
     const JsonToken* tok = peek(ctx);
@@ -938,7 +935,7 @@ static int parse_root_object(ParseCtx* ctx, ConfigV1Ast* ast)
 }
 
 BsStatus json_parse_config_v1(const char* data, size_t len, ConfigV1Ast** out_ast,
-                            size_t* error_line, size_t* error_column)
+                              size_t* error_line, size_t* error_column)
 {
     if (!data || !out_ast)
         return bs_status_from_config_parse(BS_CONFIG_PARSE_ERR_INVALID_ARG);
@@ -949,11 +946,11 @@ BsStatus json_parse_config_v1(const char* data, size_t len, ConfigV1Ast** out_as
     JsonLexer lex;
     json_lexer_init(&lex, data, len);
 
-    ParseCtx ctx = {.lex           = &lex,
-                    .error_line    = error_line,
-                    .error_column  = error_column,
-                    .depth         = 0,
-                    .err_code      = 0};
+    ParseCtx ctx = {.lex          = &lex,
+                    .error_line   = error_line,
+                    .error_column = error_column,
+                    .depth        = 0,
+                    .err_code     = 0};
 
     json_lexer_next(&lex);
 

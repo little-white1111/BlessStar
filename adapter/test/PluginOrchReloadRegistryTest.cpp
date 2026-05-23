@@ -1,11 +1,12 @@
 /* IMPL-08-17 phase 3: orch-reload registers reload_batch factory in PathRegistry. */
 
+#include "bs/kernel/registry/registry_facade.h"
+
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/orchestration/reload_batch_factory.h"
 #include "bs/adapter/orchestration/reload_gate_default.h"
 #include "bs/adapter/persistence/attach_store.h"
 #include "bs/adapter/registry_bootstrap.h"
-#include "bs/kernel/registry/registry_facade.h"
 
 #include <cassert>
 
@@ -24,8 +25,7 @@ int main()
            BS_REGISTRY_OK);
     assert(batch.impl != nullptr);
 
-    ReloadBatchController* ctrl =
-        bs_reload_batch_controller_create_from_binding(&batch, 4);
+    ReloadBatchController* ctrl = bs_reload_batch_controller_create_from_binding(&batch, 4);
     assert(ctrl != nullptr);
     bs_reload_batch_controller_use_default_gate(ctrl);
     bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);

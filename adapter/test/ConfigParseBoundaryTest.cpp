@@ -3,18 +3,18 @@
  * Does not validate money semantics (see tools/normalize money_normalize.py).
  */
 
-#include "support/config_v1_boundary_build.h"
+#include "bs/kernel/common/bs_status.h"
+#include "bs/kernel/ir/ir.h"
 
 #include "bs/adapter/parser/config_parse.h"
 #include "bs/adapter/requirement_filter.h"
-
-#include "bs/kernel/common/bs_status.h"
-#include "bs/kernel/ir/ir.h"
 
 #include <cassert>
 #include <cstring>
 
 #include <string>
+
+#include "support/config_v1_boundary_build.h"
 
 static const size_t kMaxInputBytes = 1024u * 1024u;
 static const size_t kMaxStringLen  = 4096u;
@@ -27,8 +27,8 @@ static void test_model_c_parse_and_gate()
     assert(json.size() < kMaxInputBytes);
 
     BsConfigParseResult result = {};
-    BsStatus            st   = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
     assert(bs_status_is_ok(st));
     assert(result.instructions != nullptr);
     assert(ir_instruction_list_size(result.instructions) == 400u);
@@ -47,20 +47,20 @@ static void test_model_c_parse_and_gate()
 
 static void test_string_length_4095_ok()
 {
-    std::string json = bs_test_build_single_instruction_metadata_value(4095);
+    std::string         json   = bs_test_build_single_instruction_metadata_value(4095);
     BsConfigParseResult result = {};
-    BsStatus            st   = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
     assert(bs_status_is_ok(st));
     bs_config_parse_result_destroy(&result);
 }
 
 static void test_string_length_4097_fail()
 {
-    std::string json = bs_test_build_single_instruction_metadata_value(4097);
+    std::string         json   = bs_test_build_single_instruction_metadata_value(4097);
     BsConfigParseResult result = {};
-    BsStatus            st     = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
     assert(!bs_status_is_ok(st));
     bs_config_parse_result_destroy(&result);
 }
@@ -72,15 +72,15 @@ static void test_input_over_1mb_fail()
     assert(json.size() > kMaxInputBytes);
 
     BsConfigParseResult result = {};
-    BsStatus            st     = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
     assert(!bs_status_is_ok(st));
     bs_config_parse_result_destroy(&result);
 }
 
 static void test_input_near_1mb_ok()
 {
-    size_t count = 2000;
+    size_t      count = 2000;
     std::string json;
     while (count > 50)
     {
@@ -92,15 +92,15 @@ static void test_input_near_1mb_ok()
     assert(json.size() < kMaxInputBytes);
 
     BsConfigParseResult result = {};
-    BsStatus            st     = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
     assert(bs_status_is_ok(st));
     bs_config_parse_result_destroy(&result);
 }
 
 static void test_empty_metadata_value_ok()
 {
-    const char kJson[] = R"({
+    const char          kJson[] = R"({
   "kernel_version": "0.4.0",
   "adapter_version": "0.4.0",
   "instructions": [{
@@ -109,9 +109,9 @@ static void test_empty_metadata_value_ok()
     "metadata": { "note": "" }
   }]
 })";
-    BsConfigParseResult result = {};
-    BsStatus            st     = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(kJson), strlen(kJson), &result);
+    BsConfigParseResult result  = {};
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(kJson), strlen(kJson), &result);
     assert(bs_status_is_ok(st));
     IRInstruction* first = ir_instruction_list_get(result.instructions, 0);
     const char*    note  = ir_instruction_get_metadata(first, "note");
@@ -121,10 +121,10 @@ static void test_empty_metadata_value_ok()
 
 static void test_truncated_json_fail()
 {
-    std::string json = bs_test_build_truncated_json();
+    std::string         json   = bs_test_build_truncated_json();
     BsConfigParseResult result = {};
-    BsStatus            st     = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
     assert(!bs_status_is_ok(st));
     bs_config_parse_result_destroy(&result);
 }
@@ -134,8 +134,8 @@ static void test_model_a_light_optional()
     std::string json;
     bs_test_build_config_v1_model_a_light(json, 400);
     BsConfigParseResult result = {};
-    BsStatus            st     = bs_config_parse_bytes(
-        reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus            st =
+        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
     assert(bs_status_is_ok(st));
     assert(ir_instruction_list_size(result.instructions) == 400u);
     bs_config_parse_result_destroy(&result);

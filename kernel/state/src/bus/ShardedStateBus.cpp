@@ -1,6 +1,9 @@
 #include "bs/kernel/state/ShardedStateBus.h"
 #include "bs/kernel/state/StateBus.h"
 
+#include <cstdlib>
+#include <cstring>
+
 #include <atomic>
 #include <functional>
 #include <vector>
@@ -125,11 +128,11 @@ StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count)
     for (size_t i = 0; i < all_entries.size(); i++)
     {
         const StateEntry& src = all_entries[i];
-        result[i].path      = strdup(src.path);
-        result[i].state     = src.state;
-        result[i].version   = src.version;
-        result[i].timestamp = src.timestamp;
-        result[i].dataSize  = src.dataSize;
+        result[i].path        = strdup(src.path);
+        result[i].state       = src.state;
+        result[i].version     = src.version;
+        result[i].timestamp   = src.timestamp;
+        result[i].dataSize    = src.dataSize;
         if (src.dataSnapshot && src.dataSize > 0)
         {
             result[i].dataSnapshot = malloc(src.dataSize);

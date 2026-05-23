@@ -1,9 +1,10 @@
 #ifndef BS_ADAPTER_PARSER_CONFIG_V1_IR_H
 #define BS_ADAPTER_PARSER_CONFIG_V1_IR_H
 
-#include "bs/adapter/parser/config_v1_ast.h"
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/ir/requirements.h"
+
+#include "bs/adapter/parser/config_v1_ast.h"
 
 #ifdef __cplusplus
 extern "C"

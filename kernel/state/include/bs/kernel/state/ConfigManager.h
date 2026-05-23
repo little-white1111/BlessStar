@@ -12,11 +12,11 @@ extern "C"
     typedef void (*WatchCallback)(const char* path, ConfigEventType type, const void* data,
                                   void* userData);
 
-    typedef struct StateBus StateBus;
-    typedef struct EventBus EventBus;
-    typedef struct StateMachine StateMachine;
+    typedef struct StateBus       StateBus;
+    typedef struct EventBus       EventBus;
+    typedef struct StateMachine   StateMachine;
     typedef struct TemporaryState TemporaryState;
-    typedef struct WatchManager WatchManager;
+    typedef struct WatchManager   WatchManager;
 
     typedef struct ConfigManager ConfigManager;
 

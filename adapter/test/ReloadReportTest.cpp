@@ -1,15 +1,17 @@
-#include "support/day12_attach_fixture.h"
+#include "bs/kernel/report/report.h"
 
 #include "bs/adapter/log/log_bus.h"
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_with_report.h"
-#include "bs/kernel/report/report.h"
 
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+
 #include <string>
 #include <unordered_map>
+
+#include "support/day12_attach_fixture.h"
 
 struct MockReadCtx
 {
@@ -41,14 +43,16 @@ static int mock_gate_pass(void*, const char*, const IoReadResult* read_result,
     return (read_result && read_result->status == BS_IO_OK) ? 0 : -1;
 }
 
-static void noop_log(uint16_t, BsLogLevel, const char*, void*) {}
+static void noop_log(uint16_t, BsLogLevel, const char*, void*)
+{
+}
 
 int main()
 {
     assert(bs_adapter_log_bind_memory_bus(noop_log, nullptr) == 0);
 
     ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);
-    MockReadCtx read_ctx{};
+    MockReadCtx            read_ctx{};
     read_ctx.fail_uris["file:///bad"] = 1;
     bs_reload_batch_controller_set_read_fn(ctrl, mock_read, &read_ctx);
     bs_reload_batch_controller_set_gate_fn(ctrl, mock_gate_pass, nullptr);

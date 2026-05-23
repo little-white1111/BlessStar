@@ -1,5 +1,5 @@
-#include "bs/kernel/test_support/bs_test_log_bus.h"
 #include "bs/kernel/common/bs_safe_format.h"
+#include "bs/kernel/test_support/bs_test_log_bus.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -14,7 +14,7 @@ static TestLogMemCtx g_test_log_mem;
 
 static void test_memory_emit(uint16_t domain_id, BsLogLevel level, const char* fmt, va_list ap)
 {
-    char buf[512];
+    char    buf[512];
     va_list copy;
     va_copy(copy, ap);
     bs_safe_vsnprintf(buf, sizeof(buf), fmt, copy);

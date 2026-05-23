@@ -1,8 +1,9 @@
 #ifndef BS_ADAPTER_REGISTRY_BOOTSTRAP_H
 #define BS_ADAPTER_REGISTRY_BOOTSTRAP_H
 
-#include "bs/adapter/attach_context.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/attach_context.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -34,11 +35,11 @@ extern "C"
     int bs_adapter_registry_bootstrap_register_standard_io_ctx(AttachContext* ctx);
     int bs_adapter_registry_bootstrap_freeze_ctx(AttachContext* ctx);
 
-    /** R8-07 · IMPL-08-10: optional hook after successful freeze (no ConfigManager in bootstrap). */
+    /** R8-07 · IMPL-08-10: optional hook after successful freeze (no ConfigManager in bootstrap).
+     */
     typedef void (*BsAdapterStateNotifierFn)(RegistryFacade* facade, void* user_data);
 
-    void bs_adapter_registry_register_state_notifier(BsAdapterStateNotifierFn fn,
-                                                     void* user_data);
+    void bs_adapter_registry_register_state_notifier(BsAdapterStateNotifierFn fn, void* user_data);
     void bs_adapter_registry_clear_state_notifier(void);
 
 #ifdef __cplusplus

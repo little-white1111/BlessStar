@@ -13,14 +13,13 @@ extern "C"
     PathRegistry* bs_path_registry_create(void);
     void          bs_path_registry_destroy(PathRegistry* registry);
 
-    int  bs_path_registry_register_declaration(PathRegistry* registry, const char* path,
-                                               const PathEntry* entry);
-    int  bs_path_registry_bind_instance(PathRegistry* registry, const char* path, void* impl);
-    int  bs_path_registry_resolve(PathRegistry* registry, const char* canonical_path,
-                                  Binding* out);
-    int  bs_path_registry_unregister(PathRegistry* registry, const char* path);
-    int  bs_path_registry_freeze(PathRegistry* registry);
-    int  bs_path_registry_is_frozen(const PathRegistry* registry);
+    int bs_path_registry_register_declaration(PathRegistry* registry, const char* path,
+                                              const PathEntry* entry);
+    int bs_path_registry_bind_instance(PathRegistry* registry, const char* path, void* impl);
+    int bs_path_registry_resolve(PathRegistry* registry, const char* canonical_path, Binding* out);
+    int bs_path_registry_unregister(PathRegistry* registry, const char* path);
+    int bs_path_registry_freeze(PathRegistry* registry);
+    int bs_path_registry_is_frozen(const PathRegistry* registry);
 
     RegistrationPhase bs_path_registry_current_phase(const PathRegistry* registry);
 

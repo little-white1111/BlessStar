@@ -1,5 +1,6 @@
 #include "bs/adapter/plugin/plugin_ir_requirements.h"
 #include "bs/adapter/plugin/plugin_manifest_paths.h"
+
 #include <cassert>
 
 int main()

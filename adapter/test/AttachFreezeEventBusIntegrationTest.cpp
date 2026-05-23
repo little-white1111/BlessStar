@@ -1,21 +1,23 @@
 /**
- * IMPL-08-09 / R8-07 A: attach freeze may notify external EventBus without ConfigManager in bootstrap.
+ * IMPL-08-09 / R8-07 A: attach freeze may notify external EventBus without ConfigManager in
+ * bootstrap.
  */
+
+#include "bs/kernel/state/ConfigEvent.h"
+#include "bs/kernel/state/EventBus.h"
 
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/registry_bootstrap.h"
-#include "bs/kernel/state/ConfigEvent.h"
-#include "bs/kernel/state/EventBus.h"
 
 #include <cassert>
 #include <cstring>
 
-static EventBus* g_bus          = nullptr;
+static EventBus* g_bus           = nullptr;
 static int       g_listener_hits = 0;
 
 static void on_attach_frozen(RegistryFacade* /*facade*/, void* user_data)
 {
-    auto* bus = static_cast<EventBus*>(user_data);
+    auto*       bus = static_cast<EventBus*>(user_data);
     ConfigEvent ev{};
     ev.configPath = "/config/attach/frozen";
     ev.type       = CONFIG_EVENT_ENTER_ACTIVE;
@@ -28,8 +30,7 @@ static void on_attach_frozen(RegistryFacade* /*facade*/, void* user_data)
 
 static void listener(const ConfigEvent* event, void* /*user*/)
 {
-    if (event && event->configPath &&
-        std::strcmp(event->configPath, "/config/attach/frozen") == 0)
+    if (event && event->configPath && std::strcmp(event->configPath, "/config/attach/frozen") == 0)
         ++g_listener_hits;
 }
 

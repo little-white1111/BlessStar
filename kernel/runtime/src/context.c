@@ -1,5 +1,5 @@
-#include "bs/kernel/runtime/Context.h"
 #include "bs/kernel/common/bs_safe_format.h"
+#include "bs/kernel/runtime/Context.h"
 
 #include <stdio.h>
 #include <stdlib.h>

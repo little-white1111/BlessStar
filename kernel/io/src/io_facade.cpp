@@ -1,10 +1,10 @@
-#include "bs/kernel/io/io.h"
-
 #include "bs/kernel/common/bs_reentrancy.h"
+#include "bs/kernel/io/io.h"
 #include "bs/kernel/registry/registry_facade.h"
 
 #include <cstdlib>
 #include <cstring>
+
 #include <new>
 
 struct IoFacade
@@ -16,7 +16,7 @@ IoFacade* bs_io_facade_create(RegistryFacade* registry)
 {
     if (!registry)
         return nullptr;
-    auto* f         = new (std::nothrow) IoFacade();
+    auto* f = new (std::nothrow) IoFacade();
     if (!f)
         return nullptr;
     f->registry = registry;
@@ -108,19 +108,19 @@ int bs_io_provider_path_for_scheme(const char* scheme, char* out_path, size_t ou
 
 static int resolve_provider(IoFacade* facade, const char* uri, IoProviderBinding** binding_out)
 {
-    char scheme[32];
+    char      scheme[32];
     const int scheme_rc = parse_scheme(uri, scheme, sizeof(scheme));
     if (scheme_rc != BS_IO_OK)
         return scheme_rc;
 
-    char provider_path[BS_REGISTRY_MAX_PATH];
-    const int path_rc = bs_io_provider_path_for_scheme(scheme, provider_path, sizeof(provider_path));
+    char      provider_path[BS_REGISTRY_MAX_PATH];
+    const int path_rc =
+        bs_io_provider_path_for_scheme(scheme, provider_path, sizeof(provider_path));
     if (path_rc != BS_IO_OK)
         return path_rc;
 
-    Binding b{};
-    const int resolve_rc =
-        bs_registry_facade_resolve(facade->registry, provider_path, &b);
+    Binding   b{};
+    const int resolve_rc = bs_registry_facade_resolve(facade->registry, provider_path, &b);
     if (resolve_rc != BS_REGISTRY_OK)
         return BS_IO_ERR_REGISTRY;
 
@@ -141,12 +141,12 @@ int bs_io_facade_read(IoFacade* facade, const char* uri, IoReadResult* out)
 
     bs_io_read_result_init(out);
 
-    char scheme[32];
+    char      scheme[32];
     const int scheme_rc = parse_scheme(uri, scheme, sizeof(scheme));
     if (scheme_rc != BS_IO_OK)
     {
-        out->status         = scheme_rc;
-        out->error_message  = io_strdup("invalid URI");
+        out->status        = scheme_rc;
+        out->error_message = io_strdup("invalid URI");
         return scheme_rc;
     }
 
@@ -158,7 +158,7 @@ int bs_io_facade_read(IoFacade* facade, const char* uri, IoReadResult* out)
     }
 
     IoProviderBinding* binding = nullptr;
-    const int bind_rc          = resolve_provider(facade, uri, &binding);
+    const int          bind_rc = resolve_provider(facade, uri, &binding);
     if (bind_rc != BS_IO_OK)
     {
         out->status        = bind_rc;
@@ -184,7 +184,7 @@ int bs_io_facade_stat(IoFacade* facade, const char* uri, int64_t* out_size, int*
     if (!facade || !uri || !out_size || !out_exists)
         return BS_IO_ERR_INVALID_ARG;
 
-    char scheme[32];
+    char      scheme[32];
     const int scheme_rc = parse_scheme(uri, scheme, sizeof(scheme));
     if (scheme_rc != BS_IO_OK)
         return scheme_rc;
@@ -192,7 +192,7 @@ int bs_io_facade_stat(IoFacade* facade, const char* uri, int64_t* out_size, int*
         return BS_IO_ERR_UNSUPPORTED_SCHEME;
 
     IoProviderBinding* binding = nullptr;
-    const int bind_rc          = resolve_provider(facade, uri, &binding);
+    const int          bind_rc = resolve_provider(facade, uri, &binding);
     if (bind_rc != BS_IO_OK)
         return bind_rc;
     if (!binding->ops || !binding->ops->stat)

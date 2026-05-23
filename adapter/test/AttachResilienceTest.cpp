@@ -2,8 +2,7 @@
  * Day 12: attach persistence, CAS, per_batch atomicity, OOM hooks (RES-IX).
  */
 
-#include "support/config_v1_golden.h"
-#include "support/day12_attach_fixture.h"
+#include "bs/kernel/report/report.h"
 
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/log/log_bus.h"
@@ -11,18 +10,23 @@
 #include "bs/adapter/orchestration/reload_gate_default.h"
 #include "bs/adapter/orchestration/reload_with_report.h"
 #include "bs/adapter/persistence/attach_store.h"
-#include "bs/kernel/report/report.h"
 
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
 
+#include "support/config_v1_golden.h"
+#include "support/day12_attach_fixture.h"
+
 namespace fs = std::filesystem;
 
-static void noop_log(uint16_t, BsLogLevel, const char*, void*) {}
+static void noop_log(uint16_t, BsLogLevel, const char*, void*)
+{
+}
 
 static int golden_read(void*, const char*, IoReadResult* out)
 {
@@ -68,8 +72,8 @@ static std::string file_uri_for(const fs::path& p)
     return u;
 }
 
-static void write_manifest_revision(const fs::path& manifest, const std::string& uri,
-                                  uint64_t rev, const char* canonical_path = nullptr)
+static void write_manifest_revision(const fs::path& manifest, const std::string& uri, uint64_t rev,
+                                    const char* canonical_path = nullptr)
 {
     std::ofstream out(manifest, std::ios::trunc);
     out << "# test manifest\nbatch_epoch=1\n";
@@ -124,8 +128,8 @@ int main()
 
     const fs::path tmp = fs::temp_directory_path() / "bs_day12_attach";
     fs::create_directories(tmp);
-    const fs::path cfg  = tmp / "cfg.json";
-    const fs::path man  = tmp / "manifest.bs";
+    const fs::path cfg = tmp / "cfg.json";
+    const fs::path man = tmp / "manifest.bs";
     {
         std::ofstream out(cfg, std::ios::binary);
         out.write(kBlessStarConfigV1Golden,
@@ -154,7 +158,7 @@ int main()
     report_destroy(report);
     assert(read_manifest_revision(man, uri) == 1);
     {
-        char path_buf[512];
+        char           path_buf[512];
         BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
         assert(rd != nullptr);
         assert(bs_attach_store_get_canonical_path(rd, uri.c_str(), path_buf, sizeof(path_buf)) ==
@@ -170,8 +174,8 @@ int main()
         assert(bs_attach_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
                                                kBlessStarConfigV1GoldenLen, 0) == BS_ATTACH_OK);
         assert(bs_attach_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
-                                               kBlessStarConfigV1GoldenLen, 0) ==
-               BS_ATTACH_ERR_CONFLICT);
+                                               kBlessStarConfigV1GoldenLen,
+                                               0) == BS_ATTACH_ERR_CONFLICT);
         assert(read_manifest_revision(man, uri) == 1);
         bs_attach_store_close(s);
     }

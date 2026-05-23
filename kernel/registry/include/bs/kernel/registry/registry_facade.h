@@ -19,8 +19,7 @@ extern "C"
     int bs_registry_facade_register_hub_mapping(RegistryFacade* facade, const char* logical_id,
                                                 const char* canonical_path, int allow_override);
     RegistrationPhase bs_registry_facade_current_phase(const RegistryFacade* facade);
-    int               bs_registry_facade_advance_phase(RegistryFacade* facade,
-                                                         RegistrationPhase phase);
+    int bs_registry_facade_advance_phase(RegistryFacade* facade, RegistrationPhase phase);
     int bs_registry_facade_bind_instance(RegistryFacade* facade, const char* path, void* impl);
     int bs_registry_facade_resolve(RegistryFacade* facade, const char* logical_id_or_path,
                                    Binding* out);
@@ -37,17 +36,16 @@ extern "C"
         uint16_t*   out_domain_id;
     } BsLogDomainRegistration;
 
-    int bs_registry_facade_register_status_domain(RegistryFacade* facade,
-                                                    const BsStatusDomainRegistration* reg);
-    int bs_registry_facade_register_log_domain(RegistryFacade* facade,
+    int bs_registry_facade_register_status_domain(RegistryFacade*                   facade,
+                                                  const BsStatusDomainRegistration* reg);
+    int bs_registry_facade_register_log_domain(RegistryFacade*                facade,
                                                const BsLogDomainRegistration* reg);
 
-    const char* bs_registry_facade_status_domain_qname(const RegistryFacade* facade,
-                                                       int domain_id);
+    const char* bs_registry_facade_status_domain_qname(const RegistryFacade* facade, int domain_id);
     const char* bs_registry_facade_status_code_name(const RegistryFacade* facade, int domain_id,
                                                     int code);
-    uint16_t bs_registry_facade_log_domain_id_by_qname(const RegistryFacade* facade,
-                                                       const char* domain_qname);
+    uint16_t    bs_registry_facade_log_domain_id_by_qname(const RegistryFacade* facade,
+                                                          const char*           domain_qname);
 
 #ifdef __cplusplus
 }

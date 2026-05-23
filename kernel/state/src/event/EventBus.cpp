@@ -1,7 +1,6 @@
+#include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/state/ConfigEvent.h"
 #include "bs/kernel/state/EventBus.h"
-
-#include "bs/kernel/common/bs_reentrancy.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -84,9 +83,8 @@ int EventBus_Publish(EventBus* bus, const ConfigEvent* event)
     if (!bus || !event || !event->configPath)
         return -1;
 
-    ConfigEvent* copy =
-        ConfigEvent_Create(event->configPath, event->type, event->fromState, event->toState,
-                           event->version);
+    ConfigEvent* copy = ConfigEvent_Create(event->configPath, event->type, event->fromState,
+                                           event->toState, event->version);
     if (!copy)
         return -1;
 
@@ -115,7 +113,7 @@ int EventBus_Drain(EventBus* bus)
         }
 
         std::shared_lock<std::shared_mutex> lock(bus->mutex);
-        auto it = bus->listeners.find(event->configPath);
+        auto                                it = bus->listeners.find(event->configPath);
         if (it == bus->listeners.end())
         {
             ConfigEvent_Destroy(event);

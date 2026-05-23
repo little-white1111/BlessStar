@@ -2,15 +2,9 @@
 #include "bs/kernel/io/io_status_table.h"
 
 const BsStatusCodeEntry k_io_status_table[] = {
-    {0, "OK", 0},
-    {1, "INVALID_URI", 0},
-    {2, "UNSUPPORTED_SCHEME", 0},
-    {3, "PROVIDER", 0},
-    {4, "READ_LIMIT", 0},
-    {5, "TIMEOUT", 0},
-    {6, "NOT_FOUND", 0},
-    {7, "INVALID_ARG", 0},
-    {8, "REGISTRY", 0},
+    {0, "OK", 0},          {1, "INVALID_URI", 0}, {2, "UNSUPPORTED_SCHEME", 0},
+    {3, "PROVIDER", 0},    {4, "READ_LIMIT", 0},  {5, "TIMEOUT", 0},
+    {6, "NOT_FOUND", 0},   {7, "INVALID_ARG", 0}, {8, "REGISTRY", 0},
     {9, "NO_PROVIDER", 0},
 };
 

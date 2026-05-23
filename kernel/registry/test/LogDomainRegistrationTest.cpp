@@ -24,7 +24,8 @@ int main()
     BsLogDomainRegistration orphan_log{};
     orphan_log.domain_qname = "missing";
     orphan_log.flags        = 0;
-    assert(bs_registry_facade_register_log_domain(facade, &orphan_log) == BS_REGISTRY_ERR_NOT_FOUND);
+    assert(bs_registry_facade_register_log_domain(facade, &orphan_log) ==
+           BS_REGISTRY_ERR_NOT_FOUND);
 
     assert(bs_registry_facade_freeze(facade) == BS_REGISTRY_OK);
 

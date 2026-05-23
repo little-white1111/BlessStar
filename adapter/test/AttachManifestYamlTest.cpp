@@ -10,7 +10,7 @@ int main()
     assert(bs_adapter_plugin_manifest_path("attach_plugins.yaml", path, sizeof(path)) == 0);
 
     AttachManifestPluginConfig cfgs[8];
-    const int n = bs_adapter_attach_manifest_yaml_load(path, cfgs, 8);
+    const int                  n = bs_adapter_attach_manifest_yaml_load(path, cfgs, 8);
     assert(n == 3);
 
     for (int i = 0; i < n; ++i)

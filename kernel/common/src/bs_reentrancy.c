@@ -1,7 +1,7 @@
 #include "bs/kernel/common/bs_reentrancy.h"
 
 #ifdef _WIN32
-#    include <windows.h>
+#include <windows.h>
 static __declspec(thread) int g_in_state_callback = 0;
 #else
 static __thread int g_in_state_callback = 0;

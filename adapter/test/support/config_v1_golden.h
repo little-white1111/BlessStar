@@ -18,7 +18,6 @@ static const char kBlessStarConfigV1Golden[] = R"({
   ]
 })";
 
-static const size_t kBlessStarConfigV1GoldenLen =
-    sizeof(kBlessStarConfigV1Golden) - 1;
+static const size_t kBlessStarConfigV1GoldenLen = sizeof(kBlessStarConfigV1Golden) - 1;
 
 #endif /* BS_TEST_CONFIG_V1_GOLDEN_H */

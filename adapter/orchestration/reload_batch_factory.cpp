@@ -34,12 +34,12 @@ int bs_adapter_reload_batch_register_factory(RegistryFacade* facade)
     entry.type_constraint = "reload_batch";
 
     if (bs_registry_facade_register_declaration(facade, "/adapter/orchestration/reload_batch",
-                                                 &entry) != BS_REGISTRY_OK)
+                                                &entry) != BS_REGISTRY_OK)
         return -1;
 
-    if (bs_registry_facade_register_hub_mapping(
-            facade, "adapter.orchestration.reload_batch", "/adapter/orchestration/reload_batch",
-            0) != BS_REGISTRY_OK)
+    if (bs_registry_facade_register_hub_mapping(facade, "adapter.orchestration.reload_batch",
+                                                "/adapter/orchestration/reload_batch",
+                                                0) != BS_REGISTRY_OK)
         return -1;
 
     if (bs_registry_facade_bind_instance(facade, "/adapter/orchestration/reload_batch",
@@ -50,7 +50,7 @@ int bs_adapter_reload_batch_register_factory(RegistryFacade* facade)
 }
 
 ReloadBatchController* bs_reload_batch_controller_create_from_binding(const Binding* binding,
-                                                                      unsigned max_inflight)
+                                                                      unsigned       max_inflight)
 {
     if (!binding || !binding->impl)
         return nullptr;
@@ -60,8 +60,8 @@ ReloadBatchController* bs_reload_batch_controller_create_from_binding(const Bind
     return factory->create(max_inflight, factory->user_ctx);
 }
 
-void bs_reload_batch_controller_destroy_from_binding(const Binding* binding,
-                                                   ReloadBatchController* ctrl)
+void bs_reload_batch_controller_destroy_from_binding(const Binding*         binding,
+                                                     ReloadBatchController* ctrl)
 {
     if (!binding || !binding->impl || !ctrl)
         return;

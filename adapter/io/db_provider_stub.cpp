@@ -58,7 +58,8 @@ static const IoProviderOps kDbOps = {
 
 static DbProviderStub* db_instance(void)
 {
-    static DbProviderStub* inst = []() {
+    static DbProviderStub* inst = []()
+    {
         auto* p        = new DbProviderStub();
         p->binding.ops = &kDbOps;
         p->binding.ctx = p;

@@ -1,10 +1,10 @@
-#include "bs/kernel/registry/registry_facade.h"
-
 #include "bs/kernel/registry/path_normalize.h"
 #include "bs/kernel/registry/path_registry.h"
+#include "bs/kernel/registry/registry_facade.h"
 #include "bs/kernel/registry/registry_hub.h"
 
 #include <cstring>
+
 #include <string>
 #include <vector>
 
@@ -25,8 +25,8 @@ struct LogDomainRecord
 
 struct RegistryFacade
 {
-    PathRegistry*                  registry = nullptr;
-    RegistryHub*                   hub      = nullptr;
+    PathRegistry*                   registry = nullptr;
+    RegistryHub*                    hub      = nullptr;
     std::vector<StatusDomainRecord> status_domains;
     std::vector<LogDomainRecord>    log_domains;
     uint16_t                        next_domain_id = 1;
@@ -50,7 +50,7 @@ static const StatusDomainRecord* find_status_by_id(const RegistryFacade* facade,
 }
 
 static const StatusDomainRecord* find_status_by_qname(const RegistryFacade* facade,
-                                                      const char* qname)
+                                                      const char*           qname)
 {
     if (!facade || !qname)
         return nullptr;
@@ -64,7 +64,7 @@ static const StatusDomainRecord* find_status_by_qname(const RegistryFacade* faca
 
 RegistryFacade* bs_registry_facade_create(void)
 {
-    auto* f    = new RegistryFacade();
+    auto* f     = new RegistryFacade();
     f->registry = bs_path_registry_create();
     f->hub      = bs_registry_hub_create();
     return f;
@@ -109,8 +109,7 @@ int bs_registry_facade_register_declaration(RegistryFacade* facade, const char* 
     if (!facade || !path || !entry)
         return BS_REGISTRY_ERR_INVALID_ARG;
 
-    const int manifest_rc =
-        bs_registry_facade_verify_manifest_ref(path, entry->manifest_ref);
+    const int manifest_rc = bs_registry_facade_verify_manifest_ref(path, entry->manifest_ref);
     if (manifest_rc != BS_REGISTRY_OK)
         return manifest_rc;
 
@@ -147,8 +146,7 @@ int bs_registry_facade_bind_instance(RegistryFacade* facade, const char* path, v
     return bs_path_registry_bind_instance(facade->registry, path, impl);
 }
 
-int bs_registry_facade_resolve(RegistryFacade* facade, const char* logical_id_or_path,
-                               Binding* out)
+int bs_registry_facade_resolve(RegistryFacade* facade, const char* logical_id_or_path, Binding* out)
 {
     if (!facade || !logical_id_or_path || !out)
         return BS_REGISTRY_ERR_INVALID_ARG;
@@ -156,7 +154,7 @@ int bs_registry_facade_resolve(RegistryFacade* facade, const char* logical_id_or
     if (logical_id_or_path[0] == '/')
         return bs_path_registry_resolve(facade->registry, logical_id_or_path, out);
 
-    char canonical[BS_REGISTRY_MAX_PATH];
+    char      canonical[BS_REGISTRY_MAX_PATH];
     const int hub_rc =
         bs_registry_hub_resolve(facade->hub, logical_id_or_path, canonical, sizeof(canonical));
     if (hub_rc != BS_REGISTRY_OK)
@@ -179,7 +177,7 @@ uint64_t bs_registry_facade_snapshot_id(const RegistryFacade* facade)
     return 0;
 }
 
-int bs_registry_facade_register_status_domain(RegistryFacade* facade,
+int bs_registry_facade_register_status_domain(RegistryFacade*                   facade,
                                               const BsStatusDomainRegistration* reg)
 {
     if (!facade || !reg || !reg->domain_qname || reg->domain_qname[0] == '\0' || !reg->table ||
@@ -202,7 +200,7 @@ int bs_registry_facade_register_status_domain(RegistryFacade* facade,
     return BS_REGISTRY_OK;
 }
 
-int bs_registry_facade_register_log_domain(RegistryFacade* facade,
+int bs_registry_facade_register_log_domain(RegistryFacade*                facade,
                                            const BsLogDomainRegistration* reg)
 {
     if (!facade || !reg || !reg->domain_qname || reg->domain_qname[0] == '\0')
@@ -252,7 +250,7 @@ const char* bs_registry_facade_status_code_name(const RegistryFacade* facade, in
 }
 
 uint16_t bs_registry_facade_log_domain_id_by_qname(const RegistryFacade* facade,
-                                                   const char* domain_qname)
+                                                   const char*           domain_qname)
 {
     if (!facade || !domain_qname)
         return 0;

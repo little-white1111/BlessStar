@@ -1,6 +1,6 @@
-#include "bs/adapter/parser/config_v1_ir.h"
-
 #include "bs/kernel/ir/resolver.h"
+
+#include "bs/adapter/parser/config_v1_ir.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -26,7 +26,7 @@ IRRequirementList* config_v1_build_manual_requirements(const ConfigV1Ast* ast)
             bs_requirement_list_free(list);
             return NULL;
         }
-        const size_t n = strlen(type) + 1;
+        const size_t n   = strlen(type) + 1;
         char*        dup = (char*)malloc(n);
         if (!dup)
         {

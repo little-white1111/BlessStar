@@ -6,7 +6,7 @@ int bs_safe_vsnprintf(char* buf, size_t cap, const char* fmt, va_list ap)
 {
     if (!buf || cap == 0)
         return 0;
-    const int n = vsnprintf(buf, cap, fmt, ap);
+    const int n  = vsnprintf(buf, cap, fmt, ap);
     buf[cap - 1] = '\0';
     return n;
 }

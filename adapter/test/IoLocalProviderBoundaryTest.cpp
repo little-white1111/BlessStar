@@ -1,9 +1,11 @@
-#include "bs/adapter/io/local_file_provider.h"
 #include "bs/kernel/io/io.h"
+
+#include "bs/adapter/io/local_file_provider.h"
 
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -30,8 +32,8 @@ static std::string file_uri(const std::string& path)
 
 int main()
 {
-    const fs::path base = fs::absolute("bs_io_local_boundary");
-    std::error_code  ec;
+    const fs::path  base = fs::absolute("bs_io_local_boundary");
+    std::error_code ec;
     fs::remove_all(base, ec);
     fs::create_directories(base, ec);
 
@@ -46,17 +48,16 @@ int main()
     bs_io_read_result_free(&nf);
 
     /* utf-16-le BOM */
-    const unsigned char u16[] = {0xFF, 0xFE, 'a'};
-    const std::string   u16_path =
-        write_file(base / "u16.txt", u16, sizeof(u16));
-    IoReadResult u16r{};
-    assert(binding->ops->read(binding->ctx, file_uri(u16_path).c_str(), &u16r,
-                              BS_IO_MAX_READ_BYTES, BS_IO_READ_TIMEOUT_MS_DEFAULT) == BS_IO_OK);
+    const unsigned char u16[]    = {0xFF, 0xFE, 'a'};
+    const std::string   u16_path = write_file(base / "u16.txt", u16, sizeof(u16));
+    IoReadResult        u16r{};
+    assert(binding->ops->read(binding->ctx, file_uri(u16_path).c_str(), &u16r, BS_IO_MAX_READ_BYTES,
+                              BS_IO_READ_TIMEOUT_MS_DEFAULT) == BS_IO_OK);
     assert(u16r.encoding_hint && std::strcmp(u16r.encoding_hint, "utf-16-le-bom") == 0);
     bs_io_read_result_free(&u16r);
 
     /* truncation via max_read */
-    const char payload[] = "123456789";
+    const char        payload[]  = "123456789";
     const std::string trunc_path = write_file(base / "trunc.txt", payload, sizeof(payload) - 1);
     IoReadResult      tr{};
     assert(binding->ops->read(binding->ctx, file_uri(trunc_path).c_str(), &tr, 4, 30000) ==
@@ -66,7 +67,7 @@ int main()
     bs_io_read_result_free(&tr);
 
     /* stat */
-    int64_t size = 0;
+    int64_t size   = 0;
     int     exists = 0;
     assert(binding->ops->stat(binding->ctx, file_uri(trunc_path).c_str(), &size, &exists) ==
            BS_IO_OK);

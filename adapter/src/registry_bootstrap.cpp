@@ -1,9 +1,8 @@
-#include "bs/adapter/registry_bootstrap.h"
-
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/log/log_bus.h"
 #include "bs/adapter/plugin/plugin_loader.h"
+#include "bs/adapter/registry_bootstrap.h"
 #include "bs/adapter/requirement_filter.h"
 
 static BsAdapterStateNotifierFn g_state_notifier      = nullptr;

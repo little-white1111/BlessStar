@@ -1,10 +1,11 @@
 #ifndef BS_ADAPTER_PARSER_CONFIG_PARSE_H
 #define BS_ADAPTER_PARSER_CONFIG_PARSE_H
 
-#include "bs/adapter/parser/config_parse_status.h"
 #include "bs/kernel/common/bs_status.h"
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/ir/requirements.h"
+
+#include "bs/adapter/parser/config_parse_status.h"
 
 #include <stddef.h>
 #include <stdint.h>

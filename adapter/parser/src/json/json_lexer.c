@@ -1,8 +1,8 @@
 #include "bs/adapter/parser/json_lexer.h"
-
 #include "bs/adapter/parser/json_utf8.h"
 
 #include <ctype.h>
+
 #include <string.h>
 
 static int is_hex(int c)
@@ -21,12 +21,12 @@ static int hex_val(char c)
 
 static void set_error_token(JsonLexer* lex, size_t line, size_t column)
 {
-    lex->has_error          = 1;
-    lex->current.type       = JSON_TOK_ERROR;
-    lex->current.start      = lex->cur;
-    lex->current.length     = 0;
-    lex->current.line       = line;
-    lex->current.column     = column;
+    lex->has_error      = 1;
+    lex->current.type   = JSON_TOK_ERROR;
+    lex->current.start  = lex->cur;
+    lex->current.length = 0;
+    lex->current.line   = line;
+    lex->current.column = column;
 }
 
 static void skip_ws(JsonLexer* lex)
@@ -130,8 +130,8 @@ static JsonToken lex_string(JsonLexer* lex)
                 decoded_codepoints += 1;
                 continue;
             }
-            if (e == '"' || e == '\\' || e == '/' || e == 'b' || e == 'f' || e == 'n' ||
-                e == 'r' || e == 't')
+            if (e == '"' || e == '\\' || e == '/' || e == 'b' || e == 'f' || e == 'n' || e == 'r' ||
+                e == 't')
             {
                 ++lex->cur;
                 ++lex->column;
@@ -248,11 +248,11 @@ void json_lexer_init(JsonLexer* lex, const char* data, size_t len)
 {
     if (!lex)
         return;
-    lex->start = data;
-    lex->cur   = data;
-    lex->end   = data + len;
-    lex->line  = 1;
-    lex->column = 1;
+    lex->start     = data;
+    lex->cur       = data;
+    lex->end       = data + len;
+    lex->line      = 1;
+    lex->column    = 1;
     lex->has_error = 0;
     lex->current   = make_token(lex, JSON_TOK_EOF, data, 0, 1, 1);
 }
@@ -272,7 +272,7 @@ JsonToken json_lexer_next(JsonLexer* lex)
         return lex->current;
     }
 
-    const char c = *lex->cur;
+    const char  c     = *lex->cur;
     const char* start = lex->cur;
     ++lex->cur;
     ++lex->column;

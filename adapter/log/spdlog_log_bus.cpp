@@ -1,17 +1,18 @@
+#include "bs/kernel/common/bs_safe_format.h"
+
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/log/log_bus.h"
-#include "bs/kernel/common/bs_safe_format.h"
 
 #include <cstdarg>
 #include <cstdio>
+
 #include <memory>
 #include <mutex>
-#include <string>
-#include <vector>
-
 #include <spdlog/sinks/null_sink.h>
 #include <spdlog/spdlog.h>
+#include <string>
+#include <vector>
 
 static std::shared_ptr<spdlog::logger> g_logger;
 static std::recursive_mutex            g_log_mutex;
@@ -39,7 +40,7 @@ static spdlog::level::level_enum map_level(BsLogLevel level)
 
 static void spdlog_emit(uint16_t domain_id, BsLogLevel level, const char* fmt, va_list ap)
 {
-    char buf[512];
+    char    buf[512];
     va_list copy;
     va_copy(copy, ap);
     bs_safe_vsnprintf(buf, sizeof(buf), fmt, copy);
@@ -94,7 +95,7 @@ static MemoryBusCtx g_mem_ctx{};
 
 static void memory_emit(uint16_t domain_id, BsLogLevel level, const char* fmt, va_list ap)
 {
-    char buf[512];
+    char    buf[512];
     va_list copy;
     va_copy(copy, ap);
     bs_safe_vsnprintf(buf, sizeof(buf), fmt, copy);
@@ -111,7 +112,7 @@ int bs_adapter_log_bind_memory_bus(void (*on_line)(uint16_t domain_id, BsLogLeve
 {
     g_mem_ctx.on_line = on_line;
     g_mem_ctx.user    = ctx;
-    const int rc = bs_log_bind_bus(&g_memory_ops);
+    const int rc      = bs_log_bind_bus(&g_memory_ops);
     if (rc == 0)
     {
         bs_adapter_attach_ensure_active_ctx();

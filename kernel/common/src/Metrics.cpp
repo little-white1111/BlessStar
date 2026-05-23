@@ -1,5 +1,7 @@
 #include "bs/kernel/common/Metrics.h"
 
+#include <cstdlib>
+
 #include <atomic>
 #include <mutex>
 #include <string>

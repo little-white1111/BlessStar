@@ -17,8 +17,8 @@ int main()
     assert(std::strcmp(path, "/kernel/ir/resolver/default") == 0);
 
     assert(bs_registry_hub_register_mapping(hub, "kernel.ir.resolver.default",
-                                            "/kernel/ir/resolver/other", 0) ==
-           BS_REGISTRY_ERR_HUB_OVERRIDE);
+                                            "/kernel/ir/resolver/other",
+                                            0) == BS_REGISTRY_ERR_HUB_OVERRIDE);
 
     assert(bs_registry_hub_register_mapping(hub, "too.few", "/kernel/x", 0) ==
            BS_REGISTRY_ERR_LOGICAL_ID);

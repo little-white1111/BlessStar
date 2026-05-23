@@ -11,7 +11,8 @@ extern "C"
     extern const BsStatusCodeEntry k_io_status_table[];
     extern const size_t            k_io_status_table_len;
 
-    /** After `register_status_domain` for `"io"`, pass the assigned `out_domain_id` (IMPL-08-13). */
+    /** After `register_status_domain` for `"io"`, pass the assigned `out_domain_id` (IMPL-08-13).
+     */
     void bs_io_status_set_domain_id(uint16_t domain_id);
 
     BsStatus bs_status_from_io(int io_status);

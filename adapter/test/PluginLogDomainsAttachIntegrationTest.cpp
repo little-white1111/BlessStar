@@ -2,13 +2,13 @@
  * IMPL-08-17 + day8: log-domains plugin registers io/registry status+log domains before freeze.
  */
 
-#include "support/attach_test_fixture.h"
-
 #include "bs/kernel/common/bs_status.h"
 #include "bs/kernel/io/io_status_table.h"
 #include "bs/kernel/registry/registry_status_table.h"
 
 #include <cstring>
+
+#include "support/attach_test_fixture.h"
 
 int main()
 {
@@ -23,12 +23,12 @@ int main()
     io_reg.domain_qname  = "io";
     io_reg.table         = k_io_status_table;
     io_reg.table_len     = k_io_status_table_len;
-    uint16_t unused_id = 0;
+    uint16_t unused_id   = 0;
     io_reg.out_domain_id = &unused_id;
     BS_TEST_REQUIRE("frozen", bs_registry_facade_register_status_domain(fix.facade, &io_reg) ==
-                                   BS_REGISTRY_ERR_FROZEN);
+                                  BS_REGISTRY_ERR_FROZEN);
 
-    char buf[64];
+    char           buf[64];
     const BsStatus st = bs_status_make(1, 5);
     BS_TEST_REQUIRE("format", bs_status_format(st, fix.facade, buf, sizeof(buf)) == 0);
     BS_TEST_REQUIRE("format", std::strcmp(buf, "io.TIMEOUT") == 0);
@@ -41,7 +41,7 @@ int main()
     late_log.domain_qname = "io";
     late_log.flags        = 0;
     BS_TEST_REQUIRE("frozen", bs_registry_facade_register_log_domain(fix.facade, &late_log) ==
-                                 BS_REGISTRY_ERR_FROZEN);
+                                  BS_REGISTRY_ERR_FROZEN);
 
     bs_test_attach_teardown(&fix);
     return 0;

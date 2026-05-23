@@ -22,14 +22,14 @@ extern "C"
 
     BsLogState* bs_attach_context_log_state(AttachContext* ctx);
 
-    int bs_attach_context_is_log_bus_bound(const AttachContext* ctx);
+    int  bs_attach_context_is_log_bus_bound(const AttachContext* ctx);
     void bs_attach_context_set_log_bus_bound(AttachContext* ctx, int bound);
 
     BsLogLevel bs_attach_context_get_log_level(const AttachContext* ctx);
     void       bs_attach_context_set_log_level(AttachContext* ctx, BsLogLevel level);
 
     /** Phase 1: optional active ctx for attach_runtime / legacy bootstrap compat. */
-    void bs_attach_context_set_active(AttachContext* ctx);
+    void           bs_attach_context_set_active(AttachContext* ctx);
     AttachContext* bs_attach_context_get_active(void);
 
     /** Legacy bootstrap bridge: ctx does not own registry (IMPL-08-06 phase 2). */

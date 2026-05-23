@@ -4,8 +4,8 @@
 #include <cassert>
 #include <cstring>
 
-static int g_audit_seen  = 0;
-static int g_debug_seen  = 0;
+static int g_audit_seen = 0;
+static int g_debug_seen = 0;
 
 static void capture(uint16_t, BsLogLevel level, const char* line, void*)
 {

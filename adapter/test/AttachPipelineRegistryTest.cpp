@@ -9,11 +9,12 @@
  * state hot-reload via registry, snapshot switch.
  */
 
-#include "bs/adapter/registry_bootstrap.h"
-#include "bs/adapter/requirement_filter.h"
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/ir/requirements.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/registry_bootstrap.h"
+#include "bs/adapter/requirement_filter.h"
 
 #include <cassert>
 #include <cstring>
@@ -51,8 +52,8 @@ int main()
     assert(bs_registry_facade_register_declaration(facade, "/adapter/plugin/test_plugin",
                                                    &plugin) == BS_REGISTRY_OK);
     assert(bs_registry_facade_register_hub_mapping(facade, "adapter.plugin.test_plugin",
-                                                   "/adapter/plugin/test_plugin", 0) ==
-           BS_REGISTRY_OK);
+                                                   "/adapter/plugin/test_plugin",
+                                                   0) == BS_REGISTRY_OK);
     assert(bs_registry_facade_bind_instance(facade, "/adapter/plugin/test_plugin",
                                             reinterpret_cast<void*>(g_plugin_dispatch)) ==
            BS_REGISTRY_OK);

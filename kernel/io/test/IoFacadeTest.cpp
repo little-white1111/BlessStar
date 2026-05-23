@@ -14,10 +14,10 @@ static int mock_read(void* provider_ctx, const char* uri, IoReadResult* out, siz
     if (!out)
         return BS_IO_ERR_INVALID_ARG;
     bs_io_read_result_init(out);
-    out->status = BS_IO_OK;
+    out->status          = BS_IO_OK;
     const char payload[] = "ok";
-    out->length = sizeof(payload) - 1;
-    out->data   = static_cast<uint8_t*>(std::malloc(out->length));
+    out->length          = sizeof(payload) - 1;
+    out->data            = static_cast<uint8_t*>(std::malloc(out->length));
     std::memcpy(out->data, payload, out->length);
     out->source_uri = static_cast<char*>(std::malloc(std::strlen(uri) + 1));
     std::strcpy(out->source_uri, uri);

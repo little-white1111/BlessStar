@@ -1,8 +1,9 @@
 #ifndef BS_ADAPTER_ORCHESTRATION_RELOAD_BATCH_CONTROLLER_H
 #define BS_ADAPTER_ORCHESTRATION_RELOAD_BATCH_CONTROLLER_H
 
-#include "bs/adapter/persistence/attach_store.h"
 #include "bs/kernel/io/io.h"
+
+#include "bs/adapter/persistence/attach_store.h"
 
 struct Report;
 
@@ -20,13 +21,13 @@ extern "C"
     typedef enum PathOrchestrationState
     {
         BS_ORCH_PENDING          = 0,
-        BS_ORCH_READING            = 1,
-        BS_ORCH_GATING             = 2,
-        BS_ORCH_COMMITTED          = 3,
-        BS_ORCH_GATE_REJECTED      = 4,
-        BS_ORCH_FAILED_READ        = 5,
-        BS_ORCH_PERSIST_REJECTED   = 6,
-        BS_ORCH_STAGED             = 7
+        BS_ORCH_READING          = 1,
+        BS_ORCH_GATING           = 2,
+        BS_ORCH_COMMITTED        = 3,
+        BS_ORCH_GATE_REJECTED    = 4,
+        BS_ORCH_FAILED_READ      = 5,
+        BS_ORCH_PERSIST_REJECTED = 6,
+        BS_ORCH_STAGED           = 7
     } PathOrchestrationState;
 
 #define BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT (16u * 1024u * 1024u)
@@ -40,7 +41,8 @@ extern "C"
         char buf[256];
     } BsReloadGateDetail;
 
-    typedef int (*ReloadPathGateFn)(void* user_ctx, const char* uri, const IoReadResult* read_result,
+    typedef int (*ReloadPathGateFn)(void* user_ctx, const char* uri,
+                                    const IoReadResult* read_result,
                                     BsReloadGateDetail* detail_out);
 
     ReloadBatchController* bs_reload_batch_controller_create(unsigned max_inflight);
@@ -57,13 +59,13 @@ extern "C"
     void bs_reload_batch_controller_set_report(ReloadBatchController* ctrl, struct Report* report);
 
     int bs_reload_batch_controller_set_attach_scheme(ReloadBatchController* ctrl,
-                                                     BsAttachScheme scheme);
+                                                     BsAttachScheme         scheme);
 
     void bs_reload_batch_controller_set_manifest_path(ReloadBatchController* ctrl,
-                                                      const char* manifest_path);
+                                                      const char*            manifest_path);
 
     void bs_reload_batch_controller_set_session_memory_cap(ReloadBatchController* ctrl,
-                                                           size_t cap_bytes);
+                                                           size_t                 cap_bytes);
 
     int bs_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri);
 
@@ -72,7 +74,7 @@ extern "C"
     BatchOutcome bs_reload_batch_outcome(const ReloadBatchController* ctrl);
 
     PathOrchestrationState bs_reload_batch_path_state(const ReloadBatchController* ctrl,
-                                                      const char* uri);
+                                                      const char*                  uri);
 
 #ifdef __cplusplus
 }

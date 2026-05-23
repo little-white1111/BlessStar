@@ -1,8 +1,7 @@
-#include "bs/adapter/plugin/plugin_loader.h"
-
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/plugin/attach_manifest_yaml.h"
 #include "bs/adapter/plugin/plugin_api.h"
+#include "bs/adapter/plugin/plugin_loader.h"
 #include "bs/adapter/plugin/plugin_manifest_paths.h"
 
 #include <cstring>
@@ -21,10 +20,10 @@ struct PluginDesc
 
 struct PluginRuntime
 {
-    int                   enabled;
-    const char*           depends_on[8];
-    int                   depends_count;
-    const char*           depends_storage[8];
+    int         enabled;
+    const char* depends_on[8];
+    int         depends_count;
+    const char* depends_storage[8];
 };
 
 static const char* k_no_deps[] = {nullptr};
@@ -86,7 +85,7 @@ static void apply_yaml_config_resolved(const char* resolved_path)
         return;
 
     AttachManifestPluginConfig cfgs[8];
-    const int n = bs_adapter_attach_manifest_yaml_load(resolved_path, cfgs, 8);
+    const int                  n = bs_adapter_attach_manifest_yaml_load(resolved_path, cfgs, 8);
     if (n <= 0)
         return;
 
@@ -235,9 +234,8 @@ int bs_adapter_plugin_loader_load_all(AttachContext* ctx, const char* attach_man
     init_runtime_defaults();
 
     {
-        char path[512];
-        const char* src =
-            attach_manifest_path ? attach_manifest_path : "attach_plugins.yaml";
+        char        path[512];
+        const char* src = attach_manifest_path ? attach_manifest_path : "attach_plugins.yaml";
         if (bs_adapter_plugin_manifest_path(src, path, sizeof(path)) == 0)
             apply_yaml_config_resolved(path);
     }

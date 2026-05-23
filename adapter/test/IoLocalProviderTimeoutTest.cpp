@@ -1,7 +1,9 @@
-#include "bs/adapter/io/local_file_provider.h"
 #include "bs/kernel/io/io.h"
 
+#include "bs/adapter/io/local_file_provider.h"
+
 #include <cassert>
+
 #include <filesystem>
 #include <fstream>
 

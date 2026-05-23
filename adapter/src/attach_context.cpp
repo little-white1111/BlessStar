@@ -42,8 +42,8 @@ AttachContext* bs_attach_context_create(void)
         return nullptr;
     }
 
-    ctx->owns_registry  = 1;
-    ctx->log_bus_bound  = 0;
+    ctx->owns_registry = 1;
+    ctx->log_bus_bound = 0;
     bs_log_state_init(&ctx->log_state);
     return ctx;
 }
@@ -140,10 +140,10 @@ AttachContext* bs_attach_context_legacy_bootstrap(void)
     if (!g_legacy_initialized)
     {
         bs_log_state_init(&g_legacy_bootstrap_ctx.log_state);
-        g_legacy_bootstrap_ctx.registry       = nullptr;
-        g_legacy_bootstrap_ctx.owns_registry  = 0;
-        g_legacy_bootstrap_ctx.log_bus_bound  = 0;
-        g_legacy_initialized                  = 1;
+        g_legacy_bootstrap_ctx.registry      = nullptr;
+        g_legacy_bootstrap_ctx.owns_registry = 0;
+        g_legacy_bootstrap_ctx.log_bus_bound = 0;
+        g_legacy_initialized                 = 1;
     }
     return &g_legacy_bootstrap_ctx;
 }

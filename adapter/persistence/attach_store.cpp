@@ -1,32 +1,34 @@
 #include "bs/adapter/persistence/attach_store.h"
 
-#include "attach_uri_path.h"
-
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "attach_uri_path.h"
+
 struct StagedEntry
 {
-    std::string uri;
-    std::string path;
+    std::string          uri;
+    std::string          path;
     std::vector<uint8_t> data;
     uint64_t             expected_rev = 0;
 };
 
 struct BsAttachStore
 {
-    std::string manifest_path;
-    bool        memory_only = false;
-    uint64_t    batch_epoch = 0;
-    std::unordered_map<std::string, uint64_t> revisions;
+    std::string                                  manifest_path;
+    bool                                         memory_only = false;
+    uint64_t                                     batch_epoch = 0;
+    std::unordered_map<std::string, uint64_t>    revisions;
     std::unordered_map<std::string, std::string> canonical_paths;
     std::vector<StagedEntry>                     staged;
-    bool                                      batch_open = false;
+    bool                                         batch_open = false;
 };
 
 static BsAttachMallocFn g_malloc_hook = nullptr;
@@ -97,7 +99,8 @@ static int load_manifest_file(BsAttachStore* store)
             continue;
         if (line.rfind("batch_epoch=", 0) == 0)
         {
-            store->batch_epoch = static_cast<uint64_t>(std::strtoull(line.c_str() + 12, nullptr, 10));
+            store->batch_epoch =
+                static_cast<uint64_t>(std::strtoull(line.c_str() + 12, nullptr, 10));
             continue;
         }
         if (line.rfind("[uri=", 0) == 0 && line.size() > 6 && line.back() == ']')
@@ -195,7 +198,7 @@ int bs_attach_store_get_revision(const BsAttachStore* store, const char* uri, ui
 static int commit_one(BsAttachStore* store, const char* uri, const char* path, const void* data,
                       size_t len, uint64_t expected_rev)
 {
-    const auto it = store->revisions.find(uri);
+    const auto     it      = store->revisions.find(uri);
     const uint64_t current = (it == store->revisions.end()) ? 0 : it->second;
     if (current != expected_rev)
         return BS_ATTACH_ERR_CONFLICT;
@@ -207,7 +210,7 @@ static int commit_one(BsAttachStore* store, const char* uri, const char* path, c
             return wr;
     }
 
-    store->revisions[uri]        = expected_rev + 1;
+    store->revisions[uri]       = expected_rev + 1;
     store->canonical_paths[uri] = path;
     return BS_ATTACH_OK;
 }
@@ -249,8 +252,8 @@ void bs_attach_store_batch_begin(BsAttachStore* store)
     store->batch_open = true;
 }
 
-int bs_attach_store_batch_stage(BsAttachStore* store, const char* uri, const void* data,
-                                size_t len, uint64_t expected_rev)
+int bs_attach_store_batch_stage(BsAttachStore* store, const char* uri, const void* data, size_t len,
+                                uint64_t expected_rev)
 {
     if (!store || !store->batch_open || !uri || (!data && len > 0))
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -259,9 +262,9 @@ int bs_attach_store_batch_stage(BsAttachStore* store, const char* uri, const voi
         return BS_ATTACH_ERR_INVALID_ARG;
 
     StagedEntry e;
-    e.uri           = uri;
-    e.path          = path;
-    e.expected_rev  = expected_rev;
+    e.uri          = uri;
+    e.path         = path;
+    e.expected_rev = expected_rev;
     e.data.resize(len);
     if (len > 0)
         std::memcpy(e.data.data(), data, len);
@@ -276,7 +279,7 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
 
     for (const auto& e : store->staged)
     {
-        const auto it = store->revisions.find(e.uri);
+        const auto     it      = store->revisions.find(e.uri);
         const uint64_t current = (it == store->revisions.end()) ? 0 : it->second;
         if (current != e.expected_rev)
         {
@@ -289,15 +292,14 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
     {
         if (!store->memory_only)
         {
-            const int wr =
-                write_file_atomic(e.path.c_str(), e.data.data(), e.data.size());
+            const int wr = write_file_atomic(e.path.c_str(), e.data.data(), e.data.size());
             if (wr != BS_ATTACH_OK)
             {
                 bs_attach_store_batch_abort(store);
                 return wr;
             }
         }
-        store->revisions[e.uri]           = e.expected_rev + 1;
+        store->revisions[e.uri]       = e.expected_rev + 1;
         store->canonical_paths[e.uri] = e.path;
     }
 

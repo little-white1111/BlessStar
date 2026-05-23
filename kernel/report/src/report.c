@@ -1,5 +1,5 @@
-#include "bs/kernel/report/report.h"
 #include "bs/kernel/common/bs_safe_format.h"
+#include "bs/kernel/report/report.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -224,8 +224,9 @@ char* report_to_string(const Report* report)
     if (!result)
         return NULL;
 
-    bs_safe_snprintf(result, size, "Report: %s\nStatus: %s\nDuration: %llu ms\n", report->workflow_name,
-             status_str, (unsigned long long)report_get_duration(report));
+    bs_safe_snprintf(result, size, "Report: %s\nStatus: %s\nDuration: %llu ms\n",
+                     report->workflow_name, status_str,
+                     (unsigned long long)report_get_duration(report));
 
     if (report->entries)
     {
@@ -297,9 +298,10 @@ char* report_to_json(const Report* report)
     if (!result)
         return NULL;
 
-    bs_safe_snprintf(result, size,
-             "{\"workflow_name\":\"%s\",\"status\":\"%s\",\"duration_ms\":%llu,\"entries\":[",
-             report->workflow_name, status_str, (unsigned long long)report_get_duration(report));
+    bs_safe_snprintf(
+        result, size,
+        "{\"workflow_name\":\"%s\",\"status\":\"%s\",\"duration_ms\":%llu,\"entries\":[",
+        report->workflow_name, status_str, (unsigned long long)report_get_duration(report));
 
     if (report->entries)
     {
@@ -351,21 +353,23 @@ char* report_to_json(const Report* report)
     {
         char error_json[512];
         bs_safe_snprintf(error_json, sizeof(error_json), ",\"error_message\":\"%s\"",
-                 report->error_message);
+                         report->error_message);
         strncat(result, error_json, size - strlen(result) - 1);
     }
 
     if (report->next_target)
     {
         char target_json[512];
-        bs_safe_snprintf(target_json, sizeof(target_json), ",\"next_target\":\"%s\"", report->next_target);
+        bs_safe_snprintf(target_json, sizeof(target_json), ",\"next_target\":\"%s\"",
+                         report->next_target);
         strncat(result, target_json, size - strlen(result) - 1);
     }
 
     if (report->next_action)
     {
         char action_json[512];
-        bs_safe_snprintf(action_json, sizeof(action_json), ",\"next_action\":\"%s\"", report->next_action);
+        bs_safe_snprintf(action_json, sizeof(action_json), ",\"next_action\":\"%s\"",
+                         report->next_action);
         strncat(result, action_json, size - strlen(result) - 1);
     }
 

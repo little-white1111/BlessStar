@@ -1,5 +1,6 @@
-#include "bs/adapter/registry_bootstrap.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/registry_bootstrap.h"
 
 #include <cassert>
 

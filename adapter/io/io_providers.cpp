@@ -1,8 +1,8 @@
-#include "bs/adapter/io/io_providers.h"
+#include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/io/io_providers.h"
 #include "bs/adapter/io/local_file_provider.h"
 #include "bs/adapter/io/provider_stubs.h"
-#include "bs/kernel/registry/registry_facade.h"
 
 #include <cstring>
 
@@ -37,8 +37,8 @@ int bs_adapter_io_register_providers(RegistryFacade* facade)
     if (register_one(facade, "/adapter/io/local", "adapter.io.local",
                      bs_adapter_io_local_provider_binding(local)) != 0)
         return -1;
-    if (register_one(facade, "/adapter/io/db", "adapter.io.db",
-                     bs_adapter_io_db_stub_binding()) != 0)
+    if (register_one(facade, "/adapter/io/db", "adapter.io.db", bs_adapter_io_db_stub_binding()) !=
+        0)
         return -1;
     if (register_one(facade, "/adapter/io/remote", "adapter.io.remote",
                      bs_adapter_io_remote_stub_binding()) != 0)

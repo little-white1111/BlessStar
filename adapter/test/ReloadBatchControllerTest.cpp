@@ -1,23 +1,23 @@
-#include "support/config_v1_golden.h"
-
-#include "support/day12_attach_fixture.h"
-
 #include "bs/adapter/log/log_bus.h"
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_gate_default.h"
 
 #include <cassert>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
+
 #include <string>
 #include <unordered_map>
+
+#include "support/config_v1_golden.h"
+#include "support/day12_attach_fixture.h"
 
 struct MockReadCtx
 {
     std::unordered_map<std::string, int> fail_uris;
     std::unordered_map<std::string, int> fail_through_attempt;
     std::unordered_map<std::string, int> attempts;
-    int                                calls = 0;
+    int                                  calls = 0;
 };
 
 static int mock_read(void* user_ctx, const char* uri, IoReadResult* out)
@@ -26,8 +26,8 @@ static int mock_read(void* user_ctx, const char* uri, IoReadResult* out)
     ++ctx->calls;
     bs_io_read_result_init(out);
 
-    const int attempt = ++ctx->attempts[uri];
-    const auto until  = ctx->fail_through_attempt.find(uri);
+    const int  attempt = ++ctx->attempts[uri];
+    const auto until   = ctx->fail_through_attempt.find(uri);
     if (until != ctx->fail_through_attempt.end() && attempt <= until->second)
     {
         out->status        = BS_IO_ERR_NOT_FOUND;
@@ -77,7 +77,9 @@ static int mock_gate(void* user_ctx, const char* uri, const IoReadResult* read_r
     return BS_RELOAD_GATE_OK;
 }
 
-static void test_log_sink(uint16_t, BsLogLevel, const char*, void*) {}
+static void test_log_sink(uint16_t, BsLogLevel, const char*, void*)
+{
+}
 
 int main()
 {
@@ -102,8 +104,8 @@ int main()
     bs_reload_batch_controller_destroy(ctrl);
 
     /* XV-IO-02: one read fail does not skip the other path */
-    ctrl = bs_reload_batch_controller_create(8);
-    read_ctx = MockReadCtx{};
+    ctrl                              = bs_reload_batch_controller_create(8);
+    read_ctx                          = MockReadCtx{};
     read_ctx.fail_uris["file:///bad"] = 1;
     bs_reload_batch_controller_set_read_fn(ctrl, mock_read, &read_ctx);
     bs_reload_batch_controller_set_gate_fn(ctrl, mock_gate_pass, nullptr);
@@ -120,7 +122,7 @@ int main()
     bs_reload_batch_controller_destroy(ctrl);
 
     /* Gate reject: read ok but gate fails -> GATE_REJECTED; other path still runs */
-    ctrl = bs_reload_batch_controller_create(8);
+    ctrl     = bs_reload_batch_controller_create(8);
     read_ctx = MockReadCtx{};
     MockGateCtx gate_ctx{};
     gate_ctx.reject_uris["file:///gated"] = 1;
@@ -137,8 +139,8 @@ int main()
     bs_reload_batch_controller_destroy(ctrl);
 
     /* Retry: fail once then succeed when max_retry=1 */
-    ctrl = bs_reload_batch_controller_create(8);
-    read_ctx = MockReadCtx{};
+    ctrl                                           = bs_reload_batch_controller_create(8);
+    read_ctx                                       = MockReadCtx{};
     read_ctx.fail_through_attempt["file:///retry"] = 1;
     bs_reload_batch_controller_set_read_fn(ctrl, mock_read, &read_ctx);
     bs_reload_batch_controller_set_gate_fn(ctrl, mock_gate_pass, nullptr);

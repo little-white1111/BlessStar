@@ -3,21 +3,22 @@
  * Labels: unit;registry;attach
  */
 
-#include "bs/adapter/registry_bootstrap.h"
 #include "bs/kernel/registry/path_registry.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/registry_bootstrap.h"
 
 #include <cstdio>
 #include <cstring>
 
-#define REQUIRE(cond)                                                                          \
-    do                                                                                         \
-    {                                                                                          \
-        if (!(cond))                                                                           \
-        {                                                                                      \
-            std::fprintf(stderr, "FAIL %s:%d: (%s)\n", __FILE__, __LINE__, #cond);             \
-            return 1;                                                                          \
-        }                                                                                      \
+#define REQUIRE(cond)                                                                              \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(cond))                                                                               \
+        {                                                                                          \
+            std::fprintf(stderr, "FAIL %s:%d: (%s)\n", __FILE__, __LINE__, #cond);                 \
+            return 1;                                                                              \
+        }                                                                                          \
     } while (0)
 
 static int test_bind_without_declaration(PathRegistry* reg)
@@ -36,7 +37,8 @@ static int test_hub_undeclared_resolve(RegistryFacade* facade)
                                                     0) == BS_REGISTRY_OK);
     Binding b{};
     REQUIRE(bs_registry_facade_resolve(facade, "kernel.ir.ghost", &b) == BS_REGISTRY_ERR_NOT_FOUND);
-    REQUIRE(bs_registry_facade_resolve(facade, "/kernel/ir/ghost", &b) == BS_REGISTRY_ERR_NOT_FOUND);
+    REQUIRE(bs_registry_facade_resolve(facade, "/kernel/ir/ghost", &b) ==
+            BS_REGISTRY_ERR_NOT_FOUND);
     return 0;
 }
 
@@ -76,11 +78,12 @@ static int test_list_subtree_depth(PathRegistry* reg)
 
     REQUIRE(bs_path_registry_register_declaration(reg, "/kernel/a", &builtin) == BS_REGISTRY_OK);
     REQUIRE(bs_path_registry_register_declaration(reg, "/kernel/a/b", &builtin) == BS_REGISTRY_OK);
-    REQUIRE(bs_path_registry_register_declaration(reg, "/kernel/a/b/c", &builtin) == BS_REGISTRY_OK);
+    REQUIRE(bs_path_registry_register_declaration(reg, "/kernel/a/b/c", &builtin) ==
+            BS_REGISTRY_OK);
 
-    char buf0[BS_REGISTRY_MAX_PATH];
-    char buf1[BS_REGISTRY_MAX_PATH];
-    char buf2[BS_REGISTRY_MAX_PATH];
+    char  buf0[BS_REGISTRY_MAX_PATH];
+    char  buf1[BS_REGISTRY_MAX_PATH];
+    char  buf2[BS_REGISTRY_MAX_PATH];
     char* rows[]    = {buf0, buf1, buf2};
     int   out_count = 0;
 
@@ -132,10 +135,12 @@ static int test_adapter_blocked_in_phase_p1(RegistryFacade* facade)
 static int test_advance_phase_monotonic(RegistryFacade* facade)
 {
     REQUIRE(bs_registry_facade_current_phase(facade) == BS_REGISTRY_PHASE_P0);
-    REQUIRE(bs_registry_facade_advance_phase(facade, BS_REGISTRY_PHASE_P2) == BS_REGISTRY_ERR_PHASE);
+    REQUIRE(bs_registry_facade_advance_phase(facade, BS_REGISTRY_PHASE_P2) ==
+            BS_REGISTRY_ERR_PHASE);
     REQUIRE(bs_registry_facade_advance_phase(facade, BS_REGISTRY_PHASE_P1) == BS_REGISTRY_OK);
     REQUIRE(bs_registry_facade_advance_phase(facade, BS_REGISTRY_PHASE_P2) == BS_REGISTRY_OK);
-    REQUIRE(bs_registry_facade_advance_phase(facade, BS_REGISTRY_PHASE_P1) == BS_REGISTRY_ERR_PHASE);
+    REQUIRE(bs_registry_facade_advance_phase(facade, BS_REGISTRY_PHASE_P1) ==
+            BS_REGISTRY_ERR_PHASE);
     return 0;
 }
 

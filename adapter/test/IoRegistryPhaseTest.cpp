@@ -1,10 +1,12 @@
-#include "bs/adapter/registry_bootstrap.h"
 #include "bs/kernel/io/io.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/registry_bootstrap.h"
 
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -44,7 +46,7 @@ int main()
             c = '/';
     }
     const std::string uri = "file:///" + uri_path;
-    IoReadResult        result{};
+    IoReadResult      result{};
     assert(bs_io_facade_read(io, uri.c_str(), &result) == BS_IO_OK);
     assert(result.length == 11);
     assert(result.data != nullptr);

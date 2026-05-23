@@ -3,14 +3,16 @@
  * Out of scope: full config collect/translate, state hot-reload, pipeline/report wiring.
  */
 
-#include "bs/adapter/registry_bootstrap.h"
-#include "bs/adapter/requirement_filter.h"
 #include "bs/kernel/io/io.h"
 #include "bs/kernel/ir/requirements.h"
 #include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/registry_bootstrap.h"
+#include "bs/adapter/requirement_filter.h"
+
 #include <cassert>
 #include <cstring>
+
 #include <filesystem>
 #include <fstream>
 #include <string>

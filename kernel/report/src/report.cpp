@@ -1,5 +1,5 @@
-#include "bs/kernel/report/report.h"
 #include "bs/kernel/common/bs_safe_format.h"
+#include "bs/kernel/report/report.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -219,14 +219,14 @@ char* report_to_json(const Report* report)
         return nullptr;
 
     int written = bs_safe_snprintf(buf, cap, "{\"workflow\":\"%s\",\"entries\":[",
-                           report->workflow_name ? report->workflow_name : "");
+                                   report->workflow_name ? report->workflow_name : "");
     if (written < 0)
     {
         free(buf);
         return nullptr;
     }
 
-    size_t len  = (size_t)written;
+    size_t len   = (size_t)written;
     int    first = 1;
     for (ReportEntry* e = report->entries; e; e = e->next)
     {
@@ -244,8 +244,8 @@ char* report_to_json(const Report* report)
             buf = grown;
         }
         written = bs_safe_snprintf(buf + len, cap - len, "%s{\"stage\":\"%s\",\"message\":\"%s\"}",
-                           first ? "" : ",", stage, msg);
-        first = 0;
+                                   first ? "" : ",", stage, msg);
+        first   = 0;
         if (written < 0)
         {
             free(buf);

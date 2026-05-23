@@ -1,10 +1,11 @@
 #include "bs/adapter/io/local_file_provider.h"
 
-#include <chrono>
 #include <cerrno>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
 #include <fstream>
 #include <string>
 #include <vector>
@@ -39,8 +40,8 @@ static int file_uri_to_path(const char* uri, std::string* out_path)
         /* file:///absolute: file:///C:/... or file:////unc */
         if (rest[1] == '/')
             *out_path = rest + 2;
-        else if (rest[2] == ':' && ((rest[1] >= 'A' && rest[1] <= 'Z') ||
-                                      (rest[1] >= 'a' && rest[1] <= 'z')))
+        else if (rest[2] == ':' &&
+                 ((rest[1] >= 'A' && rest[1] <= 'Z') || (rest[1] >= 'a' && rest[1] <= 'z')))
             *out_path = rest + 1;
         else
             *out_path = rest;
@@ -84,22 +85,23 @@ static int local_read(void* provider_ctx, const char* uri, IoReadResult* out, si
 
     bs_io_read_result_init(out);
 
-    const auto t0 = std::chrono::steady_clock::now();
-    auto       elapsed_ms = [&t0]() {
-        return static_cast<unsigned>(
-            std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - t0)
-                .count());
+    const auto t0         = std::chrono::steady_clock::now();
+    auto       elapsed_ms = [&t0]()
+    {
+        return static_cast<unsigned>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                         std::chrono::steady_clock::now() - t0)
+                                         .count());
     };
 
-    auto fail_timeout = [&]() {
+    auto fail_timeout = [&]()
+    {
         out->status        = BS_IO_ERR_TIMEOUT;
         out->error_message = dup_cstr("read exceeded timeout_ms");
         return BS_IO_ERR_TIMEOUT;
     };
 
     std::string path;
-    const int path_rc = file_uri_to_path(uri, &path);
+    const int   path_rc = file_uri_to_path(uri, &path);
     if (path_rc != BS_IO_OK)
     {
         out->status        = path_rc;
@@ -175,8 +177,8 @@ static int local_read(void* provider_ctx, const char* uri, IoReadResult* out, si
     out->source_uri = dup_cstr(uri);
     out->mime_hint  = dup_cstr("application/octet-stream");
     detect_bom_encoding(out->data, to_read, &out->encoding_hint);
-    out->checksum        = nullptr;
-    out->status          = BS_IO_OK;
+    out->checksum = nullptr;
+    out->status   = BS_IO_OK;
     return BS_IO_OK;
 }
 
@@ -187,7 +189,7 @@ static int local_stat(void* provider_ctx, const char* uri, int64_t* out_size, in
         return BS_IO_ERR_INVALID_ARG;
 
     std::string path;
-    const int path_rc = file_uri_to_path(uri, &path);
+    const int   path_rc = file_uri_to_path(uri, &path);
     if (path_rc != BS_IO_OK)
         return path_rc;
 
@@ -218,7 +220,7 @@ static const IoProviderOps kLocalOps = {
 
 LocalFileProvider* bs_adapter_io_local_provider_create(void)
 {
-    auto* p = new LocalFileProvider();
+    auto* p        = new LocalFileProvider();
     p->binding.ops = &kLocalOps;
     p->binding.ctx = p;
     return p;

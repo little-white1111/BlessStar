@@ -10,7 +10,7 @@ extern "C"
 
     /** Test-only memory sink (IMPL-08-07 / R8-03 B). No adapter headers. */
     int bs_test_log_bind_memory_bus(void (*on_line)(uint16_t domain_id, BsLogLevel level,
-                                                   const char* line, void* ctx),
+                                                    const char* line, void* ctx),
                                     void* ctx);
 
 #ifdef __cplusplus

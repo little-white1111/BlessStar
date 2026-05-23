@@ -8,7 +8,8 @@ extern "C"
 {
 #endif
 
-    /** Normalize path into out (must hold BS_REGISTRY_MAX_PATH). Returns BS_REGISTRY_OK or error. */
+    /** Normalize path into out (must hold BS_REGISTRY_MAX_PATH). Returns BS_REGISTRY_OK or error.
+     */
     int bs_registry_normalize_path(const char* in, char* out, size_t out_size);
 
     /** True if path is under /kernel or /adapter after normalization. */

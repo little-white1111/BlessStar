@@ -14,8 +14,8 @@ int bs_json_utf8_decode_advance(const char** p, const char* end, unsigned int* o
     if (!p || !*p || !end || *p >= end || !out_cp)
         return 0;
 
-    const unsigned char c0 = (unsigned char)(**p);
-    unsigned int        cp = 0;
+    const unsigned char c0  = (unsigned char)(**p);
+    unsigned int        cp  = 0;
     size_t              adv = 0;
 
     if (c0 < 0x80u)

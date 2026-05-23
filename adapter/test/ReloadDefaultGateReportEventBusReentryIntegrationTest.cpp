@@ -19,35 +19,37 @@
  * Labels: unit;integration;day7;io;registry;attach
  */
 
-#include "support/config_v1_golden.h"
-#include "support/day12_attach_fixture.h"
-
-#include "bs/adapter/attach_runtime.h"
-#include "bs/adapter/orchestration/reload_with_report.h"
-#include "bs/adapter/registry_bootstrap.h"
 #include "bs/kernel/io/io.h"
 #include "bs/kernel/registry/registry_facade.h"
 #include "bs/kernel/report/report.h"
 #include "bs/kernel/state/ConfigEvent.h"
 #include "bs/kernel/state/EventBus.h"
 
+#include "bs/adapter/attach_runtime.h"
+#include "bs/adapter/orchestration/reload_with_report.h"
+#include "bs/adapter/registry_bootstrap.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
 
+#include "support/config_v1_golden.h"
+#include "support/day12_attach_fixture.h"
+
 namespace fs = std::filesystem;
 
-#define REQUIRE_PHASE(phase, cond)                                                             \
-    do                                                                                         \
-    {                                                                                          \
-        if (!(cond))                                                                           \
-        {                                                                                      \
-            std::fprintf(stderr, "FAIL [%s] %s:%d: (%s)\n", phase, __FILE__, __LINE__, #cond);   \
-            return 1;                                                                          \
-        }                                                                                      \
+#define REQUIRE_PHASE(phase, cond)                                                                 \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(cond))                                                                               \
+        {                                                                                          \
+            std::fprintf(stderr, "FAIL [%s] %s:%d: (%s)\n", phase, __FILE__, __LINE__, #cond);     \
+            return 1;                                                                              \
+        }                                                                                          \
     } while (0)
 
 struct AttachContext
@@ -73,16 +75,16 @@ static int facade_read_fn(void* user_ctx, const char* uri, IoReadResult* out)
     return bs_io_facade_read(ctx->io, uri, out);
 }
 
-/** Minimal bootstrap + freeze so LOG-VII-10 allows reload (see IoAttachPipelineTest for full IO read). */
+/** Minimal bootstrap + freeze so LOG-VII-10 allows reload (see IoAttachPipelineTest for full IO
+ * read). */
 static int minimal_attach_setup(AttachContext* ctx)
 {
     ctx->facade = bs_registry_facade_create();
     REQUIRE_PHASE("setup", ctx->facade != nullptr);
     REQUIRE_PHASE("setup", bs_adapter_registry_bootstrap_begin(ctx->facade) == 0);
     REQUIRE_PHASE("setup", bs_adapter_attach_is_log_ready());
-    REQUIRE_PHASE("setup",
-                  bs_registry_facade_advance_phase(ctx->facade, BS_REGISTRY_PHASE_P2) ==
-                      BS_REGISTRY_OK);
+    REQUIRE_PHASE("setup", bs_registry_facade_advance_phase(ctx->facade, BS_REGISTRY_PHASE_P2) ==
+                               BS_REGISTRY_OK);
     REQUIRE_PHASE("setup", bs_adapter_registry_bootstrap_freeze(ctx->facade) == 0);
     ctx->io = bs_io_facade_create(ctx->facade);
     REQUIRE_PHASE("setup", ctx->io != nullptr);
@@ -94,7 +96,8 @@ static int prepare_reload_fixture(ReloadFixture* fix)
     fix->cfg_file = fs::absolute("bs_reload_gate_report_integration_cfg.txt");
     {
         std::ofstream out(fix->cfg_file, std::ios::binary);
-        out.write(kBlessStarConfigV1Golden, static_cast<std::streamsize>(kBlessStarConfigV1GoldenLen));
+        out.write(kBlessStarConfigV1Golden,
+                  static_cast<std::streamsize>(kBlessStarConfigV1GoldenLen));
     }
     std::string uri_path = fix->cfg_file.string();
     for (char& c : uri_path)
@@ -107,7 +110,8 @@ static int prepare_reload_fixture(ReloadFixture* fix)
 }
 
 /** C: reload + default gate (no gate_fn) + Report; read path uses IoFacade. */
-static int phase_c_reload_default_gate_and_report(const AttachContext* ctx, const ReloadFixture* fix)
+static int phase_c_reload_default_gate_and_report(const AttachContext* ctx,
+                                                  const ReloadFixture* fix)
 {
     ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);
     REQUIRE_PHASE("C-reload", ctrl != nullptr);
@@ -145,12 +149,11 @@ static int phase_d_eventbus_enqueue_then_drain()
     REQUIRE_PHASE("D-eventbus", bus != nullptr);
 
     int notified = 0;
-    REQUIRE_PHASE("D-eventbus",
-                  EventBus_Subscribe(bus, "/config/reload_notify", notify_listener, &notified) == 0);
+    REQUIRE_PHASE("D-eventbus", EventBus_Subscribe(bus, "/config/reload_notify", notify_listener,
+                                                   &notified) == 0);
 
-    ConfigEvent* ev =
-        ConfigEvent_Create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
-                          CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
+    ConfigEvent* ev = ConfigEvent_Create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
+                                         CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
     REQUIRE_PHASE("D-eventbus", ev != nullptr);
     REQUIRE_PHASE("D-eventbus", EventBus_Publish(bus, ev) == 0);
     ConfigEvent_Destroy(ev);
@@ -172,7 +175,7 @@ struct ReentryProbe
 static void reentry_listener(const ConfigEvent* event, void* user_data)
 {
     (void)event;
-    auto* p = static_cast<ReentryProbe*>(user_data);
+    auto*        p = static_cast<ReentryProbe*>(user_data);
     IoReadResult tmp{};
     p->read_rc = bs_io_facade_read(p->io, "file:///reentry-blocked", &tmp);
     bs_io_read_result_free(&tmp);
@@ -188,9 +191,8 @@ static int phase_e_reentrant_read_blocked_in_callback(const AttachContext* ctx)
     REQUIRE_PHASE("E-reentry",
                   EventBus_Subscribe(bus, "/config/reentry", reentry_listener, &probe) == 0);
 
-    ConfigEvent* ev =
-        ConfigEvent_Create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING, CONFIG_STATE_ACTIVE,
-                           CONFIG_STATE_UPDATING, 2);
+    ConfigEvent* ev = ConfigEvent_Create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING,
+                                         CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
     REQUIRE_PHASE("E-reentry", ev != nullptr);
     REQUIRE_PHASE("E-reentry", EventBus_Publish(bus, ev) == 0);
     ConfigEvent_Destroy(ev);

@@ -67,8 +67,7 @@ static void ring_push(BsLogState* state, uint16_t domain_id, BsLogLevel level,
     BsLogRingEntry* slot = &state->ring[state->ring_head];
     slot->domain_id      = domain_id;
     slot->level          = level;
-    bs_safe_snprintf(slot->message, sizeof(slot->message), "%s",
-                     formatted ? formatted : "");
+    bs_safe_snprintf(slot->message, sizeof(slot->message), "%s", formatted ? formatted : "");
     state->ring_head = (state->ring_head + 1) % BS_LOG_RING_CAPACITY;
     if (state->ring_count < BS_LOG_RING_CAPACITY)
         ++state->ring_count;
@@ -143,7 +142,7 @@ void bs_log_emit_ctx(BsLogState* ctx, uint16_t domain_id, BsLogLevel level, cons
 
     BsLogState* state = resolve_state(ctx);
 
-    char formatted[512];
+    char    formatted[512];
     va_list ap;
     va_start(ap, fmt);
     bs_safe_vsnprintf(formatted, sizeof(formatted), fmt, ap);
@@ -200,7 +199,7 @@ void bs_log_emit(uint16_t domain_id, BsLogLevel level, const char* fmt, ...)
 
     if (!state->bus || !state->bus->emit)
     {
-        char formatted[512];
+        char    formatted[512];
         va_list ap;
         va_start(ap, fmt);
         bs_safe_vsnprintf(formatted, sizeof(formatted), fmt, ap);

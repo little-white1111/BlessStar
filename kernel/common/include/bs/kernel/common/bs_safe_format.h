@@ -1,8 +1,8 @@
 #ifndef BS_KERNEL_COMMON_BS_SAFE_FORMAT_H
 #define BS_KERNEL_COMMON_BS_SAFE_FORMAT_H
 
-#include <stddef.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C"

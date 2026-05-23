@@ -8,7 +8,8 @@ int main()
     PathRegistry* reg = bs_path_registry_create();
     assert(reg != nullptr);
 
-    assert(bs_path_registry_advance_phase(reg, BS_REGISTRY_PHASE_P0) == BS_REGISTRY_ERR_INVALID_ARG);
+    assert(bs_path_registry_advance_phase(reg, BS_REGISTRY_PHASE_P0) ==
+           BS_REGISTRY_ERR_INVALID_ARG);
     assert(bs_path_registry_advance_phase(reg, BS_REGISTRY_PHASE_FROZEN) ==
            BS_REGISTRY_ERR_INVALID_ARG);
     assert(bs_path_registry_advance_phase(reg, BS_REGISTRY_PHASE_P2) == BS_REGISTRY_ERR_PHASE);

@@ -1,7 +1,8 @@
-#include "bs/adapter/io/io_providers.h"
-#include "bs/adapter/io/provider_stubs.h"
 #include "bs/kernel/io/io.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/io/io_providers.h"
+#include "bs/adapter/io/provider_stubs.h"
 
 #include <cassert>
 #include <cstring>
@@ -35,7 +36,7 @@ int main()
     assert(bs_registry_facade_resolve(reg, "adapter.io.local", &local) == BS_REGISTRY_OK);
     assert(local.impl != nullptr);
 
-    IoFacade* io = bs_io_facade_create(reg);
+    IoFacade*    io = bs_io_facade_create(reg);
     IoReadResult facade_db{};
     assert(bs_io_facade_read(io, "db://x", &facade_db) == BS_IO_ERR_UNSUPPORTED_SCHEME);
     bs_io_read_result_free(&facade_db);

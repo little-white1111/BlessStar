@@ -1,21 +1,25 @@
 /** IMPL-06-02 / M3: default gate parses v1 JSON bytes then ir_gate. */
 
-#include "support/config_v1_golden.h"
-#include "support/day12_attach_fixture.h"
+#include "bs/kernel/report/report.h"
 
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/log/log_bus.h"
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_gate_default.h"
 #include "bs/adapter/orchestration/reload_with_report.h"
-#include "bs/kernel/report/report.h"
 
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+
 #include <string>
 
-static void noop_log(uint16_t, BsLogLevel, const char*, void*) {}
+#include "support/config_v1_golden.h"
+#include "support/day12_attach_fixture.h"
+
+static void noop_log(uint16_t, BsLogLevel, const char*, void*)
+{
+}
 
 static int ok_read(void*, const char*, IoReadResult* out)
 {
@@ -31,7 +35,8 @@ static int ok_read(void*, const char*, IoReadResult* out)
 
 static int bad_parse_read(void*, const char*, IoReadResult* out)
 {
-    static const char kBad[] = R"({"kernel_version":"0.4.0","adapter_version":"0.4.0","instructions":[{"type":"t","name":"n","metadata":{"amount":"1","amount":"2"}}]})";
+    static const char kBad[] =
+        R"({"kernel_version":"0.4.0","adapter_version":"0.4.0","instructions":[{"type":"t","name":"n","metadata":{"amount":"1","amount":"2"}}]})";
     bs_io_read_result_init(out);
     out->status = BS_IO_OK;
     out->length = sizeof(kBad) - 1;

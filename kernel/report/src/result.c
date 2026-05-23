@@ -1,5 +1,5 @@
-#include "bs/kernel/report/Result.h"
 #include "bs/kernel/common/bs_safe_format.h"
+#include "bs/kernel/report/Result.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -152,23 +152,25 @@ char* result_to_json(const Result* result)
 
     if (result->detail)
     {
-        bs_safe_snprintf(output, size,
-                 "{\"code\":%d,\"code_str\":\"%s\",\"message\":\"%s\",\"detail\":\"%s\",\"retry_"
-                 "after_ms\":%llu}",
-                 (int)result->code, code_str, result->message ? result->message : "",
-                 result->detail, (unsigned long long)result->retry_after_ms);
+        bs_safe_snprintf(
+            output, size,
+            "{\"code\":%d,\"code_str\":\"%s\",\"message\":\"%s\",\"detail\":\"%s\",\"retry_"
+            "after_ms\":%llu}",
+            (int)result->code, code_str, result->message ? result->message : "", result->detail,
+            (unsigned long long)result->retry_after_ms);
     }
     else if (result->message)
     {
-        bs_safe_snprintf(output, size,
-                 "{\"code\":%d,\"code_str\":\"%s\",\"message\":\"%s\",\"retry_after_ms\":%llu}",
-                 (int)result->code, code_str, result->message,
-                 (unsigned long long)result->retry_after_ms);
+        bs_safe_snprintf(
+            output, size,
+            "{\"code\":%d,\"code_str\":\"%s\",\"message\":\"%s\",\"retry_after_ms\":%llu}",
+            (int)result->code, code_str, result->message,
+            (unsigned long long)result->retry_after_ms);
     }
     else
     {
         bs_safe_snprintf(output, size, "{\"code\":%d,\"code_str\":\"%s\",\"retry_after_ms\":%llu}",
-                 (int)result->code, code_str, (unsigned long long)result->retry_after_ms);
+                         (int)result->code, code_str, (unsigned long long)result->retry_after_ms);
     }
 
     return output;

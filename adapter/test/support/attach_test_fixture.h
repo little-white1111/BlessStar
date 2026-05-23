@@ -5,29 +5,30 @@
 
 #pragma once
 
-#include "bs/adapter/attach_context.h"
-#include "bs/adapter/attach_runtime.h"
-#include "bs/adapter/registry_bootstrap.h"
 #include "bs/kernel/io/io.h"
 #include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/attach_context.h"
+#include "bs/adapter/attach_runtime.h"
+#include "bs/adapter/registry_bootstrap.h"
+
 #include <cstdio>
 
-#define BS_TEST_REQUIRE(phase, cond)                                                           \
-    do                                                                                         \
-    {                                                                                          \
-        if (!(cond))                                                                           \
-        {                                                                                      \
-            std::fprintf(stderr, "FAIL [%s] %s:%d: (%s)\n", phase, __FILE__, __LINE__, #cond);   \
-            return 1;                                                                          \
-        }                                                                                      \
+#define BS_TEST_REQUIRE(phase, cond)                                                               \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(cond))                                                                               \
+        {                                                                                          \
+            std::fprintf(stderr, "FAIL [%s] %s:%d: (%s)\n", phase, __FILE__, __LINE__, #cond);     \
+            return 1;                                                                              \
+        }                                                                                          \
     } while (0)
 
 struct BsTestAttachIoFixture
 {
-    AttachContext*  ctx     = nullptr;
-    RegistryFacade* facade  = nullptr;
-    IoFacade*       io      = nullptr;
+    AttachContext*  ctx    = nullptr;
+    RegistryFacade* facade = nullptr;
+    IoFacade*       io     = nullptr;
 };
 
 inline int bs_test_attach_bootstrap_begin_ctx(BsTestAttachIoFixture* fix)

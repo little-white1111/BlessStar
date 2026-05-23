@@ -19,8 +19,9 @@ extern "C"
      * @param out_configs caller array; @param max_configs capacity
      * @return count written, or -1 on parse error
      */
-    int bs_adapter_attach_manifest_yaml_load(const char* path, AttachManifestPluginConfig* out_configs,
-                                           int max_configs);
+    int bs_adapter_attach_manifest_yaml_load(const char*                 path,
+                                             AttachManifestPluginConfig* out_configs,
+                                             int                         max_configs);
 
 #ifdef __cplusplus
 }

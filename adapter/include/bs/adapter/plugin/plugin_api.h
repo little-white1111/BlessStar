@@ -1,8 +1,9 @@
 #ifndef BS_ADAPTER_PLUGIN_PLUGIN_API_H
 #define BS_ADAPTER_PLUGIN_PLUGIN_API_H
 
-#include "bs/adapter/attach_context.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/attach_context.h"
 
 #ifdef __cplusplus
 extern "C"

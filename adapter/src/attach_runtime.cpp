@@ -1,6 +1,5 @@
-#include "bs/adapter/attach_runtime.h"
-
 #include "bs/adapter/attach_context.h"
+#include "bs/adapter/attach_runtime.h"
 
 int bs_adapter_attach_is_log_ready(void)
 {

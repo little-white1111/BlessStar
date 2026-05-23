@@ -47,7 +47,7 @@ extern "C"
     } JsonLexer;
 
 #define BS_JSON_MAX_INPUT_BYTES (1024u * 1024u)
-#define BS_JSON_MAX_DEPTH       32u
+#define BS_JSON_MAX_DEPTH 32u
 /** Legacy codepoint-oriented cap (lexer now enforces bytes; see STRING_BYTES). */
 #define BS_JSON_MAX_STRING_LEN 4096u
 /** Decoded UTF-8 byte budget per string token (AUD-IX-4 · day13). */

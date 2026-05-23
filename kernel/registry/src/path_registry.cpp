@@ -1,8 +1,8 @@
+#include "bs/kernel/registry/path_normalize.h"
 #include "bs/kernel/registry/path_registry.h"
 
-#include "bs/kernel/registry/path_normalize.h"
-
 #include <cstring>
+
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -10,17 +10,17 @@
 
 struct PathNode
 {
-    bool     has_declaration = false;
+    bool      has_declaration = false;
     PathEntry entry{};
-    bool     has_binding   = false;
-    Binding  binding{};
+    bool      has_binding = false;
+    Binding   binding{};
 };
 
 struct PathRegistry
 {
     std::unordered_map<std::string, PathNode> nodes;
     mutable std::mutex                        mutex;
-    RegistrationPhase                         phase = BS_REGISTRY_PHASE_P0;
+    RegistrationPhase                         phase  = BS_REGISTRY_PHASE_P0;
     bool                                      frozen = false;
 };
 
@@ -61,7 +61,7 @@ int bs_path_registry_register_declaration(PathRegistry* registry, const char* pa
     if (!registry || !path || !entry)
         return BS_REGISTRY_ERR_INVALID_ARG;
 
-    char norm[BS_REGISTRY_MAX_PATH];
+    char      norm[BS_REGISTRY_MAX_PATH];
     const int nrc = normalize_into(registry, path, norm, sizeof(norm));
     if (nrc != BS_REGISTRY_OK)
         return nrc;
@@ -91,9 +91,9 @@ int bs_path_registry_register_declaration(PathRegistry* registry, const char* pa
     if (node.has_declaration)
         return BS_REGISTRY_ERR_ALREADY_EXISTS;
 
-    node.has_declaration     = true;
-    node.entry               = *entry;
-    node.entry.manifest_ref  = entry->manifest_ref;
+    node.has_declaration       = true;
+    node.entry                 = *entry;
+    node.entry.manifest_ref    = entry->manifest_ref;
     node.entry.type_constraint = entry->type_constraint;
     return BS_REGISTRY_OK;
 }
@@ -103,7 +103,7 @@ int bs_path_registry_bind_instance(PathRegistry* registry, const char* path, voi
     if (!registry || !path)
         return BS_REGISTRY_ERR_INVALID_ARG;
 
-    char norm[BS_REGISTRY_MAX_PATH];
+    char      norm[BS_REGISTRY_MAX_PATH];
     const int nrc = normalize_into(registry, path, norm, sizeof(norm));
     if (nrc != BS_REGISTRY_OK)
         return nrc;
@@ -123,7 +123,7 @@ int bs_path_registry_bind_instance(PathRegistry* registry, const char* path, voi
     if (it->second.has_binding)
         return BS_REGISTRY_ERR_ALREADY_EXISTS;
 
-    it->second.has_binding = true;
+    it->second.has_binding  = true;
     it->second.binding.impl = impl;
     return BS_REGISTRY_OK;
 }
@@ -133,13 +133,13 @@ int bs_path_registry_resolve(PathRegistry* registry, const char* canonical_path,
     if (!registry || !canonical_path || !out)
         return BS_REGISTRY_ERR_INVALID_ARG;
 
-    char norm[BS_REGISTRY_MAX_PATH];
+    char      norm[BS_REGISTRY_MAX_PATH];
     const int nrc = normalize_into(registry, canonical_path, norm, sizeof(norm));
     if (nrc != BS_REGISTRY_OK)
         return nrc;
 
     std::lock_guard<std::mutex> lock(registry->mutex);
-    auto it = registry->nodes.find(norm);
+    auto                        it = registry->nodes.find(norm);
     if (it == registry->nodes.end() || !it->second.has_binding)
         return BS_REGISTRY_ERR_NOT_FOUND;
 
@@ -152,7 +152,7 @@ int bs_path_registry_unregister(PathRegistry* registry, const char* path)
     if (!registry || !path)
         return BS_REGISTRY_ERR_INVALID_ARG;
 
-    char norm[BS_REGISTRY_MAX_PATH];
+    char      norm[BS_REGISTRY_MAX_PATH];
     const int nrc = normalize_into(registry, path, norm, sizeof(norm));
     if (nrc != BS_REGISTRY_OK)
         return nrc;
@@ -221,12 +221,12 @@ int bs_path_registry_list_subtree(const PathRegistry* registry, const char* pref
         max_depth > BS_REGISTRY_LIST_MAX_DEPTH)
         return BS_REGISTRY_ERR_INVALID_ARG;
 
-    char norm_prefix[BS_REGISTRY_MAX_PATH];
+    char      norm_prefix[BS_REGISTRY_MAX_PATH];
     const int nrc = bs_registry_normalize_path(prefix, norm_prefix, sizeof(norm_prefix));
     if (nrc != BS_REGISTRY_OK)
         return nrc;
 
-    const size_t prefix_len = std::strlen(norm_prefix);
+    const size_t                prefix_len = std::strlen(norm_prefix);
     std::lock_guard<std::mutex> lock(registry->mutex);
 
     int count = 0;
@@ -240,8 +240,9 @@ int bs_path_registry_list_subtree(const PathRegistry* registry, const char* pref
         if (prefix_len > 0 && p.size() > prefix_len && p[prefix_len] != '/')
             continue;
 
-        std::string rel = (prefix_len < p.size()) ? p.substr(prefix_len + (p[prefix_len] == '/' ? 1 : 0))
-                                                  : std::string();
+        std::string rel = (prefix_len < p.size())
+                              ? p.substr(prefix_len + (p[prefix_len] == '/' ? 1 : 0))
+                              : std::string();
         if (rel.empty())
             continue;
 

@@ -1,7 +1,8 @@
-#include "bs/adapter/registry_bootstrap.h"
-#include "bs/adapter/requirement_filter.h"
 #include "bs/kernel/ir/requirements.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/registry_bootstrap.h"
+#include "bs/adapter/requirement_filter.h"
 
 #include <cassert>
 #include <cstring>
@@ -25,8 +26,8 @@ int main()
     assert(bs_registry_facade_register_declaration(facade, "/adapter/plugin/test_plugin",
                                                    &plugin) == BS_REGISTRY_OK);
     assert(bs_registry_facade_register_hub_mapping(facade, "adapter.plugin.test_plugin",
-                                                   "/adapter/plugin/test_plugin", 0) ==
-           BS_REGISTRY_OK);
+                                                   "/adapter/plugin/test_plugin",
+                                                   0) == BS_REGISTRY_OK);
 
     int plugin_impl = 99;
     assert(bs_registry_facade_bind_instance(facade, "/adapter/plugin/test_plugin", &plugin_impl) ==
@@ -45,8 +46,7 @@ int main()
     assert(bs_registry_facade_register_declaration(facade, "/adapter/plugin/after_freeze",
                                                    &plugin) == BS_REGISTRY_ERR_FROZEN);
 
-    IRRequirementList* active =
-        bs_adapter_requirement_filter_merge_activation(nullptr);
+    IRRequirementList* active = bs_adapter_requirement_filter_merge_activation(nullptr);
     assert(active != nullptr);
     bs_requirement_list_free(active);
 

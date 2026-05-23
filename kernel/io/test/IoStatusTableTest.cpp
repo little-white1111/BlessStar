@@ -12,8 +12,8 @@ int main()
     const BsStatus t = bs_status_from_io(BS_IO_ERR_TIMEOUT);
     assert(bs_status_code(t) == 5);
 
-    RegistryFacade* facade = bs_registry_facade_create();
-    uint16_t        id     = 0;
+    RegistryFacade*            facade = bs_registry_facade_create();
+    uint16_t                   id     = 0;
     BsStatusDomainRegistration reg{};
     reg.domain_qname  = "io";
     reg.table         = k_io_status_table;
@@ -25,7 +25,7 @@ int main()
     assert(bs_status_domain_id(bs_status_from_io(BS_IO_ERR_TIMEOUT)) == static_cast<int>(id));
     assert(bs_status_code(bs_status_from_io(BS_IO_ERR_TIMEOUT)) == 5);
 
-    char buf[64];
+    char           buf[64];
     const BsStatus encoded = bs_status_make(id, 5);
     assert(bs_status_format(encoded, facade, buf, sizeof(buf)) == 0);
     assert(std::strcmp(buf, "io.TIMEOUT") == 0);

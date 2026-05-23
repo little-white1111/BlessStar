@@ -63,7 +63,7 @@ extern "C"
     void bs_log_flush_ctx(BsLogState* ctx);
 
     /** Active state for legacy wrappers; set by attach on `bs_attach_context_set_active`. */
-    void       bs_log_set_current_state(BsLogState* state);
+    void        bs_log_set_current_state(BsLogState* state);
     BsLogState* bs_log_get_current_state(void);
 
     /** Legacy wrappers: operate on current state (fallback when no active attach). */

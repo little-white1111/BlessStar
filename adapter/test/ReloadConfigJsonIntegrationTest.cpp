@@ -2,18 +2,20 @@
  * M3 / IMPL-06-03: file:// v1 JSON -> IoFacade read -> default gate (parse + ir_gate) -> COMMITTED.
  */
 
-#include "support/attach_test_fixture.h"
-#include "support/config_v1_golden.h"
-#include "support/day12_attach_fixture.h"
+#include "bs/kernel/report/report.h"
 
 #include "bs/adapter/orchestration/reload_with_report.h"
-#include "bs/kernel/report/report.h"
 
 #include <cstdio>
 #include <cstring>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
+
+#include "support/attach_test_fixture.h"
+#include "support/config_v1_golden.h"
+#include "support/day12_attach_fixture.h"
 
 namespace fs = std::filesystem;
 

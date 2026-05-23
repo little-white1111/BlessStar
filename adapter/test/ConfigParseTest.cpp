@@ -1,9 +1,8 @@
+#include "bs/kernel/common/bs_status.h"
+
 #include "bs/adapter/parser/config_parse.h"
 #include "bs/adapter/parser/config_parse_status.h"
-
 #include "bs/adapter/requirement_filter.h"
-
-#include "bs/kernel/common/bs_status.h"
 
 #include <cassert>
 #include <cstring>
@@ -40,8 +39,8 @@ int main()
     bs_config_parse_result_destroy(&result);
 
     const char kSyntaxError[] = "{";
-    st = bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(kSyntaxError),
-                               strlen(kSyntaxError), &result);
+    st = bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(kSyntaxError), strlen(kSyntaxError),
+                               &result);
     assert(!bs_status_is_ok(st));
 
     const char kBadType[] = R"({

@@ -1,14 +1,15 @@
-#include "bs/adapter/orchestration/reload_batch_controller.h"
-
-#include "bs/adapter/attach_runtime.h"
-#include "bs/adapter/orchestration/reload_gate_default.h"
-#include "bs/adapter/persistence/attach_audit.h"
-#include "bs/adapter/persistence/attach_store.h"
 #include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/report/report.h"
 
+#include "bs/adapter/attach_runtime.h"
+#include "bs/adapter/orchestration/reload_batch_controller.h"
+#include "bs/adapter/orchestration/reload_gate_default.h"
+#include "bs/adapter/persistence/attach_audit.h"
+#include "bs/adapter/persistence/attach_store.h"
+
 #include <cstdio>
 #include <cstring>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -16,21 +17,21 @@
 struct PathWork
 {
     std::string            uri;
-    PathOrchestrationState state      = BS_ORCH_PENDING;
+    PathOrchestrationState state         = BS_ORCH_PENDING;
     uint64_t               base_revision = 0;
 };
 
 struct ReloadBatchController
 {
-    unsigned max_inflight = 8;
-    unsigned max_retry    = 0;
-    std::vector<PathWork>  paths;
-    BatchOutcome           outcome = BATCH_ALL_OK;
-    ReloadPathReadFn       read_fn = nullptr;
-    void*                  read_ctx = nullptr;
-    ReloadPathGateFn       gate_fn = nullptr;
-    void*                  gate_ctx = nullptr;
-    Report*                report = nullptr;
+    unsigned                                max_inflight = 8;
+    unsigned                                max_retry    = 0;
+    std::vector<PathWork>                   paths;
+    BatchOutcome                            outcome  = BATCH_ALL_OK;
+    ReloadPathReadFn                        read_fn  = nullptr;
+    void*                                   read_ctx = nullptr;
+    ReloadPathGateFn                        gate_fn  = nullptr;
+    void*                                   gate_ctx = nullptr;
+    Report*                                 report   = nullptr;
     std::unordered_map<std::string, size_t> uri_index;
 
     BsAttachScheme scheme = BS_ATTACH_SCHEME_UNSET;
@@ -87,8 +88,7 @@ void bs_reload_batch_controller_set_report(ReloadBatchController* ctrl, Report* 
         ctrl->report = report;
 }
 
-int bs_reload_batch_controller_set_attach_scheme(ReloadBatchController* ctrl,
-                                                 BsAttachScheme scheme)
+int bs_reload_batch_controller_set_attach_scheme(ReloadBatchController* ctrl, BsAttachScheme scheme)
 {
     if (!ctrl)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -99,7 +99,7 @@ int bs_reload_batch_controller_set_attach_scheme(ReloadBatchController* ctrl,
 }
 
 void bs_reload_batch_controller_set_manifest_path(ReloadBatchController* ctrl,
-                                                  const char* manifest_path)
+                                                  const char*            manifest_path)
 {
     if (!ctrl)
         return;
@@ -110,12 +110,11 @@ void bs_reload_batch_controller_set_manifest_path(ReloadBatchController* ctrl,
 }
 
 void bs_reload_batch_controller_set_session_memory_cap(ReloadBatchController* ctrl,
-                                                       size_t cap_bytes)
+                                                       size_t                 cap_bytes)
 {
     if (!ctrl)
         return;
-    ctrl->session_memory_cap =
-        (cap_bytes == 0) ? BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT : cap_bytes;
+    ctrl->session_memory_cap = (cap_bytes == 0) ? BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT : cap_bytes;
 }
 
 int bs_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri)
@@ -126,7 +125,7 @@ int bs_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri)
         return -1;
 
     PathWork w;
-    w.uri = uri;
+    w.uri                  = uri;
     ctrl->uri_index[w.uri] = ctrl->paths.size();
     ctrl->paths.push_back(std::move(w));
     return 0;
@@ -183,8 +182,7 @@ static int ensure_attach_store(ReloadBatchController* ctrl)
 {
     if (ctrl->attach_store)
         return 0;
-    const char* path =
-        ctrl->manifest_path.empty() ? nullptr : ctrl->manifest_path.c_str();
+    const char* path   = ctrl->manifest_path.empty() ? nullptr : ctrl->manifest_path.c_str();
     ctrl->attach_store = bs_attach_store_open(path);
     return ctrl->attach_store ? 0 : -1;
 }
@@ -230,8 +228,8 @@ static const char* attach_err_detail(int rc)
 
 static int persist_per_path(ReloadBatchController* ctrl, PathWork* w, const IoReadResult* result)
 {
-    const int rc = bs_attach_store_commit_per_path(ctrl->attach_store, w->uri.c_str(),
-                                                   result->data, result->length, w->base_revision);
+    const int rc = bs_attach_store_commit_per_path(ctrl->attach_store, w->uri.c_str(), result->data,
+                                                   result->length, w->base_revision);
     if (rc != BS_ATTACH_OK)
     {
         w->state = BS_ORCH_PERSIST_REJECTED;
@@ -292,14 +290,14 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
         w.state = BS_ORCH_READING;
 
         IoReadResult result{};
-        const int read_rc = run_read_with_retry(ctrl, w.uri.c_str(), &result);
+        const int    read_rc = run_read_with_retry(ctrl, w.uri.c_str(), &result);
         if (read_rc != BS_IO_OK)
         {
-            w.state       = BS_ORCH_FAILED_READ;
-            ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
+            w.state           = BS_ORCH_FAILED_READ;
+            ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
             batch_had_failure = true;
             report_audit_failure(ctrl, w.uri.c_str(), "cache_attach", read_rc,
-                                result.error_message ? result.error_message : "read failed");
+                                 result.error_message ? result.error_message : "read failed");
             bs_io_read_result_free(&result);
             gc_path_work(&w);
             continue;
@@ -307,8 +305,8 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
 
         if (account_session_bytes(ctrl, result.length) != BS_ATTACH_OK)
         {
-            w.state       = BS_ORCH_FAILED_READ;
-            ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
+            w.state           = BS_ORCH_FAILED_READ;
+            ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
             batch_had_failure = true;
             report_audit_failure(ctrl, w.uri.c_str(), "cache_attach", BS_ATTACH_ERR_LIMIT,
                                  "session memory cap exceeded");
@@ -319,18 +317,16 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
 
         w.state = BS_ORCH_GATING;
         BsReloadGateDetail gate_detail{};
-        const int          gate_rc =
-            ctrl->gate_fn(ctrl->gate_ctx, w.uri.c_str(), &result, &gate_detail);
+        const int gate_rc = ctrl->gate_fn(ctrl->gate_ctx, w.uri.c_str(), &result, &gate_detail);
         if (gate_rc != BS_RELOAD_GATE_OK)
         {
-            w.state       = BS_ORCH_GATE_REJECTED;
-            ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
-            batch_had_failure = true;
-            const char* stage =
-                (gate_rc == BS_RELOAD_GATE_PARSE_FAIL) ? "parse" : "cache_attach";
-            const char* detail = gate_detail.buf[0] ? gate_detail.buf
-                                : (gate_rc == BS_RELOAD_GATE_PARSE_FAIL) ? "parse failed"
-                                                                         : "gate rejected";
+            w.state            = BS_ORCH_GATE_REJECTED;
+            ctrl->outcome      = BATCH_COMPLETED_WITH_FAILURES;
+            batch_had_failure  = true;
+            const char* stage  = (gate_rc == BS_RELOAD_GATE_PARSE_FAIL) ? "parse" : "cache_attach";
+            const char* detail = gate_detail.buf[0]                       ? gate_detail.buf
+                                 : (gate_rc == BS_RELOAD_GATE_PARSE_FAIL) ? "parse failed"
+                                                                          : "gate rejected";
             report_audit_failure(ctrl, w.uri.c_str(), stage, gate_rc, detail);
             bs_io_read_result_free(&result);
             gc_path_work(&w);
@@ -346,16 +342,17 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
             continue;
         }
 
-        w.state = BS_ORCH_STAGED;
+        w.state      = BS_ORCH_STAGED;
         const int st = bs_attach_store_batch_stage(ctrl->attach_store, w.uri.c_str(), result.data,
                                                    result.length, w.base_revision);
         bs_io_read_result_free(&result);
         if (st != BS_ATTACH_OK)
         {
-            w.state       = BS_ORCH_PERSIST_REJECTED;
-            ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
+            w.state           = BS_ORCH_PERSIST_REJECTED;
+            ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
             batch_had_failure = true;
-            report_audit_failure(ctrl, w.uri.c_str(), "persistent_commit", st, attach_err_detail(st));
+            report_audit_failure(ctrl, w.uri.c_str(), "persistent_commit", st,
+                                 attach_err_detail(st));
             gc_path_work(&w);
         }
     }
@@ -426,7 +423,7 @@ BatchOutcome bs_reload_batch_outcome(const ReloadBatchController* ctrl)
 }
 
 PathOrchestrationState bs_reload_batch_path_state(const ReloadBatchController* ctrl,
-                                                  const char* uri)
+                                                  const char*                  uri)
 {
     if (!ctrl || !uri)
         return BS_ORCH_PENDING;

@@ -1,6 +1,6 @@
-#include "attach_uri_path.h"
-
 #include <string.h>
+
+#include "attach_uri_path.h"
 
 int bs_attach_uri_to_path(const char* uri, char* out_path, size_t out_cap)
 {

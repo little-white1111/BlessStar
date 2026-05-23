@@ -34,9 +34,8 @@ int main()
            BS_REGISTRY_ERR_FROZEN);
     assert(bs_registry_facade_bind_instance(facade, "/adapter/plugin/late", &plugin) ==
            BS_REGISTRY_ERR_FROZEN);
-    assert(bs_registry_facade_register_hub_mapping(facade, "adapter.plugin.late",
-                                                   "/adapter/plugin/late", 0) ==
-           BS_REGISTRY_ERR_FROZEN);
+    assert(bs_registry_facade_register_hub_mapping(
+               facade, "adapter.plugin.late", "/adapter/plugin/late", 0) == BS_REGISTRY_ERR_FROZEN);
 
     bs_registry_facade_destroy(facade);
     return 0;

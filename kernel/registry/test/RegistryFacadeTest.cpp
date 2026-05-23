@@ -21,9 +21,8 @@ int main()
 
     assert(bs_registry_facade_register_declaration(facade, "/adapter/plugin/vendor_x", &plugin) ==
            BS_REGISTRY_OK);
-    assert(bs_registry_facade_register_hub_mapping(facade, "adapter.plugin.vendor_x",
-                                                   "/adapter/plugin/vendor_x", 0) ==
-           BS_REGISTRY_OK);
+    assert(bs_registry_facade_register_hub_mapping(
+               facade, "adapter.plugin.vendor_x", "/adapter/plugin/vendor_x", 0) == BS_REGISTRY_OK);
 
     int impl = 7;
     assert(bs_registry_facade_bind_instance(facade, "/adapter/plugin/vendor_x", &impl) ==

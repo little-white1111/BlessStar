@@ -1,15 +1,18 @@
-#include "bs/adapter/attach_context.h"
-#include "bs/adapter/registry_bootstrap.h"
-#include "bs/kernel/test_support/bs_test_log_bus.h"
 #include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/io/io.h"
 #include "bs/kernel/registry/registry_facade.h"
 #include "bs/kernel/state/ConfigEvent.h"
 #include "bs/kernel/state/EventBus.h"
+#include "bs/kernel/test_support/bs_test_log_bus.h"
+
+#include "bs/adapter/attach_context.h"
+#include "bs/adapter/registry_bootstrap.h"
 
 #include <cassert>
 
-static void noop_log(uint16_t, BsLogLevel, const char*, void*) {}
+static void noop_log(uint16_t, BsLogLevel, const char*, void*)
+{
+}
 
 struct IoReadProbe
 {
@@ -20,7 +23,7 @@ struct IoReadProbe
 static void state_listener(const ConfigEvent* event, void* user_data)
 {
     (void)event;
-    auto* probe = static_cast<IoReadProbe*>(user_data);
+    auto*        probe = static_cast<IoReadProbe*>(user_data);
     IoReadResult tmp{};
     probe->read_rc = bs_io_facade_read(probe->facade, "file:///blocked", &tmp);
     bs_io_read_result_free(&tmp);
@@ -34,14 +37,14 @@ int main()
     assert(ctx != nullptr);
     assert(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
     assert(bs_registry_facade_advance_phase(bs_attach_context_registry(ctx),
-                                          BS_REGISTRY_PHASE_P2) == BS_REGISTRY_OK);
+                                            BS_REGISTRY_PHASE_P2) == BS_REGISTRY_OK);
     assert(bs_adapter_registry_bootstrap_freeze_ctx(ctx) == 0);
 
     RegistryFacade* facade = bs_attach_context_registry(ctx);
     IoFacade*       io     = bs_io_facade_create(facade);
     assert(io != nullptr);
 
-    EventBus* bus = EventBus_Create();
+    EventBus*   bus = EventBus_Create();
     IoReadProbe probe{io, BS_IO_OK};
     EventBus_Subscribe(bus, "/config/reload", state_listener, &probe);
 

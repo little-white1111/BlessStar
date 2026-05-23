@@ -58,7 +58,8 @@ static const IoProviderOps kRemoteOps = {
 
 static RemoteProviderStub* remote_instance(void)
 {
-    static RemoteProviderStub* inst = []() {
+    static RemoteProviderStub* inst = []()
+    {
         auto* p        = new RemoteProviderStub();
         p->binding.ops = &kRemoteOps;
         p->binding.ctx = p;

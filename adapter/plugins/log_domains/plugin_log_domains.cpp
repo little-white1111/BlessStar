@@ -1,9 +1,9 @@
+#include "bs/kernel/io/io_status_table.h"
+#include "bs/kernel/registry/registry_status_table.h"
+
 #include "bs/adapter/plugin/plugin_api.h"
 #include "bs/adapter/plugin/plugin_ir_requirements.h"
 #include "bs/adapter/plugin/plugin_manifest_paths.h"
-
-#include "bs/kernel/io/io_status_table.h"
-#include "bs/kernel/registry/registry_status_table.h"
 
 int bs_adapter_plugin_log_domains_register(RegistryFacade* facade, AttachContext* ctx)
 {

@@ -13,8 +13,8 @@ extern "C"
 
     /** Test sink: captures formatted lines (no spdlog required). */
     int bs_adapter_log_bind_memory_bus(void (*on_line)(uint16_t domain_id, BsLogLevel level,
-                                                      const char* line, void* ctx),
-                                        void* ctx);
+                                                       const char* line, void* ctx),
+                                       void* ctx);
 
 #ifdef __cplusplus
 }

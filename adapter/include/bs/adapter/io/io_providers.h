@@ -8,7 +8,8 @@ extern "C"
 {
 #endif
 
-    /** Register /adapter/io/{local,db,remote} declarations, hub mappings, and bindings (P2, pre-freeze). */
+    /** Register /adapter/io/{local,db,remote} declarations, hub mappings, and bindings (P2,
+     * pre-freeze). */
     int bs_adapter_io_register_providers(RegistryFacade* facade);
 
 #ifdef __cplusplus

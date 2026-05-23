@@ -2,9 +2,10 @@
  * IMPL-08-17: P2 plugins loaded via attach_plugins manifest (built-in table) before freeze.
  */
 
+#include "bs/kernel/registry/registry_facade.h"
+
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/registry_bootstrap.h"
-#include "bs/kernel/registry/registry_facade.h"
 
 #include <cassert>
 
@@ -23,7 +24,7 @@ int main()
 
     Binding io_local{};
     assert(bs_registry_facade_resolve(bs_attach_context_registry(ctx), "/adapter/io/local",
-                                   &io_local) == BS_REGISTRY_OK);
+                                      &io_local) == BS_REGISTRY_OK);
     assert(io_local.impl != nullptr);
 
     Binding io_db{};

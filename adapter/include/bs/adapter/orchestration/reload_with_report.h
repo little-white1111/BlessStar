@@ -1,8 +1,9 @@
 #ifndef BS_ADAPTER_ORCHESTRATION_RELOAD_WITH_REPORT_H
 #define BS_ADAPTER_ORCHESTRATION_RELOAD_WITH_REPORT_H
 
-#include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/kernel/report/report.h"
+
+#include "bs/adapter/orchestration/reload_batch_controller.h"
 
 #ifdef __cplusplus
 extern "C"

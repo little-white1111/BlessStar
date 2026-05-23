@@ -1,9 +1,10 @@
-#include "bs/adapter/plugin/plugin_ir_requirements.h"
-
 #include "bs/kernel/ir/requirements.h"
+
+#include "bs/adapter/plugin/plugin_ir_requirements.h"
 
 #include <cstdio>
 #include <cstring>
+
 #include <string>
 
 namespace
