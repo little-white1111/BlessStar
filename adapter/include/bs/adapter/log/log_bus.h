@@ -16,6 +16,9 @@ extern "C"
                                                        const char* line, void* ctx),
                                        void* ctx);
 
+    /** Flush/shutdown active log bus (CI LSan + attach destroy). */
+    void bs_adapter_log_shutdown_if_bound(void);
+
 #ifdef __cplusplus
 }
 #endif

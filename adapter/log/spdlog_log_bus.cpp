@@ -6,6 +6,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstdlib>
 
 #include <memory>
 #include <mutex>
@@ -62,8 +63,20 @@ static void spdlog_flush(void)
 static void spdlog_shutdown(void)
 {
     std::lock_guard<std::recursive_mutex> lock(g_log_mutex);
-    g_logger.reset();
+    if (g_logger)
+    {
+        g_logger->flush();
+        spdlog::drop(g_logger->name());
+        g_logger.reset();
+    }
 }
+
+static void blessstar_log_atexit_cleanup(void)
+{
+    bs_adapter_log_shutdown_if_bound();
+}
+
+static int g_log_atexit_registered = 0;
 
 static BsLogBusOps g_spdlog_ops = {spdlog_emit, spdlog_flush, spdlog_shutdown};
 
@@ -81,8 +94,22 @@ int bs_adapter_log_bind_spdlog_bus(void)
     {
         bs_adapter_attach_ensure_active_ctx();
         bs_adapter_attach_mark_log_ready(1);
+        if (!g_log_atexit_registered)
+        {
+            g_log_atexit_registered = 1;
+            std::atexit(blessstar_log_atexit_cleanup);
+        }
     }
     return rc;
+}
+
+void bs_adapter_log_shutdown_if_bound(void)
+{
+    BsLogState* st = bs_log_get_current_state();
+    if (!st || !st->bus)
+        return;
+    bs_log_shutdown_bus_ctx(st);
+    bs_adapter_attach_mark_log_ready(0);
 }
 
 struct MemoryBusCtx

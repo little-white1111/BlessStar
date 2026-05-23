@@ -62,6 +62,9 @@ extern "C"
 
     void bs_log_flush_ctx(BsLogState* ctx);
 
+    /** Flush + bus shutdown hook + clear bus pointer (LSan / attach teardown). */
+    void bs_log_shutdown_bus_ctx(BsLogState* ctx);
+
     /** Active state for legacy wrappers; set by attach on `bs_attach_context_set_active`. */
     void        bs_log_set_current_state(BsLogState* state);
     BsLogState* bs_log_get_current_state(void);

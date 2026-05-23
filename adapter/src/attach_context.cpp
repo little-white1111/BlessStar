@@ -1,5 +1,8 @@
 #include "bs/adapter/attach_context.h"
 
+#include "bs/adapter/attach_runtime.h"
+#include "bs/adapter/log/log_bus.h"
+
 #include <cstdlib>
 #include <cstring>
 
@@ -57,6 +60,13 @@ void bs_attach_context_destroy(AttachContext* ctx)
     {
         g_active_ctx = nullptr;
         bs_log_set_current_state(nullptr);
+    }
+
+    if (ctx->log_bus_bound)
+    {
+        bs_log_shutdown_bus_ctx(&ctx->log_state);
+        ctx->log_bus_bound = 0;
+        bs_adapter_attach_mark_log_ready(0);
     }
 
     if (ctx->owns_registry && ctx->registry)

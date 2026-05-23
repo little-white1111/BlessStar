@@ -170,6 +170,18 @@ void bs_log_flush_ctx(BsLogState* ctx)
         state->bus->flush();
 }
 
+void bs_log_shutdown_bus_ctx(BsLogState* ctx)
+{
+    BsLogState* state = resolve_state(ctx);
+    if (!state || !state->bus)
+        return;
+    if (state->bus->flush)
+        state->bus->flush();
+    if (state->bus->shutdown)
+        state->bus->shutdown();
+    state->bus = NULL;
+}
+
 int bs_log_bind_bus(const BsLogBusOps* ops)
 {
     return bs_log_bind_bus_ctx(NULL, ops);
