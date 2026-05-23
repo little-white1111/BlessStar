@@ -3,6 +3,7 @@
 #include "bs/adapter/io/local_file_provider.h"
 
 #include <cassert>
+#include <string>
 
 #include <filesystem>
 #include <fstream>
