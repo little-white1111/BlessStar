@@ -241,6 +241,11 @@ FetchContent_Declare(
 )
 set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(spdlog)
+# Linux sanitizer CI passes -fsanitize via CMAKE_CXX_FLAGS; apply to FetchContent too.
+if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=" AND TARGET spdlog)
+  target_compile_options(spdlog PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+  target_link_options(spdlog PRIVATE -fsanitize=address,undefined)
+endif()
 
 add_library(bs_adapter_log
   adapter/log/spdlog_log_bus.cpp

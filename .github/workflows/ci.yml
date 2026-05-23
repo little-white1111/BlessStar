@@ -45,13 +45,14 @@ jobs:
             exit 1
           fi
 
-      # AGENTS gate 3: clang-format (Linux only; avoids installing LLVM on Windows runners)
+      # AGENTS gate 3: clang-format (Linux only; use runner preinstall — avoid apt-get hang)
       - name: clang-format
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y clang-format
-          git ls-files '*.cpp' '*.h' '*.hpp' '*.cc' '*.c' | grep -v '^Source/' | xargs -r clang-format --dry-run --Werror
+          CLANG_FORMAT="$(command -v clang-format-18 || command -v clang-format-16 || command -v clang-format)"
+          echo "Using ${CLANG_FORMAT}"
+          "${CLANG_FORMAT}" --version
+          git ls-files '*.cpp' '*.h' '*.hpp' '*.cc' '*.c' | grep -v '^Source/' | xargs -r "${CLANG_FORMAT}" --dry-run --Werror
 
       # AGENTS gate 1: CTest (below). Gate 4: warnings as errors via CMake option.
       - name: Configure (Unix)
@@ -95,7 +96,7 @@ jobs:
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
 
       - name: Build (Sanitizer)
-        run: cmake --build build-san -j
+        run: cmake --build build-san -j 4
 
       - name: Test / CTest (Sanitizer)
         env:

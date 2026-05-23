@@ -1,5 +1,6 @@
 #include "bs/kernel/common/bs_safe_format.h"
 
+#include <stdarg.h>
 #include <stdio.h>
 
 int bs_safe_vsnprintf(char* buf, size_t cap, const char* fmt, va_list ap)
