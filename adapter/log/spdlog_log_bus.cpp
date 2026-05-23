@@ -69,6 +69,7 @@ static void spdlog_shutdown(void)
         spdlog::drop(g_logger->name());
         g_logger.reset();
     }
+    spdlog::shutdown();
 }
 
 static void blessstar_log_atexit_cleanup(void)

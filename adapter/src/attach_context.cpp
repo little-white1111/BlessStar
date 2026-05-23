@@ -1,5 +1,4 @@
 #include "bs/adapter/attach_context.h"
-
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/log/log_bus.h"
 

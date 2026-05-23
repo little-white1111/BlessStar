@@ -1,0 +1,4 @@
+# LeakSanitizer suppressions for CI (Linux Clang ASan+UBSan job).
+# spdlog null_sink / registry may retain allocations until process exit.
+leak:spdlog::details::registry
+leak:spdlog::sinks::null_sink_mt
