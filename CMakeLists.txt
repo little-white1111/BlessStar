@@ -37,6 +37,9 @@ target_include_directories(bs_kernel_common
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/kernel/common/include
 )
+if(UNIX AND NOT APPLE)
+  target_link_libraries(bs_kernel_common PUBLIC ${CMAKE_DL_LIBS})
+endif()
 
 add_library(bs_kernel_test_support
   kernel/common/test_support/src/bs_test_log_bus.c

@@ -13,6 +13,7 @@
 #include "bs/adapter/orchestration/reload_with_report.h"
 
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 
 #include <filesystem>

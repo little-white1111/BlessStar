@@ -1,6 +1,6 @@
 project(
   'blessstar_pure_kernel_skeleton',
-  'cpp',
+  ['c', 'cpp'],
   version: '0.1.0',
   default_options: [
     'cpp_std=c++17',
@@ -20,10 +20,17 @@ run_command(
   check: true,
 )
 
+inc_common = include_directories('kernel/common/include')
 inc_ir = include_directories('kernel/ir/include')
 inc_adapter = include_directories('adapter/include')
 inc_pipeline = include_directories('kernel/pipeline/include')
 inc_report = include_directories('kernel/report/include')
+
+bs_kernel_common = static_library(
+  'bs_kernel_common',
+  sources: ['kernel/common/src/bs_safe_format.c'],
+  include_directories: [inc_common],
+)
 
 bs_kernel_ir = static_library(
   'bs_kernel_ir',
@@ -40,7 +47,7 @@ bs_kernel_ir = static_library(
 bs_adapter_requirement = static_library(
   'bs_adapter_requirement',
   sources: ['adapter/src/requirement_filter.cpp'],
-  include_directories: [inc_adapter],
+  include_directories: [inc_adapter, inc_ir],
   link_with: [bs_kernel_ir],
 )
 
@@ -54,8 +61,8 @@ bs_kernel_pipeline = static_library(
 bs_kernel_report = static_library(
   'bs_kernel_report',
   sources: ['kernel/report/src/report.cpp'],
-  include_directories: [inc_report, inc_pipeline, inc_ir],
-  link_with: [bs_kernel_pipeline],
+  include_directories: [inc_common, inc_report, inc_pipeline, inc_ir],
+  link_with: [bs_kernel_pipeline, bs_kernel_common],
 )
 
 bs_adapter_cli = executable(
@@ -69,6 +76,7 @@ bs_adapter_cli = executable(
 bs_test_requirements = executable(
   'bs_test_requirements',
   sources: ['kernel/ir/test/RequirementsTest.cpp'],
+  include_directories: [inc_ir],
   link_with: [bs_kernel_ir],
 )
 test('bs_test_requirements', bs_test_requirements)
@@ -76,6 +84,7 @@ test('bs_test_requirements', bs_test_requirements)
 bs_test_resolver = executable(
   'bs_test_resolver',
   sources: ['kernel/ir/test/ResolverTest.cpp'],
+  include_directories: [inc_ir],
   link_with: [bs_kernel_ir],
 )
 test('bs_test_resolver', bs_test_resolver)
@@ -83,6 +92,7 @@ test('bs_test_resolver', bs_test_resolver)
 bs_test_requirement_filter = executable(
   'bs_test_requirement_filter',
   sources: ['adapter/test/RequirementFilterTest.cpp'],
+  include_directories: [inc_ir, inc_adapter],
   link_with: [bs_adapter_requirement],
 )
 test('bs_test_requirement_filter', bs_test_requirement_filter)

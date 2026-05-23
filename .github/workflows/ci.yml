@@ -31,11 +31,19 @@ jobs:
         run: python tools/purity/check_freeze_order.py --repo-root .
 
       - name: BlessStar Config JSON v1 (M1 + day10 money normalize smoke)
+        shell: bash
         run: |
           python tools/normalize/examples/identity_normalize.py tools/normalize/examples/blessstar_config_v1.minimal.json blessstar_canonical_ci.json
           python -c "import json; d=json.load(open('blessstar_canonical_ci.json',encoding='utf-8')); assert d['kernel_version']=='0.4.0'"
           python tools/normalize/examples/money_normalize.py tools/normalize/examples/blessstar_config_v1.money_good.json blessstar_money_ci.json
-          python tools/normalize/examples/money_normalize.py tools/normalize/examples/blessstar_config_v1.money_bad_tax.json blessstar_money_bad_ci.json && exit 1 || test $? -eq 1
+          set +e
+          python tools/normalize/examples/money_normalize.py tools/normalize/examples/blessstar_config_v1.money_bad_tax.json blessstar_money_bad_ci.json
+          rc=$?
+          set -e
+          if [ "$rc" -ne 1 ]; then
+            echo "money_normalize on bad input: expected exit 1, got $rc"
+            exit 1
+          fi
 
       # AGENTS gate 3: clang-format (Linux only; avoids installing LLVM on Windows runners)
       - name: clang-format

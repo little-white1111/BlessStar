@@ -7,6 +7,7 @@
 #include "bs/adapter/orchestration/reload_with_report.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include <filesystem>
