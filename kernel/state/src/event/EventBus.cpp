@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <functional>
+#include <mutex>
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
