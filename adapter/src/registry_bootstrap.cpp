@@ -20,6 +20,11 @@ void bs_adapter_registry_clear_state_notifier(void)
     g_state_notifier_user = nullptr;
 }
 
+void bs_adapter_registry_shutdown_log(void)
+{
+    bs_adapter_log_shutdown_if_bound();
+}
+
 static void invoke_state_notifier(RegistryFacade* facade)
 {
     if (g_state_notifier && facade)
@@ -38,8 +43,13 @@ int bs_adapter_registry_bootstrap_begin(RegistryFacade* facade)
     if (!facade)
         return -1;
 
-    AttachContext* legacy = facade_legacy_ctx(facade);
-    bs_attach_context_set_active(legacy);
+    AttachContext* legacy  = facade_legacy_ctx(facade);
+    AttachContext* log_ctx = bs_attach_context_get_active();
+    if (!log_ctx)
+    {
+        bs_attach_context_set_active(legacy);
+        log_ctx = legacy;
+    }
 
     if (bs_adapter_requirement_filter_validate_builtin() != 0)
         return -1;
@@ -49,6 +59,7 @@ int bs_adapter_registry_bootstrap_begin(RegistryFacade* facade)
 
     if (bs_adapter_log_bind_spdlog_bus() != 0)
         return -1;
+    bs_attach_context_set_log_bus_bound(log_ctx, 1);
     bs_adapter_attach_mark_log_ready(1);
 
     static int builtin_gate_stub = 1;

@@ -64,6 +64,7 @@ int main()
     bs_io_read_result_free(&result);
 
     bs_io_facade_destroy(io);
+    bs_adapter_registry_shutdown_log();
     bs_registry_facade_destroy(facade);
     fs::remove(cfg_file);
     return 0;

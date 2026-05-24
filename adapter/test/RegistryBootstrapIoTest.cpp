@@ -20,6 +20,7 @@ int main()
 
     assert(bs_adapter_registry_bootstrap_register_standard_io(facade) == 0);
 
+    bs_adapter_registry_shutdown_log();
     bs_registry_facade_destroy(facade);
     return 0;
 }

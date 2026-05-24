@@ -10,6 +10,7 @@
 
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/attach_runtime.h"
+#include "bs/adapter/log/log_bus.h"
 #include "bs/adapter/registry_bootstrap.h"
 
 #include <cstdio>
@@ -80,4 +81,5 @@ inline void bs_test_attach_teardown(BsTestAttachIoFixture* fix)
         fix->ctx    = nullptr;
         fix->facade = nullptr;
     }
+    bs_adapter_registry_shutdown_log();
 }

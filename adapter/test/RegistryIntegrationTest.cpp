@@ -50,6 +50,7 @@ int main()
     assert(active != nullptr);
     bs_requirement_list_free(active);
 
+    bs_adapter_registry_shutdown_log();
     bs_registry_facade_destroy(facade);
     return 0;
 }

@@ -40,6 +40,9 @@ extern "C"
     /** Process-wide legacy ctx for `bootstrap_begin(facade)` without caller-owned ctx. */
     AttachContext* bs_attach_context_legacy_bootstrap(void);
 
+    /** Shutdown log buses on legacy/ephemeral/active ctx (CI LSan; idempotent). */
+    void bs_attach_context_shutdown_all_logs(void);
+
 #ifdef __cplusplus
 }
 #endif

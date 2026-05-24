@@ -27,10 +27,14 @@ void init_builtin_once()
     kBuiltin.requirements.head  = &kBuiltinTypes[0];
     kBuiltin.requirements.count = n;
     std::strncpy(kBuiltin.kernel_version, "0.4.0", sizeof(kBuiltin.kernel_version) - 1);
+    kBuiltin.kernel_version[sizeof(kBuiltin.kernel_version) - 1] = '\0';
     std::strncpy(kBuiltin.min_adapter_version, "0.4.0", sizeof(kBuiltin.min_adapter_version) - 1);
+    kBuiltin.min_adapter_version[sizeof(kBuiltin.min_adapter_version) - 1] = '\0';
     std::strncpy(kBuiltin.max_adapter_version, "9.9.9", sizeof(kBuiltin.max_adapter_version) - 1);
+    kBuiltin.max_adapter_version[sizeof(kBuiltin.max_adapter_version) - 1] = '\0';
     std::strncpy(kBuiltin.release_notes, "Day4 builtin requirement manifest (MVP).",
                  sizeof(kBuiltin.release_notes) - 1);
+    kBuiltin.release_notes[sizeof(kBuiltin.release_notes) - 1] = '\0';
 }
 
 } // namespace

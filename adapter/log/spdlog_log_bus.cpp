@@ -106,10 +106,14 @@ int bs_adapter_log_bind_spdlog_bus(void)
 
 void bs_adapter_log_shutdown_if_bound(void)
 {
-    BsLogState* st = bs_log_get_current_state();
-    if (!st || !st->bus)
-        return;
-    bs_log_shutdown_bus_ctx(st);
+    bs_attach_context_shutdown_all_logs();
+
+    {
+        std::lock_guard<std::recursive_mutex> lock(g_log_mutex);
+        if (g_logger)
+            spdlog_shutdown();
+    }
+
     bs_adapter_attach_mark_log_ready(0);
 }
 

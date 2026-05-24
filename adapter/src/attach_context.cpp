@@ -156,3 +156,25 @@ AttachContext* bs_attach_context_legacy_bootstrap(void)
     }
     return &g_legacy_bootstrap_ctx;
 }
+
+void bs_attach_context_shutdown_all_logs(void)
+{
+    if (g_active_ctx && g_active_ctx->log_bus_bound)
+    {
+        bs_log_shutdown_bus_ctx(&g_active_ctx->log_state);
+        g_active_ctx->log_bus_bound = 0;
+    }
+
+    if (g_ephemeral_initialized && g_ephemeral_log_ctx.log_state.bus)
+    {
+        bs_log_shutdown_bus_ctx(&g_ephemeral_log_ctx.log_state);
+        g_ephemeral_log_ctx.log_bus_bound = 0;
+    }
+
+    if (g_legacy_initialized &&
+        (g_legacy_bootstrap_ctx.log_bus_bound || g_legacy_bootstrap_ctx.log_state.bus))
+    {
+        bs_log_shutdown_bus_ctx(&g_legacy_bootstrap_ctx.log_state);
+        g_legacy_bootstrap_ctx.log_bus_bound = 0;
+    }
+}

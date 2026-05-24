@@ -207,6 +207,7 @@ static void teardown(AttachContext* ctx, ReloadFixture* fix)
 {
     if (ctx->io)
         bs_io_facade_destroy(ctx->io);
+    bs_adapter_registry_shutdown_log();
     if (ctx->facade)
         bs_registry_facade_destroy(ctx->facade);
     if (!fix->cfg_file.empty() && fs::exists(fix->cfg_file))

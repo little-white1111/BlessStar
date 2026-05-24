@@ -188,6 +188,8 @@ int main()
         ++failures;
     bs_registry_facade_destroy(f_p1);
 
+    bs_adapter_registry_shutdown_log();
+
     if (failures != 0)
     {
         std::fprintf(stderr, "RegistryAttachContractTest: %d case(s) failed\n", failures);

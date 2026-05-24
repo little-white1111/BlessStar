@@ -107,6 +107,7 @@ int main()
     assert(bs_registry_facade_bind_instance(facade, "/adapter/plugin/after_freeze", &plugin) ==
            BS_REGISTRY_ERR_FROZEN);
 
+    bs_adapter_registry_shutdown_log();
     bs_registry_facade_destroy(facade);
     return 0;
 }

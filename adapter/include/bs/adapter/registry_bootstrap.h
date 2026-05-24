@@ -42,6 +42,9 @@ extern "C"
     void bs_adapter_registry_register_state_notifier(BsAdapterStateNotifierFn fn, void* user_data);
     void bs_adapter_registry_clear_state_notifier(void);
 
+    /** Release spdlog / log bus (call before exit or after facade-only bootstrap tests). */
+    void bs_adapter_registry_shutdown_log(void);
+
 #ifdef __cplusplus
 }
 #endif

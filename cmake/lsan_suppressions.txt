@@ -2,3 +2,4 @@
 # spdlog null_sink / registry may retain allocations until process exit.
 leak:spdlog::details::registry
 leak:spdlog::sinks::null_sink_mt
+leak:spdlog::logger
