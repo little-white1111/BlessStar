@@ -57,7 +57,12 @@ jobs:
       # AGENTS gate 1: CTest (below). Gate 4: warnings as errors via CMake option.
       - name: Configure (Unix)
         if: runner.os != 'Windows'
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'

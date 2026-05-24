@@ -38,5 +38,6 @@ int main()
     assert(reload_batch.impl != nullptr);
 
     bs_attach_context_destroy(ctx);
+    bs_adapter_registry_shutdown_log();
     return 0;
 }

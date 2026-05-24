@@ -118,7 +118,8 @@ int bs_adapter_registry_bootstrap_freeze(RegistryFacade* facade)
         return -1;
 
     AttachContext* legacy = facade_legacy_ctx(facade);
-    bs_attach_context_set_active(legacy);
+    if (!bs_attach_context_get_active())
+        bs_attach_context_set_active(legacy);
 
     if (bs_adapter_plugin_loader_load_all(legacy, nullptr) != 0)
         return -1;

@@ -58,6 +58,7 @@ int main()
 
     EventBus_Destroy(bus);
     bs_io_facade_destroy(io);
+    bs_adapter_registry_shutdown_log();
     bs_attach_context_destroy(ctx);
     return 0;
 }

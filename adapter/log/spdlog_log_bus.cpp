@@ -17,6 +17,7 @@
 
 static std::shared_ptr<spdlog::logger> g_logger;
 static std::recursive_mutex            g_log_mutex;
+static int                             g_spdlog_lib_shutdown = 0;
 
 static spdlog::level::level_enum map_level(BsLogLevel level)
 {
@@ -69,7 +70,11 @@ static void spdlog_shutdown(void)
         spdlog::drop(g_logger->name());
         g_logger.reset();
     }
-    spdlog::shutdown();
+    if (!g_spdlog_lib_shutdown)
+    {
+        spdlog::shutdown();
+        g_spdlog_lib_shutdown = 1;
+    }
 }
 
 static void blessstar_log_atexit_cleanup(void)
@@ -86,6 +91,8 @@ int bs_adapter_log_bind_spdlog_bus(void)
     std::lock_guard<std::recursive_mutex> lock(g_log_mutex);
     if (!g_logger)
     {
+        if (g_spdlog_lib_shutdown)
+            g_spdlog_lib_shutdown = 0;
         auto sink = std::make_shared<spdlog::sinks::null_sink_mt>();
         g_logger  = std::make_shared<spdlog::logger>("blessstar", sink);
         g_logger->set_level(spdlog::level::trace);

@@ -53,6 +53,7 @@ int main()
 
     bs_adapter_registry_clear_state_notifier();
     bs_attach_context_destroy(ctx);
+    bs_adapter_registry_shutdown_log();
     EventBus_Destroy(g_bus);
     return 0;
 }

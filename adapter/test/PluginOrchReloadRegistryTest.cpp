@@ -34,5 +34,6 @@ int main()
 
     bs_reload_batch_controller_destroy_from_binding(&batch, ctrl);
     bs_attach_context_destroy(ctx);
+    bs_adapter_registry_shutdown_log();
     return 0;
 }

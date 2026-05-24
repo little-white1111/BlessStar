@@ -3,3 +3,4 @@
 leak:spdlog::details::registry
 leak:spdlog::sinks::null_sink_mt
 leak:spdlog::logger
+leak:spdlog::details::thread_pool

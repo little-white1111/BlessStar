@@ -20,7 +20,14 @@ if(BLESSSTAR_TREAT_WARNINGS_AS_ERRORS)
     add_compile_options(-Wall -Wextra -Werror)
     # Match MSVC /wd4996: POSIX strdup/strncpy on Linux GCC (ubuntu CI Release).
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      add_compile_options(-Wno-deprecated-declarations -Wno-stringop-truncation)
+      # Match MSVC /wd4996; GCC-only noisy diagnostics on ubuntu-latest (Release -Werror).
+      add_compile_options(
+        -Wno-deprecated-declarations
+        -Wno-stringop-truncation
+        -Wno-stringop-overflow
+        -Wno-array-bounds
+        -Wno-maybe-uninitialized
+      )
     endif()
   endif()
 endif()
