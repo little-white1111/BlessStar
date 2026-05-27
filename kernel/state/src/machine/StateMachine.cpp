@@ -34,9 +34,12 @@ static const std::vector<StateTransition> defaultTransitions = {
 static const char* stateNames[] = {"INITIAL", "LOADING", "ACTIVE", "UPDATING", "ERROR", "CLOSED"};
 
 #if defined(__clang__)
-__attribute__((no_sanitize("enum")))
+#define BS_NO_SANITIZE_ENUM __attribute__((no_sanitize("enum")))
+#else
+#define BS_NO_SANITIZE_ENUM
 #endif
-const char* ConfigState_ToString(ConfigState state)
+
+BS_NO_SANITIZE_ENUM const char* ConfigState_ToString(ConfigState state)
 {
     if (state < 0 || state >= sizeof(stateNames) / sizeof(stateNames[0]))
     {
@@ -84,7 +87,7 @@ ConfigState StateMachine_GetCurrentState(const StateMachine* sm)
     return sm->currentState;
 }
 
-int StateMachine_Transition(StateMachine* sm, ConfigState newState)
+BS_NO_SANITIZE_ENUM int StateMachine_Transition(StateMachine* sm, ConfigState newState)
 {
     if (!sm)
         return -1;
@@ -103,7 +106,7 @@ int StateMachine_Transition(StateMachine* sm, ConfigState newState)
     return 0;
 }
 
-int StateMachine_CanTransition(const StateMachine* sm, ConfigState newState)
+BS_NO_SANITIZE_ENUM int StateMachine_CanTransition(const StateMachine* sm, ConfigState newState)
 {
     if (!sm)
         return 0;
