@@ -32,6 +32,8 @@ static int test_plugin_stop(Plugin* plugin)
 
 static const char* test_plugin_get_info(Plugin* plugin, const char* key)
 {
+    (void)plugin;
+    (void)key;
     static const char* info = "test_info";
     return info;
 }
