@@ -47,7 +47,7 @@ static void test_model_c_parse_and_gate()
 
 static void test_string_length_4095_ok()
 {
-    std::string         json   = bs_test_build_single_instruction_metadata_value(4095);
+    std::string         json   = bs_test_build_single_instruction_metadata_value(kMaxStringLen - 1);
     BsConfigParseResult result = {};
     BsStatus            st =
         bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
@@ -57,7 +57,7 @@ static void test_string_length_4095_ok()
 
 static void test_string_length_4097_fail()
 {
-    std::string         json   = bs_test_build_single_instruction_metadata_value(4097);
+    std::string         json   = bs_test_build_single_instruction_metadata_value(kMaxStringLen + 1);
     BsConfigParseResult result = {};
     BsStatus            st =
         bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
