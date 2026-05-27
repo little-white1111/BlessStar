@@ -39,9 +39,9 @@ static void test_Metrics_ThreadSafety()
     for (int i = 0; i < 10; i++)
     {
         threads.emplace_back(
-            [counter, N]()
+            [counter]()
             {
-                for (int j = 0; j < N; j++)
+                for (int j = 0; j < 10000; j++)
                 {
                     bs_metric_counter_inc(counter);
                 }
