@@ -69,15 +69,14 @@ static void test_BsMemoryPool_Stress()
 static void test_BsMemoryPool_ThreadSafety()
 {
     BsMemoryPool*            pool = bs_memory_pool_create(64, 1024, 64 * 1024);
-    const int                N    = 1000;
     std::vector<std::thread> threads;
 
     for (int i = 0; i < 10; i++)
     {
         threads.emplace_back(
-            [pool, N]()
+            [pool]()
             {
-                for (int j = 0; j < N; j++)
+                for (int j = 0; j < 1000; j++)
                 {
                     void* ptr = bs_memory_pool_alloc(pool, 32 + (j % 100));
                     if (ptr)
