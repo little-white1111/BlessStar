@@ -14,8 +14,9 @@ function(blessstar_add_unit_test name)
     # Release tests must still execute assert() bodies (otherwise C4101 / false greens).
     target_compile_options(${name} PRIVATE $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/UNDEBUG>)
   else()
-    # Linux/macOS Debug (e.g. CI Sanitizer) must not define NDEBUG for the same reason.
-    target_compile_options(${name} PRIVATE $<$<CONFIG:Debug>:-UNDEBUG>)
+    # Release/RelWithDebInfo CI (ubuntu cmake job) must keep assert() active under -Werror.
+    target_compile_options(${name} PRIVATE
+      $<$<OR:$<CONFIG:Debug>,$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:-UNDEBUG>)
   endif()
   if(_arg_LIBS)
     target_link_libraries(${name} PRIVATE ${_arg_LIBS})
@@ -130,6 +131,16 @@ target_include_directories(bs_test_attach_resilience
 target_compile_definitions(bs_test_attach_resilience PRIVATE BS_TESTING)
 set_tests_properties(bs_test_attach_resilience
   PROPERTIES LABELS "unit;attach;day12;regression" TIMEOUT 120
+)
+blessstar_add_unit_test(bs_test_attach_atomicity
+  SOURCES adapter/test/AttachAtomicityTest.cpp
+  LIBS bs_adapter_persistence
+)
+target_include_directories(bs_test_attach_atomicity
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/persistence
+)
+set_tests_properties(bs_test_attach_atomicity
+  PROPERTIES LABELS "unit;attach;day14;regression" TIMEOUT 120
 )
 blessstar_add_unit_test(bs_test_reload_config_json_integration
   SOURCES adapter/test/ReloadConfigJsonIntegrationTest.cpp
