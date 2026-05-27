@@ -52,7 +52,14 @@ jobs:
           CLANG_FORMAT="$(command -v clang-format-18 || command -v clang-format-16 || command -v clang-format)"
           echo "Using ${CLANG_FORMAT}"
           "${CLANG_FORMAT}" --version
-          git ls-files '*.cpp' '*.h' '*.hpp' '*.cc' '*.c' | grep -v '^Source/' | xargs -r "${CLANG_FORMAT}" --dry-run --Werror
+          failed=0
+          while IFS= read -r f; do
+            if ! "${CLANG_FORMAT}" --dry-run --Werror "${f}"; then
+              echo "clang-format failed: ${f}"
+              failed=1
+            fi
+          done < <(git ls-files '*.cpp' '*.h' '*.hpp' '*.cc' '*.c' | grep -v '^Source/')
+          exit "${failed}"
 
       # AGENTS gate 1: CTest (below). Gate 4: warnings as errors via CMake option.
       - name: Configure (Unix)
@@ -98,7 +105,8 @@ jobs:
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
             -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
-            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
+            -DBLESSSTAR_SANITIZER_CI=ON
 
       - name: Build (Sanitizer)
         run: cmake --build build-san -j 4

@@ -12,6 +12,11 @@ option(
   "Treat compiler warnings as errors (AGENTS quality gate 4 in CI)"
   OFF
 )
+option(
+  BLESSSTAR_SANITIZER_CI
+  "CI sanitizer build: memory log bus only (no spdlog / LSan false positives)"
+  OFF
+)
 if(BLESSSTAR_TREAT_WARNINGS_AS_ERRORS)
   if(MSVC)
     # /WX: warnings as errors. /wd4996: POSIX CRT names (strdup) and "unsafe" CRT (strncpy) — keep portable C without rewriting for MSVC-only APIs.
@@ -244,23 +249,26 @@ target_link_libraries(bs_adapter_attach
     bs_kernel_common
 )
 
-include(FetchContent)
-FetchContent_Declare(
-  spdlog
-  GIT_REPOSITORY https://github.com/gabime/spdlog.git
-  GIT_TAG v1.14.1
-)
-set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(spdlog)
-# Linux sanitizer CI passes -fsanitize via CMAKE_CXX_FLAGS; apply to FetchContent too.
-if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=" AND TARGET spdlog)
-  target_compile_options(spdlog PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
-  target_link_options(spdlog PRIVATE -fsanitize=address,undefined)
+if(NOT BLESSSTAR_SANITIZER_CI)
+  include(FetchContent)
+  FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.14.1
+  )
+  set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(spdlog)
+  # Linux sanitizer CI passes -fsanitize via CMAKE_CXX_FLAGS; apply to FetchContent too.
+  if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=" AND TARGET spdlog)
+    target_compile_options(spdlog PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+    target_link_options(spdlog PRIVATE -fsanitize=address,undefined)
+  endif()
 endif()
 
-add_library(bs_adapter_log
-  adapter/log/spdlog_log_bus.cpp
-)
+add_library(bs_adapter_log adapter/log/memory_log_bus.cpp)
+if(NOT BLESSSTAR_SANITIZER_CI)
+  target_sources(bs_adapter_log PRIVATE adapter/log/spdlog_log_bus.cpp)
+endif()
 target_include_directories(bs_adapter_log
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/adapter/include
@@ -269,8 +277,13 @@ target_link_libraries(bs_adapter_log
   PUBLIC
     bs_kernel_common
     bs_adapter_attach
-    spdlog::spdlog
 )
+if(BLESSSTAR_SANITIZER_CI)
+  target_compile_definitions(bs_adapter_log PRIVATE BLESSSTAR_SANITIZER_CI=1)
+  target_compile_definitions(bs_adapter_registry PRIVATE BLESSSTAR_SANITIZER_CI=1)
+else()
+  target_link_libraries(bs_adapter_log PUBLIC spdlog::spdlog)
+endif()
 
 # ------------------------------
 # Adapter: io providers
@@ -436,11 +449,6 @@ target_link_libraries(bs_adapter_registry
     bs_adapter_log
     bs_adapter_attach
 )
-# Sanitizer CI: avoid spdlog global registry leaks under LSan (AUD-G-01).
-if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=")
-  target_compile_definitions(bs_adapter_registry PRIVATE BLESSSTAR_SANITIZER_CI=1)
-endif()
-
 # ------------------------------
 # Unit tests (sources under modules; registration here + CTest)
 # ------------------------------
