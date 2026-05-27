@@ -23,16 +23,17 @@ if(BLESSSTAR_TREAT_WARNINGS_AS_ERRORS)
     add_compile_options(/W3 /WX /wd4996)
   else()
     add_compile_options(-Wall -Wextra -Werror)
-    # Match MSVC /wd4996: POSIX strdup/strncpy on Linux GCC (ubuntu CI Release).
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      # Match MSVC /wd4996; GCC-only noisy diagnostics on ubuntu-latest (Release -Werror).
+    # Match MSVC /wd4996: POSIX strdup/strncpy on Linux GCC/Clang (ubuntu CI Release -Werror).
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
       add_compile_options(
         -Wno-deprecated-declarations
         -Wno-stringop-truncation
         -Wno-stringop-overflow
         -Wno-array-bounds
-        -Wno-maybe-uninitialized
       )
+      if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        add_compile_options(-Wno-maybe-uninitialized)
+      endif()
     endif()
   endif()
 endif()
@@ -280,7 +281,6 @@ target_link_libraries(bs_adapter_log
 )
 if(BLESSSTAR_SANITIZER_CI)
   target_compile_definitions(bs_adapter_log PRIVATE BLESSSTAR_SANITIZER_CI=1)
-  target_compile_definitions(bs_adapter_registry PRIVATE BLESSSTAR_SANITIZER_CI=1)
 else()
   target_link_libraries(bs_adapter_log PUBLIC spdlog::spdlog)
 endif()

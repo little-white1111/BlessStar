@@ -38,25 +38,10 @@ static AttachContext* facade_legacy_ctx(RegistryFacade* facade)
     return legacy;
 }
 
-#if defined(BLESSSTAR_SANITIZER_CI)
-static void sanitizer_noop_log(uint16_t domain_id, BsLogLevel level, const char* line, void* ctx)
-{
-    (void)domain_id;
-    (void)level;
-    (void)line;
-    (void)ctx;
-}
-
-static int bind_bootstrap_log_bus(void)
-{
-    return bs_adapter_log_bind_memory_bus(sanitizer_noop_log, nullptr);
-}
-#else
 static int bind_bootstrap_log_bus(void)
 {
     return bs_adapter_log_bind_spdlog_bus();
 }
-#endif
 
 int bs_adapter_registry_bootstrap_begin(RegistryFacade* facade)
 {
