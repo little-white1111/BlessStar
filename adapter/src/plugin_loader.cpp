@@ -4,6 +4,7 @@
 #include "bs/adapter/plugin/plugin_loader.h"
 #include "bs/adapter/plugin/plugin_manifest_paths.h"
 
+#include <cstdlib>
 #include <cstring>
 
 namespace
