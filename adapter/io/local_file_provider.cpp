@@ -27,6 +27,12 @@ static char* dup_cstr(const char* s)
     return p;
 }
 
+static bool uri_rest_is_windows_drive(const char* rest)
+{
+    return rest[2] == ':' &&
+           ((rest[1] >= 'A' && rest[1] <= 'Z') || (rest[1] >= 'a' && rest[1] <= 'z'));
+}
+
 static int file_uri_to_path(const char* uri, std::string* out_path)
 {
     if (!uri || !out_path)
@@ -42,14 +48,12 @@ static int file_uri_to_path(const char* uri, std::string* out_path)
         {
             if (rest[2] == '/')
                 *out_path = rest + 2;
-            else if (rest[2] == ':' && ((rest[1] >= 'A' && rest[1] <= 'Z') ||
-                                        (rest[1] >= 'a' && rest[1] <= 'z')))
+            else if (uri_rest_is_windows_drive(rest))
                 *out_path = rest + 1;
             else
                 *out_path = rest + 1;
         }
-        else if (rest[2] == ':' &&
-                 ((rest[1] >= 'A' && rest[1] <= 'Z') || (rest[1] >= 'a' && rest[1] <= 'z')))
+        else if (uri_rest_is_windows_drive(rest))
             *out_path = rest + 1;
         else
             *out_path = rest;

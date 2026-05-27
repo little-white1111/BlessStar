@@ -2,6 +2,12 @@
 
 #include "attach_uri_path.h"
 
+static int uri_rest_is_windows_drive(const char* rest)
+{
+    return rest[2] == ':' &&
+           ((rest[1] >= 'A' && rest[1] <= 'Z') || (rest[1] >= 'a' && rest[1] <= 'z'));
+}
+
 int bs_attach_uri_to_path(const char* uri, char* out_path, size_t out_cap)
 {
     if (!uri || !out_path || out_cap == 0)
@@ -16,14 +22,12 @@ int bs_attach_uri_to_path(const char* uri, char* out_path, size_t out_cap)
         {
             if (rest[2] == '/')
                 rest += 2;
-            else if (rest[2] == ':' && ((rest[1] >= 'A' && rest[1] <= 'Z') ||
-                                        (rest[1] >= 'a' && rest[1] <= 'z')))
+            else if (uri_rest_is_windows_drive(rest))
                 rest += 1;
             else
                 rest += 1;
         }
-        else if (rest[2] == ':' &&
-                 ((rest[1] >= 'A' && rest[1] <= 'Z') || (rest[1] >= 'a' && rest[1] <= 'z')))
+        else if (uri_rest_is_windows_drive(rest))
             rest += 1;
         else
             ++rest;
