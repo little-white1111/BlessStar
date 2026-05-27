@@ -2,7 +2,7 @@
  * IMPL-08-16 / day8: end-to-end attach chain (implemented paths only).
  *
  * AttachContext -> bootstrap_begin_ctx -> freeze_ctx (plugin loader)
- * -> resolve /adapter/io/* -> IoFacade.read -> bs_status_format
+ * -> resolve /adapter/io/... -> IoFacade.read -> bs_status_format
  * -> reload (default ir_gate) + Report
  */
 
