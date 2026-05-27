@@ -1,6 +1,6 @@
 /**
  * Shared attach/bootstrap helpers for adapter integration tests.
- * Only include from adapter/test/*.cpp (not kernel tests).
+ * Only include from adapter test .cpp files (not kernel tests).
  */
 
 #pragma once
