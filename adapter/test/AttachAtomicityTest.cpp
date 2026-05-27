@@ -170,9 +170,10 @@ int main()
             std::ofstream orphan(orphan2);
             orphan << "orphan2";
         }
-        BsAttachWalEntry e{};
+        const std::string orphan2_path = orphan2.string();
+        BsAttachWalEntry  e{};
         e.uri              = uri.c_str();
-        e.staging_path     = orphan2.string().c_str();
+        e.staging_path     = orphan2_path.c_str();
         e.expected_rev     = 0;
         e.new_rev          = 1;
         e.payload_checksum = bs_attach_crc32(data, len);

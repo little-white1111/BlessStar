@@ -411,6 +411,7 @@ static int wal_scan_last_committed_epoch(FILE* f, uint64_t* last_committed_out, 
                                (unsigned long long)record_start, rh);
             return BS_ATTACH_OK;
         }
+        (void)record_start;
 
         uint8_t* payload = NULL;
         if (len > 0)
@@ -603,6 +604,7 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
         {
             break;
         }
+        (void)record_start;
 
         uint8_t* payload = NULL;
         if (len > 0)
