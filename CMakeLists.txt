@@ -436,6 +436,10 @@ target_link_libraries(bs_adapter_registry
     bs_adapter_log
     bs_adapter_attach
 )
+# Sanitizer CI: avoid spdlog global registry leaks under LSan (AUD-G-01).
+if(CMAKE_CXX_FLAGS MATCHES "-fsanitize=")
+  target_compile_definitions(bs_adapter_registry PRIVATE BLESSSTAR_SANITIZER_CI=1)
+endif()
 
 # ------------------------------
 # Unit tests (sources under modules; registration here + CTest)

@@ -159,8 +159,7 @@ AttachContext* bs_attach_context_legacy_bootstrap(void)
 
 void bs_attach_context_shutdown_all_logs(void)
 {
-    if (g_active_ctx &&
-        (g_active_ctx->log_bus_bound || g_active_ctx->log_state.bus))
+    if (g_active_ctx && (g_active_ctx->log_bus_bound || g_active_ctx->log_state.bus))
     {
         bs_log_shutdown_bus_ctx(&g_active_ctx->log_state);
         g_active_ctx->log_bus_bound = 0;
