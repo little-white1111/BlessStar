@@ -111,7 +111,21 @@ StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count)
         {
             for (size_t j = 0; j < shard_count; j++)
             {
-                all_entries.push_back(entries[j]);
+                StateEntry dst{};
+                dst.path      = entries[j].path ? strdup(entries[j].path) : nullptr;
+                dst.state     = entries[j].state;
+                dst.version   = entries[j].version;
+                dst.timestamp = entries[j].timestamp;
+                dst.dataSize  = entries[j].dataSize;
+                if (entries[j].dataSnapshot && entries[j].dataSize > 0)
+                {
+                    dst.dataSnapshot = malloc(entries[j].dataSize);
+                    if (dst.dataSnapshot)
+                        memcpy((void*)dst.dataSnapshot, entries[j].dataSnapshot,
+                               entries[j].dataSize);
+                }
+                dst.next = nullptr;
+                all_entries.push_back(dst);
             }
             StateBus_FreeEntries(entries, shard_count);
         }
@@ -123,31 +137,19 @@ StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count)
 
     StateEntry* result = (StateEntry*)malloc(all_entries.size() * sizeof(StateEntry));
     if (!result)
-        return nullptr;
-
-    for (size_t i = 0; i < all_entries.size(); i++)
     {
-        const StateEntry& src = all_entries[i];
-        result[i].path        = strdup(src.path);
-        result[i].state       = src.state;
-        result[i].version     = src.version;
-        result[i].timestamp   = src.timestamp;
-        result[i].dataSize    = src.dataSize;
-        if (src.dataSnapshot && src.dataSize > 0)
+        for (auto& e : all_entries)
         {
-            result[i].dataSnapshot = malloc(src.dataSize);
-            if (result[i].dataSnapshot)
-            {
-                memcpy((void*)result[i].dataSnapshot, src.dataSnapshot, src.dataSize);
-            }
+            if (e.path)
+                free((void*)e.path);
+            if (e.dataSnapshot)
+                free((void*)e.dataSnapshot);
         }
-        else
-        {
-            result[i].dataSnapshot = nullptr;
-        }
-        result[i].next = nullptr;
+        return nullptr;
     }
 
+    for (size_t i = 0; i < all_entries.size(); i++)
+        result[i] = all_entries[i];
     return result;
 }
 

@@ -23,6 +23,10 @@ extern "C"
                                              AttachManifestPluginConfig* out_configs,
                                              int                         max_configs);
 
+    /** Free strings allocated by bs_adapter_attach_manifest_yaml_load. */
+    void bs_adapter_attach_manifest_yaml_free_configs(AttachManifestPluginConfig* configs,
+                                                      int                         count);
+
 #ifdef __cplusplus
 }
 #endif

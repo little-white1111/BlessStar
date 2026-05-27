@@ -1,10 +1,10 @@
 #include "bs/adapter/plugin/attach_manifest_yaml.h"
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include <string>
-#include <vector>
 
 namespace
 {
@@ -21,10 +21,15 @@ static void trim(std::string& s)
         s.erase(0, i);
 }
 
-static const char* dup_cstr(const std::string& s, std::vector<std::string>& storage)
+static const char* dup_cstr(const std::string& s)
 {
-    storage.push_back(s);
-    return storage.back().c_str();
+    const size_t n = s.size();
+    char*        p = (char*)std::malloc(n + 1);
+    if (!p)
+        return nullptr;
+    std::memcpy(p, s.data(), n);
+    p[n] = '\0';
+    return p;
 }
 
 struct ParseState
@@ -34,7 +39,6 @@ struct ParseState
     int                         count           = 0;
     int                         cur             = -1;
     int                         in_depends_list = 0;
-    std::vector<std::string>    strings;
 };
 
 static AttachManifestPluginConfig* current_plugin(ParseState* st)
@@ -63,9 +67,11 @@ static int start_plugin(ParseState* st, const std::string& id)
     st->cur             = st->count;
     st->in_depends_list = 0;
     auto& cfg           = st->out_configs[st->count];
-    cfg.manifest_id     = dup_cstr(id, st->strings);
-    cfg.enabled         = 1;
-    cfg.depends_count   = 0;
+    cfg.manifest_id     = dup_cstr(id);
+    if (!cfg.manifest_id)
+        return -1;
+    cfg.enabled       = 1;
+    cfg.depends_count = 0;
     ++st->count;
     return 0;
 }
@@ -123,7 +129,10 @@ static int parse_line(ParseState* st, const std::string& raw)
         trim(dep);
         if (dep.empty() || cfg->depends_count >= 8)
             return -1;
-        cfg->depends_on[cfg->depends_count++] = dup_cstr(dep, st->strings);
+        const char* dup = dup_cstr(dep);
+        if (!dup)
+            return -1;
+        cfg->depends_on[cfg->depends_count++] = dup;
         return 0;
     }
 
@@ -140,6 +149,15 @@ int bs_adapter_attach_manifest_yaml_load(const char* path, AttachManifestPluginC
 {
     if (!path || !out_configs || max_configs <= 0)
         return -1;
+
+    for (int i = 0; i < max_configs; ++i)
+    {
+        out_configs[i].manifest_id   = nullptr;
+        out_configs[i].enabled       = -1;
+        out_configs[i].depends_count = 0;
+        for (int d = 0; d < 8; ++d)
+            out_configs[i].depends_on[d] = nullptr;
+    }
 
     FILE* f = std::fopen(path, "r");
     if (!f)
@@ -160,4 +178,27 @@ int bs_adapter_attach_manifest_yaml_load(const char* path, AttachManifestPluginC
     }
     std::fclose(f);
     return st.count;
+}
+
+void bs_adapter_attach_manifest_yaml_free_configs(AttachManifestPluginConfig* configs, int count)
+{
+    if (!configs || count <= 0)
+        return;
+    for (int i = 0; i < count; ++i)
+    {
+        if (configs[i].manifest_id)
+        {
+            std::free((void*)configs[i].manifest_id);
+            configs[i].manifest_id = nullptr;
+        }
+        for (int d = 0; d < configs[i].depends_count && d < 8; ++d)
+        {
+            if (configs[i].depends_on[d])
+            {
+                std::free((void*)configs[i].depends_on[d]);
+                configs[i].depends_on[d] = nullptr;
+            }
+        }
+        configs[i].depends_count = 0;
+    }
 }

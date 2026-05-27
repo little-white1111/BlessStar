@@ -28,6 +28,10 @@ void StateBus_Destroy(StateBus* bus)
     for (auto& pair : bus->entries)
     {
         StateEntry* entry = pair.second;
+        if (entry->path)
+        {
+            free((void*)entry->path);
+        }
         if (entry->dataSnapshot)
         {
             free((void*)entry->dataSnapshot);

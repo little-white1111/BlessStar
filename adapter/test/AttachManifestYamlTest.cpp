@@ -21,5 +21,6 @@ int main()
             assert(cfgs[i].depends_count >= 2);
         }
     }
+    bs_adapter_attach_manifest_yaml_free_configs(cfgs, n);
     return 0;
 }

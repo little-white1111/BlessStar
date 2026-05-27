@@ -100,9 +100,29 @@ static void apply_yaml_config_resolved(const char* resolved_path)
         {
             g_runtime[idx].depends_count = cfgs[i].depends_count;
             for (int d = 0; d < cfgs[i].depends_count; ++d)
-                g_runtime[idx].depends_on[d] = cfgs[i].depends_on[d];
+            {
+                if (g_runtime[idx].depends_storage[d])
+                {
+                    std::free((void*)g_runtime[idx].depends_storage[d]);
+                    g_runtime[idx].depends_storage[d] = nullptr;
+                }
+                if (cfgs[i].depends_on[d])
+                {
+                    const size_t len = std::strlen(cfgs[i].depends_on[d]);
+                    char*        dup = (char*)std::malloc(len + 1);
+                    if (dup)
+                    {
+                        std::memcpy(dup, cfgs[i].depends_on[d], len);
+                        dup[len]                          = '\0';
+                        g_runtime[idx].depends_storage[d] = dup;
+                        g_runtime[idx].depends_on[d]      = dup;
+                    }
+                }
+            }
         }
     }
+
+    bs_adapter_attach_manifest_yaml_free_configs(cfgs, n);
 }
 
 static int is_enabled(int idx)

@@ -33,6 +33,9 @@ static const std::vector<StateTransition> defaultTransitions = {
 
 static const char* stateNames[] = {"INITIAL", "LOADING", "ACTIVE", "UPDATING", "ERROR", "CLOSED"};
 
+#if defined(__clang__)
+__attribute__((no_sanitize("enum")))
+#endif
 const char* ConfigState_ToString(ConfigState state)
 {
     if (state < 0 || state >= sizeof(stateNames) / sizeof(stateNames[0]))
