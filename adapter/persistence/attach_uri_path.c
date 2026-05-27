@@ -13,7 +13,16 @@ int bs_attach_uri_to_path(const char* uri, char* out_path, size_t out_cap)
     if (rest[0] == '/')
     {
         if (rest[1] == '/')
-            rest += 2;
+        {
+            if (rest[2] == '/')
+                rest += 2;
+            else if (rest[2] == ':' &&
+                     ((rest[1] >= 'A' && rest[1] <= 'Z') ||
+                      (rest[1] >= 'a' && rest[1] <= 'z')))
+                rest += 1;
+            else
+                rest += 1;
+        }
         else if (rest[2] == ':' &&
                  ((rest[1] >= 'A' && rest[1] <= 'Z') || (rest[1] >= 'a' && rest[1] <= 'z')))
             rest += 1;

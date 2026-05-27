@@ -68,6 +68,18 @@ static int keys_seen_add(KeysSeen* ks, const char* key, ParseCtx* ctx, size_t li
     return 1;
 }
 
+static void metadata_list_destroy(ConfigV1Metadata* meta)
+{
+    while (meta)
+    {
+        ConfigV1Metadata* next = meta->next;
+        free(meta->key);
+        free(meta->value);
+        free(meta);
+        meta = next;
+    }
+}
+
 static BsStatus fail_status(ParseCtx* ctx)
 {
     return bs_status_from_config_parse(ctx->err_code ? ctx->err_code : BS_CONFIG_PARSE_ERR_PARSE);
@@ -439,18 +451,24 @@ static int parse_metadata_object(ParseCtx* ctx, ConfigV1Metadata** out_head)
         }
         if (!expect(ctx, JSON_TOK_COLON))
         {
+            keys_seen_clear(&seen);
+            metadata_list_destroy(head);
             free(key);
             return 0;
         }
         char* val = parse_string_value(ctx);
         if (!val)
         {
+            keys_seen_clear(&seen);
+            metadata_list_destroy(head);
             free(key);
             return 0;
         }
         ConfigV1Metadata* node = (ConfigV1Metadata*)calloc(1, sizeof(ConfigV1Metadata));
         if (!node)
         {
+            keys_seen_clear(&seen);
+            metadata_list_destroy(head);
             free(key);
             free(val);
             set_err(ctx, BS_CONFIG_PARSE_ERR_OOM, 0, 0);
@@ -466,7 +484,11 @@ static int parse_metadata_object(ParseCtx* ctx, ConfigV1Metadata** out_head)
 
         tok = peek(ctx);
         if (!tok)
+        {
+            keys_seen_clear(&seen);
+            metadata_list_destroy(head);
             return 0;
+        }
         if (tok->type == JSON_TOK_COMMA)
         {
             advance(ctx);
@@ -481,6 +503,7 @@ static int parse_metadata_object(ParseCtx* ctx, ConfigV1Metadata** out_head)
             return 1;
         }
         keys_seen_clear(&seen);
+        metadata_list_destroy(head);
         set_err(ctx, BS_CONFIG_PARSE_ERR_PARSE, tok->line, tok->column);
         return 0;
     }
@@ -584,6 +607,8 @@ static int parse_instruction_item(ParseCtx* ctx, ConfigV1Instruction** out_instr
                 free(key);
                 free(instr->type);
                 free(instr->name);
+                metadata_list_destroy(instr->metadata);
+                instr->metadata = NULL;
                 free(instr);
                 return 0;
             }

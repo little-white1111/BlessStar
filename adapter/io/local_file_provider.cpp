@@ -37,9 +37,18 @@ static int file_uri_to_path(const char* uri, std::string* out_path)
     const char* rest = uri + 7;
     if (rest[0] == '/')
     {
-        /* file:///absolute: file:///C:/... or file:////unc */
+        /* file:///absolute, file:///C:/..., file:////absolute (file:/// + /path), file:////unc */
         if (rest[1] == '/')
-            *out_path = rest + 2;
+        {
+            if (rest[2] == '/')
+                *out_path = rest + 2;
+            else if (rest[2] == ':' &&
+                     ((rest[1] >= 'A' && rest[1] <= 'Z') ||
+                      (rest[1] >= 'a' && rest[1] <= 'z')))
+                *out_path = rest + 1;
+            else
+                *out_path = rest + 1;
+        }
         else if (rest[2] == ':' &&
                  ((rest[1] >= 'A' && rest[1] <= 'Z') || (rest[1] >= 'a' && rest[1] <= 'z')))
             *out_path = rest + 1;

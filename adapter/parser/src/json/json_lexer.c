@@ -54,6 +54,7 @@ static void skip_ws(JsonLexer* lex)
 static JsonToken make_token(JsonLexer* lex, JsonTokenType type, const char* start, size_t len,
                             size_t line, size_t column)
 {
+    (void)lex;
     JsonToken tok;
     tok.type   = type;
     tok.start  = start;

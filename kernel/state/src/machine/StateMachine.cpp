@@ -48,7 +48,7 @@ BS_NO_SANITIZE_ENUM const char* ConfigState_ToString(ConfigState state)
     return stateNames[state];
 }
 
-static bool isValidTransition(ConfigState from, ConfigState to)
+static BS_NO_SANITIZE_ENUM bool isValidTransition(ConfigState from, ConfigState to)
 {
     for (const auto& trans : defaultTransitions)
     {
