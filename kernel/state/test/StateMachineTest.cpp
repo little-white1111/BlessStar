@@ -11,11 +11,8 @@ static void test_StateMachine_CreateDestroy()
     StateMachine* sm = StateMachine_Create("test/config");
     assert(sm != nullptr);
 
-    ConfigState state = StateMachine_GetCurrentState(sm);
-    assert(state == CONFIG_STATE_INITIAL);
-
-    uint64_t version = StateMachine_GetVersion(sm);
-    assert(version == 0);
+    assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_INITIAL);
+    assert(StateMachine_GetVersion(sm) == 0);
 
     StateMachine_Destroy(sm);
     printf("test_StateMachine_CreateDestroy: PASS\n");
@@ -26,28 +23,23 @@ static void test_StateMachine_ValidTransitions()
     StateMachine* sm = StateMachine_Create("test/config");
     assert(sm != nullptr);
 
-    int ret = StateMachine_Transition(sm, CONFIG_STATE_LOADING);
-    assert(ret == 0);
+    assert(StateMachine_Transition(sm, CONFIG_STATE_LOADING) == 0);
     assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_LOADING);
     assert(StateMachine_GetVersion(sm) == 1);
 
-    ret = StateMachine_Transition(sm, CONFIG_STATE_ACTIVE);
-    assert(ret == 0);
+    assert(StateMachine_Transition(sm, CONFIG_STATE_ACTIVE) == 0);
     assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_ACTIVE);
     assert(StateMachine_GetVersion(sm) == 2);
 
-    ret = StateMachine_Transition(sm, CONFIG_STATE_UPDATING);
-    assert(ret == 0);
+    assert(StateMachine_Transition(sm, CONFIG_STATE_UPDATING) == 0);
     assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_UPDATING);
     assert(StateMachine_GetVersion(sm) == 3);
 
-    ret = StateMachine_Transition(sm, CONFIG_STATE_ACTIVE);
-    assert(ret == 0);
+    assert(StateMachine_Transition(sm, CONFIG_STATE_ACTIVE) == 0);
     assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_ACTIVE);
     assert(StateMachine_GetVersion(sm) == 4);
 
-    ret = StateMachine_Transition(sm, CONFIG_STATE_CLOSED);
-    assert(ret == 0);
+    assert(StateMachine_Transition(sm, CONFIG_STATE_CLOSED) == 0);
     assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_CLOSED);
     assert(StateMachine_GetVersion(sm) == 5);
 
@@ -60,16 +52,14 @@ static void test_StateMachine_InvalidTransitions()
     StateMachine* sm = StateMachine_Create("test/config");
     assert(sm != nullptr);
 
-    int ret = StateMachine_Transition(sm, CONFIG_STATE_ACTIVE);
-    assert(ret == -2);
+    assert(StateMachine_Transition(sm, CONFIG_STATE_ACTIVE) == -2);
     assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_INITIAL);
     assert(StateMachine_GetVersion(sm) == 0);
 
     StateMachine_Transition(sm, CONFIG_STATE_LOADING);
     StateMachine_Transition(sm, CONFIG_STATE_ACTIVE);
 
-    ret = StateMachine_Transition(sm, CONFIG_STATE_LOADING);
-    assert(ret == -2);
+    assert(StateMachine_Transition(sm, CONFIG_STATE_LOADING) == -2);
     assert(StateMachine_GetCurrentState(sm) == CONFIG_STATE_ACTIVE);
     assert(StateMachine_GetVersion(sm) == 2);
 
@@ -103,7 +93,7 @@ struct StateMachineCallbackData
     const char* lastPath;
 };
 
-static StateMachineCallbackData g_callbackData = {0};
+static StateMachineCallbackData g_callbackData = {};
 
 static void stateMachineTransitionCallback(const char* path, ConfigState from, ConfigState to)
 {
@@ -118,7 +108,7 @@ static void test_StateMachine_Callback()
     StateMachine* sm = StateMachine_Create("test/config");
     assert(sm != nullptr);
 
-    g_callbackData = {0};
+    g_callbackData = {};
 
     StateMachine_SetCallback(sm, stateMachineTransitionCallback);
 
