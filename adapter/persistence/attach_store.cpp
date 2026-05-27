@@ -1,5 +1,4 @@
 #include "bs/adapter/persistence/attach_store.h"
-
 #include "bs/adapter/persistence/attach_wal.h"
 
 #include <cstdio>
@@ -33,8 +32,8 @@ struct BsAttachStore
     std::unordered_map<std::string, uint64_t>    revisions;
     std::unordered_map<std::string, std::string> canonical_paths;
     std::vector<StagedEntry>                     staged;
-    bool                                         batch_open = false;
-    BsAttachWal*                                 wal         = nullptr;
+    bool                                         batch_open   = false;
+    BsAttachWal*                                 wal          = nullptr;
     BsAttachFsyncPolicy                          fsync_policy = BS_ATTACH_FSYNC_BATCH_COMMIT;
 };
 
@@ -166,7 +165,8 @@ static int copy_file_sync(const std::string& src, const std::string& dst)
     return BS_ATTACH_OK;
 }
 
-static int load_manifest_from_path(BsAttachStore* store, const std::string& path, bool verify_checksum)
+static int load_manifest_from_path(BsAttachStore* store, const std::string& path,
+                                   bool verify_checksum)
 {
     std::ifstream in(path);
     if (!in)
@@ -393,8 +393,7 @@ static int commit_one(BsAttachStore* store, const char* uri, const char* path, c
 
     if (!store->memory_only)
     {
-        const int wr =
-            write_file_atomic(path, data, len, should_fsync_canonical(store));
+        const int wr = write_file_atomic(path, data, len, should_fsync_canonical(store));
         if (wr != BS_ATTACH_OK)
             return wr;
     }
@@ -486,15 +485,14 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
 
     for (size_t i = 0; i < store->staged.size(); ++i)
     {
-        const auto& e            = store->staged[i];
-        const uint64_t new_rev = e.expected_rev + 1;
-        staging_paths[i]         = make_staging_path(e.path, next_epoch, new_rev);
-        wal_entries[i].uri       = e.uri.c_str();
-        wal_entries[i].staging_path = staging_paths[i].c_str();
-        wal_entries[i].expected_rev = e.expected_rev;
-        wal_entries[i].new_rev      = new_rev;
-        wal_entries[i].payload_checksum =
-            crc32_payload(e.data.data(), e.data.size());
+        const auto&    e                = store->staged[i];
+        const uint64_t new_rev          = e.expected_rev + 1;
+        staging_paths[i]                = make_staging_path(e.path, next_epoch, new_rev);
+        wal_entries[i].uri              = e.uri.c_str();
+        wal_entries[i].staging_path     = staging_paths[i].c_str();
+        wal_entries[i].expected_rev     = e.expected_rev;
+        wal_entries[i].new_rev          = new_rev;
+        wal_entries[i].payload_checksum = crc32_payload(e.data.data(), e.data.size());
     }
 
     if (!store->memory_only)
@@ -502,9 +500,8 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
         open_wal(store);
         if (store->wal)
         {
-            const int wr =
-                bs_attach_wal_append_batch(store->wal, next_epoch, wal_entries.data(),
-                                           wal_entries.size());
+            const int wr = bs_attach_wal_append_batch(store->wal, next_epoch, wal_entries.data(),
+                                                      wal_entries.size());
             if (wr != BS_ATTACH_OK)
             {
                 bs_attach_store_batch_abort(store);
@@ -515,9 +512,8 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
         for (size_t i = 0; i < store->staged.size(); ++i)
         {
             const auto& e = store->staged[i];
-            const int   wr =
-                write_file_atomic(staging_paths[i].c_str(), e.data.data(), e.data.size(),
-                                  should_fsync_canonical(store));
+            const int wr = write_file_atomic(staging_paths[i].c_str(), e.data.data(), e.data.size(),
+                                             should_fsync_canonical(store));
             if (wr != BS_ATTACH_OK)
             {
                 bs_attach_store_batch_abort(store);
@@ -528,13 +524,13 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
 
     for (size_t i = 0; i < store->staged.size(); ++i)
     {
-        const auto& e = store->staged[i];
+        const auto& e                 = store->staged[i];
         store->revisions[e.uri]       = e.expected_rev + 1;
         store->canonical_paths[e.uri] = staging_paths[i];
     }
 
-    store->batch_epoch  = next_epoch;
-    store->batch_open   = false;
+    store->batch_epoch = next_epoch;
+    store->batch_open  = false;
     store->staged.clear();
 
     const int man = save_manifest_file(store);
