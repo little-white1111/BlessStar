@@ -8,17 +8,57 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
-#include <fstream>
-#include <string>
 
 #include <filesystem>
+#include <fstream>
+#include <string>
 
 #include "attach_crc32.h"
 
 namespace fs = std::filesystem;
 
-static void write_legacy_manifest(const fs::path& manifest, const std::string& uri,
-                                  uint64_t rev, const char* path)
+static void flip_last_byte(const fs::path& p)
+{
+    std::fstream f(p, std::ios::in | std::ios::out | std::ios::binary);
+    assert(f);
+    f.seekg(0, std::ios::end);
+    const std::streamoff n = f.tellg();
+    assert(n > 0);
+    f.seekg(n - 1);
+    char c = 0;
+    f.read(&c, 1);
+    f.seekp(n - 1);
+    c ^= 0x5A;
+    f.write(&c, 1);
+    f.flush();
+}
+
+static void write_corrupt_len_record(const fs::path& wal_path)
+{
+    std::ofstream out(wal_path, std::ios::binary | std::ios::trunc);
+    assert(out);
+    auto w16 = [&](uint16_t v)
+    {
+        char b[2] = {(char)(v & 0xFFu), (char)((v >> 8) & 0xFFu)};
+        out.write(b, 2);
+    };
+    auto w32 = [&](uint32_t v)
+    {
+        char b[4] = {(char)(v & 0xFFu), (char)((v >> 8) & 0xFFu), (char)((v >> 16) & 0xFFu),
+                     (char)((v >> 24) & 0xFFu)};
+        out.write(b, 4);
+    };
+    const uint32_t magic = 0x42535741u; // same as attach_wal.c
+    w32(magic);
+    w16(1);
+    w16(1);
+    w32(BS_ATTACH_WAL_MAX_RECORD_BYTES + 1);
+    w32(0); // crc (ignored because header should fail len cap)
+    out.flush();
+}
+
+static void write_legacy_manifest(const fs::path& manifest, const std::string& uri, uint64_t rev,
+                                  const char* path)
 {
     std::ofstream out(manifest, std::ios::trunc);
     out << "# BlessStar manifest v1\nbatch_epoch=1\n";
@@ -70,11 +110,11 @@ int main()
     assert(bs_attach_store_batch_epoch(store) == 2);
     bs_attach_store_close(store);
 
-    assert(fs::exists(wal));
+    assert(fs::exists(wal.string() + ".e2"));
     assert(read_epoch(man) == 2);
 
     {
-        char path_buf[1024];
+        char           path_buf[1024];
         BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
         assert(rd != nullptr);
         assert(bs_attach_store_get_canonical_path(rd, uri.c_str(), path_buf, sizeof(path_buf)) ==
@@ -85,8 +125,7 @@ int main()
 
     {
         std::ifstream in(man);
-        std::string   content((std::istreambuf_iterator<char>(in)),
-                              std::istreambuf_iterator<char>());
+        std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
         assert(content.find("manifest_checksum=") != std::string::npos);
         assert(fs::exists(man.string() + ".prev"));
     }
@@ -105,11 +144,11 @@ int main()
     {
         const std::string orphan_path = (tmp / "orphan.staging").string();
         BsAttachWalEntry  e{};
-        e.uri               = uri.c_str();
-        e.staging_path      = orphan_path.c_str();
-        e.expected_rev        = 0;
-        e.new_rev             = 1;
-        e.payload_checksum    = bs_attach_crc32(data, len);
+        e.uri              = uri.c_str();
+        e.staging_path     = orphan_path.c_str();
+        e.expected_rev     = 0;
+        e.new_rev          = 1;
+        e.payload_checksum = bs_attach_crc32(data, len);
         {
             std::ofstream orphan(tmp / "orphan.staging");
             orphan << "orphan";
@@ -123,6 +162,46 @@ int main()
         assert(rd != nullptr);
         bs_attach_store_close(rd);
         assert(!fs::exists(tmp / "orphan.staging"));
+    }
+
+    {
+        const fs::path orphan2 = tmp / "orphan_corrupt_crc.staging";
+        {
+            std::ofstream orphan(orphan2);
+            orphan << "orphan2";
+        }
+        BsAttachWalEntry e{};
+        e.uri              = uri.c_str();
+        e.staging_path     = orphan2.string().c_str();
+        e.expected_rev     = 0;
+        e.new_rev          = 1;
+        e.payload_checksum = bs_attach_crc32(data, len);
+
+        BsAttachWal* w = bs_attach_wal_open(wal.string().c_str());
+        assert(w != nullptr);
+        assert(bs_attach_wal_append_batch(w, 100, &e, 1) == BS_ATTACH_OK);
+        bs_attach_wal_close(w);
+
+        flip_last_byte(wal);
+        assert(fs::exists(orphan2));
+        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        assert(rd != nullptr);
+        bs_attach_store_close(rd);
+        // ATOM-REC-SAFE-2: corruption => conservative (no deletions).
+        assert(fs::exists(orphan2));
+    }
+
+    {
+        const fs::path orphan3 = tmp / "orphan_corrupt_len.staging";
+        {
+            std::ofstream orphan(orphan3);
+            orphan << "orphan3";
+        }
+        write_corrupt_len_record(wal);
+        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        assert(rd != nullptr);
+        bs_attach_store_close(rd);
+        assert(fs::exists(orphan3));
     }
 
     fs::remove_all(tmp);

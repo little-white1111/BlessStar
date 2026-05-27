@@ -26,6 +26,14 @@ extern "C"
         BS_ATTACH_ERR_LIMIT       = -5
     } BsAttachStatus;
 
+    /** ATOM-XIV-10: fsync policy for durable writes. */
+    typedef enum BsAttachFsyncPolicy
+    {
+        BS_ATTACH_FSYNC_NEVER        = 0,
+        BS_ATTACH_FSYNC_BATCH_COMMIT = 1,
+        BS_ATTACH_FSYNC_ALWAYS       = 2
+    } BsAttachFsyncPolicy;
+
     typedef struct BsAttachStore BsAttachStore;
 
     /** Max manifest text line length when loading from disk (AUD-IX-12). */
@@ -54,6 +62,9 @@ extern "C"
     /** Atomic manifest + all staged canonical files (RES-IX-10). */
     int  bs_attach_store_batch_commit(BsAttachStore* store);
     void bs_attach_store_batch_abort(BsAttachStore* store);
+
+    void bs_attach_store_set_fsync_policy(BsAttachStore* store, BsAttachFsyncPolicy policy);
+    BsAttachFsyncPolicy bs_attach_store_get_fsync_policy(const BsAttachStore* store);
 
     typedef void* (*BsAttachMallocFn)(size_t size);
 

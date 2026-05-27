@@ -142,6 +142,16 @@ target_include_directories(bs_test_attach_atomicity
 set_tests_properties(bs_test_attach_atomicity
   PROPERTIES LABELS "unit;attach;day14;regression" TIMEOUT 120
 )
+blessstar_add_unit_test(bs_test_attach_fsync_spot
+  SOURCES adapter/test/AttachFsyncSpotTest.cpp
+  LIBS bs_adapter_persistence
+)
+target_include_directories(bs_test_attach_fsync_spot
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/persistence
+)
+set_tests_properties(bs_test_attach_fsync_spot
+  PROPERTIES LABELS "unit;attach;day14;win_spot;regression" TIMEOUT 60
+)
 blessstar_add_unit_test(bs_test_reload_config_json_integration
   SOURCES adapter/test/ReloadConfigJsonIntegrationTest.cpp
   LIBS

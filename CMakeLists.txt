@@ -311,10 +311,15 @@ add_library(bs_adapter_persistence
   adapter/persistence/attach_store.cpp
   adapter/persistence/attach_uri_path.c
   adapter/persistence/attach_audit.c
+  adapter/persistence/attach_wal.c
+  adapter/persistence/attach_crc32.c
+  adapter/persistence/attach_fsync.c
 )
 target_include_directories(bs_adapter_persistence
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/adapter/include
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter/persistence
 )
 target_link_libraries(bs_adapter_persistence
   PUBLIC
