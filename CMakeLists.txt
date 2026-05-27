@@ -23,17 +23,17 @@ if(BLESSSTAR_TREAT_WARNINGS_AS_ERRORS)
     add_compile_options(/W3 /WX /wd4996)
   else()
     add_compile_options(-Wall -Wextra -Werror)
-    # Match MSVC /wd4996: POSIX strdup/strncpy on Linux GCC/Clang (ubuntu CI Release -Werror).
+    # Match MSVC /wd4996: POSIX strdup/strncpy on Linux (ubuntu CI Release -Werror).
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+      add_compile_options(-Wno-deprecated-declarations)
+    endif()
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
       add_compile_options(
-        -Wno-deprecated-declarations
         -Wno-stringop-truncation
         -Wno-stringop-overflow
         -Wno-array-bounds
+        -Wno-maybe-uninitialized
       )
-      if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        add_compile_options(-Wno-maybe-uninitialized)
-      endif()
     endif()
   endif()
 endif()
