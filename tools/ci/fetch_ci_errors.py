@@ -59,6 +59,25 @@ DEFAULT_KEYWORDS = [
 # HTTP helpers
 # ──────────────────────────────────────────────────────────────────────────────
 
+def load_github_token() -> str | None:
+    # 1) Prefer env var for CI / temporary use.
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        token = token.strip()
+        return token if token else None
+
+    # 2) Fallback to local-only token file (gitignored).
+    token_file = Path(__file__).resolve().parent / ".github_token"
+    try:
+        if token_file.exists():
+            token = token_file.read_text(encoding="utf-8").strip()
+            return token if token else None
+    except OSError:
+        return None
+
+    return None
+
+
 def _headers(token: str) -> dict[str, str]:
     return {
         # GitHub REST API classic PAT: Authorization: token <PAT>
@@ -234,12 +253,12 @@ def main() -> int:
     args = parser.parse_args()
 
     # ── Token ──
-    token = os.environ.get("GITHUB_TOKEN", "")
+    token = load_github_token() or ""
     if not token:
         print(
-            "错误：未找到 GITHUB_TOKEN 环境变量。\n"
-            "  PowerShell：$env:GITHUB_TOKEN = 'ghp_xxx...'\n"
-            "  CMD：       set GITHUB_TOKEN=ghp_xxx...",
+            "错误：未找到 GitHub token。\n"
+            "  方式1（推荐）：PowerShell：$env:GITHUB_TOKEN = 'ghp_xxx...'\n"
+            "  方式2（本地文件）：把 token 写入 tools/ci/.github_token（已被 .gitignore 忽略）",
             file=sys.stderr,
         )
         return 1

@@ -65,6 +65,9 @@ coverage/
 # Logs
 *.log
 
+# Local secrets (do not commit)
+tools/ci/.github_token
+
 # Local scratch / IO test debris
 test.txt
 bs_io_*.txt
