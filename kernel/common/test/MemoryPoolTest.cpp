@@ -112,6 +112,9 @@ static void test_BsMemoryPool_Clear()
     void* ptr1 = bs_memory_pool_alloc(pool, 32);
     void* ptr2 = bs_memory_pool_alloc(pool, 512);
     void* ptr3 = bs_memory_pool_alloc(pool, 16 * 1024);
+    assert(ptr1 != nullptr);
+    assert(ptr2 != nullptr);
+    assert(ptr3 != nullptr);
 
     bs_memory_pool_clear(pool);
 
