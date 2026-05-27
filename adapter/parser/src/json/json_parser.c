@@ -446,6 +446,7 @@ static int parse_metadata_object(ParseCtx* ctx, ConfigV1Metadata** out_head)
                            key_tok ? key_tok->column : 0))
         {
             keys_seen_clear(&seen);
+            metadata_list_destroy(head);
             free(key);
             return 0;
         }

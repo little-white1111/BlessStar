@@ -149,6 +149,7 @@ static void test_PluginManager_NullInput()
     assert(plugin == nullptr);
 
     plugin_manager_destroy(nullptr);
+    plugin_manager_destroy(manager);
     printf("test_PluginManager_NullInput: PASS\n");
 }
 
