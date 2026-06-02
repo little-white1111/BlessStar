@@ -1,0 +1,53 @@
+{
+  "version": "v1",
+  "type": "integration",
+  "contracts": [
+    {
+      "id": "C-IX-4",
+      "name": "AttachCommitOrder",
+      "scope": [
+        "adapter",
+        "attach"
+      ],
+      "priority": "integration",
+      "rule": "Commit order is CAS -> WAL_FSYNC -> CANONICAL_WRITE -> MANIFEST_FLIP -> WAL_COMMIT.",
+      "verify": [
+        "ctest:day14",
+        "ctest:day15"
+      ],
+      "deprecate": null,
+      "status": "active"
+    },
+    {
+      "id": "C-IX-5",
+      "name": "ContractNeedsVerification",
+      "scope": [
+        "docs",
+        "ci"
+      ],
+      "priority": "integration",
+      "rule": "Any active contract must define at least one verification item.",
+      "verify": [
+        "python:check_day16_contract_registry.py",
+        "python:check_day16_contract_files.py"
+      ],
+      "deprecate": null,
+      "status": "active"
+    },
+    {
+      "id": "C-IX-8",
+      "name": "NoActiveContractWithoutVerify",
+      "scope": [
+        "docs",
+        "ci"
+      ],
+      "priority": "integration",
+      "rule": "Contracts with status active are invalid when verify list is empty.",
+      "verify": [
+        "python:check_day16_contract_files.py"
+      ],
+      "deprecate": null,
+      "status": "active"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "C-ST-14",
+  "type": "style",
+  "version": "v1",
+  "priority": "style",
+  "status": "active",
+  "scope": [
+    "adapter"
+  ],
+  "stage": "read",
+  "rule": "Adapter attach/reload/persist/parser main-chain public C APIs use bs_adapter_<module>_ or bs_adapter_attach_<subdomain>_ prefixes; deprecated bare bs_attach_context_*, bs_reload_batch_*, bs_attach_store_*, bs_config_parse_* forbidden in production surfaces. Kernel keeps bs_<module>_*. See docs/BLESSSTAR_NAMING_CONTRACT.md.",
+  "gate_refs": [
+    "GATE-STYLE-LAYERED"
+  ],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": [
+    "docs/BLESSSTAR_NAMING_CONTRACT.md",
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-STYLE-LAYERED",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_layered_api_prefix.py",
+      "entry_kind": "script"
+    }
+  ]
+}

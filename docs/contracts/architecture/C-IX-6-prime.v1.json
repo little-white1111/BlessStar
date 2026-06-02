@@ -1,0 +1,39 @@
+{
+  "id": "C-IX-6-prime",
+  "type": "architecture",
+  "version": "v1",
+  "priority": "architecture",
+  "status": "active",
+  "scope": [
+    "docs",
+    "kernel",
+    "adapter",
+    "app"
+  ],
+  "stage": "preflight",
+  "rule": "Conflict resolution is architecture > integration > style > functional > configuration.",
+  "gate_refs": [
+    "GATE-META-CONTRACT-FILES",
+    "GATE-META-REGISTRY"
+  ],
+  "blocking": true,
+  "owner": "main-task",
+  "evidence": [
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": "Supersedes day16 four-tier wording.",
+  "implementations": [
+    {
+      "gate_id": "GATE-META-CONTRACT-FILES",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_day16_contract_files.py",
+      "entry_kind": "script"
+    },
+    {
+      "gate_id": "GATE-META-REGISTRY",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_day16_contract_registry.py",
+      "entry_kind": "script"
+    }
+  ]
+}

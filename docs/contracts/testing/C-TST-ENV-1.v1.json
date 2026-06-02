@@ -1,0 +1,23 @@
+{
+  "id": "C-TST-ENV-1",
+  "type": "testing",
+  "version": "v1",
+  "priority": "testing",
+  "status": "active",
+  "scope": ["ops", "deploy"],
+  "stage": "staging",
+  "rule": "Staging mirrors production topology: OS family, isolated manifest roots (BS_STAGING_ROOT), plugin manifest policy, no shared build_ci_test CWD.",
+  "gate_refs": ["GATE-STAGING-ACCEPTANCE"],
+  "blocking": true,
+  "owner": "subtask-b",
+  "evidence": ["docs/BLESSSTAR_TEST_ENVIRONMENT_POLICY.md"],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-STAGING-ACCEPTANCE",
+      "runner": "python",
+      "entry": "ops/acceptance/staging/run_acceptance.py",
+      "entry_kind": "script"
+    }
+  ]
+}

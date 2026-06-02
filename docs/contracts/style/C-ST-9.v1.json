@@ -1,0 +1,30 @@
+{
+  "id": "C-ST-9",
+  "type": "style",
+  "version": "v1",
+  "priority": "style",
+  "status": "active",
+  "scope": [
+    "test",
+    "cmake"
+  ],
+  "stage": "ci",
+  "rule": "CTest labels include unit and day14/day15/day16/day17 or integration/docs/comprehensive.",
+  "gate_refs": [
+    "GATE-STYLE-LABELS"
+  ],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": [
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-STYLE-LABELS",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_ctest_labels.py",
+      "entry_kind": "script"
+    }
+  ]
+}

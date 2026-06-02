@@ -1,0 +1,168 @@
+{
+  "version": "v1",
+  "gates": [
+    {
+      "gate_id": "GATE-META-CONTRACT-FILES",
+      "stage": "preflight",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_day16_contract_files.py docs/contracts/architecture.contracts.json docs/contracts/integration.contracts.json docs/contracts/style.contracts.json docs/contracts/testing.contracts.json",
+      "covers": ["C-IX-6-prime", "C-IX-5", "C-IX-8"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
+      "gate_id": "GATE-META-REGISTRY",
+      "stage": "preflight",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_day16_contract_registry.py docs/DAY16_CONTRACT_REGISTRY_TEMPLATE.md",
+      "covers": ["C-IX-6-prime", "C-IX-5"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
+      "gate_id": "GATE-APP-VENDOR-NORMALIZE",
+      "stage": "parse",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -R bs_test_vendor_config_normalizer --output-on-failure",
+      "covers": ["C-FN-4"],
+      "default_blocking": true,
+      "timeout_s": 120
+    },
+    {
+      "gate_id": "GATE-VENDOR-PARSE-BOUNDARY",
+      "stage": "bootstrap",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_vendor_config_boundary.py",
+      "covers": ["C-IX-7"],
+      "default_blocking": true,
+      "timeout_s": 120
+    },
+    {
+      "gate_id": "GATE-ARCH-INCLUDE-BOUNDARY",
+      "stage": "bootstrap",
+      "runner": "python",
+      "command": "python tools/purity/check_includes.py --repo-root .",
+      "covers": ["C-IX-1", "C-IX-2", "C-IX-3", "C-IX-7", "C-FN-2"],
+      "default_blocking": true,
+      "timeout_s": 120
+    },
+    {
+      "gate_id": "GATE-STYLE-PREFIX",
+      "stage": "read",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_public_api_prefix.py",
+      "covers": ["C-ST-1"],
+      "default_blocking": true,
+      "timeout_s": 120
+    },
+    {
+      "gate_id": "GATE-STYLE-LAYERED",
+      "stage": "read",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_layered_api_prefix.py",
+      "covers": ["C-ST-14"],
+      "default_blocking": true,
+      "timeout_s": 120
+    },
+    {
+      "gate_id": "GATE-STYLE-LABELS",
+      "stage": "ci",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_ctest_labels.py",
+      "covers": ["C-ST-9", "C-ST-11"],
+      "default_blocking": true,
+      "timeout_s": 120
+    },
+    {
+      "gate_id": "GATE-DAY14",
+      "stage": "persist",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -L day14 --output-on-failure",
+      "covers": ["C-IX-4", "C-CF-2"],
+      "default_blocking": true,
+      "timeout_s": 300
+    },
+    {
+      "gate_id": "GATE-DAY15",
+      "stage": "watch",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -L day15 --output-on-failure",
+      "covers": ["C-IX-4", "C-ST-13"],
+      "default_blocking": true,
+      "timeout_s": 300
+    },
+    {
+      "gate_id": "GATE-INTEGRATION",
+      "stage": "ci",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+      "covers": ["C-IX-2", "C-ST-13", "C-FN-1", "C-FN-3", "C-CF-1"],
+      "default_blocking": true,
+      "timeout_s": 300
+    },
+    {
+      "gate_id": "GATE-REGRESSION",
+      "stage": "ci",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 --output-on-failure",
+      "covers": ["C-IX-4", "C-ST-13", "C-FN-1", "C-FN-2", "C-FN-3", "C-CF-1", "C-CF-2"],
+      "default_blocking": true,
+      "timeout_s": 900
+    },
+    {
+      "gate_id": "GATE-DEV-L1",
+      "stage": "dev_ci",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+      "covers": ["C-TST-L1-1"],
+      "default_blocking": true,
+      "timeout_s": 1900
+    },
+    {
+      "gate_id": "GATE-TEST-TIER-ASSIGNMENT",
+      "stage": "preflight",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_test_environment_tiers.py",
+      "covers": ["C-TST-POL-1"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
+      "gate_id": "GATE-TEST-HERM",
+      "stage": "preflight",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_test_tempdir_unique.py",
+      "covers": ["C-TST-HERM-1"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
+      "gate_id": "GATE-TEST-L1-GATE-SCOPE",
+      "stage": "preflight",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_contract_gate_runner_l1_scope.py",
+      "covers": ["C-TST-GATE-SCOPE-1", "C-TST-L1-1"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
+      "gate_id": "GATE-STAGING-ACCEPTANCE",
+      "stage": "staging",
+      "runner": "python",
+      "command": "python ops/acceptance/staging/run_acceptance.py --dry-run",
+      "covers": ["C-TST-L2-1", "C-TST-ENV-1"],
+      "default_blocking": true,
+      "timeout_s": 120,
+      "notes": "L1 dev CI skips this stage via contract_gate_runner --through-stage ci. CD runs run_acceptance.py without --dry-run."
+    },
+    {
+      "gate_id": "GATE-PROD-SMOKE",
+      "stage": "prod_ops",
+      "runner": "python",
+      "command": "python ops/smoke/prod/run_smoke.py --dry-run",
+      "covers": ["C-TST-L3-1"],
+      "default_blocking": true,
+      "timeout_s": 120
+    }
+  ]
+}

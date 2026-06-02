@@ -1,0 +1,37 @@
+{
+  "id": "C-FN-2",
+  "type": "functional",
+  "version": "v1",
+  "priority": "functional",
+  "status": "active",
+  "scope": [
+    "app",
+    "adapter"
+  ],
+  "stage": "parse",
+  "rule": "Business-variable rule ownership belongs to app/sdk; adapter keeps generic mechanisms.",
+  "gate_refs": [
+    "GATE-ARCH-INCLUDE-BOUNDARY",
+    "GATE-REGRESSION"
+  ],
+  "blocking": false,
+  "owner": "main-task",
+  "evidence": [
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-ARCH-INCLUDE-BOUNDARY",
+      "runner": "python",
+      "entry": "tools/purity/check_includes.py",
+      "entry_kind": "script"
+    },
+    {
+      "gate_id": "GATE-REGRESSION",
+      "runner": "ctest",
+      "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 --output-on-failure",
+      "entry_kind": "command"
+    }
+  ]
+}

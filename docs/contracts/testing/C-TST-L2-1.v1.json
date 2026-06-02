@@ -1,0 +1,23 @@
+{
+  "id": "C-TST-L2-1",
+  "type": "testing",
+  "version": "v1",
+  "priority": "testing",
+  "status": "active",
+  "scope": ["ops", "staging"],
+  "stage": "staging",
+  "rule": "L2 Staging acceptance is exclusive to post-deploy CD: ops/acceptance/staging/scenarios.v1.json (including bulk ctest_label integration and day14). These scenarios must not run inside L1 contract_gate_runner or day17 without --through-stage ci skip of staging stage.",
+  "gate_refs": ["GATE-STAGING-ACCEPTANCE"],
+  "blocking": true,
+  "owner": "subtask-b",
+  "evidence": ["ops/acceptance/staging/scenarios.v1.json"],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-STAGING-ACCEPTANCE",
+      "runner": "python",
+      "entry": "ops/acceptance/staging/run_acceptance.py",
+      "entry_kind": "script"
+    }
+  ]
+}

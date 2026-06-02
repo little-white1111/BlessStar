@@ -1,0 +1,37 @@
+{
+  "id": "C-FN-1",
+  "type": "functional",
+  "version": "v1",
+  "priority": "functional",
+  "status": "active",
+  "scope": [
+    "adapter",
+    "orchestration"
+  ],
+  "stage": "ir_gate",
+  "rule": "Reload orchestration must execute read -> gate -> persist without bypassing gate.",
+  "gate_refs": [
+    "GATE-INTEGRATION",
+    "GATE-REGRESSION"
+  ],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": [
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-INTEGRATION",
+      "runner": "ctest",
+      "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+      "entry_kind": "command"
+    },
+    {
+      "gate_id": "GATE-REGRESSION",
+      "runner": "ctest",
+      "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 --output-on-failure",
+      "entry_kind": "command"
+    }
+  ]
+}

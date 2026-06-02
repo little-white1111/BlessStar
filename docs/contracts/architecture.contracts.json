@@ -1,0 +1,65 @@
+{
+  "version": "v1",
+  "type": "architecture",
+  "contracts": [
+    {
+      "id": "C-IX-1",
+      "name": "AppOwnsBusinessSemantics",
+      "scope": [
+        "app",
+        "adapter"
+      ],
+      "priority": "architecture",
+      "rule": "Business semantics must stay in app/sdk; adapter must remain generic.",
+      "verify": [
+        "lint:include-boundary",
+        "doc-check:contract-registry"
+      ],
+      "deprecate": null,
+      "status": "active"
+    },
+    {
+      "id": "C-IX-2",
+      "name": "KernelConsumesGenericIROnly",
+      "scope": [
+        "kernel"
+      ],
+      "priority": "architecture",
+      "rule": "Kernel consumes generic IR/instructions only, never business config text.",
+      "verify": [
+        "integration:parse-gate-attach",
+        "doc-check:contract-registry"
+      ],
+      "deprecate": null,
+      "status": "active"
+    },
+    {
+      "id": "C-IX-3",
+      "name": "AdapterRemainsRuntimeLayer",
+      "scope": [
+        "adapter"
+      ],
+      "priority": "architecture",
+      "rule": "Adapter handles io/parse/gate/attach/watch orchestration only.",
+      "verify": [
+        "unit:app-sdk-contract",
+        "doc-check:contract-registry"
+      ],
+      "deprecate": null,
+      "status": "active"
+    },
+    {
+      "id": "C-IX-6-prime",
+      "name": "ContractConflictPriorityFiveTier",
+      "scope": ["docs", "kernel", "adapter", "app"],
+      "priority": "architecture",
+      "rule": "Conflict resolution: architecture > integration > style > functional > configuration (supersedes day16 C-IX-6 four-tier chain).",
+      "verify": [
+        "doc-check:contract-registry",
+        "doc-check:contract-files"
+      ],
+      "deprecate": "Replaces four-tier C-IX-6 wording for day17+; day16 historical text retained in record.",
+      "status": "active"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "C-ST-1",
+  "type": "style",
+  "version": "v1",
+  "priority": "style",
+  "status": "active",
+  "scope": [
+    "adapter",
+    "app",
+    "kernel"
+  ],
+  "stage": "read",
+  "rule": "Public C APIs in scoped surfaces use bs_<module>_<verb> naming (adapter/include, adapter/parser/include main chain, kernel/**/include; LEGACY-NOT-BUILT headers excluded; kernel test_support excluded).",
+  "gate_refs": [
+    "GATE-STYLE-PREFIX"
+  ],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": [
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-STYLE-PREFIX",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_public_api_prefix.py",
+      "entry_kind": "script"
+    }
+  ]
+}

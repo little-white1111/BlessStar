@@ -1,0 +1,30 @@
+{
+  "id": "C-IX-1",
+  "type": "architecture",
+  "version": "v1",
+  "priority": "architecture",
+  "status": "active",
+  "scope": [
+    "app",
+    "adapter"
+  ],
+  "stage": "bootstrap",
+  "rule": "Business semantics must stay in app/sdk; adapter remains generic.",
+  "gate_refs": [
+    "GATE-ARCH-INCLUDE-BOUNDARY"
+  ],
+  "blocking": true,
+  "owner": "main-task",
+  "evidence": [
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-ARCH-INCLUDE-BOUNDARY",
+      "runner": "python",
+      "entry": "tools/purity/check_includes.py",
+      "entry_kind": "script"
+    }
+  ]
+}

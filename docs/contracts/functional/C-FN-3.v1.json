@@ -1,0 +1,29 @@
+{
+  "id": "C-FN-3",
+  "type": "functional",
+  "version": "v1",
+  "priority": "functional",
+  "status": "active",
+  "scope": ["app", "adapter"],
+  "stage": "parse",
+  "rule": "Before adapter gate, App (or host via App SDK VendorReloadFacade) must supply canonical BlessStar Config JSON v1 bytes; vendor-to-v1 conversion is an App responsibility (C-FN-4), not adapter/parser. Integration path: vendor file -> App normalize -> file:// reload.",
+  "gate_refs": ["GATE-INTEGRATION", "GATE-REGRESSION"],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": ["架构方案选择记录.md"],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-INTEGRATION",
+      "runner": "ctest",
+      "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+      "entry_kind": "command"
+    },
+    {
+      "gate_id": "GATE-REGRESSION",
+      "runner": "ctest",
+      "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 --output-on-failure",
+      "entry_kind": "command"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "blessstar.day19.profile.v1",
+  "profiles": {
+    "ci": {
+      "duration_sec_max": 25,
+      "day_wall_fraction": 0.7,
+      "min_day_reloads": 30,
+      "min_night_batches": 5,
+      "path_pool_size": 4,
+      "paths_per_batch": 4,
+      "fixture_kb": 100,
+      "rss_sample_interval_sec": 5,
+      "rss_slope_mb_per_hour_max": 50.0,
+      "rss_delta_mb_max": 200.0,
+      "outcome_ok_rate_min": 0.99
+    },
+    "smoke": {
+      "duration_sec_max": 900,
+      "day_wall_fraction": 0.7,
+      "min_day_reloads": 1500,
+      "min_night_batches": 30,
+      "path_pool_size": 12,
+      "paths_per_batch": 12,
+      "fixture_kb": 100,
+      "rss_sample_interval_sec": 60,
+      "rss_slope_mb_per_hour_max": 0.5,
+      "rss_delta_mb_max": 50.0,
+      "outcome_ok_rate_min": 0.995
+    },
+    "full": {
+      "duration_sec_max": 259200,
+      "day_wall_fraction": 0.5,
+      "min_day_reloads": 8640,
+      "min_night_batches": 144,
+      "path_pool_size": 12,
+      "paths_per_batch": 12,
+      "fixture_kb": 100,
+      "rss_sample_interval_sec": 60,
+      "rss_slope_mb_per_hour_max": 0.5,
+      "rss_delta_mb_max": 50.0,
+      "outcome_ok_rate_min": 0.999,
+      "disk_budget_mb": 2048
+    }
+  },
+  "kappa_smoke_over_full": 288
+}

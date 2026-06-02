@@ -1,0 +1,38 @@
+{
+  "version": "v1",
+  "description": "Testing-environment contract repository (L1 Dev / L2 Staging / L3 Prod).",
+  "parent_index": "docs/contracts/index.json",
+  "tier_model": {
+    "L1": {
+      "name": "dev_ci",
+      "environment": "development",
+      "runner": "ctest + contract_gate_runner (subset)",
+      "must_not_run_in": ["production"]
+    },
+    "L2": {
+      "name": "staging_acceptance",
+      "environment": "staging",
+      "runner": "ops/acceptance/staging/run_acceptance.py",
+      "blocks_promotion_to": "production"
+    },
+    "L3": {
+      "name": "prod_smoke",
+      "environment": "production",
+      "runner": "ops/smoke/prod/run_smoke.py",
+      "max_duration_s": 300,
+      "destructive": false
+    }
+  },
+  "artifact_roots": {
+    "tier_assignments": "docs/contracts/testing/tier_assignments.json",
+    "staging_scenarios": "ops/acceptance/staging/scenarios.v1.json",
+    "prod_smoke_scenarios": "ops/smoke/prod/scenarios.v1.json",
+    "policy_doc": "docs/BLESSSTAR_TEST_ENVIRONMENT_POLICY.md"
+  },
+  "gate_ids": [
+    "GATE-TEST-TIER-ASSIGNMENT",
+    "GATE-TEST-L1-GATE-SCOPE",
+    "GATE-STAGING-ACCEPTANCE",
+    "GATE-PROD-SMOKE"
+  ]
+}
