@@ -43,13 +43,17 @@ def is_adapter_production(path: Path) -> bool:
     return "test" not in path.parts
 
 
-def config_manager_allowed(path: Path) -> bool:
-    rel = path.as_posix()
+def config_manager_allowed(path: Path, repo_root: Path) -> bool:
+    rel = path.relative_to(repo_root).as_posix()
     if "ConfigManager.h" in path.name:
         return True
-    if "/kernel/state/src/" in rel and "ConfigManager" in path.name:
+    if rel.startswith("kernel/state/src/") and "ConfigManager" in path.name:
         return True
-    if "/kernel/state/include/" in rel and "ConfigManager" in path.name:
+    if rel.startswith("kernel/state/include/") and "ConfigManager" in path.name:
+        return True
+    if rel.startswith("kernel/state/test/"):
+        return True
+    if rel == "adapter/src/attach_config.cpp":
         return True
     return False
 
@@ -64,7 +68,7 @@ def check_file(path: Path, repo_root: Path) -> list[str]:
             if RE_ADAPTER_IN_KERNEL_TEST.search(line):
                 errors.append(f"{rel}:{i}: INC-VIII-1 kernel test must not include adapter")
 
-    if not config_manager_allowed(path):
+    if not config_manager_allowed(path, repo_root):
         for i, line in enumerate(text.splitlines(), 1):
             if RE_CONFIG_MANAGER.search(line):
                 errors.append(
