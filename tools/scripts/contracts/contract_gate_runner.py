@@ -215,6 +215,26 @@ def main() -> int:
 
     print(f"[OK] report generated: {json_path.relative_to(repo)}")
     print(f"[OK] report generated: {md_path.relative_to(repo)}")
+
+    if not overall_ok:
+        failed = [r for r in results if r.get("result") == "FAIL"]
+        print(f"[FAIL] {len(failed)} gate(s) failed:")
+        for r in failed[:10]:
+            gid = r.get("gate_id")
+            stage = r.get("stage")
+            rc = r.get("exit_code")
+            print(f"  - {gid} (stage={stage}, exit_code={rc})")
+        # Print tail output of first failed gate to help CI diagnosis.
+        if failed:
+            r0 = failed[0]
+            gid = r0.get("gate_id")
+            stage = r0.get("stage")
+            rc = r0.get("exit_code")
+            out = str(r0.get("output") or "")
+            tail = out.splitlines()[-80:]
+            print(f"[FAIL] first failed gate output tail: {gid} (stage={stage}, exit_code={rc})")
+            for line in tail:
+                print(line)
     return 0 if overall_ok else 2
 
 
