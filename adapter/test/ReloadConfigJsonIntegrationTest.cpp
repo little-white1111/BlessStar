@@ -56,7 +56,8 @@ int main()
     Report* report = bs_report_create("reload_config_json_m3");
     BS_TEST_REQUIRE("report", report != nullptr);
 
-    BS_TEST_REQUIRE("good-add", bs_adapter_attach_reload_batch_add_path(ctrl, good_uri.c_str()) == 0);
+    BS_TEST_REQUIRE("good-add",
+                    bs_adapter_attach_reload_batch_add_path(ctrl, good_uri.c_str()) == 0);
     BS_TEST_REQUIRE("good-run", bs_adapter_attach_reload_batch_run_with_report(ctrl, report) == 0);
     BS_TEST_REQUIRE("good-outcome", bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
 
