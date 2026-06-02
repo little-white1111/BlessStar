@@ -21,6 +21,7 @@
 
 #include "support/config_v1_golden.h"
 #include "support/day12_attach_fixture.h"
+#include "support/test_temp_dir.h"
 
 namespace fs = std::filesystem;
 
@@ -93,11 +94,11 @@ static void write_manifest_two(const fs::path& manifest, const std::string& uri_
 
 static uint64_t read_manifest_revision(const fs::path& manifest, const std::string& uri)
 {
-    BsAttachStore* s = bs_attach_store_open(manifest.string().c_str());
+    BsAttachStore* s = bs_adapter_attach_persist_store_open(manifest.string().c_str());
     assert(s != nullptr);
     uint64_t rev = 0;
-    assert(bs_attach_store_get_revision(s, uri.c_str(), &rev) == BS_ATTACH_OK);
-    bs_attach_store_close(s);
+    assert(bs_adapter_attach_persist_store_get_revision(s, uri.c_str(), &rev) == BS_ATTACH_OK);
+    bs_adapter_attach_persist_store_close(s);
     return rev;
 }
 
@@ -118,16 +119,16 @@ int main()
 {
     assert(bs_adapter_log_bind_memory_bus(noop_log, nullptr) == 0);
 
-    ReloadBatchController* ctrl = bs_reload_batch_controller_create(4);
+    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(4);
     assert(ctrl != nullptr);
-    bs_reload_batch_controller_set_read_fn(ctrl, golden_read, nullptr);
-    bs_reload_batch_controller_use_default_gate(ctrl);
-    assert(bs_reload_batch_add_path(ctrl, "file:///x") == 0);
-    assert(bs_reload_batch_run(ctrl) == -4);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///x") == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == -4);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
-    const fs::path tmp = fs::temp_directory_path() / "bs_day12_attach";
-    fs::create_directories(tmp);
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_day12_attach"));
+    const fs::path           tmp = tmp_guard.path;
     const fs::path cfg = tmp / "cfg.json";
     const fs::path man = tmp / "manifest.bs";
     {
@@ -138,46 +139,46 @@ int main()
     const std::string uri = file_uri_for(cfg);
     write_manifest_revision(man, uri, 0, cfg.string().c_str());
 
-    ctrl = bs_reload_batch_controller_create(4);
-    bs_reload_batch_controller_set_read_fn(ctrl, golden_read, nullptr);
-    bs_reload_batch_controller_use_default_gate(ctrl);
-    bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
-    bs_reload_batch_controller_set_manifest_path(ctrl, man.string().c_str());
-    Report* report = report_create("attach_audit");
+    ctrl = bs_adapter_attach_reload_batch_create(4);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    bs_adapter_attach_reload_batch_set_manifest_path(ctrl, man.string().c_str());
+    Report* report = bs_report_create("attach_audit");
     assert(report != nullptr);
-    bs_reload_batch_controller_set_report(ctrl, report);
-    assert(bs_reload_batch_add_path(ctrl, uri.c_str()) == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
-    char* rjson = report_to_json(report);
+    bs_adapter_attach_reload_batch_set_report(ctrl, report);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str()) == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    char* rjson = bs_report_to_json(report);
     assert(rjson != nullptr);
     assert(std::strstr(rjson, "scheme=per_path") != nullptr);
     assert(std::strstr(rjson, "batch_epoch=") != nullptr);
     assert(std::strstr(rjson, "revision_base=") != nullptr);
     std::free(rjson);
-    report_destroy(report);
+    bs_report_destroy(report);
     assert(read_manifest_revision(man, uri) == 1);
     {
         char           path_buf[512];
-        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        assert(bs_attach_store_get_canonical_path(rd, uri.c_str(), path_buf, sizeof(path_buf)) ==
+        assert(bs_adapter_attach_persist_store_get_canonical_path(rd, uri.c_str(), path_buf, sizeof(path_buf)) ==
                BS_ATTACH_OK);
-        bs_attach_store_close(rd);
+        bs_adapter_attach_persist_store_close(rd);
     }
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
     write_manifest_revision(man, uri, 0);
     {
-        BsAttachStore* s = bs_attach_store_open(man.string().c_str());
+        BsAttachStore* s = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(s != nullptr);
-        assert(bs_attach_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
+        assert(bs_adapter_attach_persist_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
                                                kBlessStarConfigV1GoldenLen, 0) == BS_ATTACH_OK);
-        assert(bs_attach_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
+        assert(bs_adapter_attach_persist_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
                                                kBlessStarConfigV1GoldenLen,
                                                0) == BS_ATTACH_ERR_CONFLICT);
         assert(read_manifest_revision(man, uri) == 1);
-        bs_attach_store_close(s);
+        bs_adapter_attach_persist_store_close(s);
     }
 
     const fs::path cfg2 = tmp / "cfg2.json";
@@ -188,64 +189,63 @@ int main()
     }
     const std::string uri2 = file_uri_for(cfg2);
     write_manifest_two(man, uri, uri2, 0);
-    ctrl = bs_reload_batch_controller_create(8);
-    bs_reload_batch_controller_set_read_fn(ctrl, golden_read, nullptr);
-    bs_reload_batch_controller_use_default_gate(ctrl);
-    bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
-    bs_reload_batch_controller_set_manifest_path(ctrl, man.string().c_str());
-    assert(bs_reload_batch_add_path(ctrl, uri.c_str()) == 0);
-    assert(bs_reload_batch_add_path(ctrl, uri2.c_str()) == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    ctrl = bs_adapter_attach_reload_batch_create(8);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
+    bs_adapter_attach_reload_batch_set_manifest_path(ctrl, man.string().c_str());
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str()) == 0);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri2.c_str()) == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
     assert(read_manifest_revision(man, uri) == 1);
     assert(read_manifest_revision(man, uri2) == 1);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
     write_manifest_two(man, uri, uri2, 0);
-    ctrl = bs_reload_batch_controller_create(8);
-    bs_reload_batch_controller_set_read_fn(ctrl, golden_read, nullptr);
-    bs_reload_batch_controller_set_gate_fn(ctrl, reject_bad_uri_gate, nullptr);
-    bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
-    bs_reload_batch_controller_set_manifest_path(ctrl, man.string().c_str());
+    ctrl = bs_adapter_attach_reload_batch_create(8);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
+    bs_adapter_attach_reload_batch_set_gate_fn(ctrl, reject_bad_uri_gate, nullptr);
+    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
+    bs_adapter_attach_reload_batch_set_manifest_path(ctrl, man.string().c_str());
     const std::string bad_uri = file_uri_for(tmp / "bad.json");
-    assert(bs_reload_batch_add_path(ctrl, uri.c_str()) == 0);
-    assert(bs_reload_batch_add_path(ctrl, bad_uri.c_str()) == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str()) == 0);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, bad_uri.c_str()) == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
     assert(read_manifest_revision(man, uri) == 0);
     assert(read_manifest_revision(man, uri2) == 0);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
     write_manifest_revision(man, uri, 0);
-    ctrl = bs_reload_batch_controller_create(4);
-    bs_reload_batch_controller_set_read_fn(ctrl, io_oom_read, nullptr);
-    bs_reload_batch_controller_use_default_gate(ctrl);
-    bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
-    bs_reload_batch_controller_set_manifest_path(ctrl, man.string().c_str());
-    assert(bs_reload_batch_add_path(ctrl, uri.c_str()) == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
+    ctrl = bs_adapter_attach_reload_batch_create(4);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, io_oom_read, nullptr);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    bs_adapter_attach_reload_batch_set_manifest_path(ctrl, man.string().c_str());
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str()) == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
     assert(read_manifest_revision(man, uri) == 0);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
 #if defined(BS_TESTING)
-    bs_attach_store_set_malloc_hook(counting_malloc_fail);
+    bs_adapter_attach_persist_store_set_malloc_hook(counting_malloc_fail);
     g_malloc_calls      = 0;
     g_malloc_fail_after = 0;
-    assert(bs_attach_store_open(nullptr) == nullptr);
-    bs_attach_store_reset_malloc_hook();
+    assert(bs_adapter_attach_persist_store_open(nullptr) == nullptr);
+    bs_adapter_attach_persist_store_reset_malloc_hook();
 #endif
 
-    ctrl = bs_reload_batch_controller_create(4);
-    bs_reload_batch_controller_set_read_fn(ctrl, golden_read, nullptr);
-    bs_reload_batch_controller_use_default_gate(ctrl);
+    ctrl = bs_adapter_attach_reload_batch_create(4);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
     day12_wire_reload_defaults(ctrl);
-    bs_reload_batch_controller_set_session_memory_cap(ctrl, 16);
-    assert(bs_reload_batch_add_path(ctrl, uri.c_str()) == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_set_session_memory_cap(ctrl, 16);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str()) == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
-    fs::remove_all(tmp);
     return 0;
 }

@@ -8,13 +8,16 @@
 #include <fstream>
 #include <string>
 
+#include "support/test_temp_dir.h"
+
 namespace fs = std::filesystem;
 
 int main()
 {
-    const fs::path path = fs::absolute("bs_io_timeout_test.txt");
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_io_local_timeout"));
+    const fs::path           cfg_file = tmp_guard.path / "timeout.txt";
     {
-        std::ofstream out(path, std::ios::binary);
+        std::ofstream out(cfg_file, std::ios::binary);
         out << "data";
     }
 
@@ -22,13 +25,7 @@ int main()
     IoProviderBinding* binding  = bs_adapter_io_local_provider_binding(provider);
     assert(binding != nullptr);
 
-    std::string uri_path = path.string();
-    for (char& c : uri_path)
-    {
-        if (c == '\\')
-            c = '/';
-    }
-    const std::string uri = "file:///" + uri_path;
+    const std::string uri = bs_test_path_to_file_uri(cfg_file);
 
     IoReadResult result{};
     assert(binding->ops->read(binding->ctx, uri.c_str(), &result, 1024, 0) == BS_IO_ERR_TIMEOUT);
@@ -41,6 +38,5 @@ int main()
     bs_io_read_result_free(&ok);
 
     bs_adapter_io_local_provider_destroy(provider);
-    fs::remove(path);
     return 0;
 }

@@ -12,17 +12,16 @@
 
 #include "bs/adapter/orchestration/reload_with_report.h"
 
-#include <cassert>
 #include <cstdlib>
 #include <cstring>
 
 #include <filesystem>
-#include <fstream>
 #include <string>
 
 #include "support/attach_test_fixture.h"
 #include "support/config_v1_golden.h"
 #include "support/day12_attach_fixture.h"
+#include "support/test_temp_dir.h"
 
 namespace fs = std::filesystem;
 
@@ -34,8 +33,11 @@ static int facade_read_fn(void* user_ctx, const char* uri, IoReadResult* out)
 
 int main()
 {
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_day8_attach_full"));
+    const fs::path&          work = tmp_guard.path;
+
     BsTestAttachIoFixture fix{};
-    fix.ctx = bs_attach_context_create();
+    fix.ctx = bs_adapter_attach_ctx_create();
     BS_TEST_REQUIRE("setup", fix.ctx != nullptr);
 
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
@@ -54,19 +56,11 @@ int main()
     BS_TEST_REQUIRE("resolve", bs_registry_facade_resolve(fix.facade, "/adapter/io/remote",
                                                           &remote) == BS_REGISTRY_OK);
 
-    const fs::path cfg_file = fs::absolute("bs_day8_attach_full_cfg.json");
-    {
-        std::ofstream out(cfg_file, std::ios::binary);
-        out.write(kBlessStarConfigV1Golden,
-                  static_cast<std::streamsize>(kBlessStarConfigV1GoldenLen));
-    }
-    std::string uri_path = cfg_file.string();
-    for (char& c : uri_path)
-    {
-        if (c == '\\')
-            c = '/';
-    }
-    const std::string uri = "file:///" + uri_path;
+    const fs::path cfg_file = work / "cfg.json";
+    BS_TEST_REQUIRE("write-cfg",
+                    bs_test_write_binary_file(cfg_file, kBlessStarConfigV1Golden,
+                                              kBlessStarConfigV1GoldenLen));
+    const std::string uri = bs_test_path_to_file_uri(cfg_file);
 
     IoReadResult read_result{};
     BS_TEST_REQUIRE("io-read", bs_io_facade_read(fix.io, uri.c_str(), &read_result) == BS_IO_OK);
@@ -91,27 +85,24 @@ int main()
                     bs_status_format(timeout_status, fix.facade, fmt_buf, sizeof(fmt_buf)) == 0);
     BS_TEST_REQUIRE("format", std::strcmp(fmt_buf, "io.TIMEOUT") == 0);
 
-    ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);
+    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);
     BS_TEST_REQUIRE("reload", ctrl != nullptr);
-    bs_reload_batch_controller_set_read_fn(ctrl, facade_read_fn, &fix);
-    const fs::path manifest_path = cfg_file.parent_path() / "bs_manifest_day8.json";
-    bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
-    bs_reload_batch_controller_set_manifest_path(ctrl, manifest_path.string().c_str());
-    Report* report = report_create("day8_attach_full");
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
+    const fs::path manifest_path = work / "manifest.bs";
+    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
+    Report* report = bs_report_create("day8_attach_full");
     BS_TEST_REQUIRE("reload", report != nullptr);
-    BS_TEST_REQUIRE("reload", bs_reload_batch_add_path(ctrl, uri.c_str()) == 0);
-    BS_TEST_REQUIRE("reload", bs_reload_batch_run_with_report(ctrl, report) == 0);
-    BS_TEST_REQUIRE("reload", bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    BS_TEST_REQUIRE("reload", bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str()) == 0);
+    BS_TEST_REQUIRE("reload", bs_adapter_attach_reload_batch_run_with_report(ctrl, report) == 0);
+    BS_TEST_REQUIRE("reload", bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
 
-    char* json = report_to_json(report);
+    char* json = bs_report_to_json(report);
     BS_TEST_REQUIRE("reload", json != nullptr);
     std::free(json);
 
-    report_destroy(report);
-    bs_reload_batch_controller_destroy(ctrl);
-
-    std::error_code ec;
-    fs::remove(cfg_file, ec);
+    bs_report_destroy(report);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
     bs_test_attach_teardown(&fix);
     return 0;

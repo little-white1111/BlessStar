@@ -3,41 +3,28 @@
 #include "bs/adapter/io/local_file_provider.h"
 
 #include <cassert>
-#include <cstdio>
 #include <cstring>
 
 #include <filesystem>
-#include <fstream>
 #include <string>
+
+#include "support/test_temp_dir.h"
 
 namespace fs = std::filesystem;
 
-static std::string make_temp_file(const char* name, const unsigned char* data, size_t len)
-{
-    const std::string path = name;
-    std::ofstream     out(path, std::ios::binary);
-    out.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(len));
-    return path;
-}
-
 int main()
 {
-    const unsigned char bom_utf8[] = {0xEF, 0xBB, 0xBF, 'h', 'i'};
-    const fs::path      abs_path   = fs::absolute("bs_io_local_test.txt");
-    const std::string   path       = make_temp_file(abs_path.string().c_str(), bom_utf8, 5);
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_io_local_provider"));
+    const unsigned char      bom_utf8[] = {0xEF, 0xBB, 0xBF, 'h', 'i'};
+    const fs::path             cfg_file   = tmp_guard.path / "local_test.txt";
+    assert(bs_test_write_binary_file(cfg_file, bom_utf8, 5));
 
     LocalFileProvider* provider = bs_adapter_io_local_provider_create();
     assert(provider != nullptr);
     IoProviderBinding* binding = bs_adapter_io_local_provider_binding(provider);
     assert(binding != nullptr);
 
-    std::string uri_path = path;
-    for (char& c : uri_path)
-    {
-        if (c == '\\')
-            c = '/';
-    }
-    const std::string uri = "file:///" + uri_path;
+    const std::string uri = bs_test_path_to_file_uri(cfg_file);
     IoReadResult      result{};
     assert(binding->ops->read(binding->ctx, uri.c_str(), &result, BS_IO_MAX_READ_BYTES,
                               BS_IO_READ_TIMEOUT_MS_DEFAULT) == BS_IO_OK);
@@ -47,6 +34,5 @@ int main()
     bs_io_read_result_free(&result);
 
     bs_adapter_io_local_provider_destroy(provider);
-    std::remove(path.c_str());
     return 0;
 }

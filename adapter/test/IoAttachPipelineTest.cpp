@@ -7,6 +7,7 @@
 #include "bs/kernel/ir/requirements.h"
 #include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/attach_context.h"
 #include "bs/adapter/registry_bootstrap.h"
 #include "bs/adapter/requirement_filter.h"
 
@@ -17,24 +18,31 @@
 #include <fstream>
 #include <string>
 
+#include "support/test_temp_dir.h"
+
 namespace fs = std::filesystem;
 
 int main()
 {
-    const fs::path cfg_file = fs::absolute("bs_io_attach_cfg.txt");
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_io_attach_pipeline"));
+    const fs::path           cfg_file = tmp_guard.path / "cfg.txt";
     {
         std::ofstream out(cfg_file, std::ios::binary);
         out << "attach-io-ok";
     }
 
-    assert(kernel_get_builtin_requirements() != nullptr);
+    assert(bs_kernel_get_builtin_requirements() != nullptr);
     assert(bs_adapter_requirement_filter_validate_builtin() == 0);
 
-    RegistryFacade* facade = bs_registry_facade_create();
+    AttachContext* ctx = bs_adapter_attach_ctx_create();
+    assert(ctx != nullptr);
+    bs_adapter_attach_ctx_set_active(ctx);
+    RegistryFacade* facade = bs_adapter_attach_ctx_registry(ctx);
     assert(facade != nullptr);
-    assert(bs_adapter_registry_bootstrap_begin(facade) == 0);
+
+    assert(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
     assert(bs_registry_facade_advance_phase(facade, BS_REGISTRY_PHASE_P2) == BS_REGISTRY_OK);
-    assert(bs_adapter_registry_bootstrap_freeze(facade) == 0);
+    assert(bs_adapter_registry_bootstrap_freeze_ctx(ctx) == 0);
 
     PathEntry late{};
     late.source          = BS_PATH_ENTRY_PLUGIN;
@@ -49,13 +57,7 @@ int main()
     IoFacade* io = bs_io_facade_create(facade);
     assert(io != nullptr);
 
-    std::string uri_path = cfg_file.string();
-    for (char& c : uri_path)
-    {
-        if (c == '\\')
-            c = '/';
-    }
-    const std::string uri = "file:///" + uri_path;
+    const std::string uri = bs_test_path_to_file_uri(cfg_file);
 
     IoReadResult result{};
     assert(bs_io_facade_read(io, uri.c_str(), &result) == BS_IO_OK);
@@ -65,7 +67,6 @@ int main()
 
     bs_io_facade_destroy(io);
     bs_adapter_registry_shutdown_log();
-    bs_registry_facade_destroy(facade);
-    fs::remove(cfg_file);
+    bs_adapter_attach_ctx_destroy(ctx);
     return 0;
 }

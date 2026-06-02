@@ -3,12 +3,13 @@
 #include "bs/adapter/io/local_file_provider.h"
 
 #include <cassert>
-#include <cstdio>
 #include <cstring>
 
 #include <filesystem>
 #include <fstream>
 #include <string>
+
+#include "support/test_temp_dir.h"
 
 namespace fs = std::filesystem;
 
@@ -21,21 +22,13 @@ static std::string write_file(const fs::path& p, const void* data, size_t len)
 
 static std::string file_uri(const std::string& path)
 {
-    std::string u = path;
-    for (char& c : u)
-    {
-        if (c == '\\')
-            c = '/';
-    }
-    return "file:///" + u;
+    return bs_test_path_to_file_uri(fs::path(path));
 }
 
 int main()
 {
-    const fs::path  base = fs::absolute("bs_io_local_boundary");
-    std::error_code ec;
-    fs::remove_all(base, ec);
-    fs::create_directories(base, ec);
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_io_local_boundary"));
+    const fs::path           base = tmp_guard.path;
 
     LocalFileProvider* provider = bs_adapter_io_local_provider_create();
     IoProviderBinding* binding  = bs_adapter_io_local_provider_binding(provider);
@@ -78,6 +71,5 @@ int main()
     assert(exists == 0);
 
     bs_adapter_io_local_provider_destroy(provider);
-    fs::remove_all(base, ec);
     return 0;
 }

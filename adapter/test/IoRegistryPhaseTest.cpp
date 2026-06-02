@@ -1,29 +1,36 @@
 #include "bs/kernel/io/io.h"
 #include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/attach_context.h"
 #include "bs/adapter/registry_bootstrap.h"
 
 #include <cassert>
-#include <cstdio>
 #include <cstring>
 
 #include <filesystem>
 #include <fstream>
 #include <string>
 
+#include "support/test_temp_dir.h"
+
 namespace fs = std::filesystem;
 
 int main()
 {
-    const std::string path = fs::absolute("bs_io_registry_phase.txt").string();
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_io_registry_phase"));
+    const fs::path           cfg_file = tmp_guard.path / "phase.txt";
     {
-        std::ofstream out(path, std::ios::binary);
+        std::ofstream out(cfg_file, std::ios::binary);
         out << "freeze-read";
     }
 
-    RegistryFacade* reg = bs_registry_facade_create();
+    AttachContext* ctx = bs_adapter_attach_ctx_create();
+    assert(ctx != nullptr);
+    bs_adapter_attach_ctx_set_active(ctx);
+    RegistryFacade* reg = bs_adapter_attach_ctx_registry(ctx);
     assert(reg != nullptr);
-    assert(bs_adapter_registry_bootstrap_begin(reg) == 0);
+
+    assert(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
     assert(bs_registry_facade_advance_phase(reg, BS_REGISTRY_PHASE_P2) == BS_REGISTRY_OK);
     assert(bs_adapter_registry_bootstrap_freeze(reg) == 0);
 
@@ -39,13 +46,7 @@ int main()
     IoFacade* io = bs_io_facade_create(reg);
     assert(io != nullptr);
 
-    std::string uri_path = path;
-    for (char& c : uri_path)
-    {
-        if (c == '\\')
-            c = '/';
-    }
-    const std::string uri = "file:///" + uri_path;
+    const std::string uri = bs_test_path_to_file_uri(cfg_file);
     IoReadResult      result{};
     assert(bs_io_facade_read(io, uri.c_str(), &result) == BS_IO_OK);
     assert(result.length == 11);
@@ -55,7 +56,6 @@ int main()
 
     bs_io_facade_destroy(io);
     bs_adapter_registry_shutdown_log();
-    bs_registry_facade_destroy(reg);
-    std::remove(path.c_str());
+    bs_adapter_attach_ctx_destroy(ctx);
     return 0;
 }
