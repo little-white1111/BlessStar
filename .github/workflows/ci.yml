@@ -3,6 +3,7 @@ name: ci
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 jobs:
   cmake:
@@ -83,6 +84,12 @@ jobs:
         if: runner.os == 'Windows'
         run: cmake --build build --config Release
 
+      - name: Contract compile (D-scheme)
+        run: python tools/scripts/contracts/contract_compile.py
+
+      - name: Contract gate runner (D-scheme)
+        run: python tools/scripts/contracts/contract_gate_runner.py
+
       - name: Test / CTest (Unix)
         if: runner.os != 'Windows'
         run: ctest --test-dir build --output-on-failure
@@ -117,6 +124,12 @@ jobs:
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
           LSAN_OPTIONS: suppressions=${{ github.workspace }}/cmake/lsan_suppressions.txt
         run: ctest --test-dir build-san --output-on-failure
+
+      - name: Day19 stress (ci profile, ASan build)
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --test-dir build-san -R bs_test_day19_stress_reload_loop --output-on-failure
 
   meson:
     name: meson (${{ matrix.os }})
