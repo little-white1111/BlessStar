@@ -1,6 +1,6 @@
 {
   "version": "v1",
-  "description": "Authoritative L1 CTest assignment. All registered ctest names must appear exactly once under L1_dev_ci.",
+  "description": "Authoritative L1 CTest assignment. Listed names must exist in cmake/Tests.cmake. CMake may define additional non-L1 CTest cases (e.g. day19 stress).",
   "L1_dev_ci": {
     "ctest_names": [
       "bs_test_app_sdk_contract",

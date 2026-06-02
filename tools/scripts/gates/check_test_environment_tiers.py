@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""GATE-TEST-TIER-ASSIGNMENT: L1 inventory matches cmake/Tests.cmake (C-TST-POL-1)."""
+"""GATE-TEST-TIER-ASSIGNMENT: L1 inventory is a subset of cmake/Tests.cmake (C-TST-POL-1).
+
+Policy:
+- `tier_assignments.json` is authoritative for which CTest cases belong to **L1_dev_ci**.
+- CMake may define additional CTest cases that are **not** part of L1 (e.g. day19 stress).
+- This gate ensures:
+  1) Every listed L1 ctest name exists in cmake/Tests.cmake
+  2) No duplicate names in L1 list
+"""
 
 from __future__ import annotations
 
@@ -26,22 +34,35 @@ def main() -> int:
         return 2
 
     tier = json.loads(_TIER_FILE.read_text(encoding="utf-8"))
-    l1 = set(tier.get("L1_dev_ci", {}).get("ctest_names", []))
+    l1_list = tier.get("L1_dev_ci", {}).get("ctest_names", [])
+    if not isinstance(l1_list, list):
+        print("[FAIL] L1_dev_ci.ctest_names must be a list", file=sys.stderr)
+        return 2
+    dupes = sorted({n for n in l1_list if l1_list.count(n) > 1})
+    if dupes:
+        for n in dupes:
+            print(f"[FAIL] duplicate L1 ctest name: {n}", file=sys.stderr)
+        return 2
+    l1 = set(l1_list)
     cmake_names = _ctest_names_from_cmake()
 
-    missing = sorted(cmake_names - l1)
+    # L1 must be subset of cmake; extra cmake tests are allowed (non-L1 tiers / out-of-band).
     extra = sorted(l1 - cmake_names)
+    non_l1 = sorted(cmake_names - l1)
 
-    if missing:
-        for n in missing:
-            print(f"[FAIL] L1 tier_assignments missing ctest: {n}")
     if extra:
         for n in extra:
             print(f"[FAIL] L1 tier_assignments unknown ctest: {n}")
 
-    if missing or extra:
+    if extra:
         print("[FAIL] sync tier_assignments.json with cmake/Tests.cmake", file=sys.stderr)
         return 2
+
+    # Informational only: list cmake tests not in L1 to aid review.
+    if non_l1:
+        print(f"[INFO] {len(non_l1)} CTest case(s) are non-L1 (allowed). Examples:")
+        for n in non_l1[:10]:
+            print(f"  - {n}")
 
     print(f"[OK] L1 tier assignment covers {len(l1)} ctest name(s)")
     return 0
