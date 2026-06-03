@@ -27,42 +27,42 @@ static void test_model_c_parse_and_gate()
     assert(json.size() < kMaxInputBytes);
 
     BsConfigParseResult result = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
+                                                json.size(), &result);
     assert(bs_status_is_ok(st));
     assert(result.instructions != nullptr);
-    assert(ir_instruction_list_size(result.instructions) == 400u);
+    assert(bs_ir_instruction_list_size(result.instructions) == 400u);
     assert(bs_adapter_requirement_filter_verify_instructions(result.instructions,
                                                              result.active_requirements) == 0);
 
-    IRInstruction* first = ir_instruction_list_get(result.instructions, 0);
+    IRInstruction* first = bs_ir_instruction_list_get(result.instructions, 0);
     assert(first != nullptr);
-    const char* amount = ir_instruction_get_metadata(first, "amount");
+    const char* amount = bs_ir_instruction_get_metadata(first, "amount");
     assert(amount != nullptr && std::strcmp(amount, "100.50") == 0);
-    const char* tax = ir_instruction_get_metadata(first, "tax_rate");
+    const char* tax = bs_ir_instruction_get_metadata(first, "tax_rate");
     assert(tax != nullptr && std::strcmp(tax, "13") == 0);
 
-    bs_config_parse_result_destroy(&result);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 static void test_string_length_4095_ok()
 {
     std::string         json   = bs_test_build_single_instruction_metadata_value(kMaxStringLen - 1);
     BsConfigParseResult result = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
+                                                json.size(), &result);
     assert(bs_status_is_ok(st));
-    bs_config_parse_result_destroy(&result);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 static void test_string_length_4097_fail()
 {
     std::string         json   = bs_test_build_single_instruction_metadata_value(kMaxStringLen + 1);
     BsConfigParseResult result = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
+                                                json.size(), &result);
     assert(!bs_status_is_ok(st));
-    bs_config_parse_result_destroy(&result);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 static void test_input_over_1mb_fail()
@@ -72,10 +72,10 @@ static void test_input_over_1mb_fail()
     assert(json.size() > kMaxInputBytes);
 
     BsConfigParseResult result = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
+                                                json.size(), &result);
     assert(!bs_status_is_ok(st));
-    bs_config_parse_result_destroy(&result);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 static void test_input_near_1mb_ok()
@@ -92,10 +92,10 @@ static void test_input_near_1mb_ok()
     assert(json.size() < kMaxInputBytes);
 
     BsConfigParseResult result = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
+                                                json.size(), &result);
     assert(bs_status_is_ok(st));
-    bs_config_parse_result_destroy(&result);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 static void test_empty_metadata_value_ok()
@@ -110,23 +110,23 @@ static void test_empty_metadata_value_ok()
   }]
 })";
     BsConfigParseResult result  = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(kJson), strlen(kJson), &result);
+    BsStatus            st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(kJson),
+                                                           strlen(kJson), &result);
     assert(bs_status_is_ok(st));
-    IRInstruction* first = ir_instruction_list_get(result.instructions, 0);
-    const char*    note  = ir_instruction_get_metadata(first, "note");
+    IRInstruction* first = bs_ir_instruction_list_get(result.instructions, 0);
+    const char*    note  = bs_ir_instruction_get_metadata(first, "note");
     assert(note != nullptr && note[0] == '\0');
-    bs_config_parse_result_destroy(&result);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 static void test_truncated_json_fail()
 {
     std::string         json   = bs_test_build_truncated_json();
     BsConfigParseResult result = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
+                                                json.size(), &result);
     assert(!bs_status_is_ok(st));
-    bs_config_parse_result_destroy(&result);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 static void test_model_a_light_optional()
@@ -134,16 +134,16 @@ static void test_model_a_light_optional()
     std::string json;
     bs_test_build_config_v1_model_a_light(json, 400);
     BsConfigParseResult result = {};
-    BsStatus            st =
-        bs_config_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()), json.size(), &result);
+    BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
+                                                json.size(), &result);
     assert(bs_status_is_ok(st));
-    assert(ir_instruction_list_size(result.instructions) == 400u);
-    bs_config_parse_result_destroy(&result);
+    assert(bs_ir_instruction_list_size(result.instructions) == 400u);
+    bs_adapter_parser_result_destroy(&result);
 }
 
 int main()
 {
-    bs_config_parse_status_set_domain_id(60);
+    bs_adapter_parser_status_set_domain_id(60);
     test_model_c_parse_and_gate();
     test_string_length_4095_ok();
     test_string_length_4097_fail();

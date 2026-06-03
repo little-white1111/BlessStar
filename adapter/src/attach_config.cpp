@@ -1,11 +1,12 @@
-#include "bs/adapter/attach_config.h"
-#include "attach_context_internal.h"
-
 #include "bs/kernel/state/ConfigManager.h"
 #include "bs/kernel/state/ConfigState.h"
 
+#include "bs/adapter/attach_config.h"
+
 #include <cstdlib>
 #include <cstring>
+
+#include "attach_context_internal.h"
 
 static const char* g_sync_fail_path = nullptr;
 
@@ -63,7 +64,7 @@ int bs_adapter_attach_config_sync_path(AttachContext* ctx, const char* config_pa
 #endif
 
     ConfigState state = CONFIG_STATE_INITIAL;
-    const int     st_rc = bs_config_manager_get_config_state(cm, config_path, &state);
+    const int   st_rc = bs_config_manager_get_config_state(cm, config_path, &state);
 
     /* B-01: path not loaded / terminal INITIAL|CLOSED -> load_config. */
     if (st_rc == -2 || state == CONFIG_STATE_CLOSED || state == CONFIG_STATE_INITIAL)
@@ -84,17 +85,17 @@ int bs_adapter_attach_config_checkpoint_path(AttachContext* ctx, const char* con
 {
     if (!out)
         return -1;
-    out->had_prior    = 0;
-    out->prior_state  = CONFIG_STATE_INITIAL;
-    out->prior_data   = nullptr;
-    out->prior_size   = 0;
+    out->had_prior   = 0;
+    out->prior_state = CONFIG_STATE_INITIAL;
+    out->prior_data  = nullptr;
+    out->prior_size  = 0;
 
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     if (!cm || !config_path)
         return -1;
 
     ConfigState state = CONFIG_STATE_INITIAL;
-    const int     st_rc = bs_config_manager_get_config_state(cm, config_path, &state);
+    const int   st_rc = bs_config_manager_get_config_state(cm, config_path, &state);
     if (st_rc == -2)
         return 0;
 

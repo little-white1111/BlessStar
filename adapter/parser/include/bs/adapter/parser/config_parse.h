@@ -4,8 +4,8 @@
 /*
  * C-ST-7 contract block:
  * Thread safety: not thread-safe; one parse call per result object.
- * Error semantics: BsStatus via bs_adapter_parser_parse_bytes; frees with bs_adapter_parser_result_destroy.
- * Platform notes: N/A.
+ * Error semantics: BsStatus via bs_adapter_parser_parse_bytes; frees with
+ * bs_adapter_parser_result_destroy. Platform notes: N/A.
  */
 
 #include "bs/kernel/common/bs_status.h"
@@ -32,7 +32,8 @@ extern "C"
 
     void bs_adapter_parser_result_destroy(BsConfigParseResult* result);
 
-    BsStatus bs_adapter_parser_parse_bytes(const uint8_t* data, size_t len, BsConfigParseResult* out);
+    BsStatus bs_adapter_parser_parse_bytes(const uint8_t* data, size_t len,
+                                           BsConfigParseResult* out);
 
 #ifdef __cplusplus
 }

@@ -7,39 +7,43 @@
 
 #include <cstring>
 
-static int default_gate_fn(void* /*user_ctx*/, const char* /*uri*/, const IoReadResult* read_result,
-                           BsReloadGateDetail* detail_out)
+int bs_adapter_attach_reload_parse_and_verify_bytes(const IoReadResult*  read_result,
+                                                    BsConfigParseResult* out,
+                                                    BsReloadGateDetail*  detail_out)
 {
     if (!read_result || read_result->status != BS_IO_OK || !read_result->data ||
         read_result->length == 0)
         return BS_RELOAD_GATE_PARSE_FAIL;
+    if (!out)
+        return BS_RELOAD_GATE_PARSE_FAIL;
 
-    BsConfigParseResult parsed{};
-    const BsStatus      st = bs_config_parse_bytes(read_result->data, read_result->length, &parsed);
+    const BsStatus st = bs_adapter_parser_parse_bytes(read_result->data, read_result->length, out);
     if (!bs_status_is_ok(st))
     {
         if (detail_out)
         {
             bs_safe_snprintf(detail_out->buf, sizeof(detail_out->buf),
                              "parse error at line %zu column %zu (domain=%d code=%d)",
-                             parsed.error_line, parsed.error_column, bs_status_domain_id(st),
+                             out->error_line, out->error_column, bs_status_domain_id(st),
                              bs_status_code(st));
         }
         return BS_RELOAD_GATE_PARSE_FAIL;
     }
 
-    const int gate_rc = bs_adapter_requirement_filter_verify_instructions(
-        parsed.instructions, parsed.active_requirements);
-    bs_config_parse_result_destroy(&parsed);
-
+    const int gate_rc = bs_adapter_requirement_filter_verify_instructions(out->instructions,
+                                                                          out->active_requirements);
     if (gate_rc != 0)
         return BS_RELOAD_GATE_IR_REJECT;
     return BS_RELOAD_GATE_OK;
 }
 
-void bs_reload_batch_controller_use_default_gate(ReloadBatchController* ctrl)
+int bs_adapter_attach_reload_default_path_gate(void* /*user_ctx*/, const char* /*uri*/,
+                                               const IoReadResult* read_result,
+                                               BsReloadGateDetail* detail_out)
 {
-    if (!ctrl)
-        return;
-    bs_reload_batch_controller_set_gate_fn(ctrl, default_gate_fn, nullptr);
+    BsConfigParseResult parsed{};
+    const int           rc =
+        bs_adapter_attach_reload_parse_and_verify_bytes(read_result, &parsed, detail_out);
+    bs_adapter_parser_result_destroy(&parsed);
+    return rc;
 }

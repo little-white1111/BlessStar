@@ -129,8 +129,8 @@ int main()
 
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_day12_attach"));
     const fs::path           tmp = tmp_guard.path;
-    const fs::path cfg = tmp / "cfg.json";
-    const fs::path man = tmp / "manifest.bs";
+    const fs::path           cfg = tmp / "cfg.json";
+    const fs::path           man = tmp / "manifest.bs";
     {
         std::ofstream out(cfg, std::ios::binary);
         out.write(kBlessStarConfigV1Golden,
@@ -162,8 +162,8 @@ int main()
         char           path_buf[512];
         BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        assert(bs_adapter_attach_persist_store_get_canonical_path(rd, uri.c_str(), path_buf, sizeof(path_buf)) ==
-               BS_ATTACH_OK);
+        assert(bs_adapter_attach_persist_store_get_canonical_path(
+                   rd, uri.c_str(), path_buf, sizeof(path_buf)) == BS_ATTACH_OK);
         bs_adapter_attach_persist_store_close(rd);
     }
     bs_adapter_attach_reload_batch_destroy(ctrl);
@@ -172,11 +172,12 @@ int main()
     {
         BsAttachStore* s = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(s != nullptr);
-        assert(bs_adapter_attach_persist_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
-                                               kBlessStarConfigV1GoldenLen, 0) == BS_ATTACH_OK);
-        assert(bs_adapter_attach_persist_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
-                                               kBlessStarConfigV1GoldenLen,
-                                               0) == BS_ATTACH_ERR_CONFLICT);
+        assert(bs_adapter_attach_persist_store_commit_per_path(
+                   s, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen, 0) ==
+               BS_ATTACH_OK);
+        assert(bs_adapter_attach_persist_store_commit_per_path(
+                   s, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen, 0) ==
+               BS_ATTACH_ERR_CONFLICT);
         assert(read_manifest_revision(man, uri) == 1);
         bs_adapter_attach_persist_store_close(s);
     }

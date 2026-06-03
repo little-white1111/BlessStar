@@ -41,9 +41,8 @@ int main()
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
 
     const fs::path good_file = work / "v1_good.json";
-    BS_TEST_REQUIRE("write-good",
-                    bs_test_write_binary_file(good_file, kBlessStarConfigV1Golden,
-                                              kBlessStarConfigV1GoldenLen));
+    BS_TEST_REQUIRE("write-good", bs_test_write_binary_file(good_file, kBlessStarConfigV1Golden,
+                                                            kBlessStarConfigV1GoldenLen));
     const std::string good_uri = bs_test_path_to_file_uri(good_file);
 
     ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);

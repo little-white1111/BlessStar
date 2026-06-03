@@ -26,6 +26,7 @@
 #include "bs/kernel/state/ConfigEvent.h"
 #include "bs/kernel/state/ConfigState.h"
 #include "bs/kernel/state/EventBus.h"
+
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/attach_runtime.h"
@@ -109,8 +110,7 @@ static int prepare_reload_fixture(ReloadFixture* fix, const fs::path& work)
 }
 
 /** C: reload + default gate (no gate_fn) + Report; read path uses IoFacade. */
-static int phase_c_reload_default_gate_and_report(const ReloadHarness* h,
-                                                  const ReloadFixture* fix)
+static int phase_c_reload_default_gate_and_report(const ReloadHarness* h, const ReloadFixture* fix)
 {
     ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);
     REQUIRE_PHASE("C-reload", ctrl != nullptr);
@@ -153,11 +153,11 @@ static int phase_d_eventbus_enqueue_then_drain(AttachContext* actx)
     REQUIRE_PHASE("D-eventbus", bus != nullptr);
 
     int notified = 0;
-    REQUIRE_PHASE("D-eventbus", bs_event_bus_subscribe(bus, "/config/reload_notify", notify_listener,
-                                                   &notified) == 0);
+    REQUIRE_PHASE("D-eventbus", bs_event_bus_subscribe(bus, "/config/reload_notify",
+                                                       notify_listener, &notified) == 0);
 
     ConfigEvent* ev = bs_config_event_create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
-                                         CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
+                                             CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
     REQUIRE_PHASE("D-eventbus", ev != nullptr);
     REQUIRE_PHASE("D-eventbus", bs_event_bus_publish(bus, ev) == 0);
     bs_config_event_destroy(ev);
@@ -195,7 +195,7 @@ static int phase_e_reentrant_read_blocked_in_callback(const ReloadHarness* h)
                   bs_event_bus_subscribe(bus, "/config/reentry", reentry_listener, &probe) == 0);
 
     ConfigEvent* ev = bs_config_event_create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING,
-                                         CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
+                                             CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
     REQUIRE_PHASE("E-reentry", ev != nullptr);
     REQUIRE_PHASE("E-reentry", bs_event_bus_publish(bus, ev) == 0);
     bs_config_event_destroy(ev);
@@ -218,7 +218,7 @@ int main()
 {
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_reload_gate_report"));
     ReloadHarness            ctx{};
-    ReloadFixture              fix{};
+    ReloadFixture            fix{};
 
     if (minimal_attach_setup(&ctx) != 0)
         return 1;

@@ -2,7 +2,7 @@
 
 static uint16_t g_config_parse_domain_id = 60;
 
-void bs_config_parse_status_set_domain_id(uint16_t domain_id)
+void bs_adapter_parser_status_set_domain_id(uint16_t domain_id)
 {
     g_config_parse_domain_id = domain_id;
 }

@@ -8,10 +8,10 @@
  * Platform notes: Replaces ad-hoc EventBus usage on attach freeze and reload success paths.
  */
 
-#include "bs/adapter/attach_context.h"
-
 #include "bs/kernel/state/ConfigState.h"
 #include "bs/kernel/state/EventBus.h"
+
+#include "bs/adapter/attach_context.h"
 
 #include <stddef.h>
 
@@ -64,7 +64,8 @@ extern "C"
                                                const BsAttachConfigPathCheckpoint* checkpoint);
 
 #if defined(BS_TESTING)
-    /** Force bs_adapter_attach_config_sync_path to fail for config_path (T6 / XVII-ORCH-1 tests). */
+    /** Force bs_adapter_attach_config_sync_path to fail for config_path (T6 / XVII-ORCH-1 tests).
+     */
     void bs_adapter_attach_config_testing_set_sync_fail_path(const char* config_path);
     void bs_adapter_attach_config_testing_clear_sync_fail_path(void);
 #endif

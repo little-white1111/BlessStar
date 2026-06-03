@@ -12,10 +12,11 @@
  *   shells without config_manager skip CM sync.
  */
 
-#include "bs/adapter/attach_context.h"
 #include "bs/kernel/common/bs_log.h"
 #include "bs/kernel/registry/registry_facade.h"
 #include "bs/kernel/runtime/Kernel.h"
+
+#include "bs/adapter/attach_context.h"
 
 struct Pipeline;
 
@@ -41,8 +42,9 @@ void bs_adapter_attach_ctx_teardown_kernel(AttachContext* ctx);
 Kernel*   bs_adapter_attach_ctx_kernel(AttachContext* ctx);
 Pipeline* bs_adapter_attach_ctx_default_pipeline(AttachContext* ctx);
 
-int bs_adapter_attach_ctx_bind_default_pipeline_registry(AttachContext* ctx, RegistryFacade* facade);
-int bs_adapter_attach_ctx_start_kernel(AttachContext* ctx);
+int  bs_adapter_attach_ctx_bind_default_pipeline_registry(AttachContext*  ctx,
+                                                          RegistryFacade* facade);
+int  bs_adapter_attach_ctx_start_kernel(AttachContext* ctx);
 void bs_adapter_attach_ctx_stop_kernel(AttachContext* ctx);
 
 #endif

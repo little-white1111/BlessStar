@@ -57,9 +57,8 @@ int main()
                                                           &remote) == BS_REGISTRY_OK);
 
     const fs::path cfg_file = work / "cfg.json";
-    BS_TEST_REQUIRE("write-cfg",
-                    bs_test_write_binary_file(cfg_file, kBlessStarConfigV1Golden,
-                                              kBlessStarConfigV1GoldenLen));
+    BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg_file, kBlessStarConfigV1Golden,
+                                                           kBlessStarConfigV1GoldenLen));
     const std::string uri = bs_test_path_to_file_uri(cfg_file);
 
     IoReadResult read_result{};

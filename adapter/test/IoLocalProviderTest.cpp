@@ -15,8 +15,8 @@ namespace fs = std::filesystem;
 int main()
 {
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_io_local_provider"));
-    const unsigned char bom_utf8[] = {0xEF, 0xBB, 0xBF, 'h', 'i'};
-    const fs::path cfg_file = tmp_guard.path / "local_test.txt";
+    const unsigned char      bom_utf8[] = {0xEF, 0xBB, 0xBF, 'h', 'i'};
+    const fs::path           cfg_file   = tmp_guard.path / "local_test.txt";
     assert(bs_test_write_binary_file(cfg_file, bom_utf8, 5));
 
     LocalFileProvider* provider = bs_adapter_io_local_provider_create();
