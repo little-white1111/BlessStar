@@ -259,7 +259,8 @@ static int persist_per_path(ReloadBatchController* ctrl, PathWork* w, const IoRe
             ctrl->report, ctrl->scheme, session_batch_epoch(ctrl), w->uri.c_str(), new_rev);
     }
     AttachContext* actx = bs_adapter_attach_ctx_get_active();
-    if (actx && result && result->data && result->length > 0)
+    if (actx && bs_adapter_attach_config_has_manager(actx) && result && result->data &&
+        result->length > 0)
     {
         const int sync_rc = bs_adapter_attach_config_sync_path(actx, w->uri.c_str(), result->data,
                                                                result->length);
@@ -418,12 +419,13 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             else
             {
                 const uint64_t epoch = session_batch_epoch(ctrl);
-                AttachContext* actx  = bs_adapter_attach_ctx_get_active();
+                AttachContext* actx = bs_adapter_attach_ctx_get_active();
                 for (auto& w : ctrl->paths)
                 {
                     if (w.state == BS_ORCH_STAGED)
                     {
-                        if (actx && !w.staged_payload.empty())
+                        if (actx && bs_adapter_attach_config_has_manager(actx) &&
+                            !w.staged_payload.empty())
                         {
                             const int sync_rc = bs_adapter_attach_config_sync_path(
                                 actx, w.uri.c_str(), w.staged_payload.data(),
