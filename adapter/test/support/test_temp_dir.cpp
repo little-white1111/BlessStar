@@ -1,5 +1,3 @@
-#include "test_temp_dir.h"
-
 #include <chrono>
 #include <cstdint>
 
@@ -7,12 +5,14 @@
 #include <random>
 #include <sstream>
 
+#include "test_temp_dir.h"
+
 fs::path bs_test_unique_temp_dir(const char* prefix)
 {
     const auto now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                             std::chrono::steady_clock::now().time_since_epoch())
                             .count();
-    const uint32_t salt = std::random_device{}();
+    const uint32_t     salt = std::random_device{}();
     std::ostringstream dir_name;
     dir_name << prefix << '_' << now_ns << '_' << salt;
     const fs::path  tmp = fs::temp_directory_path() / dir_name.str();

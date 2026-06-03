@@ -142,9 +142,8 @@ int bs_adapter_attach_reload_batch_add_path(ReloadBatchController* ctrl, const c
 
 static void gc_path_work(PathWork* w)
 {
-    if (!w)
-        return;
-    w->state = BS_ORCH_PENDING;
+    (void)w;
+    /* Keep terminal path state for bs_adapter_attach_reload_batch_path_state (XV-IO-02). */
 }
 
 static int run_read_with_retry(ReloadBatchController* ctrl, const char* uri, IoReadResult* out)

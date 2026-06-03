@@ -118,7 +118,7 @@ int main()
     assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
     assert(read_ctx.calls == 2);
     assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///bad") == BS_ORCH_FAILED_READ);
-    assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///good") == BS_ORCH_PENDING);
+    assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///good") == BS_ORCH_COMMITTED);
 
     bs_adapter_attach_reload_batch_destroy(ctrl);
 
@@ -138,7 +138,7 @@ int main()
     assert(read_ctx.calls == 2);
     assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///gated") ==
            BS_ORCH_GATE_REJECTED);
-    assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///ok") == BS_ORCH_PENDING);
+    assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///ok") == BS_ORCH_COMMITTED);
 
     bs_adapter_attach_reload_batch_destroy(ctrl);
 
