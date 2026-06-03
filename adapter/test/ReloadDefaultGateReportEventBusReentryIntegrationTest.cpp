@@ -153,8 +153,8 @@ static int phase_d_eventbus_enqueue_then_drain(AttachContext* actx)
     REQUIRE_PHASE("D-eventbus", bus != nullptr);
 
     int notified = 0;
-    REQUIRE_PHASE("D-eventbus",
-                  EventBus_Subscribe(bus, "/config/reload_notify", notify_listener, &notified) == 0);
+    REQUIRE_PHASE("D-eventbus", EventBus_Subscribe(bus, "/config/reload_notify",
+                                                       notify_listener, &notified) == 0);
 
     ConfigEvent* ev = ConfigEvent_Create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
                                          CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
