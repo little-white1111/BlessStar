@@ -81,7 +81,8 @@ blessstar_add_unit_test(bs_test_requirements
   SOURCES kernel/ir/test/RequirementsTest.cpp
   LIBS bs_kernel_ir
 )
-set_tests_properties(bs_test_requirements PROPERTIES LABELS "unit;registry;attach")
+set_tests_properties(bs_test_requirements
+  PROPERTIES LABELS "unit;registry;attach;regression")
 blessstar_add_unit_test(bs_test_resolver
   SOURCES kernel/ir/test/ResolverTest.cpp
   LIBS bs_kernel_ir
@@ -90,8 +91,8 @@ blessstar_add_unit_test(bs_test_requirement_filter
   SOURCES adapter/test/RequirementFilterTest.cpp
   LIBS bs_adapter_requirement
 )
-set_tests_properties(bs_test_requirements PROPERTIES LABELS "unit;registry;attach")
-set_tests_properties(bs_test_requirement_filter PROPERTIES LABELS "unit;registry;attach")
+set_tests_properties(bs_test_requirement_filter
+  PROPERTIES LABELS "unit;registry;attach;regression")
 
 # ---------------------------------------------------------------------------
 # Parser (day 9 · M2)
