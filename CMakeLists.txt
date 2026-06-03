@@ -489,6 +489,27 @@ target_link_libraries(bs_adapter_registry
     bs_adapter_log
     bs_adapter_attach
 )
+
+# ------------------------------
+# App: SDK (day16 · App -> Adapter boundary)
+# ------------------------------
+add_library(bs_app_sdk
+  app/sdk/src/app_contract.cpp
+  app/sdk/src/app_ir_mapper.cpp
+  app/sdk/src/app_scenario_policy.cpp
+  app/sdk/src/vendor_config_normalizer.cpp
+  app/sdk/src/vendor_reload_facade.cpp
+  app/sdk/src/app_vendor_precheck.cpp
+)
+target_include_directories(bs_app_sdk
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/include
+)
+target_link_libraries(bs_app_sdk
+  PUBLIC
+    bs_kernel_common
+)
+
 # ------------------------------
 # Unit tests (sources under modules; registration here + CTest)
 # ------------------------------
