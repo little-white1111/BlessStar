@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PERSISTENCE_ATTACH_STORE_H
 #define BS_ADAPTER_PERSISTENCE_ATTACH_STORE_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Store serializes batch_begin/stage/commit; not process-wide.
+ * Error semantics: BS_ATTACH_* status domain; WAL errors surface as IO failures.
+ * Platform notes: Core attach persistence API backing reload commits.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -40,38 +47,43 @@ extern "C"
 #define BS_ATTACH_MAX_MANIFEST_LINE (8192u)
 
     /** File-backed manifest at @p manifest_path. Pass NULL for in-memory test store. */
-    BsAttachStore* bs_attach_store_open(const char* manifest_path);
-    void           bs_attach_store_close(BsAttachStore* store);
+    BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path);
+    void           bs_adapter_attach_persist_store_close(BsAttachStore* store);
 
-    uint64_t bs_attach_store_batch_epoch(const BsAttachStore* store);
+    uint64_t bs_adapter_attach_persist_store_batch_epoch(const BsAttachStore* store);
 
     /** @p expected_rev is revision at session start; 0 for first write. */
-    int bs_attach_store_get_revision(const BsAttachStore* store, const char* uri,
-                                     uint64_t* rev_out);
+    int bs_adapter_attach_persist_store_get_revision(const BsAttachStore* store, const char* uri,
+                                                     uint64_t* rev_out);
 
     /** Canonical path from manifest (RES-IX-8 uri->path); empty if unknown. */
-    int bs_attach_store_get_canonical_path(const BsAttachStore* store, const char* uri,
-                                           char* out_path, size_t out_cap);
+    int bs_adapter_attach_persist_store_get_canonical_path(const BsAttachStore* store,
+                                                           const char* uri, char* out_path,
+                                                           size_t out_cap);
 
-    int bs_attach_store_commit_per_path(BsAttachStore* store, const char* uri, const void* data,
-                                        size_t len, uint64_t expected_rev);
+    int bs_adapter_attach_persist_store_commit_per_path(BsAttachStore* store, const char* uri,
+                                                        const void* data, size_t len,
+                                                        uint64_t expected_rev);
 
-    void bs_attach_store_batch_begin(BsAttachStore* store);
-    int  bs_attach_store_batch_stage(BsAttachStore* store, const char* uri, const void* data,
-                                     size_t len, uint64_t expected_rev);
+    void bs_adapter_attach_persist_store_batch_begin(BsAttachStore* store);
+    int  bs_adapter_attach_persist_store_batch_stage(BsAttachStore* store, const char* uri,
+                                                     const void* data, size_t len,
+                                                     uint64_t expected_rev);
     /** Atomic manifest + all staged canonical files (RES-IX-10). */
-    int  bs_attach_store_batch_commit(BsAttachStore* store);
-    void bs_attach_store_batch_abort(BsAttachStore* store);
+    int  bs_adapter_attach_persist_store_batch_commit(BsAttachStore* store);
+    void bs_adapter_attach_persist_store_batch_abort(BsAttachStore* store);
 
-    void bs_attach_store_set_fsync_policy(BsAttachStore* store, BsAttachFsyncPolicy policy);
-    BsAttachFsyncPolicy bs_attach_store_get_fsync_policy(const BsAttachStore* store);
+    void bs_adapter_attach_persist_store_set_fsync_policy(BsAttachStore*      store,
+                                                          BsAttachFsyncPolicy policy);
+    BsAttachFsyncPolicy
+    bs_adapter_attach_persist_store_get_fsync_policy(const BsAttachStore* store);
 
     typedef void* (*BsAttachMallocFn)(size_t size);
 
 #if defined(BS_TESTING)
     /** Testing only: inject malloc failures (see ZK LibCMocks pattern). */
-    void bs_attach_store_set_malloc_hook(BsAttachMallocFn fn);
-    void bs_attach_store_reset_malloc_hook(void);
+    void bs_adapter_attach_persist_store_set_malloc_hook(BsAttachMallocFn fn);
+    void bs_adapter_attach_persist_store_reset_malloc_hook(void);
 #endif
 
 #ifdef __cplusplus

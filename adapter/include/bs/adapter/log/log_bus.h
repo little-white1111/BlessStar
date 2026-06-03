@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_LOG_LOG_BUS_H
 #define BS_ADAPTER_LOG_LOG_BUS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Depends on backend (memory vs spdlog); see adapter_log implementation.
+ * Error semantics: Never throws across C API; drops if domain unknown.
+ * Platform notes: Binds kernel bs_log domains to adapter sinks.
+ */
+
 #include "bs/kernel/common/bs_log.h"
 
 #ifdef __cplusplus

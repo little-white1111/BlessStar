@@ -27,7 +27,7 @@ static int g_plugin_dispatch(int value)
 int main()
 {
     /* Step 1: builtin requirements (not via PathRegistry, R-II-1) */
-    const KernelBuiltinRequirements* builtin = kernel_get_builtin_requirements();
+    const KernelBuiltinRequirements* builtin = bs_kernel_get_builtin_requirements();
     assert(builtin != nullptr);
     assert(bs_adapter_requirement_filter_validate_builtin() == 0);
     assert(bs_adapter_requirement_filter_check_adapter_version("0.4.0") == 0);
@@ -66,16 +66,16 @@ int main()
     IRRequirementList* active = bs_adapter_requirement_filter_merge_activation(nullptr);
     assert(active != nullptr);
 
-    IRInstructionList* list = ir_instruction_list_create();
-    IRInstruction*     ok   = ir_instruction_create("test", "n1");
-    assert(ir_instruction_list_add(list, ok) == 0);
+    IRInstructionList* list = bs_ir_instruction_list_create();
+    IRInstruction*     ok   = bs_ir_instruction_create("test", "n1");
+    assert(bs_ir_instruction_list_add(list, ok) == 0);
     assert(bs_adapter_requirement_filter_verify_instructions(list, active) == 0);
 
-    IRInstruction* bad = ir_instruction_create("not_in_manifest", "n2");
-    assert(ir_instruction_list_add(list, bad) == 0);
+    IRInstruction* bad = bs_ir_instruction_create("not_in_manifest", "n2");
+    assert(bs_ir_instruction_list_add(list, bad) == 0);
     assert(bs_adapter_requirement_filter_verify_instructions(list, active) == 1);
 
-    ir_instruction_list_destroy(list);
+    bs_ir_instruction_list_destroy(list);
     bs_requirement_list_free(active);
 
     /* Step 6: resolve and use bindings (logical_id + canonical_path) */

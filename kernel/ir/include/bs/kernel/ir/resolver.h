@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_IR_RESOLVER_H
 #define BS_KERNEL_IR_RESOLVER_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Resolver tables are immutable after build.
+ * Error semantics: Non-zero when requirement path cannot be resolved.
+ * Platform notes: Resolves symbolic requirement names to registry paths.
+ */
+
 #include "bs/kernel/ir/requirements.h"
 
 #ifdef __cplusplus

@@ -69,12 +69,12 @@ int main(int argc, char** argv)
     const fs::path&          work = tmp_guard.path;
 
     BsTestAttachIoFixture fix{};
-    fix.ctx = bs_attach_context_create();
+    fix.ctx = bs_adapter_attach_ctx_create();
     BS_TEST_REQUIRE("setup", fix.ctx != nullptr);
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
     BS_TEST_REQUIRE("freeze", bs_test_attach_bootstrap_freeze_ctx(&fix) == 0);
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
-    bs_attach_context_set_active(fix.ctx);
+    bs_adapter_attach_ctx_set_active(fix.ctx);
 
     std::vector<std::string> uris;
     const size_t             fixture_bytes = static_cast<size_t>(profile.fixture_kb) * 1024u;
@@ -127,19 +127,21 @@ int main(int argc, char** argv)
 
         if (day_phase)
         {
-            ReloadBatchController* ctrl = bs_reload_batch_controller_create(16);
+            ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(16);
             BS_TEST_REQUIRE("day-ctrl", ctrl != nullptr);
-            bs_reload_batch_controller_set_read_fn(ctrl, facade_read_fn, &fix);
-            bs_reload_batch_controller_use_default_gate(ctrl);
-            bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
-            bs_reload_batch_controller_set_manifest_path(ctrl, manifest_path.string().c_str());
+            bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
+            bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+            bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+            bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
             const std::string& uri = uris[static_cast<size_t>(path_i % uris.size())];
             path_i++;
             ++day_total;
-            const int add_rc = bs_reload_batch_add_path(ctrl, uri.c_str());
-            const int run_rc = (add_rc == 0) ? bs_reload_batch_run(ctrl) : -1;
-            const int ok = (run_rc == 0 && bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1 : 0;
+            const int add_rc = bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str());
+            const int run_rc = (add_rc == 0) ? bs_adapter_attach_reload_batch_run(ctrl) : -1;
+            const int ok =
+                (run_rc == 0 && bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1
+                                                                                              : 0;
             day_ok += ok;
             if (!steady_mark && day_total >= 30)
             {
@@ -150,33 +152,36 @@ int main(int argc, char** argv)
             maybe_sample("day", static_cast<uint64_t>(day_total), ok);
             if (day_total % 50 == 0)
                 bs_day19_rss_sample_push(samples, "day_tick", static_cast<uint64_t>(day_total), ok);
-            bs_reload_batch_controller_destroy(ctrl);
+            bs_adapter_attach_reload_batch_destroy(ctrl);
             continue;
         }
         if (need_night)
         {
-            ReloadBatchController* ctrl = bs_reload_batch_controller_create(32);
+            ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(32);
             BS_TEST_REQUIRE("night-ctrl", ctrl != nullptr);
-            bs_reload_batch_controller_set_read_fn(ctrl, facade_read_fn, &fix);
-            bs_reload_batch_controller_use_default_gate(ctrl);
-            bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
-            bs_reload_batch_controller_set_manifest_path(ctrl, manifest_path.string().c_str());
+            bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
+            bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+            bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
+            bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
             const int n = profile.paths_per_batch < profile.path_pool_size ? profile.paths_per_batch
                                                                            : profile.path_pool_size;
             int       add_fail = 0;
             for (int p = 0; p < n; ++p)
             {
-                if (bs_reload_batch_add_path(ctrl, uris[static_cast<size_t>(p)].c_str()) != 0)
+                if (bs_adapter_attach_reload_batch_add_path(
+                        ctrl, uris[static_cast<size_t>(p)].c_str()) != 0)
                     add_fail = 1;
             }
             ++night_total;
-            const int run_rc = add_fail ? -1 : bs_reload_batch_run(ctrl);
-            const int ok = (run_rc == 0 && bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1 : 0;
+            const int run_rc = add_fail ? -1 : bs_adapter_attach_reload_batch_run(ctrl);
+            const int ok =
+                (run_rc == 0 && bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1
+                                                                                              : 0;
             night_ok += ok;
             maybe_sample("night", static_cast<uint64_t>(night_total), ok);
             bs_day19_rss_sample_push(samples, "night_tick", static_cast<uint64_t>(night_total), ok);
-            bs_reload_batch_controller_destroy(ctrl);
+            bs_adapter_attach_reload_batch_destroy(ctrl);
             continue;
         }
         if (elapsed >= profile.duration_sec_max)

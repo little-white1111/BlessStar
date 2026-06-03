@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_RUNTIME_CONFIG_H
 #define BS_KERNEL_RUNTIME_CONFIG_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: KernelConfig is copied by value into Kernel; not shared mutable state.
+ * Error semantics: bs_kernel_config_validate may return error_message alloc failures as -1.
+ * Platform notes: Holds log level, timeouts, and data directory strings.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -42,28 +49,28 @@ extern "C"
         const char*       log_dir;
     };
 
-    KernelConfig* kernel_config_create(void);
-    void          kernel_config_destroy(KernelConfig* config);
+    KernelConfig* bs_kernel_config_create(void);
+    void          bs_kernel_config_destroy(KernelConfig* config);
 
-    void        kernel_config_set_name(KernelConfig* config, const char* name);
-    const char* kernel_config_get_name(const KernelConfig* config);
+    void        bs_kernel_config_set_name(KernelConfig* config, const char* name);
+    const char* bs_kernel_config_get_name(const KernelConfig* config);
 
-    void     kernel_config_set_log_level(KernelConfig* config, LogLevel level);
-    LogLevel kernel_config_get_log_level(const KernelConfig* config);
+    void     bs_kernel_config_set_log_level(KernelConfig* config, LogLevel level);
+    LogLevel bs_kernel_config_get_log_level(const KernelConfig* config);
 
-    void kernel_config_set_error_handling_mode(KernelConfig* config, ErrorHandlingMode mode);
-    ErrorHandlingMode kernel_config_get_error_handling_mode(const KernelConfig* config);
+    void bs_kernel_config_set_error_handling_mode(KernelConfig* config, ErrorHandlingMode mode);
+    ErrorHandlingMode bs_kernel_config_get_error_handling_mode(const KernelConfig* config);
 
-    void     kernel_config_set_max_pipeline_stages(KernelConfig* config, uint32_t max);
-    uint32_t kernel_config_get_max_pipeline_stages(const KernelConfig* config);
+    void     bs_kernel_config_set_max_pipeline_stages(KernelConfig* config, uint32_t max);
+    uint32_t bs_kernel_config_get_max_pipeline_stages(const KernelConfig* config);
 
-    void     kernel_config_set_execution_timeout_ms(KernelConfig* config, uint64_t timeout);
-    uint64_t kernel_config_get_execution_timeout_ms(const KernelConfig* config);
+    void     bs_kernel_config_set_execution_timeout_ms(KernelConfig* config, uint64_t timeout);
+    uint64_t bs_kernel_config_get_execution_timeout_ms(const KernelConfig* config);
 
-    void        kernel_config_set_data_dir(KernelConfig* config, const char* dir);
-    const char* kernel_config_get_data_dir(const KernelConfig* config);
+    void        bs_kernel_config_set_data_dir(KernelConfig* config, const char* dir);
+    const char* bs_kernel_config_get_data_dir(const KernelConfig* config);
 
-    int kernel_config_validate(const KernelConfig* config, char** error_message);
+    int bs_kernel_config_validate(const KernelConfig* config, char** error_message);
 
 #ifdef __cplusplus
 }

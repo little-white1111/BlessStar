@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_IO_PROVIDER_STUBS_H
 #define BS_ADAPTER_IO_PROVIDER_STUBS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Stubs are stateless aside from configured failure injection.
+ * Error semantics: Deterministic BS_IO_ERR_* for tests.
+ * Platform notes: Used when remote/DB providers are not linked.
+ */
+
 #include "bs/kernel/io/io.h"
 
 #ifdef __cplusplus

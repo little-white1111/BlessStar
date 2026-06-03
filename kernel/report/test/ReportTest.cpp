@@ -6,51 +6,51 @@
 
 static void test_Report_CreateDestroy()
 {
-    Report* report = report_create("test workflow");
+    Report* report = bs_report_create("test workflow");
     assert(report != nullptr);
     assert(report->status == REPORT_STATUS_SUCCESS);
-    report_destroy(report);
+    bs_report_destroy(report);
     printf("test_Report_CreateDestroy: PASS\n");
 }
 
 static void test_Report_Entries()
 {
-    Report* report = report_create("test");
+    Report* report = bs_report_create("test");
 
-    report_add_debug(report, "stage1", "debug message");
-    report_add_info(report, "stage1", "info message");
-    report_add_warn(report, "stage1", "warn message");
-    report_add_error(report, "stage1", "error message");
-    report_add_fatal(report, "stage1", "fatal message");
+    bs_report_add_debug(report, "stage1", "debug message");
+    bs_report_add_info(report, "stage1", "info message");
+    bs_report_add_warn(report, "stage1", "warn message");
+    bs_report_add_error(report, "stage1", "error message");
+    bs_report_add_fatal(report, "stage1", "fatal message");
 
     assert(report->entry_count == 5);
-    report_destroy(report);
+    bs_report_destroy(report);
     printf("test_Report_Entries: PASS\n");
 }
 
 static void test_Report_Status()
 {
-    Report* report = report_create("test");
-    assert(report_get_status(report) == REPORT_STATUS_SUCCESS);
+    Report* report = bs_report_create("test");
+    assert(bs_report_get_status(report) == REPORT_STATUS_SUCCESS);
 
-    report_set_status(report, REPORT_STATUS_FAILED);
-    assert(report_get_status(report) == REPORT_STATUS_FAILED);
+    bs_report_set_status(report, REPORT_STATUS_FAILED);
+    assert(bs_report_get_status(report) == REPORT_STATUS_FAILED);
 
-    report_destroy(report);
+    bs_report_destroy(report);
     printf("test_Report_Status: PASS\n");
 }
 
 static void test_Report_TargetAction()
 {
-    Report* report = report_create("test");
+    Report* report = bs_report_create("test");
 
-    report_set_next_target(report, "target1");
-    report_set_next_action(report, "action1");
+    bs_report_set_next_target(report, "target1");
+    bs_report_set_next_action(report, "action1");
 
-    assert(strcmp(report_get_next_target(report), "target1") == 0);
-    assert(strcmp(report_get_next_action(report), "action1") == 0);
+    assert(strcmp(bs_report_get_next_target(report), "target1") == 0);
+    assert(strcmp(bs_report_get_next_action(report), "action1") == 0);
 
-    report_destroy(report);
+    bs_report_destroy(report);
     printf("test_Report_TargetAction: PASS\n");
 }
 

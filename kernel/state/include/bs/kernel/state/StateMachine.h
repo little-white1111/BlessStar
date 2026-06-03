@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_STATE_STATEMACHINE_H
 #define BS_KERNEL_STATE_STATEMACHINE_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Not thread-safe; one StateMachine per controlling thread.
+ * Error semantics: Transition failures return non-zero; illegal transitions rejected.
+ * Platform notes: C++ implementation; complements StateBus path-level state.
+ */
+
 #include "ConfigState.h"
 
 #ifdef __cplusplus
@@ -21,19 +28,19 @@ extern "C"
     typedef void (*StateTransitionCallback)(const char* configPath, ConfigState from,
                                             ConfigState to);
 
-    StateMachine* StateMachine_Create(const char* configPath);
+    StateMachine* bs_state_machine_create(const char* configPath);
 
-    void StateMachine_Destroy(StateMachine* sm);
+    void bs_state_machine_destroy(StateMachine* sm);
 
-    ConfigState StateMachine_GetCurrentState(const StateMachine* sm);
+    ConfigState bs_state_machine_get_current_state(const StateMachine* sm);
 
-    int StateMachine_Transition(StateMachine* sm, ConfigState newState);
+    int bs_state_machine_transition(StateMachine* sm, ConfigState newState);
 
-    int StateMachine_CanTransition(const StateMachine* sm, ConfigState newState);
+    int bs_state_machine_can_transition(const StateMachine* sm, ConfigState newState);
 
-    void StateMachine_SetCallback(StateMachine* sm, StateTransitionCallback callback);
+    void bs_state_machine_set_callback(StateMachine* sm, StateTransitionCallback callback);
 
-    uint64_t StateMachine_GetVersion(const StateMachine* sm);
+    uint64_t bs_state_machine_get_version(const StateMachine* sm);
 
 #ifdef __cplusplus
 }

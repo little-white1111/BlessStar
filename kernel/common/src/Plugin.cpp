@@ -31,12 +31,12 @@ struct PluginManager
     std::unordered_map<PluginType, std::vector<Plugin*>> plugins_by_type;
 };
 
-PluginManager* plugin_manager_create(void)
+PluginManager* bs_plugin_manager_create(void)
 {
     return new PluginManager();
 }
 
-void plugin_manager_destroy(PluginManager* manager)
+void bs_plugin_manager_destroy(PluginManager* manager)
 {
     if (!manager)
         return;
@@ -68,7 +68,7 @@ void plugin_manager_destroy(PluginManager* manager)
     delete manager;
 }
 
-int plugin_manager_load(PluginManager* manager, const char* plugin_path, Plugin** plugin_out)
+int bs_plugin_manager_load(PluginManager* manager, const char* plugin_path, Plugin** plugin_out)
 {
     if (!manager || !plugin_path || !plugin_out)
         return -1;
@@ -124,7 +124,7 @@ int plugin_manager_load(PluginManager* manager, const char* plugin_path, Plugin*
     return 0;
 }
 
-int plugin_manager_unload(PluginManager* manager, const char* plugin_name)
+int bs_plugin_manager_unload(PluginManager* manager, const char* plugin_name)
 {
     if (!manager || !plugin_name)
         return -1;
@@ -170,7 +170,7 @@ int plugin_manager_unload(PluginManager* manager, const char* plugin_name)
     return 0;
 }
 
-Plugin* plugin_manager_get(PluginManager* manager, const char* plugin_name)
+Plugin* bs_plugin_manager_get(PluginManager* manager, const char* plugin_name)
 {
     if (!manager || !plugin_name)
         return nullptr;
@@ -181,7 +181,7 @@ Plugin* plugin_manager_get(PluginManager* manager, const char* plugin_name)
     return (it != manager->plugins.end()) ? it->second : nullptr;
 }
 
-Plugin* plugin_manager_get_by_type(PluginManager* manager, PluginType type, size_t index)
+Plugin* bs_plugin_manager_get_by_type(PluginManager* manager, PluginType type, size_t index)
 {
     if (!manager)
         return nullptr;
@@ -196,7 +196,7 @@ Plugin* plugin_manager_get_by_type(PluginManager* manager, PluginType type, size
     return (index < list.size()) ? list[index] : nullptr;
 }
 
-size_t plugin_manager_get_count(PluginManager* manager)
+size_t bs_plugin_manager_get_count(PluginManager* manager)
 {
     if (!manager)
         return 0;
@@ -205,7 +205,7 @@ size_t plugin_manager_get_count(PluginManager* manager)
     return manager->plugins.size();
 }
 
-size_t plugin_manager_get_count_by_type(PluginManager* manager, PluginType type)
+size_t bs_plugin_manager_get_count_by_type(PluginManager* manager, PluginType type)
 {
     if (!manager)
         return 0;
@@ -216,7 +216,7 @@ size_t plugin_manager_get_count_by_type(PluginManager* manager, PluginType type)
     return (it != manager->plugins_by_type.end()) ? it->second.size() : 0;
 }
 
-int plugin_manager_start_all(PluginManager* manager)
+int bs_plugin_manager_start_all(PluginManager* manager)
 {
     if (!manager)
         return -1;
@@ -240,7 +240,7 @@ int plugin_manager_start_all(PluginManager* manager)
     return success_count;
 }
 
-int plugin_manager_stop_all(PluginManager* manager)
+int bs_plugin_manager_stop_all(PluginManager* manager)
 {
     if (!manager)
         return -1;
@@ -264,12 +264,12 @@ int plugin_manager_stop_all(PluginManager* manager)
     return success_count;
 }
 
-int plugin_manager_reload(PluginManager* manager, const char* plugin_name)
+int bs_plugin_manager_reload(PluginManager* manager, const char* plugin_name)
 {
     if (!manager || !plugin_name)
         return -1;
 
-    Plugin* plugin = plugin_manager_get(manager, plugin_name);
+    Plugin* plugin = bs_plugin_manager_get(manager, plugin_name);
     if (!plugin)
         return -2;
 
@@ -277,23 +277,23 @@ int plugin_manager_reload(PluginManager* manager, const char* plugin_name)
     if (!path)
         return -3;
 
-    int result = plugin_manager_unload(manager, plugin_name);
+    int result = bs_plugin_manager_unload(manager, plugin_name);
     if (result != 0)
         return -4;
 
     Plugin* new_plugin = nullptr;
-    result             = plugin_manager_load(manager, path, &new_plugin);
+    result             = bs_plugin_manager_load(manager, path, &new_plugin);
     return result;
 }
 
-PluginState plugin_get_state(Plugin* plugin)
+PluginState bs_plugin_get_state(Plugin* plugin)
 {
     if (!plugin)
         return PLUGIN_STATE_UNLOADED;
     return plugin->state;
 }
 
-const char* plugin_type_to_string(PluginType type)
+const char* bs_plugin_type_to_string(PluginType type)
 {
     switch (type)
     {
@@ -314,7 +314,7 @@ const char* plugin_type_to_string(PluginType type)
     }
 }
 
-const char* plugin_state_to_string(PluginState state)
+const char* bs_plugin_state_to_string(PluginState state)
 {
     switch (state)
     {

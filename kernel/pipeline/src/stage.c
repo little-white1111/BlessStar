@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-Stage* stage_create(const char* name, StageExecuteFunc execute)
+Stage* bs_stage_create(const char* name, StageExecuteFunc execute)
 {
     if (!name)
         return NULL;
@@ -25,7 +25,7 @@ Stage* stage_create(const char* name, StageExecuteFunc execute)
     return stage;
 }
 
-void stage_destroy(Stage* stage)
+void bs_stage_destroy(Stage* stage)
 {
     if (!stage)
         return;
@@ -49,7 +49,7 @@ void stage_destroy(Stage* stage)
     free(stage);
 }
 
-int stage_execute(Stage* stage, const IRInstruction* input, IRInstruction** output)
+int bs_stage_execute(Stage* stage, const IRInstruction* input, IRInstruction** output)
 {
     if (!stage || !stage->execute)
         return -1;
@@ -57,38 +57,38 @@ int stage_execute(Stage* stage, const IRInstruction* input, IRInstruction** outp
     return stage->execute(stage, input, output);
 }
 
-void stage_cleanup(Stage* stage)
+void bs_stage_cleanup(Stage* stage)
 {
     if (!stage || !stage->cleanup)
         return;
     stage->cleanup(stage);
 }
 
-void stage_set_context(Stage* stage, void* context)
+void bs_stage_set_context(Stage* stage, void* context)
 {
     if (!stage)
         return;
     stage->context = context;
 }
 
-void* stage_get_context(const Stage* stage)
+void* bs_stage_get_context(const Stage* stage)
 {
     return stage ? stage->context : NULL;
 }
 
-void stage_set_state(Stage* stage, StageState state)
+void bs_stage_set_state(Stage* stage, StageState state)
 {
     if (!stage)
         return;
     stage->state = state;
 }
 
-StageState stage_get_state(const Stage* stage)
+StageState bs_stage_get_state(const Stage* stage)
 {
     return stage ? stage->state : STAGE_STATE_IDLE;
 }
 
-void stage_set_dependencies(Stage* stage, const char** deps, size_t count)
+void bs_stage_set_dependencies(Stage* stage, const char** deps, size_t count)
 {
     if (!stage)
         return;
@@ -122,7 +122,7 @@ void stage_set_dependencies(Stage* stage, const char** deps, size_t count)
     stage->dependency_count = count;
 }
 
-const char** stage_get_dependencies(const Stage* stage, size_t* count)
+const char** bs_stage_get_dependencies(const Stage* stage, size_t* count)
 {
     if (!stage || !count)
         return NULL;
@@ -130,7 +130,7 @@ const char** stage_get_dependencies(const Stage* stage, size_t* count)
     return stage->dependencies;
 }
 
-int stage_is_ready(const Stage* stage)
+int bs_stage_is_ready(const Stage* stage)
 {
     if (!stage)
         return 0;

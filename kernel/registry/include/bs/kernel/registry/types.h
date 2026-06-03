@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_REGISTRY_TYPES_H
 #define BS_KERNEL_REGISTRY_TYPES_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: POD descriptors; immutable after registration.
+ * Error semantics: N/A (types only).
+ * Platform notes: Shared structs for hub/facade/provider entries.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 

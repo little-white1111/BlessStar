@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_REGISTRY_REGISTRY_STATUS_TABLE_H
 #define BS_KERNEL_REGISTRY_REGISTRY_STATUS_TABLE_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Read-only status strings; reentrant.
+ * Error semantics: Maps registry error integers to text for logs/reports.
+ * Platform notes: Companion to registry_facade error returns.
+ */
+
 #include "bs/kernel/common/bs_status.h"
 #include "bs/kernel/registry/types.h"
 

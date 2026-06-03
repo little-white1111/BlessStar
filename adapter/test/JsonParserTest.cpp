@@ -27,7 +27,7 @@ int main()
     ConfigV1Ast* ast  = nullptr;
     size_t       line = 0;
     size_t       col  = 0;
-    BsStatus     st   = json_parse_config_v1(kMinimal, strlen(kMinimal), &ast, &line, &col);
+    BsStatus     st   = bs_json_parse_config_v1(kMinimal, strlen(kMinimal), &ast, &line, &col);
     assert(bs_status_is_ok(st));
     assert(ast != nullptr);
     assert(strcmp(ast->kernel_version, "0.4.0") == 0);
@@ -35,11 +35,11 @@ int main()
     assert(ast->instructions != nullptr);
     assert(strcmp(ast->instructions->type, "test") == 0);
     assert(ast->instructions->metadata != nullptr);
-    config_v1_ast_destroy(ast);
+    bs_config_v1_ast_destroy(ast);
     ast = nullptr;
 
     const char kBad[] = "{";
-    st                = json_parse_config_v1(kBad, strlen(kBad), &ast, &line, &col);
+    st                = bs_json_parse_config_v1(kBad, strlen(kBad), &ast, &line, &col);
     assert(!bs_status_is_ok(st));
     assert(ast == nullptr);
     return 0;

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-Result* result_create(ResultCode code, const char* message)
+Result* bs_result_create(ResultCode code, const char* message)
 {
     Result* result = (Result*)malloc(sizeof(Result));
     if (!result)
@@ -19,7 +19,7 @@ Result* result_create(ResultCode code, const char* message)
     return result;
 }
 
-void result_destroy(Result* result)
+void bs_result_destroy(Result* result)
 {
     if (!result)
         return;
@@ -32,19 +32,19 @@ void result_destroy(Result* result)
     free(result);
 }
 
-Result* result_success(void)
+Result* bs_result_success(void)
 {
-    return result_create(RESULT_SUCCESS, "Success");
+    return bs_result_create(RESULT_SUCCESS, "Success");
 }
 
-Result* result_error(ResultCode code, const char* message)
+Result* bs_result_error(ResultCode code, const char* message)
 {
-    return result_create(code, message);
+    return bs_result_create(code, message);
 }
 
-Result* result_error_with_detail(ResultCode code, const char* message, const char* detail)
+Result* bs_result_error_with_detail(ResultCode code, const char* message, const char* detail)
 {
-    Result* result = result_create(code, message);
+    Result* result = bs_result_create(code, message);
     if (result && detail)
     {
         result->detail = strdup(detail);
@@ -52,22 +52,22 @@ Result* result_error_with_detail(ResultCode code, const char* message, const cha
     return result;
 }
 
-int result_is_success(const Result* result)
+int bs_result_is_success(const Result* result)
 {
     return result && result->code == RESULT_SUCCESS;
 }
 
-int result_is_error(const Result* result)
+int bs_result_is_error(const Result* result)
 {
-    return !result_is_success(result);
+    return !bs_result_is_success(result);
 }
 
-int result_needs_retry(const Result* result)
+int bs_result_needs_retry(const Result* result)
 {
     return result && result->code == RESULT_ERROR_RETRY;
 }
 
-const char* result_code_to_string(ResultCode code)
+const char* bs_result_code_to_string(ResultCode code)
 {
     switch (code)
     {
@@ -110,12 +110,12 @@ const char* result_code_to_string(ResultCode code)
     }
 }
 
-char* result_to_string(const Result* result)
+char* bs_result_to_string(const Result* result)
 {
     if (!result)
         return NULL;
 
-    const char* code_str = result_code_to_string(result->code);
+    const char* code_str = bs_result_code_to_string(result->code);
     size_t      size     = 512;
     char*       output   = (char*)malloc(size);
 
@@ -138,12 +138,12 @@ char* result_to_string(const Result* result)
     return output;
 }
 
-char* result_to_json(const Result* result)
+char* bs_result_to_json(const Result* result)
 {
     if (!result)
         return NULL;
 
-    const char* code_str = result_code_to_string(result->code);
+    const char* code_str = bs_result_code_to_string(result->code);
     size_t      size     = 512;
     char*       output   = (char*)malloc(size);
 

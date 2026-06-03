@@ -33,7 +33,7 @@ int main()
     assert(bs_status_is_ok(st));
     assert(result.instructions != nullptr);
     assert(result.active_requirements != nullptr);
-    assert(ir_instruction_list_size(result.instructions) == 1u);
+    assert(bs_ir_instruction_list_size(result.instructions) == 1u);
     assert(bs_adapter_requirement_filter_verify_instructions(result.instructions,
                                                              result.active_requirements) == 0);
     bs_adapter_parser_result_destroy(&result);

@@ -11,7 +11,7 @@ struct IRInstructionListImpl
     std::vector<IRInstruction*> items;
 };
 
-IRInstruction* ir_instruction_create(const char* type, const char* name)
+IRInstruction* bs_ir_instruction_create(const char* type, const char* name)
 {
     IRInstruction* instr = (IRInstruction*)malloc(sizeof(IRInstruction));
     if (!instr)
@@ -26,7 +26,7 @@ IRInstruction* ir_instruction_create(const char* type, const char* name)
     return instr;
 }
 
-void ir_instruction_destroy(IRInstruction* instr)
+void bs_ir_instruction_destroy(IRInstruction* instr)
 {
     if (!instr)
         return;
@@ -51,7 +51,7 @@ void ir_instruction_destroy(IRInstruction* instr)
     free(instr);
 }
 
-IRMetadata* ir_metadata_create(const char* key, const char* value)
+IRMetadata* bs_ir_metadata_create(const char* key, const char* value)
 {
     IRMetadata* meta = (IRMetadata*)malloc(sizeof(IRMetadata));
     if (!meta)
@@ -64,7 +64,7 @@ IRMetadata* ir_metadata_create(const char* key, const char* value)
     return meta;
 }
 
-void ir_metadata_destroy(IRMetadata* meta)
+void bs_ir_metadata_destroy(IRMetadata* meta)
 {
     if (!meta)
         return;
@@ -76,7 +76,7 @@ void ir_metadata_destroy(IRMetadata* meta)
     free(meta);
 }
 
-void ir_instruction_add_metadata(IRInstruction* instr, IRMetadata* meta)
+void bs_ir_instruction_add_metadata(IRInstruction* instr, IRMetadata* meta)
 {
     if (!instr || !meta)
         return;
@@ -85,7 +85,7 @@ void ir_instruction_add_metadata(IRInstruction* instr, IRMetadata* meta)
     instr->metadata = meta;
 }
 
-const char* ir_instruction_get_metadata(const IRInstruction* instr, const char* key)
+const char* bs_ir_instruction_get_metadata(const IRInstruction* instr, const char* key)
 {
     if (!instr || !key)
         return nullptr;
@@ -102,7 +102,7 @@ const char* ir_instruction_get_metadata(const IRInstruction* instr, const char* 
     return nullptr;
 }
 
-IRInstructionList* ir_instruction_list_create(void)
+IRInstructionList* bs_ir_instruction_list_create(void)
 {
     try
     {
@@ -114,7 +114,7 @@ IRInstructionList* ir_instruction_list_create(void)
     }
 }
 
-void ir_instruction_list_destroy(IRInstructionList* list)
+void bs_ir_instruction_list_destroy(IRInstructionList* list)
 {
     if (!list)
         return;
@@ -122,12 +122,12 @@ void ir_instruction_list_destroy(IRInstructionList* list)
     auto* impl = reinterpret_cast<IRInstructionListImpl*>(list);
     for (IRInstruction* instr : impl->items)
     {
-        ir_instruction_destroy(instr);
+        bs_ir_instruction_destroy(instr);
     }
     delete impl;
 }
 
-int ir_instruction_list_add(IRInstructionList* list, IRInstruction* instr)
+int bs_ir_instruction_list_add(IRInstructionList* list, IRInstruction* instr)
 {
     if (!list || !instr)
         return -1;
@@ -144,7 +144,7 @@ int ir_instruction_list_add(IRInstructionList* list, IRInstruction* instr)
     }
 }
 
-size_t ir_instruction_list_size(const IRInstructionList* list)
+size_t bs_ir_instruction_list_size(const IRInstructionList* list)
 {
     if (!list)
         return 0;
@@ -153,7 +153,7 @@ size_t ir_instruction_list_size(const IRInstructionList* list)
     return impl->items.size();
 }
 
-IRInstruction* ir_instruction_list_get(const IRInstructionList* list, size_t index)
+IRInstruction* bs_ir_instruction_list_get(const IRInstructionList* list, size_t index)
 {
     if (!list)
         return nullptr;

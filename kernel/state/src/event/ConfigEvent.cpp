@@ -7,7 +7,7 @@
 static const char* eventTypeNames[] = {"ENTER_INITIAL",  "ENTER_LOADING", "ENTER_ACTIVE",
                                        "ENTER_UPDATING", "ENTER_ERROR",   "ENTER_CLOSED"};
 
-const char* ConfigEventType_ToString(ConfigEventType type)
+const char* bs_config_event_type_to_string(ConfigEventType type)
 {
     if (type < 0 || type >= sizeof(eventTypeNames) / sizeof(eventTypeNames[0]))
     {
@@ -16,8 +16,8 @@ const char* ConfigEventType_ToString(ConfigEventType type)
     return eventTypeNames[type];
 }
 
-ConfigEvent* ConfigEvent_Create(const char* configPath, ConfigEventType type, ConfigState from,
-                                ConfigState to, uint64_t version)
+ConfigEvent* bs_config_event_create(const char* configPath, ConfigEventType type, ConfigState from,
+                                    ConfigState to, uint64_t version)
 {
     ConfigEvent* event = (ConfigEvent*)malloc(sizeof(ConfigEvent));
     if (!event)
@@ -33,7 +33,7 @@ ConfigEvent* ConfigEvent_Create(const char* configPath, ConfigEventType type, Co
     return event;
 }
 
-void ConfigEvent_Destroy(ConfigEvent* event)
+void bs_config_event_destroy(ConfigEvent* event)
 {
     if (event)
     {

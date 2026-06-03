@@ -31,15 +31,15 @@ static void test_model_c_parse_and_gate()
                                                 json.size(), &result);
     assert(bs_status_is_ok(st));
     assert(result.instructions != nullptr);
-    assert(ir_instruction_list_size(result.instructions) == 400u);
+    assert(bs_ir_instruction_list_size(result.instructions) == 400u);
     assert(bs_adapter_requirement_filter_verify_instructions(result.instructions,
                                                              result.active_requirements) == 0);
 
-    IRInstruction* first = ir_instruction_list_get(result.instructions, 0);
+    IRInstruction* first = bs_ir_instruction_list_get(result.instructions, 0);
     assert(first != nullptr);
-    const char* amount = ir_instruction_get_metadata(first, "amount");
+    const char* amount = bs_ir_instruction_get_metadata(first, "amount");
     assert(amount != nullptr && std::strcmp(amount, "100.50") == 0);
-    const char* tax = ir_instruction_get_metadata(first, "tax_rate");
+    const char* tax = bs_ir_instruction_get_metadata(first, "tax_rate");
     assert(tax != nullptr && std::strcmp(tax, "13") == 0);
 
     bs_adapter_parser_result_destroy(&result);
@@ -113,8 +113,8 @@ static void test_empty_metadata_value_ok()
     BsStatus            st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(kJson),
                                                            strlen(kJson), &result);
     assert(bs_status_is_ok(st));
-    IRInstruction* first = ir_instruction_list_get(result.instructions, 0);
-    const char*    note  = ir_instruction_get_metadata(first, "note");
+    IRInstruction* first = bs_ir_instruction_list_get(result.instructions, 0);
+    const char*    note  = bs_ir_instruction_get_metadata(first, "note");
     assert(note != nullptr && note[0] == '\0');
     bs_adapter_parser_result_destroy(&result);
 }
@@ -137,7 +137,7 @@ static void test_model_a_light_optional()
     BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
                                                 json.size(), &result);
     assert(bs_status_is_ok(st));
-    assert(ir_instruction_list_size(result.instructions) == 400u);
+    assert(bs_ir_instruction_list_size(result.instructions) == 400u);
     bs_adapter_parser_result_destroy(&result);
 }
 

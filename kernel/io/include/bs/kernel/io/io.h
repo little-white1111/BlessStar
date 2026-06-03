@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_IO_IO_H
 #define BS_KERNEL_IO_IO_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: IoFacade serializes provider dispatch; providers may define own rules.
+ * Error semantics: BsStatus / BS_IO_* via io_status_table; IoReadResult owns error_message heap.
+ * Platform notes: Registry-backed provider table; local file provider is MVP default.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 

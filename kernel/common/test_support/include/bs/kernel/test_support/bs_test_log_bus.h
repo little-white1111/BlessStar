@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_TEST_SUPPORT_BS_TEST_LOG_BUS_H
 #define BS_KERNEL_TEST_SUPPORT_BS_TEST_LOG_BUS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Test-only memory log bus; single-threaded tests only.
+ * Error semantics: N/A for test harness binding.
+ * Platform notes: Excluded from production gates; binds bs_log to capturing buffer.
+ */
+
 #include "bs/kernel/common/bs_log.h"
 
 #ifdef __cplusplus

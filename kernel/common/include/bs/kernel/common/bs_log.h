@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_COMMON_BS_LOG_H
 #define BS_KERNEL_COMMON_BS_LOG_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Log bus pointer on AttachContext; backends may serialize internally.
+ * Error semantics: Logging never throws; drops messages if bus unset.
+ * Platform notes: Domains registered via adapter plugin_log_domains.
+ */
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -65,7 +72,7 @@ extern "C"
     /** Flush + bus shutdown hook + clear bus pointer (LSan / attach teardown). */
     void bs_log_shutdown_bus_ctx(BsLogState* ctx);
 
-    /** Active state for legacy wrappers; set by attach on `bs_attach_context_set_active`. */
+    /** Active state for legacy wrappers; set by attach on `bs_adapter_attach_ctx_set_active`. */
     void        bs_log_set_current_state(BsLogState* state);
     BsLogState* bs_log_get_current_state(void);
 

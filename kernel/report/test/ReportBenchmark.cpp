@@ -10,8 +10,8 @@ static void benchmark_ReportCreateDestroy(size_t N)
 
     for (size_t i = 0; i < N; i++)
     {
-        Report* report = report_create("test");
-        report_destroy(report);
+        Report* report = bs_report_create("test");
+        bs_report_destroy(report);
     }
 
     clock_t end = clock();
@@ -23,19 +23,19 @@ static void benchmark_ReportCreateDestroy(size_t N)
 // Measure adding N log entries
 static void benchmark_ReportAddEntries(size_t N)
 {
-    Report* report = report_create("test");
+    Report* report = bs_report_create("test");
 
     clock_t start = clock();
 
     for (size_t i = 0; i < N; i++)
     {
-        report_add_info(report, "stage", "log entry");
+        bs_report_add_info(report, "stage", "log entry");
     }
 
     clock_t end = clock();
     double  ms  = 1000.0 * (end - start) / CLOCKS_PER_SEC;
 
-    report_destroy(report);
+    bs_report_destroy(report);
 
     printf("benchmark_ReportAddEntries (N=%zu): %.3f ms\n", N, ms);
 }
@@ -43,20 +43,20 @@ static void benchmark_ReportAddEntries(size_t N)
 // Measure mark_start/mark_end N times
 static void benchmark_ReportTiming(size_t N)
 {
-    Report* report = report_create("test");
+    Report* report = bs_report_create("test");
 
     clock_t start = clock();
 
     for (size_t i = 0; i < N; i++)
     {
-        report_mark_start(report);
-        report_mark_end(report);
+        bs_report_mark_start(report);
+        bs_report_mark_end(report);
     }
 
     clock_t end = clock();
     double  ms  = 1000.0 * (end - start) / CLOCKS_PER_SEC;
 
-    report_destroy(report);
+    bs_report_destroy(report);
 
     printf("benchmark_ReportTiming (N=%zu): %.3f ms\n", N, ms);
 }

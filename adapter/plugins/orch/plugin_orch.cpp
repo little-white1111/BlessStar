@@ -14,5 +14,5 @@ int bs_adapter_plugin_orch_register(RegistryFacade* facade, AttachContext* ctx)
             return -1;
     }
 
-    return bs_adapter_reload_batch_register_factory(facade);
+    return bs_adapter_attach_reload_batch_register_factory(facade);
 }

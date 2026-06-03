@@ -69,10 +69,10 @@ static void write_legacy_manifest(const fs::path& manifest, const std::string& u
 
 static uint64_t read_epoch(const fs::path& manifest)
 {
-    BsAttachStore* s = bs_attach_store_open(manifest.string().c_str());
+    BsAttachStore* s = bs_adapter_attach_persist_store_open(manifest.string().c_str());
     assert(s != nullptr);
-    const uint64_t e = bs_attach_store_batch_epoch(s);
-    bs_attach_store_close(s);
+    const uint64_t e = bs_adapter_attach_persist_store_batch_epoch(s);
+    bs_adapter_attach_persist_store_close(s);
     return e;
 }
 
@@ -102,25 +102,26 @@ int main()
 
     write_legacy_manifest(man, uri, 0, cfg.string().c_str());
 
-    BsAttachStore* store = bs_attach_store_open(man.string().c_str());
+    BsAttachStore* store = bs_adapter_attach_persist_store_open(man.string().c_str());
     assert(store != nullptr);
-    bs_attach_store_batch_begin(store);
-    assert(bs_attach_store_batch_stage(store, uri.c_str(), data, len, 0) == BS_ATTACH_OK);
-    assert(bs_attach_store_batch_commit(store) == BS_ATTACH_OK);
-    assert(bs_attach_store_batch_epoch(store) == 2);
-    bs_attach_store_close(store);
+    bs_adapter_attach_persist_store_batch_begin(store);
+    assert(bs_adapter_attach_persist_store_batch_stage(store, uri.c_str(), data, len, 0) ==
+           BS_ATTACH_OK);
+    assert(bs_adapter_attach_persist_store_batch_commit(store) == BS_ATTACH_OK);
+    assert(bs_adapter_attach_persist_store_batch_epoch(store) == 2);
+    bs_adapter_attach_persist_store_close(store);
 
     assert(fs::exists(wal.string() + ".e2"));
     assert(read_epoch(man) == 2);
 
     {
         char           path_buf[1024];
-        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        assert(bs_attach_store_get_canonical_path(rd, uri.c_str(), path_buf, sizeof(path_buf)) ==
-               BS_ATTACH_OK);
+        assert(bs_adapter_attach_persist_store_get_canonical_path(
+                   rd, uri.c_str(), path_buf, sizeof(path_buf)) == BS_ATTACH_OK);
         assert(fs::exists(path_buf));
-        bs_attach_store_close(rd);
+        bs_adapter_attach_persist_store_close(rd);
     }
 
     {
@@ -134,10 +135,10 @@ int main()
         std::ofstream corrupt(man, std::ios::trunc);
         corrupt << "# corrupt\nmanifest_checksum=deadbeef\nbatch_epoch=2\n";
         corrupt.close();
-        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        assert(bs_attach_store_batch_epoch(rd) >= 0);
-        bs_attach_store_close(rd);
+        assert(bs_adapter_attach_persist_store_batch_epoch(rd) >= 0);
+        bs_adapter_attach_persist_store_close(rd);
         assert(fs::exists(man));
     }
 
@@ -148,19 +149,19 @@ int main()
         e.staging_path     = orphan_path.c_str();
         e.expected_rev     = 0;
         e.new_rev          = 1;
-        e.payload_checksum = bs_attach_crc32(data, len);
+        e.payload_checksum = bs_adapter_attach_persist_crc32(data, len);
         {
             std::ofstream orphan(tmp / "orphan.staging");
             orphan << "orphan";
         }
-        BsAttachWal* w = bs_attach_wal_open(wal.string().c_str());
+        BsAttachWal* w = bs_adapter_attach_persist_wal_open(wal.string().c_str());
         assert(w != nullptr);
-        assert(bs_attach_wal_append_batch(w, 99, &e, 1) == BS_ATTACH_OK);
-        bs_attach_wal_close(w);
+        assert(bs_adapter_attach_persist_wal_append_batch(w, 99, &e, 1) == BS_ATTACH_OK);
+        bs_adapter_attach_persist_wal_close(w);
         assert(fs::exists(tmp / "orphan.staging"));
-        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        bs_attach_store_close(rd);
+        bs_adapter_attach_persist_store_close(rd);
         assert(!fs::exists(tmp / "orphan.staging"));
     }
 
@@ -170,24 +171,23 @@ int main()
             std::ofstream orphan(orphan2);
             orphan << "orphan2";
         }
-        const std::string orphan2_path = orphan2.string();
-        BsAttachWalEntry  e{};
+        BsAttachWalEntry e{};
         e.uri              = uri.c_str();
-        e.staging_path     = orphan2_path.c_str();
+        e.staging_path     = orphan2.string().c_str();
         e.expected_rev     = 0;
         e.new_rev          = 1;
-        e.payload_checksum = bs_attach_crc32(data, len);
+        e.payload_checksum = bs_adapter_attach_persist_crc32(data, len);
 
-        BsAttachWal* w = bs_attach_wal_open(wal.string().c_str());
+        BsAttachWal* w = bs_adapter_attach_persist_wal_open(wal.string().c_str());
         assert(w != nullptr);
-        assert(bs_attach_wal_append_batch(w, 100, &e, 1) == BS_ATTACH_OK);
-        bs_attach_wal_close(w);
+        assert(bs_adapter_attach_persist_wal_append_batch(w, 100, &e, 1) == BS_ATTACH_OK);
+        bs_adapter_attach_persist_wal_close(w);
 
         flip_last_byte(wal);
         assert(fs::exists(orphan2));
-        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        bs_attach_store_close(rd);
+        bs_adapter_attach_persist_store_close(rd);
         // ATOM-REC-SAFE-2: corruption => conservative (no deletions).
         assert(fs::exists(orphan2));
     }
@@ -199,9 +199,9 @@ int main()
             orphan << "orphan3";
         }
         write_corrupt_len_record(wal);
-        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
+        BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        bs_attach_store_close(rd);
+        bs_adapter_attach_persist_store_close(rd);
         assert(fs::exists(orphan3));
     }
 

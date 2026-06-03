@@ -3,13 +3,13 @@
 static ReloadBatchController* default_create(unsigned max_inflight, void* user_ctx)
 {
     (void)user_ctx;
-    return bs_reload_batch_controller_create(max_inflight);
+    return bs_adapter_attach_reload_batch_create(max_inflight);
 }
 
 static void default_destroy(ReloadBatchController* ctrl, void* user_ctx)
 {
     (void)user_ctx;
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 }
 
 static ReloadBatchControllerFactory g_default_factory = {
@@ -18,12 +18,12 @@ static ReloadBatchControllerFactory g_default_factory = {
     nullptr,
 };
 
-const ReloadBatchControllerFactory* bs_adapter_reload_batch_default_factory(void)
+const ReloadBatchControllerFactory* bs_adapter_attach_reload_batch_default_factory(void)
 {
     return &g_default_factory;
 }
 
-int bs_adapter_reload_batch_register_factory(RegistryFacade* facade)
+int bs_adapter_attach_reload_batch_register_factory(RegistryFacade* facade)
 {
     if (!facade)
         return -1;
@@ -49,8 +49,8 @@ int bs_adapter_reload_batch_register_factory(RegistryFacade* facade)
     return 0;
 }
 
-ReloadBatchController* bs_reload_batch_controller_create_from_binding(const Binding* binding,
-                                                                      unsigned       max_inflight)
+ReloadBatchController* bs_adapter_attach_reload_batch_create_from_binding(const Binding* binding,
+                                                                          unsigned max_inflight)
 {
     if (!binding || !binding->impl)
         return nullptr;
@@ -60,8 +60,8 @@ ReloadBatchController* bs_reload_batch_controller_create_from_binding(const Bind
     return factory->create(max_inflight, factory->user_ctx);
 }
 
-void bs_reload_batch_controller_destroy_from_binding(const Binding*         binding,
-                                                     ReloadBatchController* ctrl)
+void bs_adapter_attach_reload_batch_destroy_from_binding(const Binding*         binding,
+                                                         ReloadBatchController* ctrl)
 {
     if (!binding || !binding->impl || !ctrl)
         return;

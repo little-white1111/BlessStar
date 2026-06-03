@@ -1,6 +1,17 @@
 #ifndef BS_ADAPTER_ATTACH_CONTEXT_H
 #define BS_ADAPTER_ATTACH_CONTEXT_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: AttachContext is owned by reload/attach driver thread unless locked.
+ * Error semantics: 0 success; -1 invalid/null; attach_config propagates CM codes.
+ * Platform notes: One session owns RegistryFacade, ConfigManager, Kernel (default pipeline),
+ *   and log state. Production reload uses create -> set_active -> bootstrap -> freeze_ctx
+ *   (Kernel RUNNING) before bs_adapter_attach_reload_batch_run.
+ * API prefixes (C-ST-14): bs_adapter_attach_ctx_* session; bs_adapter_attach_config_* /
+ *   exec_* / reload_* / persist_* - see docs/BLESSSTAR_NAMING_CONTRACT.md.
+ */
+
 #include "bs/kernel/common/bs_log.h"
 #include "bs/kernel/registry/registry_facade.h"
 
@@ -9,39 +20,43 @@ extern "C"
 {
 #endif
 
-    /**
-     * One attach / one bootstrap chain runtime handle (R8-02 · ATTACH-VIII).
-     * MVP: single process may hold one active ctx for attach_runtime forwarding (phase 1).
-     */
+    typedef struct ConfigManager ConfigManager;
+
+    /** One attach session: registry + ConfigManager + Kernel (R8-02 / XVII-ATTACH-1). */
     typedef struct AttachContext AttachContext;
 
-    AttachContext* bs_attach_context_create(void);
-    void           bs_attach_context_destroy(AttachContext* ctx);
+    AttachContext* bs_adapter_attach_ctx_create(void);
+    void           bs_adapter_attach_ctx_destroy(AttachContext* ctx);
 
-    RegistryFacade* bs_attach_context_registry(AttachContext* ctx);
+    RegistryFacade* bs_adapter_attach_ctx_registry(AttachContext* ctx);
 
-    BsLogState* bs_attach_context_log_state(AttachContext* ctx);
+    ConfigManager* bs_adapter_attach_ctx_config_manager(AttachContext* ctx);
 
-    int  bs_attach_context_is_log_bus_bound(const AttachContext* ctx);
-    void bs_attach_context_set_log_bus_bound(AttachContext* ctx, int bound);
+    BsLogState* bs_adapter_attach_ctx_log_state(AttachContext* ctx);
 
-    BsLogLevel bs_attach_context_get_log_level(const AttachContext* ctx);
-    void       bs_attach_context_set_log_level(AttachContext* ctx, BsLogLevel level);
+    int  bs_adapter_attach_ctx_is_log_bus_bound(const AttachContext* ctx);
+    void bs_adapter_attach_ctx_set_log_bus_bound(AttachContext* ctx, int bound);
 
-    /** Phase 1: optional active ctx for attach_runtime / legacy bootstrap compat. */
-    void           bs_attach_context_set_active(AttachContext* ctx);
-    AttachContext* bs_attach_context_get_active(void);
+    BsLogLevel bs_adapter_attach_ctx_get_log_level(const AttachContext* ctx);
+    void       bs_adapter_attach_ctx_set_log_level(AttachContext* ctx, BsLogLevel level);
 
-    /** Legacy bootstrap bridge: ctx does not own registry (IMPL-08-06 phase 2). */
-    void bs_attach_context_use_external_registry(AttachContext* ctx, RegistryFacade* facade);
+    /** Single active ctx for reload / attach_runtime / bootstrap delegation. */
+    void           bs_adapter_attach_ctx_set_active(AttachContext* ctx);
+    AttachContext* bs_adapter_attach_ctx_get_active(void);
+
+    /** Bind external RegistryFacade; ctx does not take ownership. */
+    void bs_adapter_attach_ctx_use_external_registry(AttachContext* ctx, RegistryFacade* facade);
+
+    /** 1 if ctx has a Kernel in KERNEL_STATE_RUNNING (after freeze_ctx). */
+    int bs_adapter_attach_ctx_is_kernel_running(const AttachContext* ctx);
 
     void bs_adapter_attach_ensure_active_ctx(void);
 
-    /** Process-wide legacy ctx for `bootstrap_begin(facade)` without caller-owned ctx. */
-    AttachContext* bs_attach_context_legacy_bootstrap(void);
+    /** Legacy shell for log shutdown only; does not own registry or ConfigManager (XVII-ATTACH). */
+    AttachContext* bs_adapter_attach_ctx_legacy_bootstrap(void);
 
     /** Shutdown log buses on legacy/ephemeral/active ctx (CI LSan; idempotent). */
-    void bs_attach_context_shutdown_all_logs(void);
+    void bs_adapter_attach_ctx_shutdown_all_logs(void);
 
 #ifdef __cplusplus
 }

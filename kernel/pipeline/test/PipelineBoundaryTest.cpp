@@ -8,49 +8,49 @@
 static void test_Pipeline_NullInput()
 {
     Report* output = nullptr;
-    pipeline_execute(nullptr, nullptr, &output);
+    bs_pipeline_execute(nullptr, nullptr, &output);
     printf("test_Pipeline_NullInput: PASS\n");
 }
 
 static void test_Pipeline_NullOutput()
 {
-    Pipeline*      pipeline = pipeline_create();
-    IRInstruction* instr    = ir_instruction_create("type", "name");
+    Pipeline*      pipeline = bs_pipeline_create();
+    IRInstruction* instr    = bs_ir_instruction_create("type", "name");
 
-    pipeline_execute(pipeline, instr, nullptr);
+    bs_pipeline_execute(pipeline, instr, nullptr);
 
-    pipeline_destroy(pipeline);
-    ir_instruction_destroy(instr);
+    bs_pipeline_destroy(pipeline);
+    bs_ir_instruction_destroy(instr);
     printf("test_Pipeline_NullOutput: PASS\n");
 }
 
 static void test_Pipeline_EmptyPipeline()
 {
-    Pipeline*      pipeline = pipeline_create();
-    IRInstruction* instr    = ir_instruction_create("type", "name");
+    Pipeline*      pipeline = bs_pipeline_create();
+    IRInstruction* instr    = bs_ir_instruction_create("type", "name");
     Report*        output   = nullptr;
 
-    pipeline_execute(pipeline, instr, &output);
+    bs_pipeline_execute(pipeline, instr, &output);
 
-    pipeline_destroy(pipeline);
-    ir_instruction_destroy(instr);
+    bs_pipeline_destroy(pipeline);
+    bs_ir_instruction_destroy(instr);
     if (output)
-        report_destroy(output);
+        bs_report_destroy(output);
     printf("test_Pipeline_EmptyPipeline: PASS\n");
 }
 
 static void test_Pipeline_SingleInstruction()
 {
-    Pipeline*      pipeline = pipeline_create();
-    IRInstruction* instr    = ir_instruction_create("type", "name");
+    Pipeline*      pipeline = bs_pipeline_create();
+    IRInstruction* instr    = bs_ir_instruction_create("type", "name");
     Report*        output   = nullptr;
 
-    pipeline_execute(pipeline, instr, &output);
+    bs_pipeline_execute(pipeline, instr, &output);
 
-    pipeline_destroy(pipeline);
-    ir_instruction_destroy(instr);
+    bs_pipeline_destroy(pipeline);
+    bs_ir_instruction_destroy(instr);
     if (output)
-        report_destroy(output);
+        bs_report_destroy(output);
     printf("test_Pipeline_SingleInstruction: PASS\n");
 }
 
@@ -58,8 +58,8 @@ static void test_Pipeline_RepeatedCreateDestroy()
 {
     for (int i = 0; i < 10000; i++)
     {
-        Pipeline* pipeline = pipeline_create();
-        pipeline_destroy(pipeline);
+        Pipeline* pipeline = bs_pipeline_create();
+        bs_pipeline_destroy(pipeline);
     }
     printf("test_Pipeline_RepeatedCreateDestroy: PASS\n");
 }

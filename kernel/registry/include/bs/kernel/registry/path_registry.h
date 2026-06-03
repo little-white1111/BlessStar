@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_REGISTRY_PATH_REGISTRY_H
 #define BS_KERNEL_REGISTRY_PATH_REGISTRY_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: PathRegistry not thread-safe unless externally synchronized.
+ * Error semantics: Invalid paths rejected at register time with non-zero status.
+ * Platform notes: Normalizes paths via path_normalize helpers.
+ */
+
 #include "bs/kernel/registry/types.h"
 
 #ifdef __cplusplus

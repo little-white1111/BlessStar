@@ -247,7 +247,7 @@ static char* decode_json_string(const JsonToken* tok)
 
 static const JsonToken* peek(ParseCtx* ctx)
 {
-    return json_lexer_current(ctx->lex);
+    return bs_json_lexer_current(ctx->lex);
 }
 
 static int enter_container(ParseCtx* ctx)
@@ -377,8 +377,8 @@ static int skip_json_value(ParseCtx* ctx)
 
 static const JsonToken* advance(ParseCtx* ctx)
 {
-    const JsonToken* prev = json_lexer_current(ctx->lex);
-    json_lexer_next(ctx->lex);
+    const JsonToken* prev = bs_json_lexer_current(ctx->lex);
+    bs_json_lexer_next(ctx->lex);
     if (prev && prev->type == JSON_TOK_ERROR)
         set_err(ctx, BS_CONFIG_PARSE_ERR_LEX, prev->line, prev->column);
     return prev;
@@ -960,8 +960,8 @@ static int parse_root_object(ParseCtx* ctx, ConfigV1Ast* ast)
     return 1;
 }
 
-BsStatus json_parse_config_v1(const char* data, size_t len, ConfigV1Ast** out_ast,
-                              size_t* error_line, size_t* error_column)
+BsStatus bs_json_parse_config_v1(const char* data, size_t len, ConfigV1Ast** out_ast,
+                                 size_t* error_line, size_t* error_column)
 {
     if (!data || !out_ast)
         return bs_status_from_config_parse(BS_CONFIG_PARSE_ERR_INVALID_ARG);
@@ -970,7 +970,7 @@ BsStatus json_parse_config_v1(const char* data, size_t len, ConfigV1Ast** out_as
         return bs_status_from_config_parse(BS_CONFIG_PARSE_ERR_PARSE);
 
     JsonLexer lex;
-    json_lexer_init(&lex, data, len);
+    bs_json_lexer_init(&lex, data, len);
 
     ParseCtx ctx = {.lex          = &lex,
                     .error_line   = error_line,
@@ -978,15 +978,15 @@ BsStatus json_parse_config_v1(const char* data, size_t len, ConfigV1Ast** out_as
                     .depth        = 0,
                     .err_code     = 0};
 
-    json_lexer_next(&lex);
+    bs_json_lexer_next(&lex);
 
-    ConfigV1Ast* ast = config_v1_ast_create();
+    ConfigV1Ast* ast = bs_config_v1_ast_create();
     if (!ast)
         return bs_status_from_config_parse(BS_CONFIG_PARSE_ERR_OOM);
 
     if (!parse_root_object(&ctx, ast))
     {
-        config_v1_ast_destroy(ast);
+        bs_config_v1_ast_destroy(ast);
         return fail_status(&ctx);
     }
 
@@ -994,7 +994,7 @@ BsStatus json_parse_config_v1(const char* data, size_t len, ConfigV1Ast** out_as
     if (!tok || tok->type != JSON_TOK_EOF)
     {
         set_err(&ctx, BS_CONFIG_PARSE_ERR_PARSE, tok ? tok->line : 0, tok ? tok->column : 0);
-        config_v1_ast_destroy(ast);
+        bs_config_v1_ast_destroy(ast);
         return fail_status(&ctx);
     }
 

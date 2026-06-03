@@ -51,51 +51,51 @@ int main()
 {
     assert(bs_adapter_log_bind_memory_bus(noop_log, nullptr) == 0);
 
-    ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);
+    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);
     MockReadCtx            read_ctx{};
     read_ctx.fail_uris["file:///bad"] = 1;
-    bs_reload_batch_controller_set_read_fn(ctrl, mock_read, &read_ctx);
-    bs_reload_batch_controller_set_gate_fn(ctrl, mock_gate_pass, nullptr);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, mock_read, &read_ctx);
+    bs_adapter_attach_reload_batch_set_gate_fn(ctrl, mock_gate_pass, nullptr);
     day12_wire_reload_defaults(ctrl);
 
-    Report* report = report_create("reload_batch");
+    Report* report = bs_report_create("reload_batch");
     assert(report != nullptr);
 
-    assert(bs_reload_batch_add_path(ctrl, "file:///bad") == 0);
-    assert(bs_reload_batch_run_with_report(ctrl, report) == 0);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///bad") == 0);
+    assert(bs_adapter_attach_reload_batch_run_with_report(ctrl, report) == 0);
 
-    char* json = report_to_json(report);
+    char* json = bs_report_to_json(report);
     assert(json != nullptr);
     assert(std::strstr(json, "cache_attach") != nullptr);
     assert(std::strstr(json, "scheme=") != nullptr);
     assert(std::strstr(json, "abort_code=") != nullptr);
     std::free(json);
 
-    report_destroy(report);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_report_destroy(report);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
-    ctrl = bs_reload_batch_controller_create(8);
+    ctrl = bs_adapter_attach_reload_batch_create(8);
     read_ctx.fail_uris.clear();
-    bs_reload_batch_controller_set_read_fn(ctrl, mock_read, &read_ctx);
-    bs_reload_batch_controller_set_gate_fn(ctrl, mock_gate_pass, nullptr);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, mock_read, &read_ctx);
+    bs_adapter_attach_reload_batch_set_gate_fn(ctrl, mock_gate_pass, nullptr);
     day12_wire_reload_defaults(ctrl);
 
-    report = report_create("reload_batch_ok");
+    report = bs_report_create("reload_batch_ok");
     assert(report != nullptr);
-    bs_reload_batch_controller_set_report(ctrl, report);
+    bs_adapter_attach_reload_batch_set_report(ctrl, report);
 
-    assert(bs_reload_batch_add_path(ctrl, "file:///good") == 0);
-    assert(bs_reload_batch_run_with_report(ctrl, report) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///good") == 0);
+    assert(bs_adapter_attach_reload_batch_run_with_report(ctrl, report) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
 
-    json = report_to_json(report);
+    json = bs_report_to_json(report);
     assert(json != nullptr);
     assert(std::strstr(json, "persistent_commit") != nullptr);
     assert(std::strstr(json, "revision=") != nullptr);
     assert(std::strstr(json, "detail=commit_ok") != nullptr);
     std::free(json);
 
-    report_destroy(report);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_report_destroy(report);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
     return 0;
 }

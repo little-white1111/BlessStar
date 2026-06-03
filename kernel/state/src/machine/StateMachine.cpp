@@ -39,7 +39,7 @@ static const char* stateNames[] = {"INITIAL", "LOADING", "ACTIVE", "UPDATING", "
 #define BS_NO_SANITIZE_ENUM
 #endif
 
-BS_NO_SANITIZE_ENUM const char* ConfigState_ToString(ConfigState state)
+BS_NO_SANITIZE_ENUM const char* bs_config_state_to_string(ConfigState state)
 {
     if (state < 0 || state >= sizeof(stateNames) / sizeof(stateNames[0]))
     {
@@ -60,7 +60,7 @@ static BS_NO_SANITIZE_ENUM bool isValidTransition(ConfigState from, ConfigState 
     return false;
 }
 
-StateMachine* StateMachine_Create(const char* configPath)
+StateMachine* bs_state_machine_create(const char* configPath)
 {
     StateMachine* sm = new StateMachine();
     if (!sm)
@@ -75,19 +75,19 @@ StateMachine* StateMachine_Create(const char* configPath)
     return sm;
 }
 
-void StateMachine_Destroy(StateMachine* sm)
+void bs_state_machine_destroy(StateMachine* sm)
 {
     delete sm;
 }
 
-ConfigState StateMachine_GetCurrentState(const StateMachine* sm)
+ConfigState bs_state_machine_get_current_state(const StateMachine* sm)
 {
     if (!sm)
         return CONFIG_STATE_ERROR;
     return sm->currentState;
 }
 
-BS_NO_SANITIZE_ENUM int StateMachine_Transition(StateMachine* sm, ConfigState newState)
+BS_NO_SANITIZE_ENUM int bs_state_machine_transition(StateMachine* sm, ConfigState newState)
 {
     if (!sm)
         return -1;
@@ -106,14 +106,15 @@ BS_NO_SANITIZE_ENUM int StateMachine_Transition(StateMachine* sm, ConfigState ne
     return 0;
 }
 
-BS_NO_SANITIZE_ENUM int StateMachine_CanTransition(const StateMachine* sm, ConfigState newState)
+BS_NO_SANITIZE_ENUM int bs_state_machine_can_transition(const StateMachine* sm,
+                                                        ConfigState         newState)
 {
     if (!sm)
         return 0;
     return isValidTransition(sm->currentState, newState);
 }
 
-void StateMachine_SetCallback(StateMachine* sm, StateTransitionCallback callback)
+void bs_state_machine_set_callback(StateMachine* sm, StateTransitionCallback callback)
 {
     if (sm)
     {
@@ -121,7 +122,7 @@ void StateMachine_SetCallback(StateMachine* sm, StateTransitionCallback callback
     }
 }
 
-uint64_t StateMachine_GetVersion(const StateMachine* sm)
+uint64_t bs_state_machine_get_version(const StateMachine* sm)
 {
     if (!sm)
         return 0;

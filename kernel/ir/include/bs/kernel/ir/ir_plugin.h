@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_IR_IR_PLUGIN_H
 #define BS_KERNEL_IR_IR_PLUGIN_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Plugin IR hooks must not call back into gate while holding locks.
+ * Error semantics: See bs_status in ir_plugin.cpp for plugin-specific codes.
+ * Platform notes: Bridges static plugin registration to IR requirement checks.
+ */
+
 #include "bs/kernel/ir/ir.h"
 
 #ifdef __cplusplus

@@ -85,12 +85,12 @@ static int facade_read_fn(void* user_ctx, const char* uri, IoReadResult* out)
  * read). */
 static int minimal_attach_setup(ReloadHarness* h)
 {
-    h->actx = bs_attach_context_create();
+    h->actx = bs_adapter_attach_ctx_create();
     REQUIRE_PHASE("setup", h->actx != nullptr);
-    bs_attach_context_set_active(h->actx);
+    bs_adapter_attach_ctx_set_active(h->actx);
     REQUIRE_PHASE("setup", bs_adapter_registry_bootstrap_begin_ctx(h->actx) == 0);
     REQUIRE_PHASE("setup", bs_adapter_attach_is_log_ready());
-    h->facade = bs_attach_context_registry(h->actx);
+    h->facade = bs_adapter_attach_ctx_registry(h->actx);
     REQUIRE_PHASE("setup", bs_registry_facade_advance_phase(h->facade, BS_REGISTRY_PHASE_P2) ==
                                BS_REGISTRY_OK);
     REQUIRE_PHASE("setup", bs_adapter_registry_bootstrap_freeze_ctx(h->actx) == 0);
@@ -112,31 +112,31 @@ static int prepare_reload_fixture(ReloadFixture* fix, const fs::path& work)
 /** C: reload + default gate (no gate_fn) + Report; read path uses IoFacade. */
 static int phase_c_reload_default_gate_and_report(const ReloadHarness* h, const ReloadFixture* fix)
 {
-    ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);
+    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);
     REQUIRE_PHASE("C-reload", ctrl != nullptr);
 
     FacadeReadCtx read_ctx{h->io};
-    bs_reload_batch_controller_set_read_fn(ctrl, facade_read_fn, &read_ctx);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &read_ctx);
     day12_wire_reload_defaults(ctrl);
     /* gate_fn intentionally unset -> default ir_gate (IMPL-06-02) */
 
-    Report* report = report_create("reload_default_gate_report");
+    Report* report = bs_report_create("reload_default_gate_report");
     REQUIRE_PHASE("C-reload", report != nullptr);
-    REQUIRE_PHASE("C-reload", bs_reload_batch_add_path(ctrl, fix->uri.c_str()) == 0);
-    REQUIRE_PHASE("C-reload", bs_reload_batch_run_with_report(ctrl, report) == 0);
-    REQUIRE_PHASE("C-reload", bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    REQUIRE_PHASE("C-reload", bs_adapter_attach_reload_batch_add_path(ctrl, fix->uri.c_str()) == 0);
+    REQUIRE_PHASE("C-reload", bs_adapter_attach_reload_batch_run_with_report(ctrl, report) == 0);
+    REQUIRE_PHASE("C-reload", bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
 
     ConfigState st = CONFIG_STATE_INITIAL;
     REQUIRE_PHASE("C-reload",
                   bs_adapter_attach_config_get_state(h->actx, fix->uri.c_str(), &st) == 0);
     REQUIRE_PHASE("C-reload", st == CONFIG_STATE_ACTIVE);
 
-    char* json = report_to_json(report);
+    char* json = bs_report_to_json(report);
     REQUIRE_PHASE("C-reload", json != nullptr);
     std::free(json);
 
-    report_destroy(report);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_report_destroy(report);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
     return 0;
 }
 
@@ -153,17 +153,17 @@ static int phase_d_eventbus_enqueue_then_drain(AttachContext* actx)
     REQUIRE_PHASE("D-eventbus", bus != nullptr);
 
     int notified = 0;
-    REQUIRE_PHASE("D-eventbus", EventBus_Subscribe(bus, "/config/reload_notify",
+    REQUIRE_PHASE("D-eventbus", bs_event_bus_subscribe(bus, "/config/reload_notify",
                                                        notify_listener, &notified) == 0);
 
-    ConfigEvent* ev = ConfigEvent_Create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
-                                         CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
+    ConfigEvent* ev = bs_config_event_create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
+                                             CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
     REQUIRE_PHASE("D-eventbus", ev != nullptr);
-    REQUIRE_PHASE("D-eventbus", EventBus_Publish(bus, ev) == 0);
-    ConfigEvent_Destroy(ev);
+    REQUIRE_PHASE("D-eventbus", bs_event_bus_publish(bus, ev) == 0);
+    bs_config_event_destroy(ev);
 
     REQUIRE_PHASE("D-eventbus", notified == 0);
-    REQUIRE_PHASE("D-eventbus", EventBus_Drain(bus) == 0);
+    REQUIRE_PHASE("D-eventbus", bs_event_bus_drain(bus) == 0);
     REQUIRE_PHASE("D-eventbus", notified == 1);
 
     return 0;
@@ -192,14 +192,14 @@ static int phase_e_reentrant_read_blocked_in_callback(const ReloadHarness* h)
 
     ReentryProbe probe{h->io, BS_IO_OK};
     REQUIRE_PHASE("E-reentry",
-                  EventBus_Subscribe(bus, "/config/reentry", reentry_listener, &probe) == 0);
+                  bs_event_bus_subscribe(bus, "/config/reentry", reentry_listener, &probe) == 0);
 
-    ConfigEvent* ev = ConfigEvent_Create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING,
-                                         CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
+    ConfigEvent* ev = bs_config_event_create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING,
+                                             CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
     REQUIRE_PHASE("E-reentry", ev != nullptr);
-    REQUIRE_PHASE("E-reentry", EventBus_Publish(bus, ev) == 0);
-    ConfigEvent_Destroy(ev);
-    REQUIRE_PHASE("E-reentry", EventBus_Drain(bus) == 0);
+    REQUIRE_PHASE("E-reentry", bs_event_bus_publish(bus, ev) == 0);
+    bs_config_event_destroy(ev);
+    REQUIRE_PHASE("E-reentry", bs_event_bus_drain(bus) == 0);
     REQUIRE_PHASE("E-reentry", probe.read_rc == BS_IO_ERR_INVALID_ARG);
 
     return 0;
@@ -211,7 +211,7 @@ static void teardown(ReloadHarness* h, ReloadFixture* fix)
         bs_io_facade_destroy(h->io);
     bs_adapter_registry_shutdown_log();
     if (h->actx)
-        bs_attach_context_destroy(h->actx);
+        bs_adapter_attach_ctx_destroy(h->actx);
 }
 
 int main()

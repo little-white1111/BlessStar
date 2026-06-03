@@ -12,7 +12,7 @@ namespace
 
 static int builtin_has_type(const char* type)
 {
-    const KernelBuiltinRequirements* builtin = kernel_get_builtin_requirements();
+    const KernelBuiltinRequirements* builtin = bs_kernel_get_builtin_requirements();
     if (!builtin || !type || type[0] == '\0')
         return 0;
     for (IRRequirementEntry* e = builtin->requirements.head; e; e = e->next)

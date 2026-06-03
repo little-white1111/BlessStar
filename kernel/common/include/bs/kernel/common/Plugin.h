@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_COMMON_PLUGIN_H
 #define BS_KERNEL_COMMON_PLUGIN_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: PluginManager list mutations are not thread-safe.
+ * Error semantics: NULL plugin on miss; manager ops return -1 on invalid args.
+ * Platform notes: In-process plugin registry for validator/transformer hooks.
+ */
+
 #ifdef __cplusplus
 #include <cstddef>
 #include <cstdint>
@@ -57,33 +64,34 @@ extern "C"
         uint64_t last_active_time;
     };
 
-    PluginManager* plugin_manager_create(void);
+    PluginManager* bs_plugin_manager_create(void);
 
-    void plugin_manager_destroy(PluginManager* manager);
+    void bs_plugin_manager_destroy(PluginManager* manager);
 
-    int plugin_manager_load(PluginManager* manager, const char* plugin_path, Plugin** plugin_out);
+    int bs_plugin_manager_load(PluginManager* manager, const char* plugin_path,
+                               Plugin** plugin_out);
 
-    int plugin_manager_unload(PluginManager* manager, const char* plugin_name);
+    int bs_plugin_manager_unload(PluginManager* manager, const char* plugin_name);
 
-    Plugin* plugin_manager_get(PluginManager* manager, const char* plugin_name);
+    Plugin* bs_plugin_manager_get(PluginManager* manager, const char* plugin_name);
 
-    Plugin* plugin_manager_get_by_type(PluginManager* manager, PluginType type, size_t index);
+    Plugin* bs_plugin_manager_get_by_type(PluginManager* manager, PluginType type, size_t index);
 
-    size_t plugin_manager_get_count(PluginManager* manager);
+    size_t bs_plugin_manager_get_count(PluginManager* manager);
 
-    size_t plugin_manager_get_count_by_type(PluginManager* manager, PluginType type);
+    size_t bs_plugin_manager_get_count_by_type(PluginManager* manager, PluginType type);
 
-    int plugin_manager_start_all(PluginManager* manager);
+    int bs_plugin_manager_start_all(PluginManager* manager);
 
-    int plugin_manager_stop_all(PluginManager* manager);
+    int bs_plugin_manager_stop_all(PluginManager* manager);
 
-    int plugin_manager_reload(PluginManager* manager, const char* plugin_name);
+    int bs_plugin_manager_reload(PluginManager* manager, const char* plugin_name);
 
-    PluginState plugin_get_state(Plugin* plugin);
+    PluginState bs_plugin_get_state(Plugin* plugin);
 
-    const char* plugin_type_to_string(PluginType type);
+    const char* bs_plugin_type_to_string(PluginType type);
 
-    const char* plugin_state_to_string(PluginState state);
+    const char* bs_plugin_state_to_string(PluginState state);
 
 #ifdef __cplusplus
 }

@@ -5,7 +5,7 @@
 
 int main()
 {
-    const KernelBuiltinRequirements* k = kernel_get_builtin_requirements();
+    const KernelBuiltinRequirements* k = bs_kernel_get_builtin_requirements();
     assert(k != nullptr);
     assert(k->requirements.head != nullptr);
     assert(k->requirements.count >= 1u);

@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_REQUIREMENT_FILTER_H
 #define BS_ADAPTER_REQUIREMENT_FILTER_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Filter reads immutable builtin tables; reentrant.
+ * Error semantics: Drops IR nodes failing requirement paths; status via caller context.
+ * Platform notes: Applies kernel builtin requirements to parsed IR lists.
+ */
+
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/ir/ir_gate.h"
 #include "bs/kernel/ir/requirements.h"

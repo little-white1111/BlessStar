@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_PIPELINE_STAGE_H
 #define BS_KERNEL_PIPELINE_STAGE_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Stages are owned by their Pipeline list; not thread-safe.
+ * Error semantics: bs_stage_execute returns -1 if execute fn missing; dependency gating via
+ * is_ready. Platform notes: StageExecuteFunc transforms IRInstruction to IRInstruction*.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -34,26 +41,26 @@ extern "C"
         StageCleanupFunc cleanup;
         void*            context;
         Stage*           next;
-        const char*      dependencies;
+        const char**     dependencies;
         size_t           dependency_count;
     };
 
-    Stage* stage_create(const char* name, StageExecuteFunc execute);
-    void   stage_destroy(Stage* stage);
+    Stage* bs_stage_create(const char* name, StageExecuteFunc execute);
+    void   bs_stage_destroy(Stage* stage);
 
-    int  stage_execute(Stage* stage, const IRInstruction* input, IRInstruction** output);
-    void stage_cleanup(Stage* stage);
+    int  bs_stage_execute(Stage* stage, const IRInstruction* input, IRInstruction** output);
+    void bs_stage_cleanup(Stage* stage);
 
-    void  stage_set_context(Stage* stage, void* context);
-    void* stage_get_context(const Stage* stage);
+    void  bs_stage_set_context(Stage* stage, void* context);
+    void* bs_stage_get_context(const Stage* stage);
 
-    void       stage_set_state(Stage* stage, StageState state);
-    StageState stage_get_state(const Stage* stage);
+    void       bs_stage_set_state(Stage* stage, StageState state);
+    StageState bs_stage_get_state(const Stage* stage);
 
-    void         stage_set_dependencies(Stage* stage, const char** deps, size_t count);
-    const char** stage_get_dependencies(const Stage* stage, size_t* count);
+    void         bs_stage_set_dependencies(Stage* stage, const char** deps, size_t count);
+    const char** bs_stage_get_dependencies(const Stage* stage, size_t* count);
 
-    int stage_is_ready(const Stage* stage);
+    int bs_stage_is_ready(const Stage* stage);
 
 #ifdef __cplusplus
 }

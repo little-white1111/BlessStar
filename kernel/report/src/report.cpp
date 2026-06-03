@@ -6,7 +6,7 @@
 #include <cstring>
 #include <ctime>
 
-Report* report_create(const char* workflow_name)
+Report* bs_report_create(const char* workflow_name)
 {
     Report* report = (Report*)malloc(sizeof(Report));
     if (!report)
@@ -25,7 +25,7 @@ Report* report_create(const char* workflow_name)
     return report;
 }
 
-void report_destroy(Report* report)
+void bs_report_destroy(Report* report)
 {
     if (!report)
         return;
@@ -54,8 +54,8 @@ void report_destroy(Report* report)
     free(report);
 }
 
-void report_add_entry(Report* report, ReportLevel level, const char* stage_name,
-                      const char* message)
+void bs_report_add_entry(Report* report, ReportLevel level, const char* stage_name,
+                         const char* message)
 {
     if (!report || !message)
         return;
@@ -73,32 +73,32 @@ void report_add_entry(Report* report, ReportLevel level, const char* stage_name,
     report->entry_count++;
 }
 
-void report_add_debug(Report* report, const char* stage_name, const char* message)
+void bs_report_add_debug(Report* report, const char* stage_name, const char* message)
 {
-    report_add_entry(report, REPORT_LEVEL_DEBUG, stage_name, message);
+    bs_report_add_entry(report, REPORT_LEVEL_DEBUG, stage_name, message);
 }
 
-void report_add_info(Report* report, const char* stage_name, const char* message)
+void bs_report_add_info(Report* report, const char* stage_name, const char* message)
 {
-    report_add_entry(report, REPORT_LEVEL_INFO, stage_name, message);
+    bs_report_add_entry(report, REPORT_LEVEL_INFO, stage_name, message);
 }
 
-void report_add_warn(Report* report, const char* stage_name, const char* message)
+void bs_report_add_warn(Report* report, const char* stage_name, const char* message)
 {
-    report_add_entry(report, REPORT_LEVEL_WARN, stage_name, message);
+    bs_report_add_entry(report, REPORT_LEVEL_WARN, stage_name, message);
 }
 
-void report_add_error(Report* report, const char* stage_name, const char* message)
+void bs_report_add_error(Report* report, const char* stage_name, const char* message)
 {
-    report_add_entry(report, REPORT_LEVEL_ERROR, stage_name, message);
+    bs_report_add_entry(report, REPORT_LEVEL_ERROR, stage_name, message);
 }
 
-void report_add_fatal(Report* report, const char* stage_name, const char* message)
+void bs_report_add_fatal(Report* report, const char* stage_name, const char* message)
 {
-    report_add_entry(report, REPORT_LEVEL_FATAL, stage_name, message);
+    bs_report_add_entry(report, REPORT_LEVEL_FATAL, stage_name, message);
 }
 
-void report_set_status(Report* report, ReportStatus status)
+void bs_report_set_status(Report* report, ReportStatus status)
 {
     if (report)
     {
@@ -106,14 +106,14 @@ void report_set_status(Report* report, ReportStatus status)
     }
 }
 
-ReportStatus report_get_status(const Report* report)
+ReportStatus bs_report_get_status(const Report* report)
 {
     if (!report)
         return REPORT_STATUS_FAILED;
     return report->status;
 }
 
-void report_set_error_message(Report* report, const char* message)
+void bs_report_set_error_message(Report* report, const char* message)
 {
     if (report)
     {
@@ -125,14 +125,14 @@ void report_set_error_message(Report* report, const char* message)
     }
 }
 
-const char* report_get_error_message(const Report* report)
+const char* bs_report_get_error_message(const Report* report)
 {
     if (!report)
         return nullptr;
     return report->error_message;
 }
 
-void report_set_next_target(Report* report, const char* target)
+void bs_report_set_next_target(Report* report, const char* target)
 {
     if (report)
     {
@@ -144,14 +144,14 @@ void report_set_next_target(Report* report, const char* target)
     }
 }
 
-const char* report_get_next_target(const Report* report)
+const char* bs_report_get_next_target(const Report* report)
 {
     if (!report)
         return nullptr;
     return report->next_target;
 }
 
-void report_set_next_action(Report* report, const char* action)
+void bs_report_set_next_action(Report* report, const char* action)
 {
     if (report)
     {
@@ -163,14 +163,14 @@ void report_set_next_action(Report* report, const char* action)
     }
 }
 
-const char* report_get_next_action(const Report* report)
+const char* bs_report_get_next_action(const Report* report)
 {
     if (!report)
         return nullptr;
     return report->next_action;
 }
 
-void report_mark_start(Report* report)
+void bs_report_mark_start(Report* report)
 {
     if (report)
     {
@@ -178,7 +178,7 @@ void report_mark_start(Report* report)
     }
 }
 
-void report_mark_end(Report* report)
+void bs_report_mark_end(Report* report)
 {
     if (report)
     {
@@ -186,7 +186,7 @@ void report_mark_end(Report* report)
     }
 }
 
-uint64_t report_get_duration(const Report* report)
+uint64_t bs_report_get_duration(const Report* report)
 {
     if (!report)
         return 0;
@@ -195,7 +195,7 @@ uint64_t report_get_duration(const Report* report)
     return report->end_time - report->start_time;
 }
 
-char* report_to_string(const Report* report)
+char* bs_report_to_string(const Report* report)
 {
     // Placeholder implementation
     if (!report)
@@ -208,7 +208,7 @@ char* report_to_string(const Report* report)
     return result;
 }
 
-char* report_to_json(const Report* report)
+char* bs_report_to_json(const Report* report)
 {
     if (!report)
         return nullptr;

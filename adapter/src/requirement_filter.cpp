@@ -2,7 +2,7 @@
 
 int bs_adapter_requirement_filter_validate_builtin(void)
 {
-    const KernelBuiltinRequirements* k = kernel_get_builtin_requirements();
+    const KernelBuiltinRequirements* k = bs_kernel_get_builtin_requirements();
     if (!k)
         return -1;
     return bs_requirement_validate(&k->requirements) ? 0 : -1;
@@ -10,7 +10,7 @@ int bs_adapter_requirement_filter_validate_builtin(void)
 
 int bs_adapter_requirement_filter_check_adapter_version(const char* adapter_version)
 {
-    const KernelBuiltinRequirements* k = kernel_get_builtin_requirements();
+    const KernelBuiltinRequirements* k = bs_kernel_get_builtin_requirements();
     if (!k)
         return -1;
     return bs_requirement_check_compatibility(k->kernel_version, adapter_version,
@@ -22,7 +22,7 @@ int bs_adapter_requirement_filter_check_adapter_version(const char* adapter_vers
 IRRequirementList* bs_adapter_requirement_filter_merge_activation(
     const IRRequirementList* manual_extra_requirements_or_null)
 {
-    const KernelBuiltinRequirements* k = kernel_get_builtin_requirements();
+    const KernelBuiltinRequirements* k = bs_kernel_get_builtin_requirements();
     if (!k)
         return nullptr;
     return bs_requirement_merge(&k->requirements, manual_extra_requirements_or_null, 1);

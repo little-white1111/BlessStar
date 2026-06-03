@@ -75,6 +75,7 @@ target_link_libraries(bs_kernel_test_support
 # -------------------------
 add_library(bs_kernel_ir
   kernel/ir/src/ir.cpp
+  kernel/ir/src/metadata.c
   kernel/ir/src/requirements.cpp
   kernel/ir/src/resolver.cpp
   kernel/ir/src/ir_gate.cpp
@@ -90,6 +91,7 @@ target_include_directories(bs_kernel_ir
 # ------------------------------
 add_library(bs_kernel_pipeline
   kernel/pipeline/src/pipeline.cpp
+  kernel/pipeline/src/stage.c
 )
 target_include_directories(bs_kernel_pipeline
   PUBLIC
@@ -98,12 +100,34 @@ target_include_directories(bs_kernel_pipeline
 target_link_libraries(bs_kernel_pipeline
   PUBLIC
     bs_kernel_ir
+    bs_kernel_report_core
+)
+
+# ------------------------------
+# Kernel: runtime (Kernel + Context + Config)
+# ------------------------------
+add_library(bs_kernel_runtime
+  kernel/runtime/src/kernel.c
+  kernel/runtime/src/context.c
+  kernel/runtime/src/config.c
+)
+target_include_directories(bs_kernel_runtime
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernel/runtime/include
+)
+target_link_libraries(bs_kernel_runtime
+  PUBLIC
+    bs_kernel_pipeline
+    bs_kernel_ir
+    bs_kernel_report_core
+    bs_kernel_common
 )
 
 # ------------------------------
 # Kernel: state (config lifecycle)
 # ------------------------------
 add_library(bs_kernel_state
+  kernel/state/src/ConfigManager.cpp
   kernel/state/src/machine/StateMachine.cpp
   kernel/state/src/bus/StateBus.cpp
   kernel/state/src/bus/ShardedStateBus.cpp
@@ -239,15 +263,25 @@ target_link_libraries(bs_adapter_parser
 add_library(bs_adapter_attach
   adapter/src/attach_runtime.cpp
   adapter/src/attach_context.cpp
+  adapter/src/attach_config.cpp
+  adapter/src/attach_execute.cpp
 )
 target_include_directories(bs_adapter_attach
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/adapter/include
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter/src
 )
 target_link_libraries(bs_adapter_attach
   PUBLIC
     bs_kernel_registry
+    bs_kernel_io
     bs_kernel_common
+    bs_kernel_state
+    bs_kernel_runtime
+    bs_kernel_pipeline
+    bs_kernel_ir
+    bs_adapter_parser
 )
 
 if(NOT BLESSSTAR_SANITIZER_CI)
@@ -312,6 +346,7 @@ add_library(bs_adapter_persistence
   adapter/persistence/attach_uri_path.c
   adapter/persistence/attach_audit.c
   adapter/persistence/attach_wal.c
+  adapter/persistence/attach_watch.c
   adapter/persistence/attach_crc32.c
   adapter/persistence/attach_fsync.c
 )

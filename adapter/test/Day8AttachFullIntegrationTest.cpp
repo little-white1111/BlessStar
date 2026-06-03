@@ -37,7 +37,7 @@ int main()
     const fs::path&          work = tmp_guard.path;
 
     BsTestAttachIoFixture fix{};
-    fix.ctx = bs_attach_context_create();
+    fix.ctx = bs_adapter_attach_ctx_create();
     BS_TEST_REQUIRE("setup", fix.ctx != nullptr);
 
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
@@ -84,24 +84,24 @@ int main()
                     bs_status_format(timeout_status, fix.facade, fmt_buf, sizeof(fmt_buf)) == 0);
     BS_TEST_REQUIRE("format", std::strcmp(fmt_buf, "io.TIMEOUT") == 0);
 
-    ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);
+    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);
     BS_TEST_REQUIRE("reload", ctrl != nullptr);
-    bs_reload_batch_controller_set_read_fn(ctrl, facade_read_fn, &fix);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
     const fs::path manifest_path = work / "manifest.bs";
-    bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
-    bs_reload_batch_controller_set_manifest_path(ctrl, manifest_path.string().c_str());
-    Report* report = report_create("day8_attach_full");
+    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
+    Report* report = bs_report_create("day8_attach_full");
     BS_TEST_REQUIRE("reload", report != nullptr);
-    BS_TEST_REQUIRE("reload", bs_reload_batch_add_path(ctrl, uri.c_str()) == 0);
-    BS_TEST_REQUIRE("reload", bs_reload_batch_run_with_report(ctrl, report) == 0);
-    BS_TEST_REQUIRE("reload", bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    BS_TEST_REQUIRE("reload", bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str()) == 0);
+    BS_TEST_REQUIRE("reload", bs_adapter_attach_reload_batch_run_with_report(ctrl, report) == 0);
+    BS_TEST_REQUIRE("reload", bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
 
-    char* json = report_to_json(report);
+    char* json = bs_report_to_json(report);
     BS_TEST_REQUIRE("reload", json != nullptr);
     std::free(json);
 
-    report_destroy(report);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_report_destroy(report);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
     bs_test_attach_teardown(&fix);
     return 0;

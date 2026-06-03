@@ -1,4 +1,5 @@
 #include "bs/adapter/persistence/attach_wal.h"
+#include "bs/adapter/persistence/attach_watch.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -112,17 +113,17 @@ static int wal_write_record(FILE* f, uint16_t type, const uint8_t* payload, uint
     write_u16_le(hdr_no_crc + 6, (uint16_t)type);
     write_u32_le(hdr_no_crc + 8, (uint32_t)len);
 
-    uint32_t crc = bs_attach_crc32(hdr_no_crc, sizeof(hdr_no_crc));
+    uint32_t crc = bs_adapter_attach_persist_crc32(hdr_no_crc, sizeof(hdr_no_crc));
     if (len > 0 && payload)
     {
         /* crc32 over header_without_crc + payload: just hash concatenation by hashing a temp */
-        /* Since bs_attach_crc32 isn't incremental, build one buffer when needed. */
+        /* Since bs_adapter_attach_persist_crc32 isn't incremental, build one buffer when needed. */
         uint8_t* tmp = (uint8_t*)malloc(sizeof(hdr_no_crc) + len);
         if (!tmp)
             return BS_ATTACH_ERR_OOM;
         memcpy(tmp, hdr_no_crc, sizeof(hdr_no_crc));
         memcpy(tmp + sizeof(hdr_no_crc), payload, len);
-        crc = bs_attach_crc32(tmp, sizeof(hdr_no_crc) + len);
+        crc = bs_adapter_attach_persist_crc32(tmp, sizeof(hdr_no_crc) + len);
         free(tmp);
     }
 
@@ -137,7 +138,7 @@ static int wal_write_record(FILE* f, uint16_t type, const uint8_t* payload, uint
     return rc;
 }
 
-BsAttachWal* bs_attach_wal_open(const char* wal_path)
+BsAttachWal* bs_adapter_attach_persist_wal_open(const char* wal_path)
 {
     if (!wal_path || wal_path[0] == '\0')
         return NULL;
@@ -155,7 +156,7 @@ BsAttachWal* bs_attach_wal_open(const char* wal_path)
     return w;
 }
 
-void bs_attach_wal_close(BsAttachWal* wal)
+void bs_adapter_attach_persist_wal_close(BsAttachWal* wal)
 {
     if (!wal)
         return;
@@ -163,8 +164,8 @@ void bs_attach_wal_close(BsAttachWal* wal)
     free(wal);
 }
 
-int bs_attach_wal_append_batch(BsAttachWal* wal, uint64_t epoch, const BsAttachWalEntry* entries,
-                               size_t count)
+int bs_adapter_attach_persist_wal_append_batch(BsAttachWal* wal, uint64_t epoch,
+                                               const BsAttachWalEntry* entries, size_t count)
 {
     if (!wal || !wal->path || !entries || count == 0)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -244,7 +245,7 @@ int bs_attach_wal_append_batch(BsAttachWal* wal, uint64_t epoch, const BsAttachW
         write_u32_le(payload + off, entries[i].payload_checksum);
         off += 4;
 
-        entry_crcs[i] = bs_attach_crc32(payload, payload_len);
+        entry_crcs[i] = bs_adapter_attach_persist_crc32(payload, payload_len);
         rc = wal_write_record(f, (uint16_t)BS_ATTACH_WAL_REC_ENTRY, payload, payload_len);
         free(payload);
         if (rc != BS_ATTACH_OK)
@@ -256,7 +257,8 @@ int bs_attach_wal_append_batch(BsAttachWal* wal, uint64_t epoch, const BsAttachW
     }
 
     /* BATCH_END: epoch + entry_count + batch_hash */
-    const uint32_t batch_hash = bs_attach_crc32(entry_crcs, count * sizeof(uint32_t));
+    const uint32_t batch_hash =
+        bs_adapter_attach_persist_crc32(entry_crcs, count * sizeof(uint32_t));
     free(entry_crcs);
     uint8_t end_payload[8 + 4 + 4];
     write_u64_le(end_payload + 0, epoch);
@@ -270,7 +272,7 @@ int bs_attach_wal_append_batch(BsAttachWal* wal, uint64_t epoch, const BsAttachW
         return rc;
     }
 
-    if (bs_attach_fsync_file(f) != 0)
+    if (bs_adapter_attach_persist_fsync_file(f) != 0)
     {
         fclose(f);
         return BS_ATTACH_ERR_IO;
@@ -323,7 +325,7 @@ static int wal_rotate_active_segment(const char* active_path, uint64_t epoch)
     return BS_ATTACH_OK;
 }
 
-int bs_attach_wal_mark_committed(BsAttachWal* wal, uint64_t epoch)
+int bs_adapter_attach_persist_wal_mark_committed(BsAttachWal* wal, uint64_t epoch)
 {
     if (!wal || !wal->path)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -341,7 +343,7 @@ int bs_attach_wal_mark_committed(BsAttachWal* wal, uint64_t epoch)
         fclose(f);
         return rc;
     }
-    if (bs_attach_fsync_file(f) != 0)
+    if (bs_adapter_attach_persist_fsync_file(f) != 0)
     {
         fclose(f);
         return BS_ATTACH_ERR_IO;
@@ -411,7 +413,6 @@ static int wal_scan_last_committed_epoch(FILE* f, uint64_t* last_committed_out, 
                                (unsigned long long)record_start, rh);
             return BS_ATTACH_OK;
         }
-        (void)record_start;
 
         uint8_t* payload = NULL;
         if (len > 0)
@@ -435,7 +436,7 @@ static int wal_scan_last_committed_epoch(FILE* f, uint64_t* last_committed_out, 
 
         uint32_t calc = 0;
         if (len == 0)
-            calc = bs_attach_crc32(hdr_no_crc, sizeof(hdr_no_crc));
+            calc = bs_adapter_attach_persist_crc32(hdr_no_crc, sizeof(hdr_no_crc));
         else
         {
             uint8_t* tmp = (uint8_t*)malloc(sizeof(hdr_no_crc) + len);
@@ -447,7 +448,7 @@ static int wal_scan_last_committed_epoch(FILE* f, uint64_t* last_committed_out, 
             }
             memcpy(tmp, hdr_no_crc, sizeof(hdr_no_crc));
             memcpy(tmp + sizeof(hdr_no_crc), payload, len);
-            calc = bs_attach_crc32(tmp, sizeof(hdr_no_crc) + len);
+            calc = bs_adapter_attach_persist_crc32(tmp, sizeof(hdr_no_crc) + len);
             free(tmp);
         }
         if (calc != crc)
@@ -528,7 +529,8 @@ static uint64_t wal_max_committed_across_segments(const char* active_path, uint6
     return max_c;
 }
 
-int bs_attach_wal_purge_old_segments(const char* active_wal_path, uint64_t manifest_epoch)
+int bs_adapter_attach_persist_wal_purge_old_segments(const char* active_wal_path,
+                                                     uint64_t    manifest_epoch)
 {
     if (!active_wal_path)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -564,7 +566,7 @@ int bs_attach_wal_purge_old_segments(const char* active_wal_path, uint64_t manif
     return BS_ATTACH_OK;
 }
 
-int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
+int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
 {
     if (!wal || !wal->path)
         return BS_ATTACH_OK;
@@ -576,6 +578,12 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
     {
         /* ATOM-REC-SAFE-2: corruption => conservative (no deletions). */
         BS_ATTACH_WAL_DBGF("wal_recover: corrupted=1 => conservative_no_delete\n");
+        BsAttachWatchEvent ev;
+        ev.epoch  = manifest_epoch;
+        ev.uri    = "";
+        ev.stage  = BS_ATTACH_WATCH_STAGE_RECOVER_CONSERVATIVE;
+        ev.result = BS_ATTACH_WATCH_RESULT_FAIL;
+        (void)bs_adapter_attach_persist_watch_publish(&ev);
         return BS_ATTACH_OK;
     }
 
@@ -604,7 +612,6 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
         {
             break;
         }
-        (void)record_start;
 
         uint8_t* payload = NULL;
         if (len > 0)
@@ -628,7 +635,7 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
 
         uint32_t calc = 0;
         if (len == 0)
-            calc = bs_attach_crc32(hdr_no_crc, sizeof(hdr_no_crc));
+            calc = bs_adapter_attach_persist_crc32(hdr_no_crc, sizeof(hdr_no_crc));
         else
         {
             uint8_t* tmp = (uint8_t*)malloc(sizeof(hdr_no_crc) + len);
@@ -640,7 +647,7 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
             }
             memcpy(tmp, hdr_no_crc, sizeof(hdr_no_crc));
             memcpy(tmp + sizeof(hdr_no_crc), payload, len);
-            calc = bs_attach_crc32(tmp, sizeof(hdr_no_crc) + len);
+            calc = bs_adapter_attach_persist_crc32(tmp, sizeof(hdr_no_crc) + len);
             free(tmp);
         }
         if (calc != crc)
@@ -691,7 +698,7 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
                 free(payload);
                 break;
             }
-            entry_crcs[current_entry_seen] = bs_attach_crc32(payload, len);
+            entry_crcs[current_entry_seen] = bs_adapter_attach_persist_crc32(payload, len);
 
             /* parse staging_path from payload to delete later if needed */
             uint32_t off = 0;
@@ -746,7 +753,8 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
             const uint64_t end_epoch = read_u64_le(payload + 0);
             const uint32_t end_count = read_u32_le(payload + 8);
             const uint32_t end_hash  = read_u32_le(payload + 12);
-            const uint32_t calc_hash = bs_attach_crc32(entry_crcs, end_count * sizeof(uint32_t));
+            const uint32_t calc_hash =
+                bs_adapter_attach_persist_crc32(entry_crcs, end_count * sizeof(uint32_t));
             if (end_epoch != current_batch_epoch || end_count != current_batch_count ||
                 end_count != current_entry_seen || end_hash != calc_hash)
             {
@@ -799,8 +807,8 @@ int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)
 }
 
 #if defined(BS_TESTING)
-int bs_attach_wal_dump(BsAttachWal* wal, uint64_t epoch_filter, uint64_t from_offset,
-                       size_t max_records, FILE* out)
+int bs_adapter_attach_persist_wal_dump(BsAttachWal* wal, uint64_t epoch_filter,
+                                       uint64_t from_offset, size_t max_records, FILE* out)
 {
     if (!wal || !wal->path || !out)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -848,7 +856,7 @@ int bs_attach_wal_dump(BsAttachWal* wal, uint64_t epoch_filter, uint64_t from_of
 
         uint32_t calc = 0;
         if (len == 0)
-            calc = bs_attach_crc32(hdr_no_crc, sizeof(hdr_no_crc));
+            calc = bs_adapter_attach_persist_crc32(hdr_no_crc, sizeof(hdr_no_crc));
         else
         {
             uint8_t* tmp = (uint8_t*)malloc(sizeof(hdr_no_crc) + len);
@@ -859,7 +867,7 @@ int bs_attach_wal_dump(BsAttachWal* wal, uint64_t epoch_filter, uint64_t from_of
             }
             memcpy(tmp, hdr_no_crc, sizeof(hdr_no_crc));
             memcpy(tmp + sizeof(hdr_no_crc), payload, len);
-            calc = bs_attach_crc32(tmp, sizeof(hdr_no_crc) + len);
+            calc = bs_adapter_attach_persist_crc32(tmp, sizeof(hdr_no_crc) + len);
             free(tmp);
         }
 

@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_STATE_SHARDED_STATE_BUS_H
 #define BS_KERNEL_STATE_SHARDED_STATE_BUS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Shard-level locking; route by path hash.
+ * Error semantics: Same as StateBus per shard; aggregate helpers may return partial data.
+ * Platform notes: Wraps multiple StateBus instances for contention reduction.
+ */
+
 #include "ConfigState.h"
 #include "StateBus.h"
 
@@ -16,25 +23,25 @@ extern "C"
 
     typedef struct ShardedStateBus ShardedStateBus;
 
-    ShardedStateBus* ShardedStateBus_Create(size_t num_shards);
+    ShardedStateBus* bs_sharded_state_bus_create(size_t num_shards);
 
-    void ShardedStateBus_Destroy(ShardedStateBus* bus);
+    void bs_sharded_state_bus_destroy(ShardedStateBus* bus);
 
-    int ShardedStateBus_SetState(ShardedStateBus* bus, const char* path, ConfigState state,
-                                 const void* data, size_t dataSize);
+    int bs_sharded_state_bus_set_state(ShardedStateBus* bus, const char* path, ConfigState state,
+                                       const void* data, size_t dataSize);
 
-    int ShardedStateBus_GetState(ShardedStateBus* bus, const char* path, StateEntry** entry);
+    int bs_sharded_state_bus_get_state(ShardedStateBus* bus, const char* path, StateEntry** entry);
 
-    int ShardedStateBus_GetSnapshot(ShardedStateBus* bus, const char* path, void** data,
-                                    size_t* size);
+    int bs_sharded_state_bus_get_snapshot(ShardedStateBus* bus, const char* path, void** data,
+                                          size_t* size);
 
-    StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count);
+    StateEntry* bs_sharded_state_bus_get_all_entries(ShardedStateBus* bus, size_t* count);
 
-    void ShardedStateBus_FreeEntries(StateEntry* entries, size_t count);
+    void bs_sharded_state_bus_free_entries(StateEntry* entries, size_t count);
 
-    uint64_t ShardedStateBus_GetTotalOperations(ShardedStateBus* bus);
+    uint64_t bs_sharded_state_bus_get_total_operations(ShardedStateBus* bus);
 
-    size_t ShardedStateBus_GetShardCount(ShardedStateBus* bus);
+    size_t bs_sharded_state_bus_get_shard_count(ShardedStateBus* bus);
 
 #ifdef __cplusplus
 }

@@ -6,20 +6,20 @@
 
 static void test_Pipeline_CreateDestroy()
 {
-    Pipeline* pipeline = pipeline_create();
+    Pipeline* pipeline = bs_pipeline_create();
     assert(pipeline != nullptr);
-    pipeline_destroy(pipeline);
+    bs_pipeline_destroy(pipeline);
     printf("test_Pipeline_CreateDestroy: PASS\n");
 }
 
 static void test_Pipeline_Stages()
 {
-    Pipeline* pipeline = pipeline_create();
+    Pipeline* pipeline = bs_pipeline_create();
 
-    assert(pipeline_get_stage_count(pipeline) == 0);
+    assert(bs_pipeline_get_stage_count(pipeline) == 0);
 
     // Stage is an opaque type in header, we skip detailed test
-    pipeline_destroy(pipeline);
+    bs_pipeline_destroy(pipeline);
     printf("test_Pipeline_Stages: PASS (skipped)\n");
 }
 

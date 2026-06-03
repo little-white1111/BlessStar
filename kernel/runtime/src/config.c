@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-KernelConfig* kernel_config_create(void)
+KernelConfig* bs_kernel_config_create(void)
 {
     KernelConfig* config = (KernelConfig*)malloc(sizeof(KernelConfig));
     if (!config)
@@ -26,7 +26,7 @@ KernelConfig* kernel_config_create(void)
     return config;
 }
 
-void kernel_config_destroy(KernelConfig* config)
+void bs_kernel_config_destroy(KernelConfig* config)
 {
     if (!config)
         return;
@@ -41,7 +41,7 @@ void kernel_config_destroy(KernelConfig* config)
     free(config);
 }
 
-void kernel_config_set_name(KernelConfig* config, const char* name)
+void bs_kernel_config_set_name(KernelConfig* config, const char* name)
 {
     if (!config || !name)
         return;
@@ -50,60 +50,60 @@ void kernel_config_set_name(KernelConfig* config, const char* name)
     config->name = strdup(name);
 }
 
-const char* kernel_config_get_name(const KernelConfig* config)
+const char* bs_kernel_config_get_name(const KernelConfig* config)
 {
     return config ? config->name : NULL;
 }
 
-void kernel_config_set_log_level(KernelConfig* config, LogLevel level)
+void bs_kernel_config_set_log_level(KernelConfig* config, LogLevel level)
 {
     if (!config)
         return;
     config->log_level = level;
 }
 
-LogLevel kernel_config_get_log_level(const KernelConfig* config)
+LogLevel bs_kernel_config_get_log_level(const KernelConfig* config)
 {
     return config ? config->log_level : LOG_LEVEL_INFO;
 }
 
-void kernel_config_set_error_handling_mode(KernelConfig* config, ErrorHandlingMode mode)
+void bs_kernel_config_set_error_handling_mode(KernelConfig* config, ErrorHandlingMode mode)
 {
     if (!config)
         return;
     config->error_handling_mode = mode;
 }
 
-ErrorHandlingMode kernel_config_get_error_handling_mode(const KernelConfig* config)
+ErrorHandlingMode bs_kernel_config_get_error_handling_mode(const KernelConfig* config)
 {
     return config ? config->error_handling_mode : ERROR_HANDLING_STRICT;
 }
 
-void kernel_config_set_max_pipeline_stages(KernelConfig* config, uint32_t max)
+void bs_kernel_config_set_max_pipeline_stages(KernelConfig* config, uint32_t max)
 {
     if (!config)
         return;
     config->max_pipeline_stages = max;
 }
 
-uint32_t kernel_config_get_max_pipeline_stages(const KernelConfig* config)
+uint32_t bs_kernel_config_get_max_pipeline_stages(const KernelConfig* config)
 {
     return config ? config->max_pipeline_stages : 32;
 }
 
-void kernel_config_set_execution_timeout_ms(KernelConfig* config, uint64_t timeout)
+void bs_kernel_config_set_execution_timeout_ms(KernelConfig* config, uint64_t timeout)
 {
     if (!config)
         return;
     config->execution_timeout_ms = timeout;
 }
 
-uint64_t kernel_config_get_execution_timeout_ms(const KernelConfig* config)
+uint64_t bs_kernel_config_get_execution_timeout_ms(const KernelConfig* config)
 {
     return config ? config->execution_timeout_ms : 30000;
 }
 
-void kernel_config_set_data_dir(KernelConfig* config, const char* dir)
+void bs_kernel_config_set_data_dir(KernelConfig* config, const char* dir)
 {
     if (!config || !dir)
         return;
@@ -112,12 +112,12 @@ void kernel_config_set_data_dir(KernelConfig* config, const char* dir)
     config->data_dir = strdup(dir);
 }
 
-const char* kernel_config_get_data_dir(const KernelConfig* config)
+const char* bs_kernel_config_get_data_dir(const KernelConfig* config)
 {
     return config ? config->data_dir : NULL;
 }
 
-int kernel_config_validate(const KernelConfig* config, char** error_message)
+int bs_kernel_config_validate(const KernelConfig* config, char** error_message)
 {
     if (!config)
     {

@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PLUGIN_ATTACH_MANIFEST_YAML_H
 #define BS_ADAPTER_PLUGIN_ATTACH_MANIFEST_YAML_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Parse once per manifest load; not concurrent.
+ * Error semantics: Non-zero YAML/schema errors; see tests in bs_test_attach_manifest_yaml.
+ * Platform notes: Validates attach manifest before freeze.
+ */
+
 #ifdef __cplusplus
 extern "C"
 {

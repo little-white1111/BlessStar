@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_IR_IR_GATE_H
 #define BS_KERNEL_IR_IR_GATE_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Gate evaluation is stateless aside from optional user context pointer.
+ * Error semantics: Reject/accept encoded as BsStatus-compatible ints in implementation.
+ * Platform notes: Placeholder IR gate hooks for reload orchestration integration.
+ */
+
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/ir/requirements.h"
 

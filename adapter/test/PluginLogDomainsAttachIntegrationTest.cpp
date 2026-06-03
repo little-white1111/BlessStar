@@ -13,7 +13,7 @@
 int main()
 {
     BsTestAttachIoFixture fix{};
-    fix.ctx = bs_attach_context_create();
+    fix.ctx = bs_adapter_attach_ctx_create();
     BS_TEST_REQUIRE("setup", fix.ctx != nullptr);
 
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);

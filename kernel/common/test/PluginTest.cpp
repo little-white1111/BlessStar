@@ -40,9 +40,9 @@ static const char* test_plugin_get_info(Plugin* plugin, const char* key)
 
 static void test_PluginManager_CreateDestroy()
 {
-    PluginManager* manager = plugin_manager_create();
+    PluginManager* manager = bs_plugin_manager_create();
     assert(manager != nullptr);
-    plugin_manager_destroy(manager);
+    bs_plugin_manager_destroy(manager);
     printf("test_PluginManager_CreateDestroy: PASS\n");
 }
 
@@ -82,16 +82,16 @@ static void test_Plugin_StateTransitions()
     memset(plugin, 0, sizeof(Plugin));
 
     plugin->state = PLUGIN_STATE_UNLOADED;
-    assert(plugin_get_state(plugin) == PLUGIN_STATE_UNLOADED);
+    assert(bs_plugin_get_state(plugin) == PLUGIN_STATE_UNLOADED);
 
     plugin->state = PLUGIN_STATE_LOADED;
-    assert(plugin_get_state(plugin) == PLUGIN_STATE_LOADED);
+    assert(bs_plugin_get_state(plugin) == PLUGIN_STATE_LOADED);
 
     plugin->state = PLUGIN_STATE_ACTIVE;
-    assert(plugin_get_state(plugin) == PLUGIN_STATE_ACTIVE);
+    assert(bs_plugin_get_state(plugin) == PLUGIN_STATE_ACTIVE);
 
     plugin->state = PLUGIN_STATE_ERROR;
-    assert(plugin_get_state(plugin) == PLUGIN_STATE_ERROR);
+    assert(bs_plugin_get_state(plugin) == PLUGIN_STATE_ERROR);
 
     delete plugin;
     printf("test_Plugin_StateTransitions: PASS\n");
@@ -99,59 +99,59 @@ static void test_Plugin_StateTransitions()
 
 static void test_Plugin_TypeToString()
 {
-    assert(strcmp(plugin_type_to_string(PLUGIN_TYPE_FORMAT_PARSER), "FORMAT_PARSER") == 0);
-    assert(strcmp(plugin_type_to_string(PLUGIN_TYPE_SCHEMA_LOADER), "SCHEMA_LOADER") == 0);
-    assert(strcmp(plugin_type_to_string(PLUGIN_TYPE_VALIDATOR), "VALIDATOR") == 0);
-    assert(strcmp(plugin_type_to_string(PLUGIN_TYPE_IR_GENERATOR), "IR_GENERATOR") == 0);
-    assert(strcmp(plugin_type_to_string(PLUGIN_TYPE_EXECUTOR), "EXECUTOR") == 0);
-    assert(strcmp(plugin_type_to_string(PLUGIN_TYPE_OBSERVER), "OBSERVER") == 0);
+    assert(strcmp(bs_plugin_type_to_string(PLUGIN_TYPE_FORMAT_PARSER), "FORMAT_PARSER") == 0);
+    assert(strcmp(bs_plugin_type_to_string(PLUGIN_TYPE_SCHEMA_LOADER), "SCHEMA_LOADER") == 0);
+    assert(strcmp(bs_plugin_type_to_string(PLUGIN_TYPE_VALIDATOR), "VALIDATOR") == 0);
+    assert(strcmp(bs_plugin_type_to_string(PLUGIN_TYPE_IR_GENERATOR), "IR_GENERATOR") == 0);
+    assert(strcmp(bs_plugin_type_to_string(PLUGIN_TYPE_EXECUTOR), "EXECUTOR") == 0);
+    assert(strcmp(bs_plugin_type_to_string(PLUGIN_TYPE_OBSERVER), "OBSERVER") == 0);
     printf("test_Plugin_TypeToString: PASS\n");
 }
 
 static void test_Plugin_StateToString()
 {
-    assert(strcmp(plugin_state_to_string(PLUGIN_STATE_UNLOADED), "UNLOADED") == 0);
-    assert(strcmp(plugin_state_to_string(PLUGIN_STATE_LOADED), "LOADED") == 0);
-    assert(strcmp(plugin_state_to_string(PLUGIN_STATE_ACTIVE), "ACTIVE") == 0);
-    assert(strcmp(plugin_state_to_string(PLUGIN_STATE_ERROR), "ERROR") == 0);
+    assert(strcmp(bs_plugin_state_to_string(PLUGIN_STATE_UNLOADED), "UNLOADED") == 0);
+    assert(strcmp(bs_plugin_state_to_string(PLUGIN_STATE_LOADED), "LOADED") == 0);
+    assert(strcmp(bs_plugin_state_to_string(PLUGIN_STATE_ACTIVE), "ACTIVE") == 0);
+    assert(strcmp(bs_plugin_state_to_string(PLUGIN_STATE_ERROR), "ERROR") == 0);
     printf("test_Plugin_StateToString: PASS\n");
 }
 
 static void test_PluginManager_GetCount()
 {
-    PluginManager* manager = plugin_manager_create();
-    assert(plugin_manager_get_count(manager) == 0);
-    plugin_manager_destroy(manager);
+    PluginManager* manager = bs_plugin_manager_create();
+    assert(bs_plugin_manager_get_count(manager) == 0);
+    bs_plugin_manager_destroy(manager);
     printf("test_PluginManager_GetCount: PASS\n");
 }
 
 static void test_PluginManager_GetByType()
 {
-    PluginManager* manager = plugin_manager_create();
-    Plugin*        plugin  = plugin_manager_get_by_type(manager, PLUGIN_TYPE_VALIDATOR, 0);
+    PluginManager* manager = bs_plugin_manager_create();
+    Plugin*        plugin  = bs_plugin_manager_get_by_type(manager, PLUGIN_TYPE_VALIDATOR, 0);
     assert(plugin == nullptr);
-    plugin_manager_destroy(manager);
+    bs_plugin_manager_destroy(manager);
     printf("test_PluginManager_GetByType: PASS\n");
 }
 
 static void test_PluginManager_NullInput()
 {
-    PluginManager* manager = plugin_manager_create();
+    PluginManager* manager = bs_plugin_manager_create();
 
-    int result = plugin_manager_load(nullptr, "test.so", nullptr);
+    int result = bs_plugin_manager_load(nullptr, "test.so", nullptr);
     assert(result == -1);
 
-    result = plugin_manager_unload(nullptr, "test");
+    result = bs_plugin_manager_unload(nullptr, "test");
     assert(result == -1);
 
-    result = plugin_manager_unload(manager, nullptr);
+    result = bs_plugin_manager_unload(manager, nullptr);
     assert(result == -1);
 
-    Plugin* plugin = plugin_manager_get(nullptr, "test");
+    Plugin* plugin = bs_plugin_manager_get(nullptr, "test");
     assert(plugin == nullptr);
 
-    plugin_manager_destroy(nullptr);
-    plugin_manager_destroy(manager);
+    bs_plugin_manager_destroy(nullptr);
+    bs_plugin_manager_destroy(manager);
     printf("test_PluginManager_NullInput: PASS\n");
 }
 

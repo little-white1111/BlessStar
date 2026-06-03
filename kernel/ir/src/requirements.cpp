@@ -39,7 +39,7 @@ void init_builtin_once()
 
 } // namespace
 
-extern "C" const KernelBuiltinRequirements* kernel_get_builtin_requirements(void)
+extern "C" const KernelBuiltinRequirements* bs_kernel_get_builtin_requirements(void)
 {
     init_builtin_once();
     return &kBuiltin;

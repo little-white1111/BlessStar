@@ -11,8 +11,8 @@ static void benchmark_PipelineCreateDestroy(size_t N)
 
     for (size_t i = 0; i < N; i++)
     {
-        Pipeline* pipeline = pipeline_create();
-        pipeline_destroy(pipeline);
+        Pipeline* pipeline = bs_pipeline_create();
+        bs_pipeline_destroy(pipeline);
     }
 
     clock_t end = clock();
@@ -24,23 +24,23 @@ static void benchmark_PipelineCreateDestroy(size_t N)
 // Measure pipeline execution N times
 static void benchmark_PipelineExecute(size_t N)
 {
-    Pipeline* pipeline = pipeline_create();
+    Pipeline* pipeline = bs_pipeline_create();
 
-    IRInstruction* input  = ir_instruction_create("type", "name");
+    IRInstruction* input  = bs_ir_instruction_create("type", "name");
     Report*        output = nullptr;
 
     clock_t start = clock();
 
     for (size_t i = 0; i < N; i++)
     {
-        pipeline_execute(pipeline, input, &output);
+        bs_pipeline_execute(pipeline, input, &output);
     }
 
     clock_t end = clock();
     double  ms  = 1000.0 * (end - start) / CLOCKS_PER_SEC;
 
-    ir_instruction_destroy(input);
-    pipeline_destroy(pipeline);
+    bs_ir_instruction_destroy(input);
+    bs_pipeline_destroy(pipeline);
 
     printf("benchmark_PipelineExecute (N=%zu): %.3f ms\n", N, ms);
 }

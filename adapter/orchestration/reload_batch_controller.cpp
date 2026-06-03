@@ -1,6 +1,8 @@
 #include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/report/report.h"
 
+#include "bs/adapter/attach_config.h"
+#include "bs/adapter/attach_context.h"
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_gate_default.h"
@@ -41,7 +43,7 @@ struct ReloadBatchController
     BsAttachStore* attach_store       = nullptr;
 };
 
-ReloadBatchController* bs_reload_batch_controller_create(unsigned max_inflight)
+ReloadBatchController* bs_adapter_attach_reload_batch_create(unsigned max_inflight)
 {
     auto* c = new ReloadBatchController();
     if (max_inflight > 0)
@@ -49,17 +51,17 @@ ReloadBatchController* bs_reload_batch_controller_create(unsigned max_inflight)
     return c;
 }
 
-void bs_reload_batch_controller_destroy(ReloadBatchController* ctrl)
+void bs_adapter_attach_reload_batch_destroy(ReloadBatchController* ctrl)
 {
     if (!ctrl)
         return;
-    bs_attach_store_close(ctrl->attach_store);
+    bs_adapter_attach_persist_store_close(ctrl->attach_store);
     ctrl->attach_store = nullptr;
     delete ctrl;
 }
 
-void bs_reload_batch_controller_set_read_fn(ReloadBatchController* ctrl, ReloadPathReadFn fn,
-                                            void* user_ctx)
+void bs_adapter_attach_reload_batch_set_read_fn(ReloadBatchController* ctrl, ReloadPathReadFn fn,
+                                                void* user_ctx)
 {
     if (!ctrl)
         return;
@@ -67,8 +69,8 @@ void bs_reload_batch_controller_set_read_fn(ReloadBatchController* ctrl, ReloadP
     ctrl->read_ctx = user_ctx;
 }
 
-void bs_reload_batch_controller_set_gate_fn(ReloadBatchController* ctrl, ReloadPathGateFn fn,
-                                            void* user_ctx)
+void bs_adapter_attach_reload_batch_set_gate_fn(ReloadBatchController* ctrl, ReloadPathGateFn fn,
+                                                void* user_ctx)
 {
     if (!ctrl)
         return;
@@ -76,24 +78,26 @@ void bs_reload_batch_controller_set_gate_fn(ReloadBatchController* ctrl, ReloadP
     ctrl->gate_ctx = user_ctx;
 }
 
-void bs_reload_batch_controller_use_default_gate(ReloadBatchController* ctrl)
+void bs_adapter_attach_reload_batch_set_default_gate(ReloadBatchController* ctrl)
 {
-    bs_reload_batch_controller_set_gate_fn(ctrl, bs_adapter_attach_reload_default_path_gate, NULL);
+    bs_adapter_attach_reload_batch_set_gate_fn(ctrl, bs_adapter_attach_reload_default_path_gate,
+                                               NULL);
 }
 
-void bs_reload_batch_controller_set_max_retry(ReloadBatchController* ctrl, unsigned max_retry)
+void bs_adapter_attach_reload_batch_set_max_retry(ReloadBatchController* ctrl, unsigned max_retry)
 {
     if (ctrl)
         ctrl->max_retry = max_retry;
 }
 
-void bs_reload_batch_controller_set_report(ReloadBatchController* ctrl, Report* report)
+void bs_adapter_attach_reload_batch_set_report(ReloadBatchController* ctrl, Report* report)
 {
     if (ctrl)
         ctrl->report = report;
 }
 
-int bs_reload_batch_controller_set_attach_scheme(ReloadBatchController* ctrl, BsAttachScheme scheme)
+int bs_adapter_attach_reload_batch_set_attach_scheme(ReloadBatchController* ctrl,
+                                                     BsAttachScheme         scheme)
 {
     if (!ctrl)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -103,8 +107,8 @@ int bs_reload_batch_controller_set_attach_scheme(ReloadBatchController* ctrl, Bs
     return BS_ATTACH_OK;
 }
 
-void bs_reload_batch_controller_set_manifest_path(ReloadBatchController* ctrl,
-                                                  const char*            manifest_path)
+void bs_adapter_attach_reload_batch_set_manifest_path(ReloadBatchController* ctrl,
+                                                      const char*            manifest_path)
 {
     if (!ctrl)
         return;
@@ -114,15 +118,15 @@ void bs_reload_batch_controller_set_manifest_path(ReloadBatchController* ctrl,
         ctrl->manifest_path.clear();
 }
 
-void bs_reload_batch_controller_set_session_memory_cap(ReloadBatchController* ctrl,
-                                                       size_t                 cap_bytes)
+void bs_adapter_attach_reload_batch_set_session_memory_cap(ReloadBatchController* ctrl,
+                                                           size_t                 cap_bytes)
 {
     if (!ctrl)
         return;
     ctrl->session_memory_cap = (cap_bytes == 0) ? BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT : cap_bytes;
 }
 
-int bs_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri)
+int bs_adapter_attach_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri)
 {
     if (!ctrl || !uri || uri[0] == '\0')
         return -1;
@@ -171,7 +175,9 @@ static uint64_t path_base_revision(const ReloadBatchController* ctrl, const char
 
 static uint64_t session_batch_epoch(const ReloadBatchController* ctrl)
 {
-    return (ctrl && ctrl->attach_store) ? bs_attach_store_batch_epoch(ctrl->attach_store) : 0;
+    return (ctrl && ctrl->attach_store)
+               ? bs_adapter_attach_persist_store_batch_epoch(ctrl->attach_store)
+               : 0;
 }
 
 static void report_audit_failure(ReloadBatchController* ctrl, const char* uri, const char* stage,
@@ -179,8 +185,9 @@ static void report_audit_failure(ReloadBatchController* ctrl, const char* uri, c
 {
     if (!ctrl || !ctrl->report || !stage)
         return;
-    bs_attach_report_audit(ctrl->report, stage, ctrl->scheme, session_batch_epoch(ctrl), uri,
-                           path_base_revision(ctrl, uri), abort_code, detail);
+    bs_adapter_attach_persist_report_audit(ctrl->report, stage, ctrl->scheme,
+                                           session_batch_epoch(ctrl), uri,
+                                           path_base_revision(ctrl, uri), abort_code, detail);
 }
 
 static int ensure_attach_store(ReloadBatchController* ctrl)
@@ -188,7 +195,7 @@ static int ensure_attach_store(ReloadBatchController* ctrl)
     if (ctrl->attach_store)
         return 0;
     const char* path   = ctrl->manifest_path.empty() ? nullptr : ctrl->manifest_path.c_str();
-    ctrl->attach_store = bs_attach_store_open(path);
+    ctrl->attach_store = bs_adapter_attach_persist_store_open(path);
     return ctrl->attach_store ? 0 : -1;
 }
 
@@ -198,8 +205,8 @@ static int load_session_revisions(ReloadBatchController* ctrl)
         return -1;
     for (auto& w : ctrl->paths)
     {
-        if (bs_attach_store_get_revision(ctrl->attach_store, w.uri.c_str(), &w.base_revision) !=
-            BS_ATTACH_OK)
+        if (bs_adapter_attach_persist_store_get_revision(ctrl->attach_store, w.uri.c_str(),
+                                                         &w.base_revision) != BS_ATTACH_OK)
             return -1;
     }
     return 0;
@@ -233,8 +240,8 @@ static const char* attach_err_detail(int rc)
 
 static int persist_per_path(ReloadBatchController* ctrl, PathWork* w, const IoReadResult* result)
 {
-    const int rc = bs_attach_store_commit_per_path(ctrl->attach_store, w->uri.c_str(), result->data,
-                                                   result->length, w->base_revision);
+    const int rc = bs_adapter_attach_persist_store_commit_per_path(
+        ctrl->attach_store, w->uri.c_str(), result->data, result->length, w->base_revision);
     if (rc != BS_ATTACH_OK)
     {
         w->state = BS_ORCH_PERSIST_REJECTED;
@@ -245,14 +252,18 @@ static int persist_per_path(ReloadBatchController* ctrl, PathWork* w, const IoRe
     if (ctrl->report)
     {
         uint64_t new_rev = 0;
-        bs_attach_store_get_revision(ctrl->attach_store, w->uri.c_str(), &new_rev);
-        bs_attach_report_persist_ok(ctrl->report, ctrl->scheme, session_batch_epoch(ctrl),
-                                    w->uri.c_str(), new_rev);
+        bs_adapter_attach_persist_store_get_revision(ctrl->attach_store, w->uri.c_str(), &new_rev);
+        bs_adapter_attach_persist_report_persist_ok(
+            ctrl->report, ctrl->scheme, session_batch_epoch(ctrl), w->uri.c_str(), new_rev);
     }
+    AttachContext* actx = bs_adapter_attach_ctx_get_active();
+    if (actx && result && result->data && result->length > 0)
+        (void)bs_adapter_attach_config_sync_path(actx, w->uri.c_str(), result->data,
+                                                 result->length);
     return BS_ATTACH_OK;
 }
 
-int bs_reload_batch_run(ReloadBatchController* ctrl)
+int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
 {
     if (!ctrl || !ctrl->read_fn)
         return -1;
@@ -267,7 +278,7 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
         return -2;
 
     if (!ctrl->gate_fn)
-        bs_reload_batch_controller_use_default_gate(ctrl);
+        bs_adapter_attach_reload_batch_set_default_gate(ctrl);
 
     if (load_session_revisions(ctrl) != 0)
         return -1;
@@ -276,15 +287,15 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
     ctrl->session_bytes_used = 0;
 
     if (ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH)
-        bs_attach_store_batch_begin(ctrl->attach_store);
+        bs_adapter_attach_persist_store_batch_begin(ctrl->attach_store);
 
     if (ctrl->report)
     {
         const uint64_t epoch = session_batch_epoch(ctrl);
         for (const auto& w : ctrl->paths)
         {
-            bs_attach_report_session_begin(ctrl->report, ctrl->scheme, epoch, w.uri.c_str(),
-                                           w.base_revision);
+            bs_adapter_attach_persist_report_session_begin(ctrl->report, ctrl->scheme, epoch,
+                                                           w.uri.c_str(), w.base_revision);
         }
     }
 
@@ -348,8 +359,8 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
         }
 
         w.state      = BS_ORCH_STAGED;
-        const int st = bs_attach_store_batch_stage(ctrl->attach_store, w.uri.c_str(), result.data,
-                                                   result.length, w.base_revision);
+        const int st = bs_adapter_attach_persist_store_batch_stage(
+            ctrl->attach_store, w.uri.c_str(), result.data, result.length, w.base_revision);
         bs_io_read_result_free(&result);
         if (st != BS_ATTACH_OK)
         {
@@ -366,7 +377,7 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
     {
         if (batch_had_failure)
         {
-            bs_attach_store_batch_abort(ctrl->attach_store);
+            bs_adapter_attach_persist_store_batch_abort(ctrl->attach_store);
             report_audit_failure(ctrl, "batch", "persistent_commit", BS_ATTACH_ERR_IO,
                                  "batch_aborted");
             for (auto& w : ctrl->paths)
@@ -380,7 +391,7 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
         }
         else if (!ctrl->paths.empty())
         {
-            const int bc = bs_attach_store_batch_commit(ctrl->attach_store);
+            const int bc = bs_adapter_attach_persist_store_batch_commit(ctrl->attach_store);
             if (bc != BS_ATTACH_OK)
             {
                 ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
@@ -403,10 +414,10 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
                         if (ctrl->report)
                         {
                             uint64_t new_rev = 0;
-                            bs_attach_store_get_revision(ctrl->attach_store, w.uri.c_str(),
-                                                         &new_rev);
-                            bs_attach_report_persist_ok(ctrl->report, ctrl->scheme, epoch,
-                                                        w.uri.c_str(), new_rev);
+                            bs_adapter_attach_persist_store_get_revision(ctrl->attach_store,
+                                                                         w.uri.c_str(), &new_rev);
+                            bs_adapter_attach_persist_report_persist_ok(
+                                ctrl->report, ctrl->scheme, epoch, w.uri.c_str(), new_rev);
                         }
                     }
                     gc_path_work(&w);
@@ -415,20 +426,20 @@ int bs_reload_batch_run(ReloadBatchController* ctrl)
         }
         else
         {
-            bs_attach_store_batch_abort(ctrl->attach_store);
+            bs_adapter_attach_persist_store_batch_abort(ctrl->attach_store);
         }
     }
 
     return 0;
 }
 
-BatchOutcome bs_reload_batch_outcome(const ReloadBatchController* ctrl)
+BatchOutcome bs_adapter_attach_reload_batch_outcome(const ReloadBatchController* ctrl)
 {
     return ctrl ? ctrl->outcome : BATCH_COMPLETED_WITH_FAILURES;
 }
 
-PathOrchestrationState bs_reload_batch_path_state(const ReloadBatchController* ctrl,
-                                                  const char*                  uri)
+PathOrchestrationState bs_adapter_attach_reload_batch_path_state(const ReloadBatchController* ctrl,
+                                                                 const char*                  uri)
 {
     if (!ctrl || !uri)
         return BS_ORCH_PENDING;

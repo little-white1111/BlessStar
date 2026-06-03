@@ -29,28 +29,28 @@ int main(int argc, char** argv)
     }
 
     const std::string raw   = read_file_or_empty(argv[1]);
-    IRInstruction*    instr = ir_instruction_create("type", argv[1]);
+    IRInstruction*    instr = bs_ir_instruction_create("type", argv[1]);
     if (!instr)
     {
         std::cerr << "failed to create IR instruction\n";
         return 3;
     }
 
-    Report* rep = report_create("adapter_cli");
-    report_mark_start(rep);
-    report_add_info(rep, "input", raw.empty() ? "(empty file)" : "file read ok");
-    report_set_next_target(rep, argv[1]);
-    report_set_next_action(rep, "none");
-    report_mark_end(rep);
+    Report* rep = bs_report_create("adapter_cli");
+    bs_report_mark_start(rep);
+    bs_report_add_info(rep, "input", raw.empty() ? "(empty file)" : "file read ok");
+    bs_report_set_next_target(rep, argv[1]);
+    bs_report_set_next_action(rep, "none");
+    bs_report_mark_end(rep);
 
-    char* json = report_to_json(rep);
+    char* json = bs_report_to_json(rep);
     if (json)
     {
         std::cout << json << "\n";
         std::free(json);
     }
 
-    report_destroy(rep);
-    ir_instruction_destroy(instr);
+    bs_report_destroy(rep);
+    bs_ir_instruction_destroy(instr);
     return 0;
 }

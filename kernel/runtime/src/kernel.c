@@ -1,4 +1,5 @@
 #include "bs/kernel/ir/ir.h"
+#include "bs/kernel/pipeline/pipeline.h"
 #include "bs/kernel/report/report.h"
 #include "bs/kernel/runtime/Config.h"
 #include "bs/kernel/runtime/Context.h"
@@ -9,6 +10,13 @@
 #include <time.h>
 
 #define PIPELINE_INITIAL_CAPACITY 4
+#define KERNEL_ASYNC_QUEUE_CAP 32
+
+typedef struct KernelAsyncNode
+{
+    IRInstruction*          ir;
+    struct KernelAsyncNode* next;
+} KernelAsyncNode;
 
 typedef struct PipelineEntry
 {
@@ -18,19 +26,22 @@ typedef struct PipelineEntry
 
 struct Kernel
 {
-    KernelState    state;
-    KernelConfig*  config;
-    Context*       context;
-    PipelineEntry* pipelines;
-    size_t         pipeline_count;
-    size_t         pipeline_capacity;
-    uint64_t       start_time;
-    uint64_t       execution_count;
+    KernelState      state;
+    KernelConfig*    config;
+    Context*         context;
+    PipelineEntry*   pipelines;
+    size_t           pipeline_count;
+    size_t           pipeline_capacity;
+    uint64_t         start_time;
+    uint64_t         execution_count;
+    KernelAsyncNode* async_head;
+    KernelAsyncNode* async_tail;
+    size_t           async_count;
 };
 
 static const char* KERNEL_VERSION = "1.0.0";
 
-Kernel* kernel_create(const KernelConfig* config)
+Kernel* bs_kernel_create(const KernelConfig* config)
 {
     Kernel* kernel = (Kernel*)malloc(sizeof(Kernel));
     if (!kernel)
@@ -50,7 +61,7 @@ Kernel* kernel_create(const KernelConfig* config)
     }
     else
     {
-        kernel->config = kernel_config_create();
+        kernel->config = bs_kernel_config_create();
         if (!kernel->config)
         {
             free(kernel);
@@ -58,11 +69,11 @@ Kernel* kernel_create(const KernelConfig* config)
         }
     }
 
-    kernel->context = context_create(CONTEXT_SCOPE_GLOBAL);
+    kernel->context = bs_context_create(CONTEXT_SCOPE_GLOBAL);
     if (!kernel->context)
     {
         if (kernel->config)
-            kernel_config_destroy(kernel->config);
+            bs_kernel_config_destroy(kernel->config);
         free(kernel);
         return NULL;
     }
@@ -70,9 +81,9 @@ Kernel* kernel_create(const KernelConfig* config)
     kernel->pipelines = (PipelineEntry*)malloc(sizeof(PipelineEntry) * PIPELINE_INITIAL_CAPACITY);
     if (!kernel->pipelines)
     {
-        context_destroy(kernel->context);
+        bs_context_destroy(kernel->context);
         if (kernel->config)
-            kernel_config_destroy(kernel->config);
+            bs_kernel_config_destroy(kernel->config);
         free(kernel);
         return NULL;
     }
@@ -81,11 +92,14 @@ Kernel* kernel_create(const KernelConfig* config)
     kernel->pipeline_capacity = PIPELINE_INITIAL_CAPACITY;
     kernel->start_time        = 0;
     kernel->execution_count   = 0;
+    kernel->async_head        = NULL;
+    kernel->async_tail        = NULL;
+    kernel->async_count       = 0;
 
     return kernel;
 }
 
-void kernel_destroy(Kernel* kernel)
+void bs_kernel_destroy(Kernel* kernel)
 {
     if (!kernel)
         return;
@@ -96,21 +110,63 @@ void kernel_destroy(Kernel* kernel)
         {
             free((void*)kernel->pipelines[i].name);
         }
-        // Assume pipeline has its own destroy function
-        // pipeline_destroy(kernel->pipelines[i].pipeline);
+        /* Pipeline objects are caller-owned (AttachContext destroys default_pipeline
+         * after bs_kernel_unregister_pipeline). Do not bs_pipeline_destroy here. */
     }
 
     if (kernel->pipelines)
         free(kernel->pipelines);
     if (kernel->context)
-        context_destroy(kernel->context);
+        bs_context_destroy(kernel->context);
     if (kernel->config)
-        kernel_config_destroy(kernel->config);
+        bs_kernel_config_destroy(kernel->config);
+
+    KernelAsyncNode* node = kernel->async_head;
+    while (node)
+    {
+        KernelAsyncNode* next = node->next;
+        if (node->ir)
+            bs_ir_instruction_destroy(node->ir);
+        free(node);
+        node = next;
+    }
 
     free(kernel);
 }
 
-int kernel_start(Kernel* kernel)
+static IRInstruction* kernel_copy_instruction(const IRInstruction* ir)
+{
+    if (!ir)
+        return NULL;
+    IRInstruction* copy = bs_ir_instruction_create(ir->type, ir->name);
+    if (!copy)
+        return NULL;
+    copy->version   = ir->version;
+    copy->timestamp = ir->timestamp;
+    return copy;
+}
+
+static void kernel_async_enqueue(Kernel* kernel, IRInstruction* ir)
+{
+    KernelAsyncNode* node = (KernelAsyncNode*)malloc(sizeof(KernelAsyncNode));
+    if (!node)
+    {
+        bs_ir_instruction_destroy(ir);
+        return;
+    }
+    node->ir   = ir;
+    node->next = NULL;
+    if (!kernel->async_tail)
+        kernel->async_head = kernel->async_tail = node;
+    else
+    {
+        kernel->async_tail->next = node;
+        kernel->async_tail       = node;
+    }
+    kernel->async_count++;
+}
+
+int bs_kernel_start(Kernel* kernel)
 {
     if (!kernel)
         return -1;
@@ -120,7 +176,7 @@ int kernel_start(Kernel* kernel)
     kernel->state = KERNEL_STATE_STARTING;
 
     // Initialize components
-    context_set_metadata(kernel->context, "kernel.version", KERNEL_VERSION);
+    bs_context_set_metadata(kernel->context, "kernel.version", KERNEL_VERSION);
 
     kernel->start_time = (uint64_t)time(NULL);
     kernel->state      = KERNEL_STATE_RUNNING;
@@ -128,7 +184,7 @@ int kernel_start(Kernel* kernel)
     return 0;
 }
 
-int kernel_stop(Kernel* kernel)
+int bs_kernel_stop(Kernel* kernel)
 {
     if (!kernel)
         return -1;
@@ -145,58 +201,85 @@ int kernel_stop(Kernel* kernel)
     return 0;
 }
 
-KernelState kernel_get_state(const Kernel* kernel)
+KernelState bs_kernel_get_state(const Kernel* kernel)
 {
     return kernel ? kernel->state : KERNEL_STATE_ERROR;
 }
 
-Report* kernel_execute(Kernel* kernel, const IRInstruction* ir)
+Report* bs_kernel_execute(Kernel* kernel, const IRInstruction* ir)
 {
     if (!kernel || !ir)
         return NULL;
     if (kernel->state != KERNEL_STATE_RUNNING)
         return NULL;
 
-    Report* report = report_create("kernel_execution");
-    if (!report)
+    Pipeline* pipeline = (Pipeline*)bs_kernel_get_pipeline(kernel, "default");
+    if (!pipeline && kernel->pipeline_count > 0)
+        pipeline = (Pipeline*)kernel->pipelines[0].pipeline;
+
+    if (!pipeline)
         return NULL;
 
-    report_mark_start(report);
-    report_add_info(report, "kernel", "Starting execution");
-
-    // Execute through registered pipelines
-    for (size_t i = 0; i < kernel->pipeline_count; i++)
+    Report* pipe_report = NULL;
+    if (bs_pipeline_execute(pipeline, ir, &pipe_report) != 0)
     {
-        report_add_info(report, "kernel", "Executing pipeline: ");
-        // Incomplete - would call pipeline_execute here
+        if (pipe_report)
+            bs_report_destroy(pipe_report);
+        return NULL;
     }
 
     kernel->execution_count++;
-
-    report_set_status(report, REPORT_STATUS_SUCCESS);
-    report_add_info(report, "kernel", "Execution completed");
-    report_mark_end(report);
-
-    return report;
+    return pipe_report;
 }
 
-int kernel_execute_async(Kernel* kernel, const IRInstruction* ir)
+int bs_kernel_execute_async(Kernel* kernel, const IRInstruction* ir)
 {
     if (!kernel || !ir)
         return -1;
     if (kernel->state != KERNEL_STATE_RUNNING)
         return -1;
+    if (kernel->async_count >= KERNEL_ASYNC_QUEUE_CAP)
+        return -1;
 
-    // In async implementation, would queue for background execution
-    // For now, just execute synchronously
-    Report* report = kernel_execute(kernel, ir);
-    if (report)
+    IRInstruction* copy = kernel_copy_instruction(ir);
+    if (!copy)
+        return -1;
+
+    kernel_async_enqueue(kernel, copy);
+    return 0;
+}
+
+int bs_kernel_drain_async_queue(Kernel* kernel)
+{
+    if (!kernel)
+        return -1;
+    if (kernel->state != KERNEL_STATE_RUNNING)
+        return -1;
+
+    int processed = 0;
+    while (kernel->async_head)
     {
-        report_destroy(report);
-        return 0;
-    }
+        KernelAsyncNode* node = kernel->async_head;
+        kernel->async_head    = node->next;
+        if (!kernel->async_head)
+            kernel->async_tail = NULL;
+        kernel->async_count--;
 
-    return -1;
+        Report* report = bs_kernel_execute(kernel, node->ir);
+        if (!report || bs_report_get_status(report) != REPORT_STATUS_SUCCESS)
+        {
+            if (report)
+                bs_report_destroy(report);
+            bs_ir_instruction_destroy(node->ir);
+            free(node);
+            return -1;
+        }
+        bs_report_destroy(report);
+        bs_ir_instruction_destroy(node->ir);
+        free(node);
+        processed++;
+    }
+    return processed;
 }
 
 static int kernel_resize_pipelines(Kernel* kernel, size_t new_capacity)
@@ -211,7 +294,7 @@ static int kernel_resize_pipelines(Kernel* kernel, size_t new_capacity)
     return 0;
 }
 
-int kernel_register_pipeline(Kernel* kernel, const char* name, void* pipeline)
+int bs_kernel_register_pipeline(Kernel* kernel, const char* name, void* pipeline)
 {
     if (!kernel || !name || !pipeline)
         return -1;
@@ -240,7 +323,7 @@ int kernel_register_pipeline(Kernel* kernel, const char* name, void* pipeline)
     return 0;
 }
 
-int kernel_unregister_pipeline(Kernel* kernel, const char* name)
+int bs_kernel_unregister_pipeline(Kernel* kernel, const char* name)
 {
     if (!kernel || !name)
         return -1;
@@ -264,7 +347,7 @@ int kernel_unregister_pipeline(Kernel* kernel, const char* name)
     return -1;
 }
 
-void* kernel_get_pipeline(Kernel* kernel, const char* name)
+void* bs_kernel_get_pipeline(Kernel* kernel, const char* name)
 {
     if (!kernel || !name)
         return NULL;
@@ -280,7 +363,7 @@ void* kernel_get_pipeline(Kernel* kernel, const char* name)
     return NULL;
 }
 
-int kernel_set_config(Kernel* kernel, const KernelConfig* config)
+int bs_kernel_set_config(Kernel* kernel, const KernelConfig* config)
 {
     if (!kernel || !config)
         return -1;
@@ -289,7 +372,7 @@ int kernel_set_config(Kernel* kernel, const KernelConfig* config)
 
     if (kernel->config)
     {
-        kernel_config_destroy(kernel->config);
+        bs_kernel_config_destroy(kernel->config);
     }
 
     kernel->config = (KernelConfig*)malloc(sizeof(KernelConfig));
@@ -300,22 +383,22 @@ int kernel_set_config(Kernel* kernel, const KernelConfig* config)
     return 0;
 }
 
-const KernelConfig* kernel_get_config(const Kernel* kernel)
+const KernelConfig* bs_kernel_get_config(const Kernel* kernel)
 {
     return kernel ? kernel->config : NULL;
 }
 
-const char* kernel_get_version(void)
+const char* bs_kernel_get_version(void)
 {
     return KERNEL_VERSION;
 }
 
-uint64_t kernel_get_start_time(const Kernel* kernel)
+uint64_t bs_kernel_get_start_time(const Kernel* kernel)
 {
     return kernel ? kernel->start_time : 0;
 }
 
-uint64_t kernel_get_execution_count(const Kernel* kernel)
+uint64_t bs_kernel_get_execution_count(const Kernel* kernel)
 {
     return kernel ? kernel->execution_count : 0;
 }

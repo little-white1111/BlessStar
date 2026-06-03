@@ -21,10 +21,10 @@ extern "C" int bs_ir_gate_verify_instructions(const IRInstructionList* list,
         return -1;
     if (!list)
         return 0;
-    const size_t n = ir_instruction_list_size(list);
+    const size_t n = bs_ir_instruction_list_size(list);
     for (size_t i = 0; i < n; ++i)
     {
-        const IRInstruction* instr = ir_instruction_list_get(list, i);
+        const IRInstruction* instr = bs_ir_instruction_list_get(list, i);
         if (!instr || !instr->type)
             return -1;
         if (!type_allowed(instr->type, requirements))

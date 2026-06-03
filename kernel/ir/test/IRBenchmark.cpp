@@ -11,8 +11,8 @@ static void benchmark_IRInstructionCreate(size_t N)
 
     for (size_t i = 0; i < N; i++)
     {
-        IRInstruction* instr = ir_instruction_create("type", "name");
-        ir_instruction_destroy(instr);
+        IRInstruction* instr = bs_ir_instruction_create("type", "name");
+        bs_ir_instruction_destroy(instr);
     }
 
     clock_t end = clock();
@@ -26,7 +26,7 @@ static void benchmark_IRMetadata(size_t N)
 {
     clock_t start = clock();
 
-    IRInstruction* instr = ir_instruction_create("type", "name");
+    IRInstruction* instr = bs_ir_instruction_create("type", "name");
 
     for (size_t i = 0; i < N; i++)
     {
@@ -34,11 +34,11 @@ static void benchmark_IRMetadata(size_t N)
         sprintf(key, "key%zu", i);
         sprintf(value, "value%zu", i);
 
-        IRMetadata* meta = ir_metadata_create(key, value);
-        ir_instruction_add_metadata(instr, meta);
+        IRMetadata* meta = bs_ir_metadata_create(key, value);
+        bs_ir_instruction_add_metadata(instr, meta);
     }
 
-    ir_instruction_destroy(instr);
+    bs_ir_instruction_destroy(instr);
 
     clock_t end = clock();
     double  ms  = 1000.0 * (end - start) / CLOCKS_PER_SEC;
@@ -51,15 +51,15 @@ static void benchmark_IRInstructionList(size_t N)
 {
     clock_t start = clock();
 
-    IRInstructionList* list = ir_instruction_list_create();
+    IRInstructionList* list = bs_ir_instruction_list_create();
 
     for (size_t i = 0; i < N; i++)
     {
-        IRInstruction* instr = ir_instruction_create("type", "name");
-        ir_instruction_list_add(list, instr);
+        IRInstruction* instr = bs_ir_instruction_create("type", "name");
+        bs_ir_instruction_list_add(list, instr);
     }
 
-    ir_instruction_list_destroy(list);
+    bs_ir_instruction_list_destroy(list);
 
     clock_t end = clock();
     double  ms  = 1000.0 * (end - start) / CLOCKS_PER_SEC;

@@ -48,7 +48,7 @@ int main()
     IRRequirementList manual{};
     manual.head                        = &dup;
     manual.count                       = 1;
-    const KernelBuiltinRequirements* k = kernel_get_builtin_requirements();
+    const KernelBuiltinRequirements* k = bs_kernel_get_builtin_requirements();
     assert(k != nullptr);
     IRRequirementList* merged = bs_requirement_merge(&k->requirements, &manual, 1);
     assert(merged != nullptr);

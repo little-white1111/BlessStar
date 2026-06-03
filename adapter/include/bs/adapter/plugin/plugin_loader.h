@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PLUGIN_PLUGIN_LOADER_H
 #define BS_ADAPTER_PLUGIN_PLUGIN_LOADER_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Dynamic load occurs on loader thread during attach only.
+ * Error semantics: Non-zero when library missing symbols or manifest mismatch.
+ * Platform notes: Wraps platform dlopen for optional plugins.
+ */
+
 #include "bs/adapter/attach_context.h"
 
 #ifdef __cplusplus

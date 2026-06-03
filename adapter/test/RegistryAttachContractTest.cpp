@@ -6,6 +6,7 @@
 #include "bs/kernel/registry/path_registry.h"
 #include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/attach_context.h"
 #include "bs/adapter/registry_bootstrap.h"
 
 #include <cstdio>
@@ -118,9 +119,11 @@ static int test_duplicate_decl_and_bind(PathRegistry* reg)
     return 0;
 }
 
-static int test_adapter_blocked_in_phase_p1(RegistryFacade* facade)
+static int test_adapter_blocked_in_phase_p1(AttachContext* ctx)
 {
-    REQUIRE(bs_adapter_registry_bootstrap_begin(facade) == 0);
+    RegistryFacade* facade = bs_adapter_attach_ctx_registry(ctx);
+    REQUIRE(facade != nullptr);
+    REQUIRE(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
     REQUIRE(bs_registry_facade_current_phase(facade) == BS_REGISTRY_PHASE_P1);
 
     PathEntry plugin{};
@@ -183,10 +186,18 @@ int main()
         ++failures;
     bs_registry_facade_destroy(f_phase);
 
-    RegistryFacade* f_p1 = bs_registry_facade_create();
-    if (!f_p1 || test_adapter_blocked_in_phase_p1(f_p1) != 0)
+    RegistryFacade* f_p1_ctx = nullptr;
+    AttachContext*  ctx_p1   = bs_adapter_attach_ctx_create();
+    if (!ctx_p1)
         ++failures;
-    bs_registry_facade_destroy(f_p1);
+    else
+    {
+        bs_adapter_attach_ctx_set_active(ctx_p1);
+        f_p1_ctx = bs_adapter_attach_ctx_registry(ctx_p1);
+        if (!f_p1_ctx || test_adapter_blocked_in_phase_p1(ctx_p1) != 0)
+            ++failures;
+        bs_adapter_attach_ctx_destroy(ctx_p1);
+    }
 
     bs_adapter_registry_shutdown_log();
 

@@ -60,7 +60,7 @@ int bs_adapter_log_bind_spdlog_bus(void)
 
 void bs_adapter_log_shutdown_if_bound(void)
 {
-    bs_attach_context_shutdown_all_logs();
+    bs_adapter_attach_ctx_shutdown_all_logs();
     bs_adapter_attach_mark_log_ready(0);
 }
 

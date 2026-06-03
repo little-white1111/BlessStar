@@ -27,7 +27,7 @@ static int write_tmp_rename_atomic(const char* final_path, const void* data, siz
         std::remove(tmp.c_str());
         return -1;
     }
-    if (bs_attach_fsync_file(f) != 0)
+    if (bs_adapter_attach_persist_fsync_file(f) != 0)
     {
         fclose(f);
         std::remove(tmp.c_str());

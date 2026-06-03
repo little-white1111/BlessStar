@@ -185,7 +185,7 @@ static int ensure_phase_p2(RegistryFacade* facade)
 
 static int invoke_plugin(AttachContext* ctx, const PluginDesc* plugin, int idx)
 {
-    RegistryFacade* facade = bs_attach_context_registry(ctx);
+    RegistryFacade* facade = bs_adapter_attach_ctx_registry(ctx);
     if (!facade || !plugin || !plugin->register_fn)
         return -1;
     if (!is_enabled(idx))
@@ -209,7 +209,7 @@ int bs_adapter_plugin_loader_load_one(AttachContext* ctx, const char* manifest_i
 
     init_runtime_defaults();
 
-    RegistryFacade* facade = bs_attach_context_registry(ctx);
+    RegistryFacade* facade = bs_adapter_attach_ctx_registry(ctx);
     if (!facade)
         return -1;
 
@@ -261,7 +261,7 @@ int bs_adapter_plugin_loader_load_all(AttachContext* ctx, const char* attach_man
             apply_yaml_config_resolved(path);
     }
 
-    RegistryFacade* facade = bs_attach_context_registry(ctx);
+    RegistryFacade* facade = bs_adapter_attach_ctx_registry(ctx);
     if (!facade)
         return -1;
 

@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_STATE_CONFIGEVENT_H
 #define BS_KERNEL_STATE_CONFIGEVENT_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: ConfigEvent heap objects are owned by publisher until destroy.
+ * Error semantics: bs_config_event_create returns nullptr on alloc failure.
+ * Platform notes: Published copies are cloned into EventBus pending queue.
+ */
+
 #include "ConfigState.h"
 
 #ifdef __cplusplus
@@ -36,12 +43,12 @@ extern "C"
         uint64_t        timestamp;
     } ConfigEvent;
 
-    const char* ConfigEventType_ToString(ConfigEventType type);
+    const char* bs_config_event_type_to_string(ConfigEventType type);
 
-    ConfigEvent* ConfigEvent_Create(const char* configPath, ConfigEventType type, ConfigState from,
-                                    ConfigState to, uint64_t version);
+    ConfigEvent* bs_config_event_create(const char* configPath, ConfigEventType type,
+                                        ConfigState from, ConfigState to, uint64_t version);
 
-    void ConfigEvent_Destroy(ConfigEvent* event);
+    void bs_config_event_destroy(ConfigEvent* event);
 
 #ifdef __cplusplus
 }

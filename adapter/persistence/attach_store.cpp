@@ -1,5 +1,6 @@
 #include "bs/adapter/persistence/attach_store.h"
 #include "bs/adapter/persistence/attach_wal.h"
+#include "bs/adapter/persistence/attach_watch.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -46,23 +47,24 @@ static void* attach_malloc(size_t n)
     return std::malloc(n);
 }
 
-extern "C" void bs_attach_store_set_malloc_hook(BsAttachMallocFn fn)
+extern "C" void bs_adapter_attach_persist_store_set_malloc_hook(BsAttachMallocFn fn)
 {
     g_malloc_hook = fn;
 }
 
-extern "C" void bs_attach_store_reset_malloc_hook(void)
+extern "C" void bs_adapter_attach_persist_store_reset_malloc_hook(void)
 {
     g_malloc_hook = nullptr;
 }
 
-void bs_attach_store_set_fsync_policy(BsAttachStore* store, BsAttachFsyncPolicy policy)
+void bs_adapter_attach_persist_store_set_fsync_policy(BsAttachStore*      store,
+                                                      BsAttachFsyncPolicy policy)
 {
     if (store)
         store->fsync_policy = policy;
 }
 
-BsAttachFsyncPolicy bs_attach_store_get_fsync_policy(const BsAttachStore* store)
+BsAttachFsyncPolicy bs_adapter_attach_persist_store_get_fsync_policy(const BsAttachStore* store)
 {
     return store ? store->fsync_policy : BS_ATTACH_FSYNC_BATCH_COMMIT;
 }
@@ -89,12 +91,24 @@ static std::string make_staging_path(const std::string& base_path, uint64_t epoc
 
 static uint32_t crc32_payload(const void* data, size_t len)
 {
-    return bs_attach_crc32(data, len);
+    return bs_adapter_attach_persist_crc32(data, len);
 }
 
 static uint32_t crc32_manifest_body(const std::string& body)
 {
-    return bs_attach_crc32(body.data(), body.size());
+    return bs_adapter_attach_persist_crc32(body.data(), body.size());
+}
+
+static void publish_watch_event(uint64_t epoch, const char* uri, BsAttachWatchStage stage,
+                                BsAttachWatchResult result)
+{
+    BsAttachWatchEvent ev{};
+    ev.epoch  = epoch;
+    ev.uri    = uri ? uri : "";
+    ev.stage  = stage;
+    ev.result = result;
+    (void)bs_adapter_attach_persist_watch_publish(
+        &ev); // WATCH-XV-4: publish failure never blocks commit.
 }
 
 static int write_file_atomic_ex(const char* path, const void* data, size_t len, bool fsync_tmp)
@@ -114,7 +128,7 @@ static int write_file_atomic_ex(const char* path, const void* data, size_t len, 
             return BS_ATTACH_ERR_IO;
         }
     }
-    if (fsync_tmp && bs_attach_fsync_file(f) != 0)
+    if (fsync_tmp && bs_adapter_attach_persist_fsync_file(f) != 0)
     {
         fclose(f);
         std::remove(tmp.c_str());
@@ -156,7 +170,7 @@ static int copy_file_sync(const std::string& src, const std::string& dst)
         if (!in)
             break;
     }
-    if (bs_attach_fsync_file(out) != 0)
+    if (bs_adapter_attach_persist_fsync_file(out) != 0)
     {
         fclose(out);
         return BS_ATTACH_ERR_IO;
@@ -310,7 +324,7 @@ static int save_manifest_file(BsAttachStore* store)
         std::remove(tmp.c_str());
         return BS_ATTACH_ERR_IO;
     }
-    if (should_fsync_manifest(store) && bs_attach_fsync_file(f) != 0)
+    if (should_fsync_manifest(store) && bs_adapter_attach_persist_fsync_file(f) != 0)
     {
         fclose(f);
         std::remove(tmp.c_str());
@@ -329,10 +343,10 @@ static void open_wal(BsAttachStore* store)
     if (!store || store->memory_only || store->wal)
         return;
     store->wal_path = derive_wal_path(store->manifest_path);
-    store->wal      = bs_attach_wal_open(store->wal_path.c_str());
+    store->wal      = bs_adapter_attach_persist_wal_open(store->wal_path.c_str());
 }
 
-BsAttachStore* bs_attach_store_open(const char* manifest_path)
+BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path)
 {
     auto* s = static_cast<BsAttachStore*>(attach_malloc(sizeof(BsAttachStore)));
     if (!s)
@@ -346,35 +360,36 @@ BsAttachStore* bs_attach_store_open(const char* manifest_path)
     s->manifest_path = manifest_path;
     if (load_manifest_file(s) != BS_ATTACH_OK)
     {
-        bs_attach_store_close(s);
+        bs_adapter_attach_persist_store_close(s);
         return nullptr;
     }
     open_wal(s);
     if (s->wal)
     {
-        (void)bs_attach_wal_recover_unfinished(s->wal, s->batch_epoch);
-        (void)bs_attach_wal_purge_old_segments(s->wal_path.c_str(), s->batch_epoch);
+        (void)bs_adapter_attach_persist_wal_recover_unfinished(s->wal, s->batch_epoch);
+        (void)bs_adapter_attach_persist_wal_purge_old_segments(s->wal_path.c_str(), s->batch_epoch);
     }
     return s;
 }
 
-void bs_attach_store_close(BsAttachStore* store)
+void bs_adapter_attach_persist_store_close(BsAttachStore* store)
 {
     if (!store)
         return;
     if (store->wal)
-        bs_attach_wal_close(store->wal);
+        bs_adapter_attach_persist_wal_close(store->wal);
     store->wal = nullptr;
     store->~BsAttachStore();
     std::free(store);
 }
 
-uint64_t bs_attach_store_batch_epoch(const BsAttachStore* store)
+uint64_t bs_adapter_attach_persist_store_batch_epoch(const BsAttachStore* store)
 {
     return store ? store->batch_epoch : 0;
 }
 
-int bs_attach_store_get_revision(const BsAttachStore* store, const char* uri, uint64_t* rev_out)
+int bs_adapter_attach_persist_store_get_revision(const BsAttachStore* store, const char* uri,
+                                                 uint64_t* rev_out)
 {
     if (!store || !uri || !rev_out)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -403,8 +418,8 @@ static int commit_one(BsAttachStore* store, const char* uri, const char* path, c
     return BS_ATTACH_OK;
 }
 
-int bs_attach_store_get_canonical_path(const BsAttachStore* store, const char* uri, char* out_path,
-                                       size_t out_cap)
+int bs_adapter_attach_persist_store_get_canonical_path(const BsAttachStore* store, const char* uri,
+                                                       char* out_path, size_t out_cap)
 {
     if (!store || !uri || !out_path || out_cap == 0)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -417,13 +432,14 @@ int bs_attach_store_get_canonical_path(const BsAttachStore* store, const char* u
     return BS_ATTACH_OK;
 }
 
-int bs_attach_store_commit_per_path(BsAttachStore* store, const char* uri, const void* data,
-                                    size_t len, uint64_t expected_rev)
+int bs_adapter_attach_persist_store_commit_per_path(BsAttachStore* store, const char* uri,
+                                                    const void* data, size_t len,
+                                                    uint64_t expected_rev)
 {
     if (!store || !uri || (!data && len > 0))
         return BS_ATTACH_ERR_INVALID_ARG;
     char path[4096];
-    if (bs_attach_uri_to_path(uri, path, sizeof(path)) != BS_ATTACH_OK)
+    if (bs_adapter_attach_persist_uri_to_path(uri, path, sizeof(path)) != BS_ATTACH_OK)
         return BS_ATTACH_ERR_INVALID_ARG;
     const int rc = commit_one(store, uri, path, data, len, expected_rev);
     if (rc != BS_ATTACH_OK)
@@ -432,7 +448,7 @@ int bs_attach_store_commit_per_path(BsAttachStore* store, const char* uri, const
     return save_manifest_file(store);
 }
 
-void bs_attach_store_batch_begin(BsAttachStore* store)
+void bs_adapter_attach_persist_store_batch_begin(BsAttachStore* store)
 {
     if (!store)
         return;
@@ -440,13 +456,13 @@ void bs_attach_store_batch_begin(BsAttachStore* store)
     store->batch_open = true;
 }
 
-int bs_attach_store_batch_stage(BsAttachStore* store, const char* uri, const void* data, size_t len,
-                                uint64_t expected_rev)
+int bs_adapter_attach_persist_store_batch_stage(BsAttachStore* store, const char* uri,
+                                                const void* data, size_t len, uint64_t expected_rev)
 {
     if (!store || !store->batch_open || !uri || (!data && len > 0))
         return BS_ATTACH_ERR_INVALID_ARG;
     char path[4096];
-    if (bs_attach_uri_to_path(uri, path, sizeof(path)) != BS_ATTACH_OK)
+    if (bs_adapter_attach_persist_uri_to_path(uri, path, sizeof(path)) != BS_ATTACH_OK)
         return BS_ATTACH_ERR_INVALID_ARG;
 
     StagedEntry e;
@@ -460,7 +476,7 @@ int bs_attach_store_batch_stage(BsAttachStore* store, const char* uri, const voi
     return BS_ATTACH_OK;
 }
 
-int bs_attach_store_batch_commit(BsAttachStore* store)
+int bs_adapter_attach_persist_store_batch_commit(BsAttachStore* store)
 {
     if (!store || !store->batch_open)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -471,12 +487,17 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
         const uint64_t current = (it == store->revisions.end()) ? 0 : it->second;
         if (current != e.expected_rev)
         {
-            bs_attach_store_batch_abort(store);
+            publish_watch_event(store->batch_epoch + 1, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_CAS,
+                                BS_ATTACH_WATCH_RESULT_FAIL);
+            bs_adapter_attach_persist_store_batch_abort(store);
             return BS_ATTACH_ERR_CONFLICT;
         }
     }
 
     const uint64_t next_epoch = store->batch_epoch + 1;
+    for (const auto& e : store->staged)
+        publish_watch_event(next_epoch, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_CAS,
+                            BS_ATTACH_WATCH_RESULT_OK);
 
     std::vector<BsAttachWalEntry> wal_entries;
     std::vector<std::string>      staging_paths;
@@ -500,13 +521,19 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
         open_wal(store);
         if (store->wal)
         {
-            const int wr = bs_attach_wal_append_batch(store->wal, next_epoch, wal_entries.data(),
-                                                      wal_entries.size());
+            const int wr = bs_adapter_attach_persist_wal_append_batch(
+                store->wal, next_epoch, wal_entries.data(), wal_entries.size());
             if (wr != BS_ATTACH_OK)
             {
-                bs_attach_store_batch_abort(store);
+                for (const auto& e : store->staged)
+                    publish_watch_event(next_epoch, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_WAL_FSYNC,
+                                        BS_ATTACH_WATCH_RESULT_FAIL);
+                bs_adapter_attach_persist_store_batch_abort(store);
                 return wr;
             }
+            for (const auto& e : store->staged)
+                publish_watch_event(next_epoch, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_WAL_FSYNC,
+                                    BS_ATTACH_WATCH_RESULT_OK);
         }
 
         for (size_t i = 0; i < store->staged.size(); ++i)
@@ -516,9 +543,14 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
                                              should_fsync_canonical(store));
             if (wr != BS_ATTACH_OK)
             {
-                bs_attach_store_batch_abort(store);
+                publish_watch_event(next_epoch, e.uri.c_str(),
+                                    BS_ATTACH_WATCH_STAGE_CANONICAL_WRITE,
+                                    BS_ATTACH_WATCH_RESULT_FAIL);
+                bs_adapter_attach_persist_store_batch_abort(store);
                 return wr;
             }
+            publish_watch_event(next_epoch, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_CANONICAL_WRITE,
+                                BS_ATTACH_WATCH_RESULT_OK);
         }
     }
 
@@ -535,15 +567,29 @@ int bs_attach_store_batch_commit(BsAttachStore* store)
 
     const int man = save_manifest_file(store);
     if (man != BS_ATTACH_OK)
+    {
+        for (const auto& e : store->staged)
+            publish_watch_event(next_epoch, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_MANIFEST_FLIP,
+                                BS_ATTACH_WATCH_RESULT_FAIL);
         return man;
+    }
+    for (const auto& e : store->staged)
+        publish_watch_event(next_epoch, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_MANIFEST_FLIP,
+                            BS_ATTACH_WATCH_RESULT_OK);
 
     if (!store->memory_only && store->wal)
-        (void)bs_attach_wal_mark_committed(store->wal, next_epoch);
+    {
+        const int wrc = bs_adapter_attach_persist_wal_mark_committed(store->wal, next_epoch);
+        for (const auto& e : store->staged)
+            publish_watch_event(next_epoch, e.uri.c_str(), BS_ATTACH_WATCH_STAGE_WAL_COMMIT,
+                                (wrc == BS_ATTACH_OK) ? BS_ATTACH_WATCH_RESULT_OK
+                                                      : BS_ATTACH_WATCH_RESULT_FAIL);
+    }
 
     return BS_ATTACH_OK;
 }
 
-void bs_attach_store_batch_abort(BsAttachStore* store)
+void bs_adapter_attach_persist_store_batch_abort(BsAttachStore* store)
 {
     if (!store)
         return;

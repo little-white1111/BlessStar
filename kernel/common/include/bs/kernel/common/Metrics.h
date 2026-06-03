@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_COMMON_METRICS_H
 #define BS_KERNEL_COMMON_METRICS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Metrics counters use atomics where implemented; see Metrics.cpp.
+ * Error semantics: Recording failures are silent drops in MVP.
+ * Platform notes: Lightweight counters for benchmarks and diagnostics.
+ */
+
 #ifdef __cplusplus
 #include <cstddef>
 #include <cstdint>

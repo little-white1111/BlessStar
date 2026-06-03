@@ -9,7 +9,7 @@
 #include <unistd.h>
 #endif
 
-int bs_attach_fsync_file(void* file_handle)
+int bs_adapter_attach_persist_fsync_file(void* file_handle)
 {
     FILE* f = (FILE*)file_handle;
     if (!f)

@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PARSER_JSON_UTF8_H
 #define BS_ADAPTER_PARSER_JSON_UTF8_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: pure functions; no shared state.
+ * Error semantics: returns 0/1 for decode/validation; no BsStatus.
+ * Platform notes: N/A.
+ */
+
 #include <stddef.h>
 
 #ifdef __cplusplus

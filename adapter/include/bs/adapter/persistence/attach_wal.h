@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PERSISTENCE_ATTACH_WAL_H
 #define BS_ADAPTER_PERSISTENCE_ATTACH_WAL_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: WAL append is serialized by attach_store caller.
+ * Error semantics: Non-zero on checksum or fsync failure.
+ * Platform notes: Write-ahead log segments for crash recovery (MVP subset).
+ */
+
 #include "bs/adapter/persistence/attach_store.h"
 
 #include <stddef.h>
@@ -36,24 +43,25 @@ extern "C"
         uint32_t    payload_checksum;
     } BsAttachWalEntry;
 
-    BsAttachWal* bs_attach_wal_open(const char* wal_path);
-    void         bs_attach_wal_close(BsAttachWal* wal);
+    BsAttachWal* bs_adapter_attach_persist_wal_open(const char* wal_path);
+    void         bs_adapter_attach_persist_wal_close(BsAttachWal* wal);
 
     /** Append batch intent and fsync (ATOM-XIV-3). */
-    int bs_attach_wal_append_batch(BsAttachWal* wal, uint64_t epoch,
-                                   const BsAttachWalEntry* entries, size_t count);
+    int bs_adapter_attach_persist_wal_append_batch(BsAttachWal* wal, uint64_t epoch,
+                                                   const BsAttachWalEntry* entries, size_t count);
 
     /** Record batch completion after manifest flip. */
-    int bs_attach_wal_mark_committed(BsAttachWal* wal, uint64_t epoch);
+    int bs_adapter_attach_persist_wal_mark_committed(BsAttachWal* wal, uint64_t epoch);
 
     /**
      * Remove orphan staging files for batches with epoch > @p manifest_epoch that lack commit.
      * @return BS_ATTACH_OK or BS_ATTACH_ERR_IO.
      */
-    int bs_attach_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch);
+    int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch);
 
     /** P3: purge history segments `active.wal.e{N}` when safe (see ATOM-PURGE-9..12). */
-    int bs_attach_wal_purge_old_segments(const char* active_wal_path, uint64_t manifest_epoch);
+    int bs_adapter_attach_persist_wal_purge_old_segments(const char* active_wal_path,
+                                                         uint64_t    manifest_epoch);
 
 #if defined(BS_TESTING)
     /**
@@ -65,8 +73,8 @@ extern "C"
      * @param max_records Max number of records to dump.
      * @param out Output stream.
      */
-    int bs_attach_wal_dump(BsAttachWal* wal, uint64_t epoch_filter, uint64_t from_offset,
-                           size_t max_records, FILE* out);
+    int bs_adapter_attach_persist_wal_dump(BsAttachWal* wal, uint64_t epoch_filter,
+                                           uint64_t from_offset, size_t max_records, FILE* out);
 #endif
 
 #ifdef __cplusplus

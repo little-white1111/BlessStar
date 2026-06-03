@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PARSER_CONFIG_V1_AST_H
 #define BS_ADAPTER_PARSER_CONFIG_V1_AST_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: not thread-safe; caller serializes ast create/destroy.
+ * Error semantics: create may return null on OOM; destroy accepts null.
+ * Platform notes: N/A.
+ */
+
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -33,8 +40,8 @@ extern "C"
         size_t               instructions_count;
     } ConfigV1Ast;
 
-    ConfigV1Ast* config_v1_ast_create(void);
-    void         config_v1_ast_destroy(ConfigV1Ast* ast);
+    ConfigV1Ast* bs_config_v1_ast_create(void);
+    void         bs_config_v1_ast_destroy(ConfigV1Ast* ast);
 
 #ifdef __cplusplus
 }

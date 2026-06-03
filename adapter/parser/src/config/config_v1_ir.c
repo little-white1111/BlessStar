@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-IRRequirementList* config_v1_build_manual_requirements(const ConfigV1Ast* ast)
+IRRequirementList* bs_config_v1_build_manual_requirements(const ConfigV1Ast* ast)
 {
     if (!ast || ast->manual_requirements_count == 0)
         return NULL;
@@ -43,12 +43,12 @@ IRRequirementList* config_v1_build_manual_requirements(const ConfigV1Ast* ast)
     return list;
 }
 
-IRInstructionList* ir_generate_config_v1_from_ast(const ConfigV1Ast* ast)
+IRInstructionList* bs_config_v1_generate_ir_from_ast(const ConfigV1Ast* ast)
 {
     if (!ast)
         return NULL;
 
-    IRInstructionList* list = ir_instruction_list_create();
+    IRInstructionList* list = bs_ir_instruction_list_create();
     if (!list)
         return NULL;
 
@@ -57,10 +57,10 @@ IRInstructionList* ir_generate_config_v1_from_ast(const ConfigV1Ast* ast)
         if (!it->type || !it->name)
             continue;
 
-        IRInstruction* instr = ir_instruction_create(it->type, it->name);
+        IRInstruction* instr = bs_ir_instruction_create(it->type, it->name);
         if (!instr)
         {
-            ir_instruction_list_destroy(list);
+            bs_ir_instruction_list_destroy(list);
             return NULL;
         }
 
@@ -68,15 +68,15 @@ IRInstructionList* ir_generate_config_v1_from_ast(const ConfigV1Ast* ast)
         {
             if (!m->key || !m->value)
                 continue;
-            IRMetadata* meta = ir_metadata_create(m->key, m->value);
+            IRMetadata* meta = bs_ir_metadata_create(m->key, m->value);
             if (meta)
-                ir_instruction_add_metadata(instr, meta);
+                bs_ir_instruction_add_metadata(instr, meta);
         }
 
-        if (ir_instruction_list_add(list, instr) != 0)
+        if (bs_ir_instruction_list_add(list, instr) != 0)
         {
-            ir_instruction_destroy(instr);
-            ir_instruction_list_destroy(list);
+            bs_ir_instruction_destroy(instr);
+            bs_ir_instruction_list_destroy(list);
             return NULL;
         }
     }

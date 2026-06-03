@@ -24,20 +24,20 @@ struct WatchManager
     std::shared_mutex                                          mutex;
 };
 
-WatchManager* WatchManager_Create()
+WatchManager* bs_watch_manager_create()
 {
     return new WatchManager();
 }
 
-void WatchManager_Destroy(WatchManager* wm)
+void bs_watch_manager_destroy(WatchManager* wm)
 {
     if (!wm)
         return;
     delete wm;
 }
 
-int WatchManager_AddWatch(WatchManager* wm, const char* path, WatchCallback callback,
-                          WatchMode mode, void* userData)
+int bs_watch_manager_add_watch(WatchManager* wm, const char* path, WatchCallback callback,
+                               WatchMode mode, void* userData)
 {
     if (!wm || !path || !callback)
         return -1;
@@ -55,7 +55,7 @@ int WatchManager_AddWatch(WatchManager* wm, const char* path, WatchCallback call
     return 0;
 }
 
-int WatchManager_RemoveWatch(WatchManager* wm, const char* path, WatchCallback callback)
+int bs_watch_manager_remove_watch(WatchManager* wm, const char* path, WatchCallback callback)
 {
     if (!wm || !path || !callback)
         return -1;
@@ -79,7 +79,8 @@ int WatchManager_RemoveWatch(WatchManager* wm, const char* path, WatchCallback c
     return 0;
 }
 
-int WatchManager_Notify(WatchManager* wm, const char* path, ConfigEventType type, const void* data)
+int bs_watch_manager_notify(WatchManager* wm, const char* path, ConfigEventType type,
+                            const void* data)
 {
     if (!wm || !path)
         return -1;

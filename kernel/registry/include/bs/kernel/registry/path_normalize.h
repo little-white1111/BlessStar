@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_REGISTRY_PATH_NORMALIZE_H
 #define BS_KERNEL_REGISTRY_PATH_NORMALIZE_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Pure functions on caller buffers; reentrant.
+ * Error semantics: Non-zero when normalization would overflow output buffer.
+ * Platform notes: Ensures registry keys use canonical slash form.
+ */
+
 #include "bs/kernel/registry/types.h"
 
 #ifdef __cplusplus

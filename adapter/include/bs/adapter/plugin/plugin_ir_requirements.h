@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PLUGIN_PLUGIN_IR_REQUIREMENTS_H
 #define BS_ADAPTER_PLUGIN_PLUGIN_IR_REQUIREMENTS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Requirement merge is read-only on IR lists post-parse.
+ * Error semantics: Filters instructions failing plugin-declared requirements.
+ * Platform notes: Extends kernel builtin requirements at attach time.
+ */
+
 #ifdef __cplusplus
 extern "C"
 {

@@ -15,16 +15,16 @@ int main()
     assert(active != nullptr);
     assert(active->count > 0u);
 
-    IRInstructionList* list = ir_instruction_list_create();
-    IRInstruction*     ok   = ir_instruction_create("type", "n");
-    assert(ir_instruction_list_add(list, ok) == 0);
+    IRInstructionList* list = bs_ir_instruction_list_create();
+    IRInstruction*     ok   = bs_ir_instruction_create("type", "n");
+    assert(bs_ir_instruction_list_add(list, ok) == 0);
     assert(bs_adapter_requirement_filter_verify_instructions(list, active) == 0);
 
-    IRInstruction* bad = ir_instruction_create("not_in_manifest", "n2");
-    assert(ir_instruction_list_add(list, bad) == 0);
+    IRInstruction* bad = bs_ir_instruction_create("not_in_manifest", "n2");
+    assert(bs_ir_instruction_list_add(list, bad) == 0);
     assert(bs_adapter_requirement_filter_verify_instructions(list, active) == 1);
 
-    ir_instruction_list_destroy(list);
+    bs_ir_instruction_list_destroy(list);
     bs_requirement_list_free(active);
     return 0;
 }

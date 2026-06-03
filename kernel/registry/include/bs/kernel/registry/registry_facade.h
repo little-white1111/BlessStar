@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_REGISTRY_REGISTRY_FACADE_H
 #define BS_KERNEL_REGISTRY_REGISTRY_FACADE_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Facade uses internal hub locking; see registry_facade.cpp.
+ * Error semantics: BS_REGISTRY_ERR_* / BsStatus; no exceptions across extern "C" boundary.
+ * Platform notes: Primary registry C ABI per ADR-BS-ABI-001.
+ */
+
 #include "bs/kernel/common/bs_status.h"
 #include "bs/kernel/registry/types.h"
 

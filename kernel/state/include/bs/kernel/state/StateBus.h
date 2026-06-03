@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_STATE_STATEBUS_H
 #define BS_KERNEL_STATE_STATEBUS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Internally synchronized (shared_mutex); safe for concurrent readers.
+ * Error semantics: 0 ok; -1 invalid; -2 missing path; -3 alloc failure on snapshot copy.
+ * Platform notes: Owns path-keyed StateEntry map; snapshots are malloc'd copies for callers.
+ */
+
 #include "ConfigState.h"
 
 #ifdef __cplusplus
@@ -29,20 +36,20 @@ extern "C"
 
     typedef struct StateBus StateBus;
 
-    StateBus* StateBus_Create();
+    StateBus* bs_state_bus_create();
 
-    void StateBus_Destroy(StateBus* bus);
+    void bs_state_bus_destroy(StateBus* bus);
 
-    int StateBus_SetState(StateBus* bus, const char* path, ConfigState state, const void* data,
-                          size_t dataSize);
+    int bs_state_bus_set_state(StateBus* bus, const char* path, ConfigState state, const void* data,
+                               size_t dataSize);
 
-    int StateBus_GetState(StateBus* bus, const char* path, StateEntry** entry);
+    int bs_state_bus_get_state(StateBus* bus, const char* path, StateEntry** entry);
 
-    int StateBus_GetSnapshot(StateBus* bus, const char* path, void** data, size_t* size);
+    int bs_state_bus_get_snapshot(StateBus* bus, const char* path, void** data, size_t* size);
 
-    StateEntry* StateBus_GetAllEntries(StateBus* bus, size_t* count);
+    StateEntry* bs_state_bus_get_all_entries(StateBus* bus, size_t* count);
 
-    void StateBus_FreeEntries(StateEntry* entries, size_t count);
+    void bs_state_bus_free_entries(StateEntry* entries, size_t count);
 
 #ifdef __cplusplus
 }

@@ -27,12 +27,12 @@ static void destroy_instructions(ConfigV1Instruction* head)
     }
 }
 
-ConfigV1Ast* config_v1_ast_create(void)
+ConfigV1Ast* bs_config_v1_ast_create(void)
 {
     return (ConfigV1Ast*)calloc(1, sizeof(ConfigV1Ast));
 }
 
-void config_v1_ast_destroy(ConfigV1Ast* ast)
+void bs_config_v1_ast_destroy(ConfigV1Ast* ast)
 {
     if (!ast)
         return;

@@ -1,6 +1,6 @@
 #include "attach_crc32.h"
 
-uint32_t bs_attach_crc32(const void* data, size_t len)
+uint32_t bs_adapter_attach_persist_crc32(const void* data, size_t len)
 {
     static uint32_t table[256];
     static int      init = 0;

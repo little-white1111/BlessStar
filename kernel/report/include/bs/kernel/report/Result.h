@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_REPORT_RESULT_H
 #define BS_KERNEL_REPORT_RESULT_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Result objects are independent heap nodes; not shared across threads.
+ * Error semantics: Factory helpers return NULL on OOM; bs_result_code_from_bs_status maps domains.
+ * Platform notes: Rich single-point errors complement thin BsStatus on IO paths.
+ */
+
 #include "bs/kernel/common/bs_status.h"
 
 #include <stdint.h>
@@ -41,20 +48,20 @@ extern "C"
         uint64_t    retry_after_ms;
     };
 
-    Result* result_create(ResultCode code, const char* message);
-    void    result_destroy(Result* result);
+    Result* bs_result_create(ResultCode code, const char* message);
+    void    bs_result_destroy(Result* result);
 
-    Result* result_success(void);
-    Result* result_error(ResultCode code, const char* message);
-    Result* result_error_with_detail(ResultCode code, const char* message, const char* detail);
+    Result* bs_result_success(void);
+    Result* bs_result_error(ResultCode code, const char* message);
+    Result* bs_result_error_with_detail(ResultCode code, const char* message, const char* detail);
 
-    int result_is_success(const Result* result);
-    int result_is_error(const Result* result);
-    int result_needs_retry(const Result* result);
+    int bs_result_is_success(const Result* result);
+    int bs_result_is_error(const Result* result);
+    int bs_result_needs_retry(const Result* result);
 
-    const char* result_code_to_string(ResultCode code);
-    char*       result_to_string(const Result* result);
-    char*       result_to_json(const Result* result);
+    const char* bs_result_code_to_string(ResultCode code);
+    char*       bs_result_to_string(const Result* result);
+    char*       bs_result_to_json(const Result* result);
 
     ResultCode bs_result_code_from_bs_status(BsStatus status);
 

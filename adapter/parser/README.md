@@ -4,16 +4,11 @@
 
 Production reload and tests use:
 
-- `bs_config_parse_bytes()` in `include/bs/adapter/parser/config_parse.h`
-- `json_lexer` / `json_parser` -> `ConfigV1Ast` -> `ir_generate_config_v1_from_ast`
+- `bs_adapter_parser_parse_bytes()` in `include/bs/adapter/parser/config_parse.h`
+- `bs_json_lexer_*` / `bs_json_parse_config_v1` -> `ConfigV1Ast` -> `bs_config_v1_generate_ir_from_ast`
 
-Canonical bytes may be produced off-chain by `tools/normalize/` (see repo root).
+Canonical bytes may be produced off-chain by App SDK or `tools/normalize/` (see repo root).
 
-## Legacy skeleton (not the MVP path)
+## Removed legacy skeleton (XVII-DOC-1)
 
-The following remain from early skeleton work and are **not** wired into `reload_gate_default`:
-
-- `Parser.h` / `parser.c` — single `IRInstruction*` API
-- `FormatAdapter`, `ASTNode` — generic workflow placeholders
-
-Do not extend these for v1 config; use `config_parse.h` instead.
+PascalCase `Parser.h` / `FormatAdapter.h` / `ASTNode.h` / `SchemaRegistry.h` / `IRGenerator.h` / `MetaExecutor.h` (formerly `LEGACY-NOT-BUILT`) were **removed** in change **17.22**. MVP config parsing is **only** via `config_parse.h` and the linked `config_*` / `json_*` sources in `bs_adapter_parser`.

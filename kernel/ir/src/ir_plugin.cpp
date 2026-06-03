@@ -33,10 +33,10 @@ extern "C" int bs_ir_plugin_apply_visitors(IRInstructionList* list)
 {
     if (!list)
         return 0;
-    const size_t n = ir_instruction_list_size(list);
+    const size_t n = bs_ir_instruction_list_size(list);
     for (size_t i = 0; i < n; ++i)
     {
-        IRInstruction* instr = ir_instruction_list_get(list, i);
+        IRInstruction* instr = bs_ir_instruction_list_get(list, i);
         if (!instr)
             return -1;
         for (const auto& slot : g_visitors)

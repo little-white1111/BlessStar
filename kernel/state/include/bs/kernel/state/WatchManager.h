@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_STATE_WATCHMANAGER_H
 #define BS_KERNEL_STATE_WATCHMANAGER_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Internally synchronized; callbacks run on notify thread without reentrancy guard.
+ * Error semantics: 0 ok; -1 invalid; -2 remove miss; WATCH_MODE_ONCE auto-removes after fire.
+ * Platform notes: Path-keyed watcher lists; pairs with ConfigManager state notifications.
+ */
+
 #include "ConfigEvent.h"
 
 #ifdef __cplusplus
@@ -22,17 +29,17 @@ extern "C"
 
     typedef struct WatchManager WatchManager;
 
-    WatchManager* WatchManager_Create();
+    WatchManager* bs_watch_manager_create();
 
-    void WatchManager_Destroy(WatchManager* wm);
+    void bs_watch_manager_destroy(WatchManager* wm);
 
-    int WatchManager_AddWatch(WatchManager* wm, const char* path, WatchCallback callback,
-                              WatchMode mode, void* userData);
+    int bs_watch_manager_add_watch(WatchManager* wm, const char* path, WatchCallback callback,
+                                   WatchMode mode, void* userData);
 
-    int WatchManager_RemoveWatch(WatchManager* wm, const char* path, WatchCallback callback);
+    int bs_watch_manager_remove_watch(WatchManager* wm, const char* path, WatchCallback callback);
 
-    int WatchManager_Notify(WatchManager* wm, const char* path, ConfigEventType type,
-                            const void* data);
+    int bs_watch_manager_notify(WatchManager* wm, const char* path, ConfigEventType type,
+                                const void* data);
 
 #ifdef __cplusplus
 }

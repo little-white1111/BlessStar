@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_REGISTRY_REGISTRY_HUB_H
 #define BS_KERNEL_REGISTRY_REGISTRY_HUB_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Hub mutex protects provider tables.
+ * Error semantics: Registration collisions return domain-specific error codes.
+ * Platform notes: Backing store for facade lookups.
+ */
+
 #include "bs/kernel/registry/types.h"
 
 #ifdef __cplusplus

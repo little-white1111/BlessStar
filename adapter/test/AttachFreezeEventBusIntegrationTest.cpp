@@ -1,59 +1,52 @@
 /**
- * IMPL-08-09 / R8-07 A: attach freeze may notify external EventBus without ConfigManager in
- * bootstrap.
+ * IMPL-08-09 / R8-07 / B-04: attach freeze notifies via ConfigManager EventBus (not ad-hoc bus).
+ * Expect at least one CONFIG_EVENT_ENTER_ACTIVE (LOADING->ACTIVE) on
+ * BS_ADAPTER_CONFIG_PATH_ATTACH_FROZEN.
  */
 
 #include "bs/kernel/state/ConfigEvent.h"
-#include "bs/kernel/state/EventBus.h"
+#include "bs/kernel/state/ConfigState.h"
 
+#include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/registry_bootstrap.h"
 
 #include <cassert>
 #include <cstring>
 
-static EventBus* g_bus           = nullptr;
-static int       g_listener_hits = 0;
-
-static void on_attach_frozen(RegistryFacade* /*facade*/, void* user_data)
-{
-    auto*       bus = static_cast<EventBus*>(user_data);
-    ConfigEvent ev{};
-    ev.configPath = "/config/attach/frozen";
-    ev.type       = CONFIG_EVENT_ENTER_ACTIVE;
-    ev.fromState  = CONFIG_STATE_LOADING;
-    ev.toState    = CONFIG_STATE_ACTIVE;
-    ev.version    = 1;
-    ev.timestamp  = 1;
-    assert(EventBus_Publish(bus, &ev) == 0);
-}
+static int g_listener_hits = 0;
 
 static void listener(const ConfigEvent* event, void* /*user*/)
 {
-    if (event && event->configPath && std::strcmp(event->configPath, "/config/attach/frozen") == 0)
+    if (!event || !event->configPath ||
+        std::strcmp(event->configPath, BS_ADAPTER_CONFIG_PATH_ATTACH_FROZEN) != 0)
+        return;
+    if (event->type == CONFIG_EVENT_ENTER_ACTIVE && event->fromState == CONFIG_STATE_LOADING &&
+        event->toState == CONFIG_STATE_ACTIVE)
         ++g_listener_hits;
 }
 
 int main()
 {
-    g_bus = EventBus_Create();
-    assert(g_bus != nullptr);
-    assert(EventBus_Subscribe(g_bus, "/config/attach/frozen", listener, nullptr) == 0);
-
-    bs_adapter_registry_register_state_notifier(on_attach_frozen, g_bus);
-
-    AttachContext* ctx = bs_attach_context_create();
+    AttachContext* ctx = bs_adapter_attach_ctx_create();
     assert(ctx != nullptr);
+
+    EventBus* bus = bs_adapter_attach_config_event_bus(ctx);
+    assert(bus != nullptr);
+    assert(bs_event_bus_subscribe(bus, BS_ADAPTER_CONFIG_PATH_ATTACH_FROZEN, listener, nullptr) ==
+           0);
+
     assert(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
     assert(bs_adapter_registry_bootstrap_register_standard_io_ctx(ctx) == 0);
     assert(bs_adapter_registry_bootstrap_freeze_ctx(ctx) == 0);
 
-    assert(EventBus_Drain(g_bus) == 0);
-    assert(g_listener_hits == 1);
+    assert(g_listener_hits >= 1);
 
-    bs_adapter_registry_clear_state_notifier();
-    bs_attach_context_destroy(ctx);
+    ConfigState st = CONFIG_STATE_INITIAL;
+    assert(bs_adapter_attach_config_get_state(ctx, BS_ADAPTER_CONFIG_PATH_ATTACH_FROZEN, &st) == 0);
+    assert(st == CONFIG_STATE_ACTIVE);
+
+    bs_adapter_attach_ctx_destroy(ctx);
     bs_adapter_registry_shutdown_log();
-    EventBus_Destroy(g_bus);
     return 0;
 }

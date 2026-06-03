@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_COMMON_MEMORY_POOL_H
 #define BS_KERNEL_COMMON_MEMORY_POOL_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Pool not thread-safe unless documented per pool instance.
+ * Error semantics: Alloc returns NULL on exhaustion; free tolerates NULL.
+ * Platform notes: Optional arena for attach/reload hot paths.
+ */
+
 #ifdef __cplusplus
 #include <cstddef>
 #include <cstdint>

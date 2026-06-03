@@ -245,7 +245,7 @@ static int match_literal(JsonLexer* lex, const char* lit)
     return 1;
 }
 
-void json_lexer_init(JsonLexer* lex, const char* data, size_t len)
+void bs_json_lexer_init(JsonLexer* lex, const char* data, size_t len)
 {
     if (!lex)
         return;
@@ -258,7 +258,7 @@ void json_lexer_init(JsonLexer* lex, const char* data, size_t len)
     lex->current   = make_token(lex, JSON_TOK_EOF, data, 0, 1, 1);
 }
 
-JsonToken json_lexer_next(JsonLexer* lex)
+JsonToken bs_json_lexer_next(JsonLexer* lex)
 {
     if (!lex || lex->has_error)
         return lex ? lex->current : (JsonToken){JSON_TOK_ERROR, NULL, 0, 0, 0};
@@ -334,7 +334,7 @@ JsonToken json_lexer_next(JsonLexer* lex)
     return lex->current;
 }
 
-const JsonToken* json_lexer_current(const JsonLexer* lex)
+const JsonToken* bs_json_lexer_current(const JsonLexer* lex)
 {
     return lex ? &lex->current : NULL;
 }

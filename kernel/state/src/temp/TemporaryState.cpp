@@ -18,7 +18,8 @@ struct TemporaryState
     bool          isValidated;
 };
 
-TemporaryState* TemporaryState_Create(const char* path, const void* newConfig, size_t configSize)
+TemporaryState* bs_temporary_state_create(const char* path, const void* newConfig,
+                                          size_t configSize)
 {
     if (!path)
         return nullptr;
@@ -33,8 +34,8 @@ TemporaryState* TemporaryState_Create(const char* path, const void* newConfig, s
     ts->configSize   = 0;
     ts->isActive     = false;
     ts->isValidated  = false;
-    ts->sm           = StateMachine_Create(path);
-    ts->tempBus      = StateBus_Create();
+    ts->sm           = bs_state_machine_create(path);
+    ts->tempBus      = bs_state_bus_create();
 
     if (newConfig && configSize > 0)
     {
@@ -48,14 +49,14 @@ TemporaryState* TemporaryState_Create(const char* path, const void* newConfig, s
 
     if (!ts->sm || !ts->tempBus)
     {
-        TemporaryState_Destroy(ts);
+        bs_temporary_state_destroy(ts);
         return nullptr;
     }
 
     return ts;
 }
 
-void TemporaryState_Destroy(TemporaryState* ts)
+void bs_temporary_state_destroy(TemporaryState* ts)
 {
     if (!ts)
         return;
@@ -65,35 +66,37 @@ void TemporaryState_Destroy(TemporaryState* ts)
     {
         free(ts->newConfig);
     }
-    StateMachine_Destroy(ts->sm);
-    StateBus_Destroy(ts->tempBus);
+    bs_state_machine_destroy(ts->sm);
+    bs_state_bus_destroy(ts->tempBus);
     delete ts;
 }
 
-int TemporaryState_Activate(TemporaryState* ts)
+int bs_temporary_state_activate(TemporaryState* ts)
 {
     if (!ts)
         return -1;
     if (ts->isActive)
         return 0;
 
-    int ret = StateMachine_Transition(ts->sm, CONFIG_STATE_LOADING);
+    int ret = bs_state_machine_transition(ts->sm, CONFIG_STATE_LOADING);
     if (ret != 0)
         return -2;
 
-    StateBus_SetState(ts->tempBus, ts->path, CONFIG_STATE_LOADING, ts->newConfig, ts->configSize);
+    bs_state_bus_set_state(ts->tempBus, ts->path, CONFIG_STATE_LOADING, ts->newConfig,
+                           ts->configSize);
 
-    ret = StateMachine_Transition(ts->sm, CONFIG_STATE_ACTIVE);
+    ret = bs_state_machine_transition(ts->sm, CONFIG_STATE_ACTIVE);
     if (ret != 0)
         return -3;
 
-    StateBus_SetState(ts->tempBus, ts->path, CONFIG_STATE_ACTIVE, ts->newConfig, ts->configSize);
+    bs_state_bus_set_state(ts->tempBus, ts->path, CONFIG_STATE_ACTIVE, ts->newConfig,
+                           ts->configSize);
 
     ts->isActive = true;
     return 0;
 }
 
-int TemporaryState_Validate(TemporaryState* ts)
+int bs_temporary_state_validate(TemporaryState* ts)
 {
     if (!ts || !ts->isActive)
         return -1;
@@ -105,12 +108,12 @@ int TemporaryState_Validate(TemporaryState* ts)
     return 0;
 }
 
-int TemporaryState_Commit(TemporaryState* ts)
+int bs_temporary_state_commit(TemporaryState* ts)
 {
     if (!ts || !ts->isActive || !ts->isValidated)
         return -1;
 
-    int ret = StateMachine_Transition(ts->sm, CONFIG_STATE_CLOSED);
+    int ret = bs_state_machine_transition(ts->sm, CONFIG_STATE_CLOSED);
     if (ret != 0)
         return -2;
 
@@ -118,29 +121,29 @@ int TemporaryState_Commit(TemporaryState* ts)
     return 0;
 }
 
-int TemporaryState_Rollback(TemporaryState* ts)
+int bs_temporary_state_rollback(TemporaryState* ts)
 {
     if (!ts)
         return -1;
 
-    int ret = StateMachine_Transition(ts->sm, CONFIG_STATE_ERROR);
+    int ret = bs_state_machine_transition(ts->sm, CONFIG_STATE_ERROR);
     if (ret != 0)
-        StateMachine_Transition(ts->sm, CONFIG_STATE_CLOSED);
+        bs_state_machine_transition(ts->sm, CONFIG_STATE_CLOSED);
     else
-        StateMachine_Transition(ts->sm, CONFIG_STATE_CLOSED);
+        bs_state_machine_transition(ts->sm, CONFIG_STATE_CLOSED);
 
     ts->isActive = false;
     return 0;
 }
 
-ConfigState TemporaryState_GetCurrentState(const TemporaryState* ts)
+ConfigState bs_temporary_state_get_current_state(const TemporaryState* ts)
 {
     if (!ts)
         return CONFIG_STATE_ERROR;
-    return StateMachine_GetCurrentState(ts->sm);
+    return bs_state_machine_get_current_state(ts->sm);
 }
 
-int TemporaryState_IsActive(const TemporaryState* ts)
+int bs_temporary_state_is_active(const TemporaryState* ts)
 {
     if (!ts)
         return 0;

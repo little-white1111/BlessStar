@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PLUGIN_PLUGIN_MANIFEST_PATHS_H
 #define BS_ADAPTER_PLUGIN_PLUGIN_MANIFEST_PATHS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Path resolution is pure on caller buffers.
+ * Error semantics: Non-zero when manifest path cannot be composed within cap.
+ * Platform notes: YAML manifest discovery for static plugins.
+ */
+
 #include <stddef.h>
 
 #ifdef __cplusplus

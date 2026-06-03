@@ -7,6 +7,6 @@
 inline void day12_wire_reload_defaults(ReloadBatchController* ctrl,
                                        BsAttachScheme         scheme = BS_ATTACH_SCHEME_PER_PATH)
 {
-    bs_reload_batch_controller_set_attach_scheme(ctrl, scheme);
-    bs_reload_batch_controller_set_manifest_path(ctrl, nullptr);
+    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, scheme);
+    bs_adapter_attach_reload_batch_set_manifest_path(ctrl, nullptr);
 }

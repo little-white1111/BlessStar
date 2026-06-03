@@ -26,21 +26,21 @@ struct EventBus
     std::deque<ConfigEvent*>                                    pending;
 };
 
-EventBus* EventBus_Create()
+EventBus* bs_event_bus_create()
 {
     return new EventBus();
 }
 
-void EventBus_Destroy(EventBus* bus)
+void bs_event_bus_destroy(EventBus* bus)
 {
     if (!bus)
         return;
     for (ConfigEvent* ev : bus->pending)
-        ConfigEvent_Destroy(ev);
+        bs_config_event_destroy(ev);
     delete bus;
 }
 
-int EventBus_Subscribe(EventBus* bus, const char* path, EventListener listener, void* userData)
+int bs_event_bus_subscribe(EventBus* bus, const char* path, EventListener listener, void* userData)
 {
     if (!bus || !path || !listener)
         return -1;
@@ -56,7 +56,7 @@ int EventBus_Subscribe(EventBus* bus, const char* path, EventListener listener, 
     return 0;
 }
 
-int EventBus_Unsubscribe(EventBus* bus, const char* path, EventListener listener)
+int bs_event_bus_unsubscribe(EventBus* bus, const char* path, EventListener listener)
 {
     if (!bus || !path || !listener)
         return -1;
@@ -80,13 +80,13 @@ int EventBus_Unsubscribe(EventBus* bus, const char* path, EventListener listener
     return 0;
 }
 
-int EventBus_Publish(EventBus* bus, const ConfigEvent* event)
+int bs_event_bus_publish(EventBus* bus, const ConfigEvent* event)
 {
     if (!bus || !event || !event->configPath)
         return -1;
 
-    ConfigEvent* copy = ConfigEvent_Create(event->configPath, event->type, event->fromState,
-                                           event->toState, event->version);
+    ConfigEvent* copy = bs_config_event_create(event->configPath, event->type, event->fromState,
+                                               event->toState, event->version);
     if (!copy)
         return -1;
 
@@ -95,7 +95,7 @@ int EventBus_Publish(EventBus* bus, const ConfigEvent* event)
     return 0;
 }
 
-int EventBus_Drain(EventBus* bus)
+int bs_event_bus_drain(EventBus* bus)
 {
     if (!bus)
         return -1;
@@ -110,7 +110,7 @@ int EventBus_Drain(EventBus* bus)
     {
         if (!event || !event->configPath)
         {
-            ConfigEvent_Destroy(event);
+            bs_config_event_destroy(event);
             continue;
         }
 
@@ -118,7 +118,7 @@ int EventBus_Drain(EventBus* bus)
         auto                                it = bus->listeners.find(event->configPath);
         if (it == bus->listeners.end())
         {
-            ConfigEvent_Destroy(event);
+            bs_config_event_destroy(event);
             continue;
         }
 
@@ -132,7 +132,7 @@ int EventBus_Drain(EventBus* bus)
             bs_reentrancy_leave_state_callback();
         }
 
-        ConfigEvent_Destroy(event);
+        bs_config_event_destroy(event);
     }
 
     return 0;

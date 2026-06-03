@@ -16,12 +16,12 @@ struct StateBus
     std::shared_mutex                            mutex;
 };
 
-StateBus* StateBus_Create()
+StateBus* bs_state_bus_create()
 {
     return new StateBus();
 }
 
-void StateBus_Destroy(StateBus* bus)
+void bs_state_bus_destroy(StateBus* bus)
 {
     if (!bus)
         return;
@@ -41,8 +41,8 @@ void StateBus_Destroy(StateBus* bus)
     delete bus;
 }
 
-int StateBus_SetState(StateBus* bus, const char* path, ConfigState state, const void* data,
-                      size_t dataSize)
+int bs_state_bus_set_state(StateBus* bus, const char* path, ConfigState state, const void* data,
+                           size_t dataSize)
 {
     if (!bus || !path)
         return -1;
@@ -91,7 +91,7 @@ int StateBus_SetState(StateBus* bus, const char* path, ConfigState state, const 
     return 0;
 }
 
-int StateBus_GetState(StateBus* bus, const char* path, StateEntry** entry)
+int bs_state_bus_get_state(StateBus* bus, const char* path, StateEntry** entry)
 {
     if (!bus || !path || !entry)
         return -1;
@@ -109,7 +109,7 @@ int StateBus_GetState(StateBus* bus, const char* path, StateEntry** entry)
     return 0;
 }
 
-int StateBus_GetSnapshot(StateBus* bus, const char* path, void** data, size_t* size)
+int bs_state_bus_get_snapshot(StateBus* bus, const char* path, void** data, size_t* size)
 {
     if (!bus || !path || !data || !size)
         return -1;
@@ -133,7 +133,7 @@ int StateBus_GetSnapshot(StateBus* bus, const char* path, void** data, size_t* s
     return 0;
 }
 
-StateEntry* StateBus_GetAllEntries(StateBus* bus, size_t* count)
+StateEntry* bs_state_bus_get_all_entries(StateBus* bus, size_t* count)
 {
     if (!bus || !count)
         return nullptr;
@@ -180,7 +180,7 @@ StateEntry* StateBus_GetAllEntries(StateBus* bus, size_t* count)
     return result;
 }
 
-void StateBus_FreeEntries(StateEntry* entries, size_t count)
+void bs_state_bus_free_entries(StateEntry* entries, size_t count)
 {
     if (!entries)
         return;

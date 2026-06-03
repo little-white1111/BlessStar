@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_IR_METADATA_H
 #define BS_KERNEL_IR_METADATA_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Not thread-safe; one Metadata object per owner thread.
+ * Error semantics: Setters return -1 on alloc failure; getters return -1 if key/type mismatch.
+ * Platform notes: Linked-list key/value store; binary values are heap copies.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -56,29 +63,29 @@ extern "C"
         size_t         count;
     };
 
-    Metadata* metadata_create(void);
-    void      metadata_destroy(Metadata* meta);
+    Metadata* bs_metadata_create(void);
+    void      bs_metadata_destroy(Metadata* meta);
 
-    int metadata_set_string(Metadata* meta, const char* key, const char* value);
-    int metadata_set_integer(Metadata* meta, const char* key, int64_t value);
-    int metadata_set_double(Metadata* meta, const char* key, double value);
-    int metadata_set_boolean(Metadata* meta, const char* key, int value);
-    int metadata_set_binary(Metadata* meta, const char* key, const uint8_t* data, size_t length);
+    int bs_metadata_set_string(Metadata* meta, const char* key, const char* value);
+    int bs_metadata_set_integer(Metadata* meta, const char* key, int64_t value);
+    int bs_metadata_set_double(Metadata* meta, const char* key, double value);
+    int bs_metadata_set_boolean(Metadata* meta, const char* key, int value);
+    int bs_metadata_set_binary(Metadata* meta, const char* key, const uint8_t* data, size_t length);
 
-    int metadata_get_string(const Metadata* meta, const char* key, const char** value);
-    int metadata_get_integer(const Metadata* meta, const char* key, int64_t* value);
-    int metadata_get_double(const Metadata* meta, const char* key, double* value);
-    int metadata_get_boolean(const Metadata* meta, const char* key, int* value);
-    int metadata_get_binary(const Metadata* meta, const char* key, const uint8_t** data,
-                            size_t* length);
+    int bs_metadata_get_string(const Metadata* meta, const char* key, const char** value);
+    int bs_metadata_get_integer(const Metadata* meta, const char* key, int64_t* value);
+    int bs_metadata_get_double(const Metadata* meta, const char* key, double* value);
+    int bs_metadata_get_boolean(const Metadata* meta, const char* key, int* value);
+    int bs_metadata_get_binary(const Metadata* meta, const char* key, const uint8_t** data,
+                               size_t* length);
 
-    int    metadata_has_key(const Metadata* meta, const char* key);
-    void   metadata_remove(Metadata* meta, const char* key);
-    size_t metadata_count(const Metadata* meta);
-    void   metadata_clear(Metadata* meta);
+    int    bs_metadata_has_key(const Metadata* meta, const char* key);
+    void   bs_metadata_remove(Metadata* meta, const char* key);
+    size_t bs_metadata_count(const Metadata* meta);
+    void   bs_metadata_clear(Metadata* meta);
 
-    Metadata* metadata_clone(const Metadata* meta);
-    int       metadata_merge(Metadata* dest, const Metadata* src);
+    Metadata* bs_metadata_clone(const Metadata* meta);
+    int       bs_metadata_merge(Metadata* dest, const Metadata* src);
 
 #ifdef __cplusplus
 }

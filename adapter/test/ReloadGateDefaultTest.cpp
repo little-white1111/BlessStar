@@ -51,45 +51,45 @@ int main()
 {
     assert(bs_adapter_log_bind_memory_bus(noop_log, nullptr) == 0);
 
-    ReloadBatchController* ctrl = bs_reload_batch_controller_create(4);
+    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(4);
     assert(ctrl != nullptr);
-    bs_reload_batch_controller_set_read_fn(ctrl, ok_read, nullptr);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, ok_read, nullptr);
     day12_wire_reload_defaults(ctrl);
     /* gate_fn intentionally unset -> default parse + ir_gate */
 
-    assert(bs_reload_batch_add_path(ctrl, "file:///ok") == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
-    assert(bs_reload_batch_path_state(ctrl, "file:///ok") == BS_ORCH_PENDING);
-    bs_reload_batch_controller_destroy(ctrl);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///ok") == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///ok") == BS_ORCH_PENDING);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
-    ctrl = bs_reload_batch_controller_create(4);
-    bs_reload_batch_controller_set_read_fn(ctrl, ok_read, nullptr);
-    bs_reload_batch_controller_use_default_gate(ctrl);
+    ctrl = bs_adapter_attach_reload_batch_create(4);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, ok_read, nullptr);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
     day12_wire_reload_defaults(ctrl);
-    assert(bs_reload_batch_add_path(ctrl, "file:///ok2") == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///ok2") == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
 
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
-    ctrl = bs_reload_batch_controller_create(4);
-    bs_reload_batch_controller_set_read_fn(ctrl, bad_parse_read, nullptr);
-    bs_reload_batch_controller_use_default_gate(ctrl);
+    ctrl = bs_adapter_attach_reload_batch_create(4);
+    bs_adapter_attach_reload_batch_set_read_fn(ctrl, bad_parse_read, nullptr);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
     day12_wire_reload_defaults(ctrl);
-    Report* report = report_create("reload_gate_parse");
+    Report* report = bs_report_create("reload_gate_parse");
     assert(report != nullptr);
-    bs_reload_batch_controller_set_report(ctrl, report);
-    assert(bs_reload_batch_add_path(ctrl, "file:///bad-parse") == 0);
-    assert(bs_reload_batch_run(ctrl) == 0);
-    assert(bs_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
-    char* report_json = report_to_json(report);
+    bs_adapter_attach_reload_batch_set_report(ctrl, report);
+    assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///bad-parse") == 0);
+    assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES);
+    char* report_json = bs_report_to_json(report);
     assert(report_json != nullptr);
     assert(std::strstr(report_json, "parse error at line") != nullptr);
     assert(std::strstr(report_json, "column") != nullptr);
     std::free(report_json);
-    report_destroy(report);
-    bs_reload_batch_controller_destroy(ctrl);
+    bs_report_destroy(report);
+    bs_adapter_attach_reload_batch_destroy(ctrl);
 
     return 0;
 }

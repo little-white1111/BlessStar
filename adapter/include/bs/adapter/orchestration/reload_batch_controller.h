@@ -45,38 +45,40 @@ extern "C"
                                     const IoReadResult* read_result,
                                     BsReloadGateDetail* detail_out);
 
-    ReloadBatchController* bs_reload_batch_controller_create(unsigned max_inflight);
-    void                   bs_reload_batch_controller_destroy(ReloadBatchController* ctrl);
+    ReloadBatchController* bs_adapter_attach_reload_batch_create(unsigned max_inflight);
+    void                   bs_adapter_attach_reload_batch_destroy(ReloadBatchController* ctrl);
 
-    void bs_reload_batch_controller_set_read_fn(ReloadBatchController* ctrl, ReloadPathReadFn fn,
-                                                void* user_ctx);
+    void bs_adapter_attach_reload_batch_set_read_fn(ReloadBatchController* ctrl,
+                                                    ReloadPathReadFn fn, void* user_ctx);
 
-    void bs_reload_batch_controller_set_gate_fn(ReloadBatchController* ctrl, ReloadPathGateFn fn,
-                                                void* user_ctx);
+    void bs_adapter_attach_reload_batch_set_gate_fn(ReloadBatchController* ctrl,
+                                                    ReloadPathGateFn fn, void* user_ctx);
 
-    void bs_reload_batch_controller_use_default_gate(ReloadBatchController* ctrl);
+    void bs_adapter_attach_reload_batch_set_default_gate(ReloadBatchController* ctrl);
 
-    void bs_reload_batch_controller_set_max_retry(ReloadBatchController* ctrl, unsigned max_retry);
+    void bs_adapter_attach_reload_batch_set_max_retry(ReloadBatchController* ctrl,
+                                                      unsigned               max_retry);
 
-    void bs_reload_batch_controller_set_report(ReloadBatchController* ctrl, struct Report* report);
+    void bs_adapter_attach_reload_batch_set_report(ReloadBatchController* ctrl,
+                                                   struct Report*         report);
 
-    int bs_reload_batch_controller_set_attach_scheme(ReloadBatchController* ctrl,
-                                                     BsAttachScheme         scheme);
+    int bs_adapter_attach_reload_batch_set_attach_scheme(ReloadBatchController* ctrl,
+                                                         BsAttachScheme         scheme);
 
-    void bs_reload_batch_controller_set_manifest_path(ReloadBatchController* ctrl,
-                                                      const char*            manifest_path);
+    void bs_adapter_attach_reload_batch_set_manifest_path(ReloadBatchController* ctrl,
+                                                          const char*            manifest_path);
 
-    void bs_reload_batch_controller_set_session_memory_cap(ReloadBatchController* ctrl,
-                                                           size_t                 cap_bytes);
+    void bs_adapter_attach_reload_batch_set_session_memory_cap(ReloadBatchController* ctrl,
+                                                               size_t                 cap_bytes);
 
-    int bs_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri);
+    int bs_adapter_attach_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri);
 
-    int bs_reload_batch_run(ReloadBatchController* ctrl);
+    int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl);
 
-    BatchOutcome bs_reload_batch_outcome(const ReloadBatchController* ctrl);
+    BatchOutcome bs_adapter_attach_reload_batch_outcome(const ReloadBatchController* ctrl);
 
-    PathOrchestrationState bs_reload_batch_path_state(const ReloadBatchController* ctrl,
-                                                      const char*                  uri);
+    PathOrchestrationState
+    bs_adapter_attach_reload_batch_path_state(const ReloadBatchController* ctrl, const char* uri);
 
 #ifdef __cplusplus
 }

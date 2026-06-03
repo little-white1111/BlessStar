@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_IR_REQUIREMENTS_H
 #define BS_KERNEL_IR_REQUIREMENTS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: Builtin requirement tables are read-only after init.
+ * Error semantics: bs_kernel_get_builtin_requirements never fails (static tables).
+ * Platform notes: Used by adapter requirement_filter and config_parse precheck.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -35,7 +42,7 @@ extern "C"
         char              release_notes[512];
     } KernelBuiltinRequirements;
 
-    const KernelBuiltinRequirements* kernel_get_builtin_requirements(void);
+    const KernelBuiltinRequirements* bs_kernel_get_builtin_requirements(void);
 
 #ifdef __cplusplus
 }

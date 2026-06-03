@@ -31,7 +31,7 @@ static inline size_t get_shard_index(const char* path, size_t num_shards)
     return hash_string(path) % num_shards;
 }
 
-ShardedStateBus* ShardedStateBus_Create(size_t num_shards)
+ShardedStateBus* bs_sharded_state_bus_create(size_t num_shards)
 {
     if (num_shards == 0)
         num_shards = 16;
@@ -43,31 +43,31 @@ ShardedStateBus* ShardedStateBus_Create(size_t num_shards)
 
     for (size_t i = 0; i < num_shards; i++)
     {
-        bus->shards[i] = StateBus_Create();
+        bus->shards[i] = bs_state_bus_create();
     }
 
     return bus;
 }
 
-void ShardedStateBus_Destroy(ShardedStateBus* bus)
+void bs_sharded_state_bus_destroy(ShardedStateBus* bus)
 {
     if (!bus)
         return;
     for (size_t i = 0; i < bus->num_shards; i++)
     {
-        StateBus_Destroy(bus->shards[i]);
+        bs_state_bus_destroy(bus->shards[i]);
     }
     delete bus;
 }
 
-int ShardedStateBus_SetState(ShardedStateBus* bus, const char* path, ConfigState state,
-                             const void* data, size_t dataSize)
+int bs_sharded_state_bus_set_state(ShardedStateBus* bus, const char* path, ConfigState state,
+                                   const void* data, size_t dataSize)
 {
     if (!bus || !path)
         return -1;
 
     size_t index  = get_shard_index(path, bus->num_shards);
-    int    result = StateBus_SetState(bus->shards[index], path, state, data, dataSize);
+    int    result = bs_state_bus_set_state(bus->shards[index], path, state, data, dataSize);
 
     if (result == 0)
     {
@@ -77,25 +77,26 @@ int ShardedStateBus_SetState(ShardedStateBus* bus, const char* path, ConfigState
     return result;
 }
 
-int ShardedStateBus_GetState(ShardedStateBus* bus, const char* path, StateEntry** entry)
+int bs_sharded_state_bus_get_state(ShardedStateBus* bus, const char* path, StateEntry** entry)
 {
     if (!bus || !path || !entry)
         return -1;
 
     size_t index = get_shard_index(path, bus->num_shards);
-    return StateBus_GetState(bus->shards[index], path, entry);
+    return bs_state_bus_get_state(bus->shards[index], path, entry);
 }
 
-int ShardedStateBus_GetSnapshot(ShardedStateBus* bus, const char* path, void** data, size_t* size)
+int bs_sharded_state_bus_get_snapshot(ShardedStateBus* bus, const char* path, void** data,
+                                      size_t* size)
 {
     if (!bus || !path || !data || !size)
         return -1;
 
     size_t index = get_shard_index(path, bus->num_shards);
-    return StateBus_GetSnapshot(bus->shards[index], path, data, size);
+    return bs_state_bus_get_snapshot(bus->shards[index], path, data, size);
 }
 
-StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count)
+StateEntry* bs_sharded_state_bus_get_all_entries(ShardedStateBus* bus, size_t* count)
 {
     if (!bus || !count)
         return nullptr;
@@ -106,7 +107,7 @@ StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count)
     for (size_t i = 0; i < bus->num_shards; i++)
     {
         size_t      shard_count = 0;
-        StateEntry* entries     = StateBus_GetAllEntries(bus->shards[i], &shard_count);
+        StateEntry* entries     = bs_state_bus_get_all_entries(bus->shards[i], &shard_count);
         if (entries && shard_count > 0)
         {
             for (size_t j = 0; j < shard_count; j++)
@@ -127,7 +128,7 @@ StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count)
                 dst.next = nullptr;
                 all_entries.push_back(dst);
             }
-            StateBus_FreeEntries(entries, shard_count);
+            bs_state_bus_free_entries(entries, shard_count);
         }
     }
 
@@ -153,7 +154,7 @@ StateEntry* ShardedStateBus_GetAllEntries(ShardedStateBus* bus, size_t* count)
     return result;
 }
 
-void ShardedStateBus_FreeEntries(StateEntry* entries, size_t count)
+void bs_sharded_state_bus_free_entries(StateEntry* entries, size_t count)
 {
     if (!entries)
         return;
@@ -168,14 +169,14 @@ void ShardedStateBus_FreeEntries(StateEntry* entries, size_t count)
     free(entries);
 }
 
-uint64_t ShardedStateBus_GetTotalOperations(ShardedStateBus* bus)
+uint64_t bs_sharded_state_bus_get_total_operations(ShardedStateBus* bus)
 {
     if (!bus)
         return 0;
     return bus->total_operations.load();
 }
 
-size_t ShardedStateBus_GetShardCount(ShardedStateBus* bus)
+size_t bs_sharded_state_bus_get_shard_count(ShardedStateBus* bus)
 {
     if (!bus)
         return 0;

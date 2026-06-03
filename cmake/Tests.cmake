@@ -459,18 +459,18 @@ blessstar_add_unit_test(bs_test_io_status_table
   SOURCES kernel/io/test/IoStatusTableTest.cpp
   LIBS bs_kernel_io bs_kernel_registry bs_kernel_common bs_kernel_common_format
 )
-# Disabled until attach_config links with full AttachContext (XVII-ATTACH-1).
-# blessstar_add_unit_test(bs_test_reload_default_gate_report_eventbus_reentry_integration
-#   SOURCES adapter/test/ReloadDefaultGateReportEventBusReentryIntegrationTest.cpp
-#   LIBS
-#     bs_adapter_registry
-#     bs_adapter_orchestration
-#     bs_adapter_log
-#     bs_kernel_io
-#     bs_kernel_state
-#     bs_kernel_report
-#     bs_kernel_common
-# )
+blessstar_add_unit_test(bs_test_reload_default_gate_report_eventbus_reentry_integration
+  SOURCES adapter/test/ReloadDefaultGateReportEventBusReentryIntegrationTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_attach
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_state
+    bs_kernel_report
+    bs_kernel_common
+)
 set_tests_properties(bs_test_reload_attach_guard PROPERTIES LABELS "unit;day7;io;attach;regression")
 set_tests_properties(bs_test_reload_gate_default PROPERTIES LABELS "unit;day7;day9;io;parser;regression")
 set_tests_properties(bs_test_log_domain_registration PROPERTIES LABELS "unit;day7;registry;regression")
@@ -479,8 +479,8 @@ set_tests_properties(bs_test_reentrancy_io PROPERTIES LABELS "unit;day7;io;regis
 set_tests_properties(bs_test_result_status_map PROPERTIES LABELS "unit;day7;regression")
 set_tests_properties(bs_test_io_status_table PROPERTIES LABELS "unit;day7;io;registry;regression")
 set_tests_properties(bs_test_reload_report PROPERTIES LABELS "unit;day7;io;regression")
-# set_tests_properties(bs_test_reload_default_gate_report_eventbus_reentry_integration
-#   PROPERTIES LABELS "unit;integration;day7;attach;io;registry;regression" TIMEOUT 120)
+set_tests_properties(bs_test_reload_default_gate_report_eventbus_reentry_integration
+  PROPERTIES LABELS "unit;integration;day7;attach;io;registry;regression" TIMEOUT 120)
 
 # ---------------------------------------------------------------------------
 # Day19 · memory baseline + 72h-RP stress harness (T19)

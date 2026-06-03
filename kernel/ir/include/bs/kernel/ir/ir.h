@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_IR_IR_H
 #define BS_KERNEL_IR_IR_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: IR lists/instructions are not thread-safe unless externally locked.
+ * Error semantics: NULL on alloc failure; destroy functions tolerate NULL.
+ * Platform notes: Core IRInstruction graph; pairs with adapter config_v1_ir generator.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -29,28 +36,28 @@ extern "C"
         uint64_t    timestamp;
     };
 
-    IRInstruction* ir_instruction_create(const char* type, const char* name);
-    void           ir_instruction_destroy(IRInstruction* instr);
+    IRInstruction* bs_ir_instruction_create(const char* type, const char* name);
+    void           bs_ir_instruction_destroy(IRInstruction* instr);
 
-    IRMetadata* ir_metadata_create(const char* key, const char* value);
-    void        ir_metadata_destroy(IRMetadata* meta);
+    IRMetadata* bs_ir_metadata_create(const char* key, const char* value);
+    void        bs_ir_metadata_destroy(IRMetadata* meta);
 
-    void        ir_instruction_add_metadata(IRInstruction* instr, IRMetadata* meta);
-    const char* ir_instruction_get_metadata(const IRInstruction* instr, const char* key);
+    void        bs_ir_instruction_add_metadata(IRInstruction* instr, IRMetadata* meta);
+    const char* bs_ir_instruction_get_metadata(const IRInstruction* instr, const char* key);
 
-    IRInstructionList* ir_instruction_list_create(void);
-    void               ir_instruction_list_destroy(IRInstructionList* list);
+    IRInstructionList* bs_ir_instruction_list_create(void);
+    void               bs_ir_instruction_list_destroy(IRInstructionList* list);
 
     /**
      * Append an instruction to the list. On success, ownership transfers to the list:
-     * do not call ir_instruction_destroy() on @p instr; ir_instruction_list_destroy() frees
+     * do not call bs_ir_instruction_destroy() on @p instr; bs_ir_instruction_list_destroy() frees
      * all added instructions.
      * @return 0 success, -1 null list/instr, -2 allocation failure
      */
-    int ir_instruction_list_add(IRInstructionList* list, IRInstruction* instr);
+    int bs_ir_instruction_list_add(IRInstructionList* list, IRInstruction* instr);
 
-    size_t         ir_instruction_list_size(const IRInstructionList* list);
-    IRInstruction* ir_instruction_list_get(const IRInstructionList* list, size_t index);
+    size_t         bs_ir_instruction_list_size(const IRInstructionList* list);
+    IRInstruction* bs_ir_instruction_list_get(const IRInstructionList* list, size_t index);
 
 #ifdef __cplusplus
 }

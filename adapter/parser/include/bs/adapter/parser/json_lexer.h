@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_PARSER_JSON_LEXER_H
 #define BS_ADAPTER_PARSER_JSON_LEXER_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: one JsonLexer per thread; no concurrent use of same instance.
+ * Error semantics: JSON_TOK_ERROR token on invalid input; see bs_json_parse_config_v1.
+ * Platform notes: N/A.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -57,12 +64,12 @@ extern "C"
 /** Max manual_requirements[] string entries (AUD-IX-4). */
 #define BS_JSON_MAX_MANUAL_ITEMS (256u)
 
-    void json_lexer_init(JsonLexer* lex, const char* data, size_t len);
+    void bs_json_lexer_init(JsonLexer* lex, const char* data, size_t len);
 
     /** Advance and return previous token (or ERROR on failure). */
-    JsonToken json_lexer_next(JsonLexer* lex);
+    JsonToken bs_json_lexer_next(JsonLexer* lex);
 
-    const JsonToken* json_lexer_current(const JsonLexer* lex);
+    const JsonToken* bs_json_lexer_current(const JsonLexer* lex);
 
 #ifdef __cplusplus
 }

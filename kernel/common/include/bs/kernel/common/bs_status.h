@@ -1,6 +1,13 @@
 #ifndef BS_KERNEL_COMMON_BS_STATUS_H
 #define BS_KERNEL_COMMON_BS_STATUS_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: bs_status_make and helpers are reentrant.
+ * Error semantics: Packed domain+code BsStatus; BS_STATUS_OK is zero.
+ * Platform notes: Thin error model per day7; maps to Result via result_status_map.
+ */
+
 #include <stddef.h>
 #include <stdint.h>
 
