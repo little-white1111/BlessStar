@@ -153,17 +153,17 @@ static int phase_d_eventbus_enqueue_then_drain(AttachContext* actx)
     REQUIRE_PHASE("D-eventbus", bus != nullptr);
 
     int notified = 0;
-    REQUIRE_PHASE("D-eventbus", bs_event_bus_subscribe(bus, "/config/reload_notify",
+    REQUIRE_PHASE("D-eventbus", EventBus_Subscribe(bus, "/config/reload_notify",
                                                        notify_listener, &notified) == 0);
 
-    ConfigEvent* ev = bs_config_event_create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
+    ConfigEvent* ev = ConfigEvent_Create("/config/reload_notify", CONFIG_EVENT_ENTER_ACTIVE,
                                              CONFIG_STATE_LOADING, CONFIG_STATE_ACTIVE, 1);
     REQUIRE_PHASE("D-eventbus", ev != nullptr);
-    REQUIRE_PHASE("D-eventbus", bs_event_bus_publish(bus, ev) == 0);
-    bs_config_event_destroy(ev);
+    REQUIRE_PHASE("D-eventbus", EventBus_Publish(bus, ev) == 0);
+    ConfigEvent_Destroy(ev);
 
     REQUIRE_PHASE("D-eventbus", notified == 0);
-    REQUIRE_PHASE("D-eventbus", bs_event_bus_drain(bus) == 0);
+    REQUIRE_PHASE("D-eventbus", EventBus_Drain(bus) == 0);
     REQUIRE_PHASE("D-eventbus", notified == 1);
 
     return 0;
@@ -192,14 +192,14 @@ static int phase_e_reentrant_read_blocked_in_callback(const ReloadHarness* h)
 
     ReentryProbe probe{h->io, BS_IO_OK};
     REQUIRE_PHASE("E-reentry",
-                  bs_event_bus_subscribe(bus, "/config/reentry", reentry_listener, &probe) == 0);
+                  EventBus_Subscribe(bus, "/config/reentry", reentry_listener, &probe) == 0);
 
-    ConfigEvent* ev = bs_config_event_create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING,
+    ConfigEvent* ev = ConfigEvent_Create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING,
                                              CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
     REQUIRE_PHASE("E-reentry", ev != nullptr);
-    REQUIRE_PHASE("E-reentry", bs_event_bus_publish(bus, ev) == 0);
-    bs_config_event_destroy(ev);
-    REQUIRE_PHASE("E-reentry", bs_event_bus_drain(bus) == 0);
+    REQUIRE_PHASE("E-reentry", EventBus_Publish(bus, ev) == 0);
+    ConfigEvent_Destroy(ev);
+    REQUIRE_PHASE("E-reentry", EventBus_Drain(bus) == 0);
     REQUIRE_PHASE("E-reentry", probe.read_rc == BS_IO_ERR_INVALID_ARG);
 
     return 0;
