@@ -283,6 +283,8 @@ target_link_libraries(bs_adapter_attach
     bs_kernel_ir
     bs_adapter_parser
 )
+# Test hooks in attach_config.cpp (sync_fail_path, etc.) require BS_TESTING in this TU.
+target_compile_definitions(bs_adapter_attach PRIVATE BS_TESTING)
 
 if(NOT BLESSSTAR_SANITIZER_CI)
   include(FetchContent)

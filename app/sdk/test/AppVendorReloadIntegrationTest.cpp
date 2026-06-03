@@ -75,7 +75,7 @@ int main()
     ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);
     BS_TEST_REQUIRE("reload", ctrl != nullptr);
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
-    bs_adapter_attach_reload_batch_set_app_precheck_fn(ctrl, app_precheck_fn, nullptr);
+    bs_adapter_attach_reload_batch_set_gate_fn(ctrl, app_precheck_fn, nullptr);
     const fs::path manifest_path = temp_dir / "manifest.bs";
     bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
     bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());

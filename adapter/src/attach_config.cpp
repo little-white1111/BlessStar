@@ -181,12 +181,17 @@ EventBus* bs_adapter_attach_config_event_bus(AttachContext* ctx)
     return cm ? bs_config_manager_get_event_bus(cm) : nullptr;
 }
 
-void bs_adapter_attach_config_testing_set_sync_fail_path(const char* config_path)
+#if defined(BS_TESTING)
+extern "C"
 {
-    g_sync_fail_path = config_path;
-}
+    void bs_adapter_attach_config_testing_set_sync_fail_path(const char* config_path)
+    {
+        g_sync_fail_path = config_path;
+    }
 
-void bs_adapter_attach_config_testing_clear_sync_fail_path(void)
-{
-    g_sync_fail_path = nullptr;
+    void bs_adapter_attach_config_testing_clear_sync_fail_path(void)
+    {
+        g_sync_fail_path = nullptr;
+    }
 }
+#endif

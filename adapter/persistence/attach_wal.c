@@ -604,10 +604,10 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
     uint64_t offset = 0;
     for (;;)
     {
-        uint16_t  type = 0;
-        uint32_t  len  = 0;
-        uint32_t  crc  = 0;
-        uint8_t   hdr_no_crc[4 + 2 + 2 + 4];
+        uint16_t       type = 0;
+        uint32_t       len  = 0;
+        uint32_t       crc  = 0;
+        uint8_t        hdr_no_crc[4 + 2 + 2 + 4];
         const uint64_t record_start = offset;
 #ifndef BS_TESTING
         (void)record_start;
