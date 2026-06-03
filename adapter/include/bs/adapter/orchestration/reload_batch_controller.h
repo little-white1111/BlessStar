@@ -1,6 +1,13 @@
 #ifndef BS_ADAPTER_ORCHESTRATION_RELOAD_BATCH_CONTROLLER_H
 #define BS_ADAPTER_ORCHESTRATION_RELOAD_BATCH_CONTROLLER_H
 
+/*
+ * C-ST-7 contract block:
+ * Thread safety: ReloadBatchController is not thread-safe.
+ * Error semantics: run/add_path return 0 ok; negative errno-style codes on failure.
+ * Platform notes: PER_PATH/PER_BATCH attach schemes; optional ConfigManager sync when active.
+ */
+
 #include "bs/kernel/io/io.h"
 
 #include "bs/adapter/persistence/attach_store.h"

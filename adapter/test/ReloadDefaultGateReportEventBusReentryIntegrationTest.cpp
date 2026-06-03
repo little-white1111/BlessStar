@@ -205,7 +205,7 @@ static int phase_e_reentrant_read_blocked_in_callback(const ReloadHarness* h)
     return 0;
 }
 
-static void teardown(ReloadHarness* h, ReloadFixture* fix)
+static void teardown(ReloadHarness* h, ReloadFixture* /*fix*/)
 {
     if (h->io)
         bs_io_facade_destroy(h->io);
