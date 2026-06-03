@@ -483,6 +483,34 @@ set_tests_properties(bs_test_reload_report PROPERTIES LABELS "unit;day7;io;regre
 #   PROPERTIES LABELS "unit;integration;day7;attach;io;registry;regression" TIMEOUT 120)
 
 # ---------------------------------------------------------------------------
+# Day19 · memory baseline + 72h-RP stress harness (T19)
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_day19_memory_baseline
+  SOURCES adapter/test/Day19MemoryBaselineTest.cpp
+  LIBS bs_adapter_parser bs_kernel_common
+)
+set_tests_properties(bs_test_day19_memory_baseline
+  PROPERTIES LABELS "unit;day19;mem;regression" TIMEOUT 120
+)
+
+blessstar_add_unit_test(bs_test_day19_stress_reload_loop
+  SOURCES adapter/test/Day19StressReloadLoopTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_common
+)
+target_include_directories(bs_test_day19_stress_reload_loop
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+set_tests_properties(bs_test_day19_stress_reload_loop
+  PROPERTIES LABELS "unit;day19;stress;regression" TIMEOUT 300
+                   ENVIRONMENT "BS_DAY19_PROFILE=ci"
+)
+
+# ---------------------------------------------------------------------------
 # Comprehensive (still unit scope; may be slower)
 # ---------------------------------------------------------------------------
 blessstar_add_unit_test(bs_test_memory_pool_comprehensive
