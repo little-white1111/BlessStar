@@ -31,7 +31,7 @@ int main()
         out << "attach-io-ok";
     }
 
-    assert(bs_kernel_get_builtin_requirements() != nullptr);
+    assert(kernel_get_builtin_requirements() != nullptr);
     assert(bs_adapter_requirement_filter_validate_builtin() == 0);
 
     AttachContext* ctx = bs_attach_context_create();

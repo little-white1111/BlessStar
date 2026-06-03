@@ -162,8 +162,8 @@ int main()
         char           path_buf[512];
         BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
         assert(rd != nullptr);
-        assert(bs_attach_store_get_canonical_path(
-                   rd, uri.c_str(), path_buf, sizeof(path_buf)) == BS_ATTACH_OK);
+        assert(bs_attach_store_get_canonical_path(rd, uri.c_str(), path_buf, sizeof(path_buf)) ==
+               BS_ATTACH_OK);
         bs_attach_store_close(rd);
     }
     bs_reload_batch_controller_destroy(ctrl);
@@ -172,12 +172,11 @@ int main()
     {
         BsAttachStore* s = bs_attach_store_open(man.string().c_str());
         assert(s != nullptr);
-        assert(bs_attach_store_commit_per_path(
-                   s, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen, 0) ==
-               BS_ATTACH_OK);
-        assert(bs_attach_store_commit_per_path(
-                   s, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen, 0) ==
-               BS_ATTACH_ERR_CONFLICT);
+        assert(bs_attach_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
+                                               kBlessStarConfigV1GoldenLen, 0) == BS_ATTACH_OK);
+        assert(bs_attach_store_commit_per_path(s, uri.c_str(), kBlessStarConfigV1Golden,
+                                               kBlessStarConfigV1GoldenLen,
+                                               0) == BS_ATTACH_ERR_CONFLICT);
         assert(read_manifest_revision(man, uri) == 1);
         bs_attach_store_close(s);
     }
