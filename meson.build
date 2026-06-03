@@ -53,8 +53,11 @@ bs_adapter_requirement = static_library(
 
 bs_kernel_pipeline = static_library(
   'bs_kernel_pipeline',
-  sources: ['kernel/pipeline/src/pipeline.cpp'],
-  include_directories: [inc_pipeline, inc_ir],
+  sources: [
+    'kernel/pipeline/src/pipeline.cpp',
+    'kernel/pipeline/src/stage.c',
+  ],
+  include_directories: [inc_pipeline, inc_ir, inc_report],
   link_with: [bs_kernel_ir],
 )
 

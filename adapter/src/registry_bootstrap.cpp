@@ -145,6 +145,7 @@ int bs_adapter_registry_bootstrap_freeze_ctx(AttachContext* ctx)
     if (bs_adapter_plugin_loader_load_all(ctx, nullptr) != 0)
         return -1;
 
+    /* R5-02: builtin ir_gate registered in P1 before freeze (IMPL-05-01 / R8-09). */
     if (bs_registry_facade_freeze(facade) != BS_REGISTRY_OK)
         return -1;
     if (bs_adapter_attach_notify_registry_frozen(ctx) != 0)

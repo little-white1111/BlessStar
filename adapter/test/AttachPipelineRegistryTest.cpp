@@ -13,6 +13,7 @@
 #include "bs/kernel/ir/requirements.h"
 #include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/attach_context.h"
 #include "bs/adapter/registry_bootstrap.h"
 #include "bs/adapter/requirement_filter.h"
 
@@ -32,11 +33,14 @@ int main()
     assert(bs_adapter_requirement_filter_validate_builtin() == 0);
     assert(bs_adapter_requirement_filter_check_adapter_version("0.4.0") == 0);
 
-    RegistryFacade* facade = bs_registry_facade_create();
+    AttachContext* ctx = bs_adapter_attach_ctx_create();
+    assert(ctx != nullptr);
+    bs_adapter_attach_ctx_set_active(ctx);
+    RegistryFacade* facade = bs_adapter_attach_ctx_registry(ctx);
     assert(facade != nullptr);
 
     /* Step 2: P1 built-in /kernel extension (bootstrap ends in phase P1) */
-    assert(bs_adapter_registry_bootstrap_begin(facade) == 0);
+    assert(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
     assert(bs_registry_facade_current_phase(facade) == BS_REGISTRY_PHASE_P1);
 
     /* Enter P2 before adapter plugin registration */
@@ -59,7 +63,7 @@ int main()
            BS_REGISTRY_OK);
 
     /* Step 4: freeze before IR gate consumes IR */
-    assert(bs_adapter_registry_bootstrap_freeze(facade) == 0);
+    assert(bs_adapter_registry_bootstrap_freeze_ctx(ctx) == 0);
     assert(bs_registry_facade_current_phase(facade) == BS_REGISTRY_PHASE_FROZEN);
 
     /* Step 5: IR gate via requirement list (not stored in PathRegistry) */
@@ -108,6 +112,6 @@ int main()
            BS_REGISTRY_ERR_FROZEN);
 
     bs_adapter_registry_shutdown_log();
-    bs_registry_facade_destroy(facade);
+    bs_adapter_attach_ctx_destroy(ctx);
     return 0;
 }

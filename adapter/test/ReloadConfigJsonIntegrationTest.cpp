@@ -67,7 +67,7 @@ int main()
     std::free(json);
 
     const fs::path bad_file = work / "v1_bad.json";
-    BS_TEST_REQUIRE("write-bad", bs_test_write_binary_file(bad_file, "{ not valid json", 18));
+    BS_TEST_REQUIRE("write-bad", bs_test_write_binary_file(bad_file, "{ not valid json", 17));
     const std::string bad_uri = bs_test_path_to_file_uri(bad_file);
 
     BS_TEST_REQUIRE("bad-add", bs_adapter_attach_reload_batch_add_path(ctrl, bad_uri.c_str()) == 0);
