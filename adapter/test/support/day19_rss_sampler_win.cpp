@@ -6,10 +6,12 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <cstddef>
-
-#include <psapi.h>
+// clang-format off
 #include <windows.h>
+#include <psapi.h>
+// clang-format on
+
+#include <cstddef>
 
 #include "day19_rss_sampler.h"
 

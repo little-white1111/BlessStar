@@ -604,9 +604,8 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
         uint16_t       type = 0;
         uint32_t       len  = 0;
         uint32_t       crc  = 0;
-        uint8_t        hdr_no_crc[4 + 2 + 2 + 4];
-        const uint64_t record_start = offset;
-        const int      rh =
+        uint8_t  hdr_no_crc[4 + 2 + 2 + 4];
+        const int rh =
             wal_read_record_header(f, &offset, &type, &len, &crc, hdr_no_crc, sizeof(hdr_no_crc));
         if (rh != BS_ATTACH_OK)
         {
