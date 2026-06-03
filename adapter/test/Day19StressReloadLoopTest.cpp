@@ -10,6 +10,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -46,10 +47,10 @@ static int write_path_pool(const fs::path& work, int count, size_t fixture_bytes
 
 static uint64_t dir_size_bytes(const fs::path& root)
 {
-    uint64_t total = 0;
+    uint64_t        total = 0;
     std::error_code ec;
-    for (auto it = fs::recursive_directory_iterator(root, ec); !ec && it != fs::recursive_directory_iterator();
-         it.increment(ec))
+    for (auto it = fs::recursive_directory_iterator(root, ec);
+         !ec && it != fs::recursive_directory_iterator(); it.increment(ec))
     {
         if (it->is_regular_file(ec))
             total += static_cast<uint64_t>(it->file_size(ec));
@@ -76,30 +77,32 @@ int main(int argc, char** argv)
     bs_attach_context_set_active(fix.ctx);
 
     std::vector<std::string> uris;
-    const size_t             fixture_bytes =
-        static_cast<size_t>(profile.fixture_kb) * 1024u;
-    BS_TEST_REQUIRE("paths", write_path_pool(work, profile.path_pool_size, fixture_bytes, &uris) == 0);
+    const size_t             fixture_bytes = static_cast<size_t>(profile.fixture_kb) * 1024u;
+    BS_TEST_REQUIRE("paths",
+                    write_path_pool(work, profile.path_pool_size, fixture_bytes, &uris) == 0);
 
     const fs::path                manifest_path = work / "manifest.bs";
     std::vector<BsDay19RssSample> samples;
 
-    const auto t0 = std::chrono::steady_clock::now();
+    const auto t0          = std::chrono::steady_clock::now();
     auto       last_sample = t0;
 
-    int day_ok = 0;
-    int day_total = 0;
-    int night_ok = 0;
-    int night_total = 0;
+    int  day_ok      = 0;
+    int  day_total   = 0;
+    int  night_ok    = 0;
+    int  night_total = 0;
     int  path_i      = 0;
     bool steady_mark = false;
 
-    auto elapsed_sec = [&]() {
-        return static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(
-                                    std::chrono::steady_clock::now() - t0)
-                                    .count());
+    auto elapsed_sec = [&]()
+    {
+        return static_cast<int>(
+            std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - t0)
+                .count());
     };
 
-    auto maybe_sample = [&](const char* phase, uint64_t iter, int ok) {
+    auto maybe_sample = [&](const char* phase, uint64_t iter, int ok)
+    {
         const auto now = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::seconds>(now - last_sample).count() >=
             profile.rss_sample_interval_sec)
@@ -116,8 +119,8 @@ int main(int argc, char** argv)
             night_total >= profile.min_night_batches)
             break;
 
-        const int day_limit =
-            static_cast<int>(static_cast<double>(profile.duration_sec_max) * profile.day_wall_fraction);
+        const int  day_limit  = static_cast<int>(static_cast<double>(profile.duration_sec_max) *
+                                                 profile.day_wall_fraction);
         const bool need_day   = day_total < profile.min_day_reloads;
         const bool need_night = night_total < profile.min_night_batches;
         const bool day_phase  = need_day && (elapsed < day_limit || !need_night);
@@ -135,13 +138,8 @@ int main(int argc, char** argv)
             path_i++;
             ++day_total;
             const int add_rc = bs_reload_batch_add_path(ctrl, uri.c_str());
-            const int run_rc =
-                (add_rc == 0) ? bs_reload_batch_run(ctrl) : -1;
-            const int ok =
-                (run_rc == 0 &&
-                 bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK)
-                    ? 1
-                    : 0;
+            const int run_rc = (add_rc == 0) ? bs_reload_batch_run(ctrl) : -1;
+            const int ok = (run_rc == 0 && bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1 : 0;
             day_ok += ok;
             if (!steady_mark && day_total >= 30)
             {
@@ -164,23 +162,17 @@ int main(int argc, char** argv)
             bs_reload_batch_controller_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
             bs_reload_batch_controller_set_manifest_path(ctrl, manifest_path.string().c_str());
 
-            const int n = profile.paths_per_batch < profile.path_pool_size
-                              ? profile.paths_per_batch
-                              : profile.path_pool_size;
-            int add_fail = 0;
+            const int n = profile.paths_per_batch < profile.path_pool_size ? profile.paths_per_batch
+                                                                           : profile.path_pool_size;
+            int       add_fail = 0;
             for (int p = 0; p < n; ++p)
             {
-                if (bs_reload_batch_add_path(ctrl, uris[static_cast<size_t>(p)].c_str()) !=
-                    0)
+                if (bs_reload_batch_add_path(ctrl, uris[static_cast<size_t>(p)].c_str()) != 0)
                     add_fail = 1;
             }
             ++night_total;
             const int run_rc = add_fail ? -1 : bs_reload_batch_run(ctrl);
-            const int ok =
-                (run_rc == 0 &&
-                 bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK)
-                    ? 1
-                    : 0;
+            const int ok = (run_rc == 0 && bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1 : 0;
             night_ok += ok;
             maybe_sample("night", static_cast<uint64_t>(night_total), ok);
             bs_day19_rss_sample_push(samples, "night_tick", static_cast<uint64_t>(night_total), ok);
@@ -199,13 +191,14 @@ int main(int argc, char** argv)
 
     const size_t window_samples = static_cast<size_t>(
         600 / (profile.rss_sample_interval_sec > 0 ? profile.rss_sample_interval_sec : 60));
-    const size_t win =
-        window_samples < (samples.size() - warmup_skip) ? window_samples : (samples.size() - warmup_skip);
+    const size_t win = window_samples < (samples.size() - warmup_skip)
+                           ? window_samples
+                           : (samples.size() - warmup_skip);
 
     const double slope_endpoint_ws = bs_day19_rss_slope_endpoint_mb_per_hour(samples);
     double       slope_reg_ws =
         bs_day19_rss_slope_regression_mb_per_hour(samples, warmup_skip, false /* use_private */);
-    double delta_ws = bs_day19_rss_delta_windowed_mb(samples, warmup_skip, win, false);
+    double delta_ws   = bs_day19_rss_delta_windowed_mb(samples, warmup_skip, win, false);
     double delta_priv = bs_day19_rss_delta_windowed_mb(samples, warmup_skip, win, true);
 
     if (samples.size() < 8)
@@ -220,7 +213,7 @@ int main(int argc, char** argv)
             max_p = (s.private_mb > max_p) ? s.private_mb : max_p;
         }
         delta_priv = max_p - min_p;
-        delta_ws     = delta_priv; /* rss==private fallback on short ci */
+        delta_ws   = delta_priv; /* rss==private fallback on short ci */
     }
 
     const double slope = slope_reg_ws;
@@ -228,19 +221,17 @@ int main(int argc, char** argv)
 
     const double day_rate =
         day_total > 0 ? static_cast<double>(day_ok) / static_cast<double>(day_total) : 1.0;
-    const double night_rate = night_total > 0 ? static_cast<double>(night_ok) /
-                                                    static_cast<double>(night_total)
-                                              : 1.0;
+    const double night_rate =
+        night_total > 0 ? static_cast<double>(night_ok) / static_cast<double>(night_total) : 1.0;
     const uint64_t disk = dir_size_bytes(work);
 
-    std::printf(
-        "stress,profile=%s,day=%d/%d(%.4f),night=%d/%d(%.4f),"
-        "rss_slope_reg=%.3f,rss_delta_win=%.3f,"
-        "rss_slope_endpoint_ws=%.3f,rss_delta_ws_win=%.3f,"
-        "samples=%zu,warmup_skip=%zu,win=%zu,disk_mb=%llu\n",
-        profile.name, day_ok, day_total, day_rate, night_ok, night_total, night_rate, slope, delta,
-        slope_endpoint_ws, delta_ws, samples.size(), warmup_skip, window_samples,
-        static_cast<unsigned long long>(disk / (1024u * 1024u)));
+    std::printf("stress,profile=%s,day=%d/%d(%.4f),night=%d/%d(%.4f),"
+                "rss_slope_reg=%.3f,rss_delta_win=%.3f,"
+                "rss_slope_endpoint_ws=%.3f,rss_delta_ws_win=%.3f,"
+                "samples=%zu,warmup_skip=%zu,win=%zu,disk_mb=%llu\n",
+                profile.name, day_ok, day_total, day_rate, night_ok, night_total, night_rate, slope,
+                delta, slope_endpoint_ws, delta_ws, samples.size(), warmup_skip, window_samples,
+                static_cast<unsigned long long>(disk / (1024u * 1024u)));
 
     const char* out_path = std::getenv("BS_DAY19_STRESS_OUT");
     if (out_path && out_path[0])
@@ -292,8 +283,8 @@ int main(int argc, char** argv)
     if (delta > profile.rss_delta_mb_max)
     {
         std::fprintf(stderr,
-                     "FAIL: rss delta (private window) %.3f > max %.3f [delta_ws_win=%.3f]\n", delta,
-                     profile.rss_delta_mb_max, delta_ws);
+                     "FAIL: rss delta (private window) %.3f > max %.3f [delta_ws_win=%.3f]\n",
+                     delta, profile.rss_delta_mb_max, delta_ws);
         if (!diag)
             bs_day19_rss_print_samples(samples, stderr);
         return 1;

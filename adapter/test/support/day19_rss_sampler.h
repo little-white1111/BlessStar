@@ -4,10 +4,11 @@
 
 #pragma once
 
-#include <cstdio>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
+
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -15,8 +16,8 @@
 
 #ifdef _WIN32
 #define NOMINMAX
-#include <windows.h>
 #include <psapi.h>
+#include <windows.h>
 #endif
 
 inline size_t bs_day19_current_rss_bytes()
@@ -37,7 +38,7 @@ inline size_t bs_day19_current_rss_bytes()
         if (line.rfind("VmRSS:", 0) == 0)
         {
             std::istringstream iss(line.substr(6));
-            size_t kb = 0;
+            size_t             kb = 0;
             iss >> kb;
             return kb * 1024u;
         }
@@ -83,16 +84,16 @@ struct BsDay19RssSample
 inline void bs_day19_rss_sample_push(std::vector<BsDay19RssSample>& out, const char* phase,
                                      uint64_t iter, int outcome_ok)
 {
-    const auto            now = std::chrono::system_clock::now();
+    const auto              now = std::chrono::system_clock::now();
     const BsDay19RssMetrics mem = bs_day19_current_memory_metrics();
-    BsDay19RssSample      s{};
+    BsDay19RssSample        s{};
     s.timestamp_unix = static_cast<int64_t>(
         std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count());
-    s.rss_mb         = static_cast<double>(mem.working_set_bytes) / (1024.0 * 1024.0);
-    s.private_mb     = static_cast<double>(mem.private_bytes) / (1024.0 * 1024.0);
-    s.phase          = phase ? phase : "";
-    s.iter           = iter;
-    s.outcome_ok     = outcome_ok;
+    s.rss_mb     = static_cast<double>(mem.working_set_bytes) / (1024.0 * 1024.0);
+    s.private_mb = static_cast<double>(mem.private_bytes) / (1024.0 * 1024.0);
+    s.phase      = phase ? phase : "";
+    s.iter       = iter;
+    s.outcome_ok = outcome_ok;
     out.push_back(s);
 }
 
@@ -101,8 +102,8 @@ inline double bs_day19_rss_slope_endpoint_mb_per_hour(const std::vector<BsDay19R
 {
     if (samples.size() < 2)
         return 0.0;
-    const double t0 = static_cast<double>(samples.front().timestamp_unix);
-    const double t1 = static_cast<double>(samples.back().timestamp_unix);
+    const double t0   = static_cast<double>(samples.front().timestamp_unix);
+    const double t1   = static_cast<double>(samples.back().timestamp_unix);
     const double dt_h = (t1 - t0) / 3600.0;
     if (dt_h <= 0.0)
         return 0.0;
@@ -110,15 +111,16 @@ inline double bs_day19_rss_slope_endpoint_mb_per_hour(const std::vector<BsDay19R
 }
 
 /** Least-squares slope (MB/h) on private_mb; skips first `skip_first` samples (warmup). */
-inline double bs_day19_rss_slope_regression_mb_per_hour(const std::vector<BsDay19RssSample>& samples,
-                                                        size_t skip_first, bool use_private)
+inline double
+bs_day19_rss_slope_regression_mb_per_hour(const std::vector<BsDay19RssSample>& samples,
+                                          size_t skip_first, bool use_private)
 {
     if (samples.size() <= skip_first + 1)
         return 0.0;
     const int64_t t_base = samples[skip_first].timestamp_unix;
-    double        n = 0.0;
-    double        sum_t = 0.0;
-    double        sum_r = 0.0;
+    double        n      = 0.0;
+    double        sum_t  = 0.0;
+    double        sum_r  = 0.0;
     double        sum_tt = 0.0;
     double        sum_tr = 0.0;
     for (size_t i = skip_first; i < samples.size(); ++i)
@@ -143,8 +145,8 @@ inline double bs_day19_rss_slope_regression_mb_per_hour(const std::vector<BsDay1
  * `window_samples` = number of points per window (e.g. 10 for 10min @ 60s).
  */
 inline double bs_day19_rss_delta_windowed_mb(const std::vector<BsDay19RssSample>& samples,
-                                           size_t skip_first, size_t window_samples,
-                                           bool use_private)
+                                             size_t skip_first, size_t window_samples,
+                                             bool use_private)
 {
     if (samples.size() <= skip_first)
         return 0.0;
@@ -154,15 +156,14 @@ inline double bs_day19_rss_delta_windowed_mb(const std::vector<BsDay19RssSample>
     const size_t win = window_samples > 0 ? window_samples : 1;
     const size_t w   = win < n ? win : n;
 
-    auto metric = [use_private](const BsDay19RssSample& s) {
-        return use_private ? s.private_mb : s.rss_mb;
-    };
+    auto metric = [use_private](const BsDay19RssSample& s)
+    { return use_private ? s.private_mb : s.rss_mb; };
 
     double baseline = metric(samples[skip_first]);
     for (size_t i = skip_first; i < skip_first + w && i < samples.size(); ++i)
         baseline = (metric(samples[i]) < baseline) ? metric(samples[i]) : baseline;
 
-    double peak = metric(samples.back());
+    double       peak       = metric(samples.back());
     const size_t tail_start = samples.size() > w ? samples.size() - w : skip_first;
     for (size_t i = tail_start; i < samples.size(); ++i)
         peak = (metric(samples[i]) > peak) ? metric(samples[i]) : peak;

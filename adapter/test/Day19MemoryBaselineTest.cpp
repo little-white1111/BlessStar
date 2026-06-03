@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <cstdio>
+
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -26,7 +27,7 @@ static int parse_file_rss_mb(const fs::path& path, double* rss_out)
         return -1;
     const std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
     BsConfigParseResult result{};
-    const BsStatus st = bs_adapter_parser_parse_bytes(
+    const BsStatus      st = bs_adapter_parser_parse_bytes(
         reinterpret_cast<const uint8_t*>(bytes.data()), bytes.size(), &result);
     if (!bs_status_is_ok(st))
         return -1;
@@ -38,7 +39,7 @@ static int parse_file_rss_mb(const fs::path& path, double* rss_out)
 static int run_size_label(const fs::path& work, const char* label, size_t target_bytes,
                           std::vector<BsDay19RssSample>& samples)
 {
-    const fs::path cfg = work / (std::string("cfg_") + label + ".json");
+    const fs::path    cfg  = work / (std::string("cfg_") + label + ".json");
     const std::string json = bs_day19_make_valid_v1_json(target_bytes);
     if (!bs_test_write_binary_file(cfg, json.data(), json.size()))
         return -1;
@@ -64,7 +65,7 @@ int main(int argc, char** argv)
     (void)argc;
     (void)argv;
 
-    const BsTestTempDirGuard tmp(bs_test_unique_temp_dir("bs_day19_mem_baseline"));
+    const BsTestTempDirGuard      tmp(bs_test_unique_temp_dir("bs_day19_mem_baseline"));
     std::vector<BsDay19RssSample> samples;
 
     if (run_size_label(tmp.path, "1kb", 1024u, samples) != 0)
