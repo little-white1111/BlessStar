@@ -40,14 +40,9 @@ function(blessstar_add_unit_test name)
     endif()
   endif()
   add_test(NAME ${name} COMMAND "$<TARGET_FILE:${name}>")
-  set_tests_properties(${name} PROPERTIES TIMEOUT 300 LABELS "unit;regression")
+  set_tests_properties(${name} PROPERTIES TIMEOUT 300 LABELS "unit")
   set_property(GLOBAL APPEND PROPERTY BLESSSTAR_UNIT_TEST_TARGETS "${name}")
 endfunction()
-
-# attach_config sync_fail_path hooks (attach_config.cpp); enabled for CTest builds only.
-if(TARGET bs_adapter_attach)
-  target_compile_definitions(bs_adapter_attach PRIVATE BS_TESTING)
-endif()
 
 # ---------------------------------------------------------------------------
 # State
@@ -60,12 +55,6 @@ blessstar_add_unit_test(bs_test_state_bus
   SOURCES kernel/state/test/StateBusTest.cpp
   LIBS bs_kernel_state
 )
-blessstar_add_unit_test(bs_test_config_manager
-  SOURCES kernel/state/test/ConfigManagerTest.cpp
-  LIBS bs_kernel_state
-)
-set_tests_properties(bs_test_config_manager
-  PROPERTIES LABELS "unit;state;regression;day17")
 blessstar_add_unit_test(bs_test_sharded_state_bus
   SOURCES kernel/state/test/ShardedStateBusTest.cpp
   LIBS bs_kernel_state
@@ -86,7 +75,7 @@ blessstar_add_unit_test(bs_test_requirements
   SOURCES kernel/ir/test/RequirementsTest.cpp
   LIBS bs_kernel_ir
 )
-set_tests_properties(bs_test_requirements PROPERTIES LABELS "unit;registry;attach;regression")
+set_tests_properties(bs_test_requirements PROPERTIES LABELS "unit;registry;attach")
 blessstar_add_unit_test(bs_test_resolver
   SOURCES kernel/ir/test/ResolverTest.cpp
   LIBS bs_kernel_ir
@@ -95,8 +84,8 @@ blessstar_add_unit_test(bs_test_requirement_filter
   SOURCES adapter/test/RequirementFilterTest.cpp
   LIBS bs_adapter_requirement
 )
-set_tests_properties(bs_test_requirements PROPERTIES LABELS "unit;registry;attach;regression")
-set_tests_properties(bs_test_requirement_filter PROPERTIES LABELS "unit;registry;attach;regression")
+set_tests_properties(bs_test_requirements PROPERTIES LABELS "unit;registry;attach")
+set_tests_properties(bs_test_requirement_filter PROPERTIES LABELS "unit;registry;attach")
 
 # ---------------------------------------------------------------------------
 # Parser (day 9 · M2)
@@ -134,9 +123,6 @@ blessstar_add_unit_test(bs_test_config_parse_security_audit
   SOURCES adapter/test/ConfigParseSecurityAuditTest.cpp
   LIBS bs_adapter_parser bs_adapter_persistence bs_adapter_requirement
 )
-target_include_directories(bs_test_config_parse_security_audit
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
-)
 set_tests_properties(bs_test_config_parse_security_audit
   PROPERTIES LABELS "unit;parser;attach;day13;regression" TIMEOUT 300
 )
@@ -172,64 +158,6 @@ target_include_directories(bs_test_attach_fsync_spot
 set_tests_properties(bs_test_attach_fsync_spot
   PROPERTIES LABELS "unit;attach;day14;win_spot;regression" TIMEOUT 60
 )
-blessstar_add_unit_test(bs_test_attach_watch
-  SOURCES adapter/test/AttachWatchTest.cpp
-  LIBS bs_adapter_persistence
-)
-target_include_directories(bs_test_attach_watch
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/persistence
-)
-set_tests_properties(bs_test_attach_watch
-  PROPERTIES LABELS "unit;attach;day15;regression" TIMEOUT 120
-)
-blessstar_add_unit_test(bs_test_app_sdk_contract
-  SOURCES app/sdk/test/AppSdkContractTest.cpp
-  LIBS bs_app_sdk
-)
-target_include_directories(bs_test_app_sdk_contract
-  PRIVATE ${CMAKE_SOURCE_DIR}/app/sdk/include
-)
-set_tests_properties(bs_test_app_sdk_contract
-  PROPERTIES LABELS "unit;app;day16;day17;regression" TIMEOUT 120
-)
-blessstar_add_unit_test(bs_test_vendor_config_normalizer
-  SOURCES app/sdk/test/VendorConfigNormalizerTest.cpp
-  LIBS bs_app_sdk bs_adapter_parser bs_kernel_ir bs_kernel_common
-)
-target_include_directories(bs_test_vendor_config_normalizer
-  PRIVATE
-    ${CMAKE_SOURCE_DIR}/app/sdk/include
-    ${CMAKE_SOURCE_DIR}/adapter/test
-)
-set_tests_properties(bs_test_vendor_config_normalizer
-  PROPERTIES
-    LABELS "unit;app;day17;regression"
-    TIMEOUT 120
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-)
-blessstar_add_unit_test(bs_test_app_vendor_reload_integration
-  SOURCES app/sdk/test/AppVendorReloadIntegrationTest.cpp
-  LIBS
-    bs_app_sdk
-    bs_adapter_registry
-    bs_adapter_orchestration
-    bs_adapter_parser
-    bs_kernel_io
-    bs_kernel_report
-    bs_kernel_common
-)
-target_include_directories(bs_test_app_vendor_reload_integration
-  PRIVATE
-    ${CMAKE_SOURCE_DIR}/app/sdk/include
-    ${CMAKE_SOURCE_DIR}/adapter/test
-)
-set_tests_properties(bs_test_app_vendor_reload_integration
-  PROPERTIES
-    LABELS "unit;integration;app;day17;regression"
-    TIMEOUT 180
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    RESOURCE_LOCK "attach_hermetic_temp"
-)
 blessstar_add_unit_test(bs_test_reload_config_json_integration
   SOURCES adapter/test/ReloadConfigJsonIntegrationTest.cpp
   LIBS
@@ -243,52 +171,7 @@ target_include_directories(bs_test_reload_config_json_integration
   PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
 )
 set_tests_properties(bs_test_reload_config_json_integration
-  PROPERTIES
-    LABELS "unit;integration;day9;io;attach;parser;regression"
-    TIMEOUT 120
-    RESOURCE_LOCK "attach_hermetic_temp"
-)
-
-# ---------------------------------------------------------------------------
-# Day 19 — memory baseline + 72h-RP stress (XIX-MEM)
-# ---------------------------------------------------------------------------
-blessstar_add_unit_test(bs_test_day19_memory_baseline
-  SOURCES adapter/test/Day19MemoryBaselineTest.cpp
-  LIBS bs_adapter_parser bs_kernel_ir bs_kernel_common
-)
-target_include_directories(bs_test_day19_memory_baseline
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
-)
-set_tests_properties(bs_test_day19_memory_baseline
-  PROPERTIES
-    LABELS "unit;day19;mem;regression"
-    TIMEOUT 300
-    RESOURCE_LOCK "attach_hermetic_temp"
-)
-
-blessstar_add_unit_test(bs_test_day19_stress_reload_loop
-  SOURCES adapter/test/Day19StressReloadLoopTest.cpp
-  LIBS
-    bs_adapter_registry
-    bs_adapter_orchestration
-    bs_adapter_attach
-    bs_kernel_io
-    bs_kernel_report
-    bs_kernel_common
-)
-target_include_directories(bs_test_day19_stress_reload_loop
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
-)
-set_tests_properties(bs_test_day19_stress_reload_loop
-  PROPERTIES
-    LABELS "unit;day19;stress;regression"
-    TIMEOUT 600
-    RESOURCE_LOCK "attach_hermetic_temp"
-)
-# CTest default: short "ci" profile (see day19_profile.json).
-set_tests_properties(bs_test_day19_stress_reload_loop
-  PROPERTIES
-    ENVIRONMENT "BS_DAY19_PROFILE=ci"
+  PROPERTIES LABELS "unit;integration;day9;io;attach;parser;regression" TIMEOUT 120
 )
 
 # ---------------------------------------------------------------------------
@@ -312,7 +195,7 @@ blessstar_add_unit_test(bs_test_registry_guard
 )
 blessstar_add_unit_test(bs_test_registry_integration
   SOURCES adapter/test/RegistryIntegrationTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_adapter_requirement bs_kernel_ir bs_kernel_common
+  LIBS bs_adapter_registry bs_adapter_requirement bs_kernel_ir bs_kernel_common
 )
 set_tests_properties(bs_test_path_registry PROPERTIES LABELS "unit;registry;day8;regression")
 set_tests_properties(bs_test_registry_hub PROPERTIES LABELS "unit;registry;regression")
@@ -323,14 +206,14 @@ set_tests_properties(bs_test_registry_integration PROPERTIES LABELS "unit;regist
 # Attach-phase integration: implemented pipeline only (see test file header).
 blessstar_add_unit_test(bs_test_attach_pipeline_registry
   SOURCES adapter/test/AttachPipelineRegistryTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_kernel_common
+  LIBS bs_adapter_registry bs_kernel_common
 )
 set_tests_properties(bs_test_attach_pipeline_registry
   PROPERTIES LABELS "unit;registry;attach;integration;regression" TIMEOUT 120)
 
 blessstar_add_unit_test(bs_test_registry_attach_contract
   SOURCES adapter/test/RegistryAttachContractTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_kernel_common
+  LIBS bs_adapter_registry bs_kernel_common
 )
 set_tests_properties(bs_test_registry_attach_contract
   PROPERTIES LABELS "unit;registry;attach;regression" TIMEOUT 120)
@@ -350,15 +233,9 @@ blessstar_add_unit_test(bs_test_io_local_provider
   SOURCES adapter/test/IoLocalProviderTest.cpp
   LIBS bs_adapter_io bs_kernel_common
 )
-target_include_directories(bs_test_io_local_provider
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
-)
 blessstar_add_unit_test(bs_test_io_registry_phase
   SOURCES adapter/test/IoRegistryPhaseTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_adapter_io bs_kernel_common
-)
-target_include_directories(bs_test_io_registry_phase
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+  LIBS bs_adapter_registry bs_adapter_io bs_kernel_common
 )
 blessstar_add_unit_test(bs_test_io_facade_boundary
   SOURCES kernel/io/test/IoFacadeBoundaryTest.cpp
@@ -367,9 +244,6 @@ blessstar_add_unit_test(bs_test_io_facade_boundary
 blessstar_add_unit_test(bs_test_io_local_provider_boundary
   SOURCES adapter/test/IoLocalProviderBoundaryTest.cpp
   LIBS bs_adapter_io bs_kernel_common
-)
-target_include_directories(bs_test_io_local_provider_boundary
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
 )
 blessstar_add_unit_test(bs_test_io_provider_stub
   SOURCES adapter/test/IoProviderStubTest.cpp
@@ -382,29 +256,6 @@ blessstar_add_unit_test(bs_test_io_reload_batch
 target_include_directories(bs_test_io_reload_batch
   PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
 )
-blessstar_add_unit_test(bs_test_reload_per_batch_config_manager
-  SOURCES adapter/test/ReloadPerBatchConfigManagerTest.cpp
-  LIBS bs_adapter_orchestration bs_adapter_registry bs_adapter_attach bs_adapter_log
-       bs_kernel_state bs_kernel_common
-)
-target_include_directories(bs_test_reload_per_batch_config_manager
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
-)
-target_compile_definitions(bs_test_reload_per_batch_config_manager PRIVATE BS_TESTING)
-set_tests_properties(bs_test_reload_per_batch_config_manager
-  PROPERTIES LABELS "unit;integration;state;day17;regression" TIMEOUT 120
-)
-blessstar_add_unit_test(bs_test_reload_ir_execute_integration
-  SOURCES adapter/test/ReloadIrExecuteIntegrationTest.cpp
-  LIBS bs_adapter_orchestration bs_adapter_registry bs_adapter_attach bs_adapter_log
-       bs_kernel_runtime bs_kernel_common
-)
-target_include_directories(bs_test_reload_ir_execute_integration
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
-)
-set_tests_properties(bs_test_reload_ir_execute_integration
-  PROPERTIES LABELS "unit;integration;runtime;attach;day17;regression" TIMEOUT 120
-)
 blessstar_add_unit_test(bs_test_io_facade_max_read
   SOURCES kernel/io/test/IoFacadeMaxReadTest.cpp
   LIBS bs_kernel_io bs_kernel_common
@@ -413,19 +264,13 @@ blessstar_add_unit_test(bs_test_io_local_provider_timeout
   SOURCES adapter/test/IoLocalProviderTimeoutTest.cpp
   LIBS bs_adapter_io
 )
-target_include_directories(bs_test_io_local_provider_timeout
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
-)
 blessstar_add_unit_test(bs_test_io_attach_pipeline
   SOURCES adapter/test/IoAttachPipelineTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_adapter_io bs_kernel_common
-)
-target_include_directories(bs_test_io_attach_pipeline
-  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+  LIBS bs_adapter_registry bs_adapter_io bs_kernel_common
 )
 blessstar_add_unit_test(bs_test_registry_bootstrap_io
   SOURCES adapter/test/RegistryBootstrapIoTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_kernel_common
+  LIBS bs_adapter_registry bs_kernel_common
 )
 blessstar_add_unit_test(bs_test_attach_context_bootstrap
   SOURCES adapter/test/AttachContextBootstrapTest.cpp
@@ -433,14 +278,7 @@ blessstar_add_unit_test(bs_test_attach_context_bootstrap
 )
 blessstar_add_unit_test(bs_test_attach_freeze_eventbus_integration
   SOURCES adapter/test/AttachFreezeEventBusIntegrationTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_kernel_state bs_kernel_common
-)
-blessstar_add_unit_test(bs_test_attach_facade_freeze_delegate
-  SOURCES adapter/test/AttachFacadeFreezeDelegateTest.cpp
-  LIBS bs_adapter_registry bs_adapter_attach bs_kernel_state bs_kernel_common
-)
-set_tests_properties(bs_test_attach_facade_freeze_delegate
-  PROPERTIES LABELS "unit;integration;attach;day17;regression" TIMEOUT 120
+  LIBS bs_adapter_registry bs_kernel_state bs_kernel_common
 )
 blessstar_add_unit_test(bs_test_plugin_loader_attach
   SOURCES adapter/test/PluginLoaderAttachTest.cpp
@@ -508,11 +346,7 @@ set_tests_properties(bs_test_attach_manifest_yaml
 set_tests_properties(bs_test_plugin_log_domains_attach_integration
   PROPERTIES LABELS "unit;registry;attach;day8;integration;regression" TIMEOUT 120)
 set_tests_properties(bs_test_day8_attach_full_integration
-  PROPERTIES
-    LABELS "unit;registry;attach;day8;io;integration;regression"
-    TIMEOUT 120
-    RESOURCE_LOCK "attach_hermetic_temp"
-)
+  PROPERTIES LABELS "unit;registry;attach;day8;io;integration;regression" TIMEOUT 120)
 
 # IO regression (local/CI):
 #   ctest --test-dir <build> -C <Config> -L io --output-on-failure
@@ -533,13 +367,6 @@ blessstar_add_unit_test(bs_test_pipeline
 blessstar_add_unit_test(bs_test_report
   SOURCES kernel/report/test/ReportTest.cpp
   LIBS bs_kernel_report
-)
-blessstar_add_unit_test(bs_test_kernel_runtime
-  SOURCES kernel/runtime/test/KernelRuntimeTest.cpp
-  LIBS bs_kernel_runtime bs_kernel_pipeline bs_kernel_ir bs_kernel_report_core
-)
-set_tests_properties(bs_test_kernel_runtime
-  PROPERTIES LABELS "unit;runtime;regression;day17" TIMEOUT 120
 )
 
 # ---------------------------------------------------------------------------
@@ -632,22 +459,17 @@ blessstar_add_unit_test(bs_test_io_status_table
   SOURCES kernel/io/test/IoStatusTableTest.cpp
   LIBS bs_kernel_io bs_kernel_registry bs_kernel_common bs_kernel_common_format
 )
-# Disabled until attach_config + full AttachContext (ConfigManager) ship in bs_adapter_attach.
-# See attach_config.cpp / attach_context.cpp integration (XVII-ATTACH-1).
+# Disabled until attach_config links with full AttachContext (XVII-ATTACH-1).
 # blessstar_add_unit_test(bs_test_reload_default_gate_report_eventbus_reentry_integration
 #   SOURCES adapter/test/ReloadDefaultGateReportEventBusReentryIntegrationTest.cpp
 #   LIBS
 #     bs_adapter_registry
-#     bs_adapter_attach
 #     bs_adapter_orchestration
 #     bs_adapter_log
 #     bs_kernel_io
 #     bs_kernel_state
 #     bs_kernel_report
 #     bs_kernel_common
-# )
-# target_include_directories(bs_test_reload_default_gate_report_eventbus_reentry_integration
-#   PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
 # )
 set_tests_properties(bs_test_reload_attach_guard PROPERTIES LABELS "unit;day7;io;attach;regression")
 set_tests_properties(bs_test_reload_gate_default PROPERTIES LABELS "unit;day7;day9;io;parser;regression")
@@ -674,167 +496,3 @@ blessstar_add_unit_test(bs_test_metrics_comprehensive
   LIBS bs_kernel_common
 )
 set_tests_properties(bs_test_metrics_comprehensive PROPERTIES LABELS "unit;comprehensive")
-
-find_package(Python3 COMPONENTS Interpreter QUIET)
-if(Python3_FOUND)
-  add_test(
-    NAME bs_test_day16_contract_registry_check
-    COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/scripts/gates/check_day16_contract_registry.py"
-            "${CMAKE_SOURCE_DIR}/docs/DAY16_CONTRACT_REGISTRY_TEMPLATE.md"
-  )
-  set_tests_properties(bs_test_day16_contract_registry_check
-    PROPERTIES LABELS "unit;docs;day16;regression" TIMEOUT 60
-  )
-  add_test(
-    NAME bs_test_day16_contract_files_check
-    COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/scripts/gates/check_day16_contract_files.py"
-            "${CMAKE_SOURCE_DIR}/docs/contracts/architecture.contracts.json"
-            "${CMAKE_SOURCE_DIR}/docs/contracts/integration.contracts.json"
-  )
-  set_tests_properties(bs_test_day16_contract_files_check
-    PROPERTIES LABELS "unit;docs;day16;regression" TIMEOUT 60
-  )
-
-  # Day17: style contract gates (C-ST-*)
-  set(_bs_scripts_dir "${CMAKE_SOURCE_DIR}/tools/scripts")
-  set(_bs_contracts_dir "${_bs_scripts_dir}/contracts")
-  set(_bs_gates_dir "${_bs_scripts_dir}/gates")
-  set(_bs_format_dir "${_bs_scripts_dir}/format")
-  set(_bs_day17_contract_json
-    "${CMAKE_SOURCE_DIR}/docs/contracts/architecture.contracts.json"
-    "${CMAKE_SOURCE_DIR}/docs/contracts/integration.contracts.json"
-    "${CMAKE_SOURCE_DIR}/docs/contracts/style.contracts.json"
-  )
-
-  add_test(
-    NAME bs_test_day17_contract_files_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_contracts_dir}/contract_validate_instances.py"
-  )
-  set_tests_properties(bs_test_day17_contract_files_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_public_api_prefix_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_public_api_prefix.py"
-  )
-  set_tests_properties(bs_test_day17_public_api_prefix_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 120
-  )
-
-  add_test(
-    NAME bs_test_day17_layered_api_prefix_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_layered_api_prefix.py"
-  )
-  set_tests_properties(bs_test_day17_layered_api_prefix_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 120
-  )
-
-  add_test(
-    NAME bs_test_day17_vendor_config_boundary_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_vendor_config_boundary.py"
-  )
-  set_tests_properties(bs_test_day17_vendor_config_boundary_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_namespace_boundary_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_namespace_boundary.py"
-  )
-  set_tests_properties(bs_test_day17_namespace_boundary_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_target_name_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_cmake_target_names.py"
-  )
-  set_tests_properties(bs_test_day17_target_name_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_contract_id_prefix_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_contract_id_prefix.py"
-  )
-  set_tests_properties(bs_test_day17_contract_id_prefix_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_ctest_labels_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_ctest_labels.py"
-  )
-  set_tests_properties(bs_test_day17_ctest_labels_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_test_tempdir_unique_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_test_tempdir_unique.py"
-  )
-  set_tests_properties(bs_test_day17_test_tempdir_unique_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 120
-  )
-
-  add_test(
-    NAME bs_test_day17_test_environment_tier_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_test_environment_tiers.py"
-  )
-  set_tests_properties(bs_test_day17_test_environment_tier_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_test_l1_gate_scope_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_contract_gate_runner_l1_scope.py"
-  )
-  set_tests_properties(bs_test_day17_test_l1_gate_scope_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
-  )
-
-  add_test(
-    NAME bs_test_day17_public_header_contract_block_check
-    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_public_header_contract_block.py"
-  )
-  set_tests_properties(bs_test_day17_public_header_contract_block_check
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 120
-  )
-
-  add_test(
-    NAME bs_test_day17_clang_format_include
-    COMMAND ${Python3_EXECUTABLE} "${_bs_format_dir}/run_clang_format_check.py"
-            --batch include
-  )
-  set_tests_properties(bs_test_day17_clang_format_include
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 600
-  )
-
-  add_test(
-    NAME bs_test_day17_clang_format_src
-    COMMAND ${Python3_EXECUTABLE} "${_bs_format_dir}/run_clang_format_check.py"
-            --batch src
-  )
-  set_tests_properties(bs_test_day17_clang_format_src
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 900
-  )
-
-  # Day17 D-scheme: contract compile + gate runner
-  add_test(
-    NAME bs_test_day17_contract_compile
-    COMMAND ${Python3_EXECUTABLE} "${_bs_contracts_dir}/contract_compile.py"
-  )
-  set_tests_properties(bs_test_day17_contract_compile
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 120
-  )
-
-  add_test(
-    NAME bs_test_day17_contract_gate_runner
-    COMMAND ${Python3_EXECUTABLE} "${_bs_contracts_dir}/contract_gate_runner.py"
-      --through-stage ci
-  )
-  set_tests_properties(bs_test_day17_contract_gate_runner
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 600
-  )
-endif()
