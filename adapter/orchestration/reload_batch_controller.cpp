@@ -21,6 +21,7 @@ struct PathWork
     std::string            uri;
     PathOrchestrationState state         = BS_ORCH_PENDING;
     uint64_t               base_revision = 0;
+    std::vector<uint8_t>   staged_payload;
 };
 
 struct ReloadBatchController
@@ -142,7 +143,9 @@ int bs_adapter_attach_reload_batch_add_path(ReloadBatchController* ctrl, const c
 
 static void gc_path_work(PathWork* w)
 {
-    (void)w;
+    if (!w)
+        return;
+    w->staged_payload.clear();
     /* Keep terminal path state for bs_adapter_attach_reload_batch_path_state (XV-IO-02). */
 }
 
@@ -257,8 +260,17 @@ static int persist_per_path(ReloadBatchController* ctrl, PathWork* w, const IoRe
     }
     AttachContext* actx = bs_adapter_attach_ctx_get_active();
     if (actx && result && result->data && result->length > 0)
-        (void)bs_adapter_attach_config_sync_path(actx, w->uri.c_str(), result->data,
-                                                 result->length);
+    {
+        const int sync_rc = bs_adapter_attach_config_sync_path(actx, w->uri.c_str(), result->data,
+                                                               result->length);
+        if (sync_rc != 0)
+        {
+            w->state = BS_ORCH_PERSIST_REJECTED;
+            report_audit_failure(ctrl, w->uri.c_str(), "config_sync", sync_rc,
+                                 "config manager sync failed");
+            return sync_rc;
+        }
+    }
     return BS_ATTACH_OK;
 }
 
@@ -357,7 +369,8 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             continue;
         }
 
-        w.state      = BS_ORCH_STAGED;
+        w.state = BS_ORCH_STAGED;
+        w.staged_payload.assign(result.data, result.data + result.length);
         const int st = bs_adapter_attach_persist_store_batch_stage(
             ctrl->attach_store, w.uri.c_str(), result.data, result.length, w.base_revision);
         bs_io_read_result_free(&result);
@@ -405,10 +418,27 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             else
             {
                 const uint64_t epoch = session_batch_epoch(ctrl);
+                AttachContext* actx  = bs_adapter_attach_ctx_get_active();
                 for (auto& w : ctrl->paths)
                 {
                     if (w.state == BS_ORCH_STAGED)
                     {
+                        if (actx && !w.staged_payload.empty())
+                        {
+                            const int sync_rc = bs_adapter_attach_config_sync_path(
+                                actx, w.uri.c_str(), w.staged_payload.data(),
+                                w.staged_payload.size());
+                            if (sync_rc != 0)
+                            {
+                                w.state           = BS_ORCH_PERSIST_REJECTED;
+                                ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
+                                batch_had_failure = true;
+                                report_audit_failure(ctrl, w.uri.c_str(), "config_sync", sync_rc,
+                                                     "config manager sync failed");
+                                gc_path_work(&w);
+                                continue;
+                            }
+                        }
                         w.state = BS_ORCH_COMMITTED;
                         if (ctrl->report)
                         {

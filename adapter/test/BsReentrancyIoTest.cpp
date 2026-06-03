@@ -46,8 +46,8 @@ int main()
     IoFacade*       io     = bs_io_facade_create(facade);
     assert(io != nullptr);
 
-    EventBus* bus = bs_adapter_attach_config_event_bus(ctx);
-    IoReadProbe    probe{io, BS_IO_OK};
+    EventBus*   bus = bs_adapter_attach_config_event_bus(ctx);
+    IoReadProbe probe{io, BS_IO_OK};
     bs_event_bus_subscribe(bus, "/config/reload", state_listener, &probe);
 
     static const char k_payload[] = "reload-payload";
