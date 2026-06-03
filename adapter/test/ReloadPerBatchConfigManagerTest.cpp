@@ -199,5 +199,6 @@ int main()
     if (test_sync_fail_maps_persist_rejected() != 0)
         return 1;
 #endif
+    bs_adapter_registry_shutdown_log();
     return 0;
 }

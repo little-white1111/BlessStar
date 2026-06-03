@@ -55,8 +55,8 @@ int main()
     assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri) == 0);
     assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
     assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
-    /* gc_path_work resets successful PER_PATH to BS_ORCH_PENDING; failures keep terminal state. */
-    assert(bs_adapter_attach_reload_batch_path_state(ctrl, uri) == BS_ORCH_PENDING);
+    /* gc_path_work keeps terminal path state for path_state queries (XV-IO-02). */
+    assert(bs_adapter_attach_reload_batch_path_state(ctrl, uri) == BS_ORCH_COMMITTED);
 
     bs_adapter_attach_reload_batch_destroy(ctrl);
     bs_test_attach_teardown(&fix);
