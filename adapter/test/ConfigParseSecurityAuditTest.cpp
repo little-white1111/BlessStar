@@ -77,7 +77,7 @@ static void test_manifest_line_limit()
         std::string long_line(static_cast<size_t>(BS_ATTACH_MAX_MANIFEST_LINE) + 1, 'x');
         out << long_line << "\n";
     }
-    BsAttachStore* store = bs_adapter_attach_persist_store_open(path.string().c_str());
+    BsAttachStore* store = bs_attach_store_open(path.string().c_str());
     assert(store == nullptr);
 }
 

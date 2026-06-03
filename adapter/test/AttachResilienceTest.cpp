@@ -94,7 +94,7 @@ static void write_manifest_two(const fs::path& manifest, const std::string& uri_
 
 static uint64_t read_manifest_revision(const fs::path& manifest, const std::string& uri)
 {
-    BsAttachStore* s = bs_adapter_attach_persist_store_open(manifest.string().c_str());
+    BsAttachStore* s = bs_attach_store_open(manifest.string().c_str());
     assert(s != nullptr);
     uint64_t rev = 0;
     assert(bs_adapter_attach_persist_store_get_revision(s, uri.c_str(), &rev) == BS_ATTACH_OK);
@@ -160,7 +160,7 @@ int main()
     assert(read_manifest_revision(man, uri) == 1);
     {
         char           path_buf[512];
-        BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
+        BsAttachStore* rd = bs_attach_store_open(man.string().c_str());
         assert(rd != nullptr);
         assert(bs_adapter_attach_persist_store_get_canonical_path(
                    rd, uri.c_str(), path_buf, sizeof(path_buf)) == BS_ATTACH_OK);
@@ -170,7 +170,7 @@ int main()
 
     write_manifest_revision(man, uri, 0);
     {
-        BsAttachStore* s = bs_adapter_attach_persist_store_open(man.string().c_str());
+        BsAttachStore* s = bs_attach_store_open(man.string().c_str());
         assert(s != nullptr);
         assert(bs_adapter_attach_persist_store_commit_per_path(
                    s, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen, 0) ==
@@ -234,7 +234,7 @@ int main()
     bs_adapter_attach_persist_store_set_malloc_hook(counting_malloc_fail);
     g_malloc_calls      = 0;
     g_malloc_fail_after = 0;
-    assert(bs_adapter_attach_persist_store_open(nullptr) == nullptr);
+    assert(bs_attach_store_open(nullptr) == nullptr);
     bs_adapter_attach_persist_store_reset_malloc_hook();
 #endif
 

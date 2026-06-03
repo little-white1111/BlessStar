@@ -54,6 +54,8 @@ extern "C"
     void bs_reload_batch_controller_set_gate_fn(ReloadBatchController* ctrl, ReloadPathGateFn fn,
                                                 void* user_ctx);
 
+    void bs_reload_batch_controller_use_default_gate(ReloadBatchController* ctrl);
+
     void bs_reload_batch_controller_set_max_retry(ReloadBatchController* ctrl, unsigned max_retry);
 
     void bs_reload_batch_controller_set_report(ReloadBatchController* ctrl, struct Report* report);

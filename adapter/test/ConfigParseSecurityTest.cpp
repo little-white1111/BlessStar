@@ -78,8 +78,8 @@ static void test_injection_string_stores_literal()
     BsStatus st = bs_adapter_parser_parse_bytes(reinterpret_cast<const uint8_t*>(json.data()),
                                                 json.size(), &result);
     assert(bs_status_is_ok(st));
-    IRInstruction* first = bs_ir_instruction_list_get(result.instructions, 0);
-    const char*    sql   = bs_ir_instruction_get_metadata(first, "sql");
+    IRInstruction* first = ir_instruction_list_get(result.instructions, 0);
+    const char*    sql   = ir_instruction_get_metadata(first, "sql");
     assert(sql != nullptr && std::strstr(sql, "DROP TABLE") != nullptr);
     bs_adapter_parser_result_destroy(&result);
 }
