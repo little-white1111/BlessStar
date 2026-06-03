@@ -24,10 +24,10 @@ int main()
         out << "freeze-read";
     }
 
-    AttachContext* ctx = bs_adapter_attach_ctx_create();
+    AttachContext* ctx = bs_attach_context_create();
     assert(ctx != nullptr);
-    bs_adapter_attach_ctx_set_active(ctx);
-    RegistryFacade* reg = bs_adapter_attach_ctx_registry(ctx);
+    bs_attach_context_set_active(ctx);
+    RegistryFacade* reg = bs_attach_context_registry(ctx);
     assert(reg != nullptr);
 
     assert(bs_adapter_registry_bootstrap_begin_ctx(ctx) == 0);
@@ -56,6 +56,6 @@ int main()
 
     bs_io_facade_destroy(io);
     bs_adapter_registry_shutdown_log();
-    bs_adapter_attach_ctx_destroy(ctx);
+    bs_attach_context_destroy(ctx);
     return 0;
 }

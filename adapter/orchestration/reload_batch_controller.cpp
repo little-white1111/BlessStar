@@ -78,8 +78,7 @@ void bs_reload_batch_controller_set_gate_fn(ReloadBatchController* ctrl, ReloadP
 
 void bs_reload_batch_controller_use_default_gate(ReloadBatchController* ctrl)
 {
-    bs_reload_batch_controller_set_gate_fn(ctrl, bs_adapter_attach_reload_default_path_gate,
-                                           NULL);
+    bs_reload_batch_controller_set_gate_fn(ctrl, bs_adapter_attach_reload_default_path_gate, NULL);
 }
 
 void bs_reload_batch_controller_set_max_retry(ReloadBatchController* ctrl, unsigned max_retry)

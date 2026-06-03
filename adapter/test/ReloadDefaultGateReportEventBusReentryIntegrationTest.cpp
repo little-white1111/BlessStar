@@ -85,12 +85,12 @@ static int facade_read_fn(void* user_ctx, const char* uri, IoReadResult* out)
  * read). */
 static int minimal_attach_setup(ReloadHarness* h)
 {
-    h->actx = bs_adapter_attach_ctx_create();
+    h->actx = bs_attach_context_create();
     REQUIRE_PHASE("setup", h->actx != nullptr);
-    bs_adapter_attach_ctx_set_active(h->actx);
+    bs_attach_context_set_active(h->actx);
     REQUIRE_PHASE("setup", bs_adapter_registry_bootstrap_begin_ctx(h->actx) == 0);
     REQUIRE_PHASE("setup", bs_adapter_attach_is_log_ready());
-    h->facade = bs_adapter_attach_ctx_registry(h->actx);
+    h->facade = bs_attach_context_registry(h->actx);
     REQUIRE_PHASE("setup", bs_registry_facade_advance_phase(h->facade, BS_REGISTRY_PHASE_P2) ==
                                BS_REGISTRY_OK);
     REQUIRE_PHASE("setup", bs_adapter_registry_bootstrap_freeze_ctx(h->actx) == 0);
@@ -112,31 +112,31 @@ static int prepare_reload_fixture(ReloadFixture* fix, const fs::path& work)
 /** C: reload + default gate (no gate_fn) + Report; read path uses IoFacade. */
 static int phase_c_reload_default_gate_and_report(const ReloadHarness* h, const ReloadFixture* fix)
 {
-    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(8);
+    ReloadBatchController* ctrl = bs_reload_batch_controller_create(8);
     REQUIRE_PHASE("C-reload", ctrl != nullptr);
 
     FacadeReadCtx read_ctx{h->io};
-    bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &read_ctx);
+    bs_reload_batch_controller_set_read_fn(ctrl, facade_read_fn, &read_ctx);
     day12_wire_reload_defaults(ctrl);
     /* gate_fn intentionally unset -> default ir_gate (IMPL-06-02) */
 
-    Report* report = bs_report_create("reload_default_gate_report");
+    Report* report = report_create("reload_default_gate_report");
     REQUIRE_PHASE("C-reload", report != nullptr);
-    REQUIRE_PHASE("C-reload", bs_adapter_attach_reload_batch_add_path(ctrl, fix->uri.c_str()) == 0);
-    REQUIRE_PHASE("C-reload", bs_adapter_attach_reload_batch_run_with_report(ctrl, report) == 0);
-    REQUIRE_PHASE("C-reload", bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
+    REQUIRE_PHASE("C-reload", bs_reload_batch_add_path(ctrl, fix->uri.c_str()) == 0);
+    REQUIRE_PHASE("C-reload", bs_reload_batch_run_with_report(ctrl, report) == 0);
+    REQUIRE_PHASE("C-reload", bs_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
 
     ConfigState st = CONFIG_STATE_INITIAL;
     REQUIRE_PHASE("C-reload",
                   bs_adapter_attach_config_get_state(h->actx, fix->uri.c_str(), &st) == 0);
     REQUIRE_PHASE("C-reload", st == CONFIG_STATE_ACTIVE);
 
-    char* json = bs_report_to_json(report);
+    char* json = report_to_json(report);
     REQUIRE_PHASE("C-reload", json != nullptr);
     std::free(json);
 
-    bs_report_destroy(report);
-    bs_adapter_attach_reload_batch_destroy(ctrl);
+    report_destroy(report);
+    bs_reload_batch_controller_destroy(ctrl);
     return 0;
 }
 
@@ -211,7 +211,7 @@ static void teardown(ReloadHarness* h, ReloadFixture* fix)
         bs_io_facade_destroy(h->io);
     bs_adapter_registry_shutdown_log();
     if (h->actx)
-        bs_adapter_attach_ctx_destroy(h->actx);
+        bs_attach_context_destroy(h->actx);
 }
 
 int main()

@@ -18,10 +18,9 @@ namespace fs = std::filesystem;
 /** Unique dir under system temp; removes any prior path with the same name. */
 inline fs::path bs_test_unique_temp_dir(const char* prefix)
 {
-    const auto now_ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::steady_clock::now().time_since_epoch())
-            .count();
+    const auto now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            std::chrono::steady_clock::now().time_since_epoch())
+                            .count();
     const uint32_t salt = std::random_device{}();
     std::ostringstream dir_name;
     dir_name << prefix << '_' << now_ns << '_' << salt;
