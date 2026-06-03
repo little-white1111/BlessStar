@@ -21,6 +21,12 @@ struct BsDay19Profile
     double      rss_slope_mb_per_hour_max = 50.0;
     double      rss_delta_mb_max          = 200.0;
     double      outcome_ok_rate_min       = 0.99;
+    /** When < 1.0, success rate must not exceed this (failure-stress profiles). */
+    double      outcome_ok_rate_max       = 1.01;
+    int         min_night_abort_batches   = 0;
+    int         min_fail_parse            = 0;
+    int         min_fail_gate             = 0;
+    int         min_fail_read             = 0;
     int         disk_budget_mb            = 2048;
 };
 
@@ -74,12 +80,51 @@ inline BsDay19Profile bs_day19_profile_full()
     return p;
 }
 
+/** 900s negative smoke_fail: fault injection + capped success rate (same kappa as smoke). */
+inline BsDay19Profile bs_day19_profile_smoke_fail()
+{
+    BsDay19Profile p            = bs_day19_profile_smoke();
+    p.name                      = "smoke_fail";
+    p.outcome_ok_rate_min       = 0.0;
+    p.outcome_ok_rate_max       = 0.82;
+    p.min_night_abort_batches   = 15;
+    p.min_fail_parse            = 80;
+    p.min_fail_gate             = 80;
+    p.min_fail_read             = 80;
+    p.rss_slope_mb_per_hour_max = 2.0;
+    p.rss_delta_mb_max          = 100.0;
+    return p;
+}
+
+/** Fast local/CI check for smoke_fail harness (~25s). */
+inline BsDay19Profile bs_day19_profile_smoke_fail_ci()
+{
+    BsDay19Profile p          = bs_day19_profile_ci();
+    p.name                    = "smoke_fail_ci";
+    p.outcome_ok_rate_min     = 0.0;
+    p.outcome_ok_rate_max     = 0.90;
+    p.min_night_abort_batches = 2;
+    p.min_fail_parse          = 4;
+    p.min_fail_gate           = 4;
+    p.min_fail_read           = 4;
+    return p;
+}
+
+inline bool bs_day19_profile_is_failure_stress(const BsDay19Profile& profile)
+{
+    return profile.outcome_ok_rate_max < 1.0;
+}
+
 inline BsDay19Profile bs_day19_profile_from_name(const char* name)
 {
     if (!name || name[0] == '\0')
         return bs_day19_profile_ci();
     if (std::strcmp(name, "smoke") == 0)
         return bs_day19_profile_smoke();
+    if (std::strcmp(name, "smoke_fail") == 0)
+        return bs_day19_profile_smoke_fail();
+    if (std::strcmp(name, "smoke_fail_ci") == 0)
+        return bs_day19_profile_smoke_fail_ci();
     if (std::strcmp(name, "full") == 0)
         return bs_day19_profile_full();
     return bs_day19_profile_ci();

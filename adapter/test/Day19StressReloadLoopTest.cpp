@@ -1,6 +1,6 @@
 /**
  * T19.4 / T19.5: 72h-RP stress harness (PER_PATH day + PER_BATCH night).
- * Default profile "ci" for CTest; use --profile=smoke|full or BS_DAY19_PROFILE.
+ * Default profile "ci" for CTest; use --profile=smoke|smoke_fail|full or BS_DAY19_PROFILE.
  */
 
 #include "bs/adapter/attach_context.h"
@@ -17,6 +17,7 @@
 
 #include "support/attach_test_fixture.h"
 #include "support/day12_attach_fixture.h"
+#include "support/day19_failure_pool.h"
 #include "support/day19_fixture_gen.h"
 #include "support/day19_profile.h"
 #include "support/day19_rss_sampler.h"
@@ -58,6 +59,24 @@ static uint64_t dir_size_bytes(const fs::path& root)
     return total;
 }
 
+static void tally_failure_kind(BsDay19PathKind kind, int* fail_parse, int* fail_gate, int* fail_read)
+{
+    switch (kind)
+    {
+    case BS_DAY19_PATH_PARSE_FAIL:
+        ++(*fail_parse);
+        break;
+    case BS_DAY19_PATH_GATE_FAIL:
+        ++(*fail_gate);
+        break;
+    case BS_DAY19_PATH_READ_FAIL:
+        ++(*fail_read);
+        break;
+    default:
+        break;
+    }
+}
+
 int main(int argc, char** argv)
 {
     const BsDay19Profile profile = bs_day19_profile_from_argv_env(argc, argv);
@@ -76,10 +95,23 @@ int main(int argc, char** argv)
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
-    std::vector<std::string> uris;
-    const size_t             fixture_bytes = static_cast<size_t>(profile.fixture_kb) * 1024u;
-    BS_TEST_REQUIRE("paths",
-                    write_path_pool(work, profile.path_pool_size, fixture_bytes, &uris) == 0);
+    const bool                      failure_stress = bs_day19_profile_is_failure_stress(profile);
+    std::vector<std::string>        uris;
+    std::vector<BsDay19PathEntry>   path_entries;
+    const size_t                    fixture_bytes = static_cast<size_t>(profile.fixture_kb) * 1024u;
+    if (failure_stress)
+    {
+        BS_TEST_REQUIRE("paths-fail",
+                        bs_day19_write_failure_path_pool(work, profile.path_pool_size,
+                                                         fixture_bytes, &path_entries) == 0);
+        for (const auto& e : path_entries)
+            uris.push_back(e.uri);
+    }
+    else
+    {
+        BS_TEST_REQUIRE("paths",
+                        write_path_pool(work, profile.path_pool_size, fixture_bytes, &uris) == 0);
+    }
 
     const fs::path                manifest_path = work / "manifest.bs";
     std::vector<BsDay19RssSample> samples;
@@ -91,8 +123,12 @@ int main(int argc, char** argv)
     int  day_total   = 0;
     int  night_ok    = 0;
     int  night_total = 0;
-    int  path_i      = 0;
-    bool steady_mark = false;
+    int  path_i              = 0;
+    bool steady_mark         = false;
+    int  fail_parse          = 0;
+    int  fail_gate           = 0;
+    int  fail_read           = 0;
+    int  night_abort_batches = 0;
 
     auto elapsed_sec = [&]()
     {
@@ -134,7 +170,10 @@ int main(int argc, char** argv)
             bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
             bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
-            const std::string& uri = uris[static_cast<size_t>(path_i % uris.size())];
+            const size_t       idx  = static_cast<size_t>(path_i % uris.size());
+            const std::string& uri  = uris[idx];
+            const BsDay19PathKind kind =
+                failure_stress ? path_entries[idx].kind : BS_DAY19_PATH_GOOD;
             path_i++;
             ++day_total;
             const int add_rc = bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str());
@@ -143,6 +182,8 @@ int main(int argc, char** argv)
                 (run_rc == 0 && bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1
                                                                                               : 0;
             day_ok += ok;
+            if (!ok && failure_stress)
+                tally_failure_kind(kind, &fail_parse, &fail_gate, &fail_read);
             if (!steady_mark && day_total >= 30)
             {
                 bs_day19_rss_sample_push(samples, "steady_mark", static_cast<uint64_t>(day_total),
@@ -164,14 +205,45 @@ int main(int argc, char** argv)
             bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
             bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
-            const int n = profile.paths_per_batch < profile.path_pool_size ? profile.paths_per_batch
-                                                                           : profile.path_pool_size;
-            int       add_fail = 0;
-            for (int p = 0; p < n; ++p)
+            const bool abort_batch = failure_stress && ((night_total % 2) == 0);
+            int        add_fail    = 0;
+            if (failure_stress)
             {
-                if (bs_adapter_attach_reload_batch_add_path(
-                        ctrl, uris[static_cast<size_t>(p)].c_str()) != 0)
-                    add_fail = 1;
+                int added = 0;
+                for (const auto& e : path_entries)
+                {
+                    if (e.kind != BS_DAY19_PATH_GOOD)
+                        continue;
+                    if (added >= profile.paths_per_batch)
+                        break;
+                    if (bs_adapter_attach_reload_batch_add_path(ctrl, e.uri.c_str()) != 0)
+                        add_fail = 1;
+                    ++added;
+                }
+                if (abort_batch)
+                {
+                    for (const auto& e : path_entries)
+                    {
+                        if (e.kind == BS_DAY19_PATH_PARSE_FAIL)
+                        {
+                            if (bs_adapter_attach_reload_batch_add_path(ctrl, e.uri.c_str()) != 0)
+                                add_fail = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                const int n =
+                    profile.paths_per_batch < profile.path_pool_size ? profile.paths_per_batch
+                                                                     : profile.path_pool_size;
+                for (int p = 0; p < n; ++p)
+                {
+                    if (bs_adapter_attach_reload_batch_add_path(
+                            ctrl, uris[static_cast<size_t>(p)].c_str()) != 0)
+                        add_fail = 1;
+                }
             }
             ++night_total;
             const int run_rc = add_fail ? -1 : bs_adapter_attach_reload_batch_run(ctrl);
@@ -179,6 +251,8 @@ int main(int argc, char** argv)
                 (run_rc == 0 && bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK) ? 1
                                                                                               : 0;
             night_ok += ok;
+            if (failure_stress && abort_batch && !ok)
+                ++night_abort_batches;
             maybe_sample("night", static_cast<uint64_t>(night_total), ok);
             bs_day19_rss_sample_push(samples, "night_tick", static_cast<uint64_t>(night_total), ok);
             bs_adapter_attach_reload_batch_destroy(ctrl);
@@ -231,11 +305,13 @@ int main(int argc, char** argv)
     const uint64_t disk = dir_size_bytes(work);
 
     std::printf("stress,profile=%s,day=%d/%d(%.4f),night=%d/%d(%.4f),"
+                "fail_parse=%d,fail_gate=%d,fail_read=%d,night_abort=%d,"
                 "rss_slope_reg=%.3f,rss_delta_win=%.3f,"
                 "rss_slope_endpoint_ws=%.3f,rss_delta_ws_win=%.3f,"
                 "samples=%zu,warmup_skip=%zu,win=%zu,disk_mb=%llu\n",
-                profile.name, day_ok, day_total, day_rate, night_ok, night_total, night_rate, slope,
-                delta, slope_endpoint_ws, delta_ws, samples.size(), warmup_skip, window_samples,
+                profile.name, day_ok, day_total, day_rate, night_ok, night_total, night_rate,
+                fail_parse, fail_gate, fail_read, night_abort_batches, slope, delta,
+                slope_endpoint_ws, delta_ws, samples.size(), warmup_skip, window_samples,
                 static_cast<unsigned long long>(disk / (1024u * 1024u)));
 
     const char* out_path = std::getenv("BS_DAY19_STRESS_OUT");
@@ -254,6 +330,7 @@ int main(int argc, char** argv)
 
     const bool diag = (std::getenv("BS_DAY19_RSS_DIAG") != nullptr) ||
                       (std::strcmp(profile.name, "smoke") == 0) ||
+                      (std::strcmp(profile.name, "smoke_fail") == 0) ||
                       (std::strcmp(profile.name, "full") == 0);
 
     bs_test_attach_teardown(&fix);
@@ -269,12 +346,39 @@ int main(int argc, char** argv)
                      profile.min_night_batches);
         return 1;
     }
-    if (day_rate < profile.outcome_ok_rate_min || night_rate < profile.outcome_ok_rate_min)
+    if (failure_stress)
+    {
+        if (day_rate > profile.outcome_ok_rate_max || night_rate > profile.outcome_ok_rate_max)
+        {
+            std::fprintf(stderr,
+                         "FAIL: success rate too high (day=%.4f night=%.4f max=%.4f) - "
+                         "failure injection ineffective\n",
+                         day_rate, night_rate, profile.outcome_ok_rate_max);
+            return 1;
+        }
+        if (night_abort_batches < profile.min_night_abort_batches)
+        {
+            std::fprintf(stderr, "FAIL: night_abort %d < min %d\n", night_abort_batches,
+                         profile.min_night_abort_batches);
+            return 1;
+        }
+        if (fail_parse < profile.min_fail_parse || fail_gate < profile.min_fail_gate ||
+            fail_read < profile.min_fail_read)
+        {
+            std::fprintf(stderr,
+                         "FAIL: failure taxonomy parse=%d gate=%d read=%d (min %d/%d/%d)\n",
+                         fail_parse, fail_gate, fail_read, profile.min_fail_parse,
+                         profile.min_fail_gate, profile.min_fail_read);
+            return 1;
+        }
+    }
+    else if (day_rate < profile.outcome_ok_rate_min || night_rate < profile.outcome_ok_rate_min)
     {
         std::fprintf(stderr, "FAIL: outcome rate below min %.4f\n", profile.outcome_ok_rate_min);
         return 1;
     }
-    const bool check_slope = (std::strcmp(profile.name, "ci") != 0);
+    const bool check_slope =
+        (std::strcmp(profile.name, "ci") != 0 && std::strcmp(profile.name, "smoke_fail_ci") != 0);
     if (check_slope && slope > profile.rss_slope_mb_per_hour_max)
     {
         std::fprintf(stderr,

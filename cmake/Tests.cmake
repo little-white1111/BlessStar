@@ -623,6 +623,14 @@ if(WIN32)
   )
 endif()
 
+# smoke_fail_ci (~25s); 900s negative run uses day19-stress-smoke-fail workflow.
+add_test(NAME bs_test_day19_stress_fail_ci
+         COMMAND "$<TARGET_FILE:bs_test_day19_stress_reload_loop>" --profile=smoke_fail_ci)
+set_tests_properties(bs_test_day19_stress_fail_ci
+  PROPERTIES LABELS "unit;day19;stress;regression;negative" TIMEOUT 120
+                   ENVIRONMENT "BS_DAY19_PROFILE=smoke_fail_ci"
+)
+
 # ---------------------------------------------------------------------------
 # Comprehensive (still unit scope; may be slower)
 # ---------------------------------------------------------------------------
