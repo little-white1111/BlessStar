@@ -195,7 +195,7 @@ static int phase_e_reentrant_read_blocked_in_callback(const ReloadHarness* h)
                   EventBus_Subscribe(bus, "/config/reentry", reentry_listener, &probe) == 0);
 
     ConfigEvent* ev = ConfigEvent_Create("/config/reentry", CONFIG_EVENT_ENTER_UPDATING,
-                                             CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
+                                         CONFIG_STATE_ACTIVE, CONFIG_STATE_UPDATING, 2);
     REQUIRE_PHASE("E-reentry", ev != nullptr);
     REQUIRE_PHASE("E-reentry", EventBus_Publish(bus, ev) == 0);
     ConfigEvent_Destroy(ev);

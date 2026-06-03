@@ -239,14 +239,18 @@ target_link_libraries(bs_adapter_parser
 add_library(bs_adapter_attach
   adapter/src/attach_runtime.cpp
   adapter/src/attach_context.cpp
+  adapter/src/attach_config.cpp
 )
 target_include_directories(bs_adapter_attach
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/adapter/include
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter/src
 )
 target_link_libraries(bs_adapter_attach
   PUBLIC
     bs_kernel_registry
+    bs_kernel_state
     bs_kernel_common
 )
 
