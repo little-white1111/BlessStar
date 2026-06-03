@@ -1,0 +1,54 @@
+# T19 smoke (900s) — standalone; does not block PR ci.yml.
+# Triggers: manual dispatch, weekly schedule (Sunday 00:00 UTC).
+name: day19-stress-smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_dir:
+        description: CMake build directory
+        required: false
+        default: build_day19_stress
+      profile:
+        description: BS_DAY19_PROFILE (use smoke for 900s gate)
+        required: false
+        default: smoke
+  schedule:
+    - cron: "0 0 * * 0"
+
+concurrency:
+  group: day19-stress-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke-900s:
+    name: Day19 stress smoke (900s)
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B "${{ github.event.inputs.build_dir || 'build_day19_stress' }}" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build stress target
+        run: cmake --build "${{ github.event.inputs.build_dir || 'build_day19_stress' }}" --config Release --target bs_test_day19_stress_reload_loop
+
+      - name: Run smoke profile
+        shell: pwsh
+        env:
+          BS_DAY19_PROFILE: ${{ github.event.inputs.profile || 'smoke' }}
+        run: |
+          $bd = "${{ github.event.inputs.build_dir || 'build_day19_stress' }}"
+          powershell -ExecutionPolicy Bypass -File tools/scripts/perf/run_day19_stress_smoke.ps1 `
+            -BuildDir $bd -Config Release -Profile $env:BS_DAY19_PROFILE
+
+      - name: Upload smoke artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day19-stress-smoke-${{ github.run_id }}
+          path: |
+            docs/day19_stress_smoke_latest.json
+            docs/day19_stress_smoke_latest.csv
+          if-no-files-found: ignore

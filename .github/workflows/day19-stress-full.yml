@@ -1,0 +1,74 @@
+# T19 full (72h-RP) — standalone; does not block PR ci.yml.
+#
+# GitHub-hosted runners enforce a 6-hour job timeout, so a true 72h wall-clock run
+# requires a self-hosted runner labeled `day19-full` (or run locally:
+#   bash tools/scripts/perf/run_day19_stress_full_linux.sh
+# ).
+name: day19-stress-full
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: github-hosted = fail-fast with guidance; self-hosted = 72h on label day19-full
+        type: choice
+        options:
+          - self-hosted
+          - github-hosted
+        default: self-hosted
+      build_dir:
+        description: CMake build directory
+        required: false
+        default: build_day19_full
+      profile:
+        description: BS_DAY19_PROFILE (full = 72h per day19_profile.json)
+        required: false
+        default: full
+
+concurrency:
+  group: day19-stress-full
+  cancel-in-progress: false
+
+jobs:
+  guard-github-hosted:
+    name: Block 72h on GitHub-hosted (6h cap)
+    if: github.event.inputs.runner == 'github-hosted'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          echo "::error::72h full stress cannot complete on GitHub-hosted runners (max job timeout 360 minutes)."
+          echo "Use workflow_dispatch runner=self-hosted with a runner labeled 'day19-full', or run locally:"
+          echo "  BS_DAY19_PROFILE=full bash tools/scripts/perf/run_day19_stress_full_linux.sh"
+          exit 1
+
+  full-72h:
+    name: Day19 stress full (72h-RP)
+    if: github.event.inputs.runner == 'self-hosted'
+    runs-on: [self-hosted, day19-full]
+    timeout-minutes: 4500
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B "${{ github.event.inputs.build_dir || 'build_day19_full' }}" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build stress target
+        run: cmake --build "${{ github.event.inputs.build_dir || 'build_day19_full' }}" -j 4 --target bs_test_day19_stress_reload_loop
+
+      - name: Run full profile
+        env:
+          BUILD_DIR: ${{ github.event.inputs.build_dir || 'build_day19_full' }}
+          BS_DAY19_PROFILE: ${{ github.event.inputs.profile || 'full' }}
+          BS_DAY19_STRESS_OUT: docs/day19_stress_full_latest.csv
+        run: bash tools/scripts/perf/run_day19_stress_full_linux.sh
+
+      - name: Upload full run artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day19-stress-full-${{ github.run_id }}
+          path: |
+            docs/day19_stress_full_latest.csv
+            docs/day19_stress_full_latest.json
+          if-no-files-found: ignore
