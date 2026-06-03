@@ -60,7 +60,7 @@ int main()
     assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///ok") == 0);
     assert(bs_adapter_attach_reload_batch_run(ctrl) == 0);
     assert(bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
-    assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///ok") == BS_ORCH_PENDING);
+    assert(bs_adapter_attach_reload_batch_path_state(ctrl, "file:///ok") == BS_ORCH_COMMITTED);
     bs_adapter_attach_reload_batch_destroy(ctrl);
 
     ctrl = bs_adapter_attach_reload_batch_create(4);

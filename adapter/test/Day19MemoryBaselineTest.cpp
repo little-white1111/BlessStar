@@ -2,16 +2,6 @@
  * T19.1 / T19.2: cold vs hot load RSS baseline (1KB / 100KB; optional 10MB via env).
  */
 
-#if defined(_WIN32)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#endif
-
 #include "bs/kernel/common/bs_status.h"
 
 #include "bs/adapter/parser/config_parse.h"

@@ -14,26 +14,18 @@
 #include <string>
 #include <vector>
 
-#ifdef _WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <psapi.h>
-#include <windows.h>
-#endif
+struct BsDay19RssMetrics
+{
+    size_t working_set_bytes = 0;
+    size_t private_bytes     = 0; /* Windows PrivateUsage; else same as WS */
+};
 
+#ifdef _WIN32
+size_t            bs_day19_current_rss_bytes();
+BsDay19RssMetrics bs_day19_current_memory_metrics();
+#else
 inline size_t bs_day19_current_rss_bytes()
 {
-#ifdef _WIN32
-    PROCESS_MEMORY_COUNTERS_EX pmc{};
-    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc),
-                             sizeof(pmc)) != 0)
-        return static_cast<size_t>(pmc.WorkingSetSize);
-    return 0;
-#else
     std::ifstream status("/proc/self/status");
     if (!status)
         return 0;
@@ -49,32 +41,16 @@ inline size_t bs_day19_current_rss_bytes()
         }
     }
     return 0;
-#endif
 }
-
-struct BsDay19RssMetrics
-{
-    size_t working_set_bytes = 0;
-    size_t private_bytes     = 0; /* Windows PrivateUsage; else same as WS */
-};
 
 inline BsDay19RssMetrics bs_day19_current_memory_metrics()
 {
     BsDay19RssMetrics m{};
-#ifdef _WIN32
-    PROCESS_MEMORY_COUNTERS_EX pmc{};
-    if (GetProcessMemoryInfo(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc),
-                             sizeof(pmc)) != 0)
-    {
-        m.working_set_bytes = static_cast<size_t>(pmc.WorkingSetSize);
-        m.private_bytes     = static_cast<size_t>(pmc.PrivateUsage);
-    }
-#else
     m.working_set_bytes = bs_day19_current_rss_bytes();
     m.private_bytes     = m.working_set_bytes;
-#endif
     return m;
 }
+#endif /* !_WIN32 */
 
 struct BsDay19RssSample
 {

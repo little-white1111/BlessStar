@@ -492,6 +492,11 @@ blessstar_add_unit_test(bs_test_day19_memory_baseline
 set_tests_properties(bs_test_day19_memory_baseline
   PROPERTIES LABELS "unit;day19;mem;regression" TIMEOUT 120
 )
+if(WIN32)
+  target_sources(bs_test_day19_memory_baseline PRIVATE
+    ${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp
+  )
+endif()
 
 blessstar_add_unit_test(bs_test_day19_stress_reload_loop
   SOURCES adapter/test/Day19StressReloadLoopTest.cpp
@@ -509,6 +514,11 @@ set_tests_properties(bs_test_day19_stress_reload_loop
   PROPERTIES LABELS "unit;day19;stress;regression" TIMEOUT 300
                    ENVIRONMENT "BS_DAY19_PROFILE=ci"
 )
+if(WIN32)
+  target_sources(bs_test_day19_stress_reload_loop PRIVATE
+    ${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp
+  )
+endif()
 
 # ---------------------------------------------------------------------------
 # Comprehensive (still unit scope; may be slower)
