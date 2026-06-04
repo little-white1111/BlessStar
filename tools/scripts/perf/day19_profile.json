@@ -74,7 +74,23 @@
       "rss_delta_mb_max": 50.0,
       "outcome_ok_rate_min": 0.999,
       "disk_budget_mb": 2048
+    },
+    "gha_6h": {
+      "duration_sec_max": 21000,
+      "day_wall_fraction": 0.7,
+      "min_day_reloads": 34500,
+      "min_night_batches": 690,
+      "path_pool_size": 12,
+      "paths_per_batch": 12,
+      "fixture_kb": 100,
+      "rss_sample_interval_sec": 60,
+      "rss_slope_mb_per_hour_max": 0.5,
+      "rss_delta_mb_max": 50.0,
+      "outcome_ok_rate_min": 0.995,
+      "disk_budget_mb": 2048,
+      "notes": "GitHub-hosted ubuntu cap (~350min stress + build); kappa=23 vs smoke 900s; Linux 72h full deferred"
     }
   },
-  "kappa_smoke_over_full": 288
+  "kappa_smoke_over_full": 288,
+  "kappa_gha_6h_over_smoke": 23
 }

@@ -1,6 +1,6 @@
 /**
  * T19.4 / T19.5: 72h-RP stress harness (PER_PATH day + PER_BATCH night).
- * Default profile "ci" for CTest; use --profile=smoke|smoke_fail|full or BS_DAY19_PROFILE.
+ * Default profile "ci" for CTest; use --profile=smoke|smoke_fail|gha_6h|full or BS_DAY19_PROFILE.
  */
 
 #include "bs/adapter/attach_context.h"
@@ -331,6 +331,7 @@ int main(int argc, char** argv)
     const bool diag = (std::getenv("BS_DAY19_RSS_DIAG") != nullptr) ||
                       (std::strcmp(profile.name, "smoke") == 0) ||
                       (std::strcmp(profile.name, "smoke_fail") == 0) ||
+                      (std::strcmp(profile.name, "gha_6h") == 0) ||
                       (std::strcmp(profile.name, "full") == 0);
 
     bs_test_attach_teardown(&fix);

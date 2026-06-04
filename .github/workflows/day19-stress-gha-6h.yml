@@ -1,0 +1,53 @@
+# T19 gha_6h (~5h50m) — GitHub-hosted ubuntu; fits 360min job cap. Linux 72h full remains deferred.
+#
+# Triggers: manual dispatch, optional weekly (Monday 02:00 UTC). Does not block PR ci.yml.
+name: day19-stress-gha-6h
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_dir:
+        description: CMake build directory
+        required: false
+        default: build_day19_gha_6h
+      profile:
+        description: BS_DAY19_PROFILE (default gha_6h)
+        required: false
+        default: gha_6h
+  schedule:
+    - cron: "0 2 * * 1"
+
+concurrency:
+  group: day19-stress-gha-6h
+  cancel-in-progress: false
+
+jobs:
+  gha-6h:
+    name: Day19 stress gha_6h (ubuntu ~5h50m)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B "${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build stress target
+        run: cmake --build "${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}" -j 2 --target bs_test_day19_stress_reload_loop
+
+      - name: Run gha_6h profile
+        env:
+          BUILD_DIR: ${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}
+          BS_DAY19_PROFILE: ${{ github.event.inputs.profile || 'gha_6h' }}
+          BS_DAY19_STRESS_OUT: docs/day19_stress_gha_6h_latest.csv
+        run: bash tools/scripts/perf/run_day19_stress_gha_6h_linux.sh
+
+      - name: Upload gha_6h artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day19-stress-gha-6h-${{ github.run_id }}
+          path: |
+            docs/day19_stress_gha_6h_latest.csv
+            docs/day19_stress_gha_6h_latest.json
+          if-no-files-found: ignore
