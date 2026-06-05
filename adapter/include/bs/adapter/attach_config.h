@@ -3,7 +3,7 @@
 
 /*
  * C-ST-7 contract block:
- * Thread safety: Uses AttachContext's ConfigManager; not thread-safe across threads.
+ * Thread safety: Read/write APIs use attach_session guards (XX-CONC); one writer per ctx.
  * Error semantics: 0 ok; -1 invalid; propagates ConfigManager load/reload/hot_update codes.
  * Platform notes: Replaces ad-hoc EventBus usage on attach freeze and reload success paths.
  */

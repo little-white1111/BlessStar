@@ -91,7 +91,7 @@ inline double bs_day19_rss_slope_endpoint_mb_per_hour(const std::vector<BsDay19R
     return (samples.back().rss_mb - samples.front().rss_mb) / dt_h;
 }
 
-/** Least-squares slope (MB/h) on private_mb; skips first `skip_first` samples (warmup). */
+/** Least-squares slope (MB/h); skips first `skip_first` samples (warmup / diagnostic). */
 inline double
 bs_day19_rss_slope_regression_mb_per_hour(const std::vector<BsDay19RssSample>& samples,
                                           size_t skip_first, bool use_private)
@@ -119,6 +119,16 @@ bs_day19_rss_slope_regression_mb_per_hour(const std::vector<BsDay19RssSample>& s
         return 0.0;
     const double b_per_sec = (n * sum_tr - sum_t * sum_r) / denom;
     return b_per_sec * 3600.0;
+}
+
+/** XIX-MEM-10: least-squares slope (MB/h) on the last `tail_count` samples (W-minute tail window). */
+inline double bs_day19_rss_slope_regression_tail_mb_per_hour(
+    const std::vector<BsDay19RssSample>& samples, size_t tail_count, bool use_private)
+{
+    if (samples.empty() || tail_count == 0)
+        return 0.0;
+    const size_t start = samples.size() > tail_count ? samples.size() - tail_count : 0;
+    return bs_day19_rss_slope_regression_mb_per_hour(samples, start, use_private);
 }
 
 /**

@@ -2,6 +2,45 @@
 
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+static CRITICAL_SECTION g_watch_cs;
+static int              g_watch_cs_init = 0;
+
+static void watch_lock_init(void)
+{
+    if (!g_watch_cs_init)
+    {
+        InitializeCriticalSection(&g_watch_cs);
+        g_watch_cs_init = 1;
+    }
+}
+
+static void watch_lock(void)
+{
+    watch_lock_init();
+    EnterCriticalSection(&g_watch_cs);
+}
+
+static void watch_unlock(void)
+{
+    LeaveCriticalSection(&g_watch_cs);
+}
+#else
+#include <pthread.h>
+static pthread_mutex_t g_watch_mu = PTHREAD_MUTEX_INITIALIZER;
+
+static void watch_lock(void)
+{
+    pthread_mutex_lock(&g_watch_mu);
+}
+
+static void watch_unlock(void)
+{
+    pthread_mutex_unlock(&g_watch_mu);
+}
+#endif
+
 #define BS_ATTACH_WATCH_MAX_SUBSCRIBERS 32
 #define BS_ATTACH_WATCH_DEDUPE_SLOTS 1024 /* P1: fixed dedupe capacity contract. */
 
@@ -70,6 +109,7 @@ int bs_adapter_attach_persist_watch_subscribe(BsAttachWatchSubscriber fn, void* 
 {
     if (!fn || !token_out)
         return -1;
+    watch_lock();
     for (size_t i = 0; i < BS_ATTACH_WATCH_MAX_SUBSCRIBERS; ++i)
     {
         if (!g_slots[i].used)
@@ -79,28 +119,34 @@ int bs_adapter_attach_persist_watch_subscribe(BsAttachWatchSubscriber fn, void* 
             g_slots[i].fn    = fn;
             g_slots[i].user  = user;
             *token_out       = g_slots[i].token;
+            watch_unlock();
             return 0;
         }
     }
+    watch_unlock();
     return -1;
 }
 
 void bs_adapter_attach_persist_watch_unsubscribe(int token)
 {
+    watch_lock();
     for (size_t i = 0; i < BS_ATTACH_WATCH_MAX_SUBSCRIBERS; ++i)
     {
         if (g_slots[i].used && g_slots[i].token == token)
         {
             memset(&g_slots[i], 0, sizeof(g_slots[i]));
+            watch_unlock();
             return;
         }
     }
+    watch_unlock();
 }
 
 int bs_adapter_attach_persist_watch_publish(const BsAttachWatchEvent* ev)
 {
     if (!ev)
         return -1;
+    watch_lock();
     int rc = 0;
     for (size_t i = 0; i < BS_ATTACH_WATCH_MAX_SUBSCRIBERS; ++i)
     {
@@ -118,15 +164,18 @@ int bs_adapter_attach_persist_watch_publish(const BsAttachWatchEvent* ev)
             rc = sub_rc;
         }
     }
+    watch_unlock();
     return rc;
 }
 
 void bs_adapter_attach_persist_watch_metrics_reset(void)
 {
+    watch_lock();
     memset(&g_metrics, 0, sizeof(g_metrics));
     g_metrics.dedupe_capacity = BS_ATTACH_WATCH_DEDUPE_SLOTS;
     memset(g_dedupe, 0, sizeof(g_dedupe));
     g_dedupe_cursor = 0;
+    watch_unlock();
 }
 
 int bs_adapter_attach_persist_watch_metrics_on_event(const BsAttachWatchEvent* ev, void* user)
@@ -134,14 +183,19 @@ int bs_adapter_attach_persist_watch_metrics_on_event(const BsAttachWatchEvent* e
     (void)user;
     if (!ev)
         return -1;
+    watch_lock();
     if (!dedupe_accept(ev))
+    {
+        watch_unlock();
         return 0;
+    }
     g_metrics.total_events++;
     const uint32_t stage = (uint32_t)ev->stage;
     if (stage < (sizeof(g_metrics.stage_counts) / sizeof(g_metrics.stage_counts[0])))
         g_metrics.stage_counts[stage]++;
     if (ev->result == BS_ATTACH_WATCH_RESULT_FAIL)
         g_metrics.fail_count++;
+    watch_unlock();
     return 0;
 }
 
@@ -149,12 +203,16 @@ void bs_adapter_attach_persist_watch_metrics_snapshot(BsAttachWatchMetrics* out)
 {
     if (!out)
         return;
+    watch_lock();
     *out = g_metrics;
+    watch_unlock();
 }
 
 void bs_adapter_attach_persist_watch_audit_reset(void)
 {
+    watch_lock();
     memset(&g_audit, 0, sizeof(g_audit));
+    watch_unlock();
 }
 
 int bs_adapter_attach_persist_watch_audit_on_event(const BsAttachWatchEvent* ev, void* user)
@@ -162,10 +220,12 @@ int bs_adapter_attach_persist_watch_audit_on_event(const BsAttachWatchEvent* ev,
     (void)user;
     if (!ev)
         return -1;
+    watch_lock();
     if (ev->stage == BS_ATTACH_WATCH_STAGE_RECOVER_CONSERVATIVE)
         g_audit.conservative_recover_count++;
     if (ev->result == BS_ATTACH_WATCH_RESULT_FAIL)
         g_audit.publish_fail_count++;
+    watch_unlock();
     return 0;
 }
 
@@ -173,7 +233,9 @@ void bs_adapter_attach_persist_watch_audit_snapshot(BsAttachWatchAudit* out)
 {
     if (!out)
         return;
+    watch_lock();
     *out = g_audit;
+    watch_unlock();
 }
 
 size_t bs_adapter_attach_persist_watch_dedupe_capacity(void)

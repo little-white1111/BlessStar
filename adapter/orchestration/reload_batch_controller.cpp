@@ -3,7 +3,9 @@
 
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_context.h"
+#include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_runtime.h"
+#include "bs/adapter/attach_session.h"
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_gate_default.h"
 #include "bs/adapter/persistence/attach_audit.h"
@@ -284,16 +286,24 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         return -4;
 
     if (bs_reentrancy_in_state_callback())
-        return -3;
+        return BS_ATTACH_CONC_ERR_REENTRANT;
 
     if (!bs_adapter_attach_is_log_ready())
         return -2;
+
+    AttachContext* actx_for_window = bs_adapter_attach_ctx_get_active();
+    if (actx_for_window)
+        bs_adapter_attach_session_begin_write_window(actx_for_window);
 
     if (!ctrl->gate_fn)
         bs_adapter_attach_reload_batch_set_default_gate(ctrl);
 
     if (load_session_revisions(ctrl) != 0)
+    {
+        if (actx_for_window)
+            bs_adapter_attach_session_end_write_window(actx_for_window);
         return -1;
+    }
 
     ctrl->outcome            = BATCH_ALL_OK;
     ctrl->session_bytes_used = 0;
@@ -461,6 +471,8 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         }
     }
 
+    if (actx_for_window)
+        bs_adapter_attach_session_end_write_window(actx_for_window);
     return 0;
 }
 

@@ -7,10 +7,12 @@
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/attach_runtime.h"
+#include "bs/adapter/attach_session.h"
 #include "bs/adapter/log/log_bus.h"
 
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 
 #include "attach_context_internal.h"
 
@@ -25,6 +27,7 @@ static int attach_audit_stage_execute(Stage* /*stage*/, const IRInstruction* inp
 }
 
 static AttachContext* g_active_ctx = nullptr;
+static std::mutex     g_active_ctx_mu;
 static AttachContext  g_ephemeral_log_ctx;
 static AttachContext  g_legacy_bootstrap_ctx;
 static int            g_ephemeral_initialized = 0;
@@ -72,6 +75,7 @@ AttachContext* bs_adapter_attach_ctx_create(void)
         return nullptr;
     }
     bs_log_state_init(&ctx->log_state);
+    bs_adapter_attach_session_init(ctx);
     return ctx;
 }
 
@@ -80,11 +84,16 @@ void bs_adapter_attach_ctx_destroy(AttachContext* ctx)
     if (!ctx)
         return;
 
-    if (g_active_ctx == ctx)
     {
-        g_active_ctx = nullptr;
-        bs_log_set_current_state(nullptr);
+        std::lock_guard<std::mutex> lock(g_active_ctx_mu);
+        if (g_active_ctx == ctx)
+        {
+            g_active_ctx = nullptr;
+            bs_log_set_current_state(nullptr);
+        }
     }
+
+    bs_adapter_attach_session_destroy(ctx);
 
     if (ctx->log_bus_bound)
     {
@@ -269,12 +278,14 @@ void bs_adapter_attach_ctx_set_log_level(AttachContext* ctx, BsLogLevel level)
 
 void bs_adapter_attach_ctx_set_active(AttachContext* ctx)
 {
+    std::lock_guard<std::mutex> lock(g_active_ctx_mu);
     g_active_ctx = ctx;
     bs_log_set_current_state(ctx ? &ctx->log_state : nullptr);
 }
 
 AttachContext* bs_adapter_attach_ctx_get_active(void)
 {
+    std::lock_guard<std::mutex> lock(g_active_ctx_mu);
     return g_active_ctx;
 }
 
@@ -287,6 +298,7 @@ int bs_adapter_attach_ctx_is_kernel_running(const AttachContext* ctx)
 
 void bs_adapter_attach_ensure_active_ctx(void)
 {
+    std::lock_guard<std::mutex> lock(g_active_ctx_mu);
     if (!g_active_ctx)
     {
         ensure_ephemeral_initialized();
@@ -325,10 +337,13 @@ AttachContext* bs_adapter_attach_ctx_legacy_bootstrap(void)
 
 void bs_adapter_attach_ctx_shutdown_all_logs(void)
 {
-    if (g_active_ctx && (g_active_ctx->log_bus_bound || g_active_ctx->log_state.bus))
     {
-        bs_log_shutdown_bus_ctx(&g_active_ctx->log_state);
-        g_active_ctx->log_bus_bound = 0;
+        std::lock_guard<std::mutex> lock(g_active_ctx_mu);
+        if (g_active_ctx && (g_active_ctx->log_bus_bound || g_active_ctx->log_state.bus))
+        {
+            bs_log_shutdown_bus_ctx(&g_active_ctx->log_state);
+            g_active_ctx->log_bus_bound = 0;
+        }
     }
 
     if (g_ephemeral_initialized && g_ephemeral_log_ctx.log_state.bus)

@@ -2,6 +2,10 @@
 #include "bs/kernel/state/ConfigState.h"
 
 #include "bs/adapter/attach_config.h"
+#include "bs/adapter/attach_errors.h"
+#include "bs/adapter/attach_session.h"
+
+#include "bs/kernel/common/bs_reentrancy.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -32,7 +36,12 @@ int bs_adapter_attach_config_get_state(AttachContext* ctx, const char* config_pa
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     if (!cm || !config_path || !state)
         return -1;
-    return bs_config_manager_get_config_state(cm, config_path, state);
+    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
+    if (lk != 0)
+        return lk;
+    const int rc = bs_config_manager_get_config_state(cm, config_path, state);
+    bs_adapter_attach_session_read_unlock(ctx);
+    return rc;
 }
 
 int bs_adapter_attach_config_get_snapshot(AttachContext* ctx, const char* config_path, void** data,
@@ -41,7 +50,12 @@ int bs_adapter_attach_config_get_snapshot(AttachContext* ctx, const char* config
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     if (!cm || !config_path || !data || !size)
         return -1;
-    return bs_config_manager_get_config_snapshot(cm, config_path, data, size);
+    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
+    if (lk != 0)
+        return lk;
+    const int rc = bs_config_manager_get_config_snapshot(cm, config_path, data, size);
+    bs_adapter_attach_session_read_unlock(ctx);
+    return rc;
 }
 
 int bs_adapter_attach_config_has_manager(AttachContext* ctx)
@@ -58,26 +72,44 @@ int bs_adapter_attach_config_sync_path(AttachContext* ctx, const char* config_pa
     if (data_size > 0 && !data)
         return -1;
 
+    if (bs_reentrancy_in_state_callback())
+        return BS_ATTACH_CONC_ERR_REENTRANT;
+
 #if defined(BS_TESTING)
     if (g_sync_fail_path && std::strcmp(config_path, g_sync_fail_path) == 0)
         return -99;
 #endif
 
+    const int in_window = bs_adapter_attach_session_in_write_window(ctx);
+    int       owned_write_lock = 0;
+    if (!in_window)
+    {
+        const int wk = bs_adapter_attach_session_try_write_lock(ctx);
+        if (wk != 0)
+            return wk;
+        owned_write_lock = 1;
+    }
+
     ConfigState state = CONFIG_STATE_INITIAL;
     const int   st_rc = bs_config_manager_get_config_state(cm, config_path, &state);
 
+    int rc = -1;
     /* B-01: path not loaded / terminal INITIAL|CLOSED -> load_config. */
     if (st_rc == -2 || state == CONFIG_STATE_CLOSED || state == CONFIG_STATE_INITIAL)
-        return bs_config_manager_load_config(cm, config_path, data, data_size);
+        rc = bs_config_manager_load_config(cm, config_path, data, data_size);
+    else if (st_rc != 0)
+        rc = st_rc;
+    else if (state == CONFIG_STATE_ACTIVE)
+        rc = bs_config_manager_hot_update(cm, config_path, data, data_size);
+    else
+        rc = bs_config_manager_reload_config(cm, config_path, data, data_size);
 
-    if (st_rc != 0)
-        return st_rc;
+    if (rc == 0)
+        bs_adapter_attach_session_bump_revision(ctx, config_path);
 
-    /* B-02: ACTIVE -> hot_update; LOADING/UPDATING/ERROR -> reload_config. */
-    if (state == CONFIG_STATE_ACTIVE)
-        return bs_config_manager_hot_update(cm, config_path, data, data_size);
-
-    return bs_config_manager_reload_config(cm, config_path, data, data_size);
+    if (owned_write_lock)
+        bs_adapter_attach_session_write_unlock(ctx);
+    return rc;
 }
 
 int bs_adapter_attach_config_checkpoint_path(AttachContext* ctx, const char* config_path,

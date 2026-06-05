@@ -193,6 +193,14 @@ int main(int argc, char** argv)
             maybe_sample("day", static_cast<uint64_t>(day_total), ok);
             if (day_total % 50 == 0)
                 bs_day19_rss_sample_push(samples, "day_tick", static_cast<uint64_t>(day_total), ok);
+            if ((std::strcmp(profile.name, "gha_6h") == 0 ||
+                 std::strcmp(profile.name, "full") == 0) &&
+                day_total % 1000 == 0)
+            {
+                std::fprintf(stderr, "[day19] progress elapsed=%ds day=%d/%d night=%d/%d\n", elapsed,
+                             day_total, profile.min_day_reloads, night_total,
+                             profile.min_night_batches);
+            }
             bs_adapter_attach_reload_batch_destroy(ctrl);
             continue;
         }
@@ -268,15 +276,23 @@ int main(int argc, char** argv)
     if (warmup_skip + 3 > samples.size())
         warmup_skip = samples.size() > 3 ? samples.size() - 3 : 0;
 
-    const size_t window_samples = static_cast<size_t>(
-        600 / (profile.rss_sample_interval_sec > 0 ? profile.rss_sample_interval_sec : 60));
+    const int interval =
+        profile.rss_sample_interval_sec > 0 ? profile.rss_sample_interval_sec : 60;
+    /* XIX-MEM-10: W=10min (PR/smoke/gha_6h) or W=60min (full) for slope + delta windows. */
+    const int slope_window_min =
+        (std::strcmp(profile.name, "full") == 0) ? 60 : 10;
+    const size_t window_samples =
+        static_cast<size_t>((slope_window_min * 60) / interval);
     const size_t win = window_samples < (samples.size() - warmup_skip)
                            ? window_samples
                            : (samples.size() - warmup_skip);
 
     const double slope_endpoint_ws = bs_day19_rss_slope_endpoint_mb_per_hour(samples);
-    double       slope_reg_ws =
-        bs_day19_rss_slope_regression_mb_per_hour(samples, warmup_skip, false /* use_private */);
+    /* Gate: tail W-window regression (not full-run; avoids Linux VmRSS warmup drift). */
+    double slope_reg_ws =
+        bs_day19_rss_slope_regression_tail_mb_per_hour(samples, win, false /* use_private */);
+    const double slope_reg_full_ws = bs_day19_rss_slope_regression_mb_per_hour(
+        samples, warmup_skip, false /* use_private */);
     double delta_ws   = bs_day19_rss_delta_windowed_mb(samples, warmup_skip, win, false);
     double delta_priv = bs_day19_rss_delta_windowed_mb(samples, warmup_skip, win, true);
 
@@ -306,13 +322,13 @@ int main(int argc, char** argv)
 
     std::printf("stress,profile=%s,day=%d/%d(%.4f),night=%d/%d(%.4f),"
                 "fail_parse=%d,fail_gate=%d,fail_read=%d,night_abort=%d,"
-                "rss_slope_reg=%.3f,rss_delta_win=%.3f,"
+                "rss_slope_reg=%.3f,rss_slope_reg_full=%.3f,rss_delta_win=%.3f,"
                 "rss_slope_endpoint_ws=%.3f,rss_delta_ws_win=%.3f,"
-                "samples=%zu,warmup_skip=%zu,win=%zu,disk_mb=%llu\n",
+                "samples=%zu,warmup_skip=%zu,win=%zu,slope_win_min=%d,disk_mb=%llu\n",
                 profile.name, day_ok, day_total, day_rate, night_ok, night_total, night_rate,
-                fail_parse, fail_gate, fail_read, night_abort_batches, slope, delta,
-                slope_endpoint_ws, delta_ws, samples.size(), warmup_skip, window_samples,
-                static_cast<unsigned long long>(disk / (1024u * 1024u)));
+                fail_parse, fail_gate, fail_read, night_abort_batches, slope, slope_reg_full_ws,
+                delta, slope_endpoint_ws, delta_ws, samples.size(), warmup_skip, win,
+                slope_window_min, static_cast<unsigned long long>(disk / (1024u * 1024u)));
 
     const char* out_path = std::getenv("BS_DAY19_STRESS_OUT");
     if (out_path && out_path[0])
@@ -328,26 +344,29 @@ int main(int argc, char** argv)
         }
     }
 
+    int         exit_code = 0;
+    const char* fail_reason = "ok";
+
     const bool diag = (std::getenv("BS_DAY19_RSS_DIAG") != nullptr) ||
                       (std::strcmp(profile.name, "smoke") == 0) ||
                       (std::strcmp(profile.name, "smoke_fail") == 0) ||
                       (std::strcmp(profile.name, "gha_6h") == 0) ||
                       (std::strcmp(profile.name, "full") == 0);
 
-    bs_test_attach_teardown(&fix);
-
     if (day_total < profile.min_day_reloads)
     {
         std::fprintf(stderr, "FAIL: day reloads %d < min %d\n", day_total, profile.min_day_reloads);
-        return 1;
+        exit_code   = 1;
+        fail_reason = "day_reload_min";
     }
-    if (night_total < profile.min_night_batches)
+    else if (night_total < profile.min_night_batches)
     {
         std::fprintf(stderr, "FAIL: night batches %d < min %d\n", night_total,
                      profile.min_night_batches);
-        return 1;
+        exit_code   = 1;
+        fail_reason = "night_batch_min";
     }
-    if (failure_stress)
+    if (exit_code == 0 && failure_stress)
     {
         if (day_rate > profile.outcome_ok_rate_max || night_rate > profile.outcome_ok_rate_max)
         {
@@ -355,32 +374,37 @@ int main(int argc, char** argv)
                          "FAIL: success rate too high (day=%.4f night=%.4f max=%.4f) - "
                          "failure injection ineffective\n",
                          day_rate, night_rate, profile.outcome_ok_rate_max);
-            return 1;
+            exit_code   = 1;
+            fail_reason = "outcome_rate_max";
         }
-        if (night_abort_batches < profile.min_night_abort_batches)
+        else if (night_abort_batches < profile.min_night_abort_batches)
         {
             std::fprintf(stderr, "FAIL: night_abort %d < min %d\n", night_abort_batches,
                          profile.min_night_abort_batches);
-            return 1;
+            exit_code   = 1;
+            fail_reason = "night_abort_min";
         }
-        if (fail_parse < profile.min_fail_parse || fail_gate < profile.min_fail_gate ||
-            fail_read < profile.min_fail_read)
+        else if (fail_parse < profile.min_fail_parse || fail_gate < profile.min_fail_gate ||
+                 fail_read < profile.min_fail_read)
         {
             std::fprintf(stderr,
                          "FAIL: failure taxonomy parse=%d gate=%d read=%d (min %d/%d/%d)\n",
                          fail_parse, fail_gate, fail_read, profile.min_fail_parse,
                          profile.min_fail_gate, profile.min_fail_read);
-            return 1;
+            exit_code   = 1;
+            fail_reason = "failure_taxonomy";
         }
     }
-    else if (day_rate < profile.outcome_ok_rate_min || night_rate < profile.outcome_ok_rate_min)
+    else if (exit_code == 0 &&
+             (day_rate < profile.outcome_ok_rate_min || night_rate < profile.outcome_ok_rate_min))
     {
         std::fprintf(stderr, "FAIL: outcome rate below min %.4f\n", profile.outcome_ok_rate_min);
-        return 1;
+        exit_code   = 1;
+        fail_reason = "outcome_rate_min";
     }
     const bool check_slope =
         (std::strcmp(profile.name, "ci") != 0 && std::strcmp(profile.name, "smoke_fail_ci") != 0);
-    if (check_slope && slope > profile.rss_slope_mb_per_hour_max)
+    if (exit_code == 0 && check_slope && slope > profile.rss_slope_mb_per_hour_max)
     {
         std::fprintf(stderr,
                      "FAIL: rss slope (regression rss) %.3f > max %.3f "
@@ -388,27 +412,65 @@ int main(int argc, char** argv)
                      slope, profile.rss_slope_mb_per_hour_max, slope_endpoint_ws, delta_ws);
         if (!diag)
             bs_day19_rss_print_samples(samples, stderr);
-        return 1;
+        exit_code   = 1;
+        fail_reason = "rss_slope";
     }
-    if (delta > profile.rss_delta_mb_max)
+    if (exit_code == 0 && delta > profile.rss_delta_mb_max)
     {
         std::fprintf(stderr,
                      "FAIL: rss delta (private window) %.3f > max %.3f [delta_ws_win=%.3f]\n",
                      delta, profile.rss_delta_mb_max, delta_ws);
         if (!diag)
             bs_day19_rss_print_samples(samples, stderr);
-        return 1;
+        exit_code   = 1;
+        fail_reason = "rss_delta";
     }
-    if (disk > static_cast<uint64_t>(profile.disk_budget_mb) * 1024u * 1024u)
+    if (exit_code == 0 &&
+        disk > static_cast<uint64_t>(profile.disk_budget_mb) * 1024u * 1024u)
     {
         std::fprintf(stderr, "FAIL: disk %llu > budget %d MB\n",
                      static_cast<unsigned long long>(disk / (1024u * 1024u)),
                      profile.disk_budget_mb);
-        return 1;
+        exit_code   = 1;
+        fail_reason = "disk_budget";
     }
+
+    const char* json_path = std::getenv("BS_DAY19_STRESS_JSON");
+    if (json_path && json_path[0])
+    {
+        std::FILE* jf = std::fopen(json_path, "w");
+        if (jf)
+        {
+            std::fprintf(jf,
+                         "{\n"
+                         "  \"profile\": \"%s\",\n"
+                         "  \"pass\": %s,\n"
+                         "  \"fail_reason\": \"%s\",\n"
+                         "  \"day_ok\": %d,\n"
+                         "  \"day_total\": %d,\n"
+                         "  \"night_ok\": %d,\n"
+                         "  \"night_total\": %d,\n"
+                         "  \"day_rate\": %.6f,\n"
+                         "  \"night_rate\": %.6f,\n"
+                         "  \"rss_slope_reg\": %.3f,\n"
+                         "  \"rss_delta_win\": %.3f,\n"
+                         "  \"elapsed_sec\": %d,\n"
+                         "  \"samples\": %zu\n"
+                         "}\n",
+                         profile.name, exit_code == 0 ? "true" : "false", fail_reason, day_ok,
+                         day_total, night_ok, night_total, day_rate, night_rate, slope, delta,
+                         elapsed_sec(), samples.size());
+            std::fclose(jf);
+        }
+    }
+
+    bs_test_attach_teardown(&fix);
 
     if (diag)
         bs_day19_rss_print_samples(samples, stdout);
+
+    if (exit_code != 0)
+        return exit_code;
 
     std::printf("Day19StressReloadLoopTest OK\n");
     return 0;

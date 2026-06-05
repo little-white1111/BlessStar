@@ -631,6 +631,24 @@ set_tests_properties(bs_test_day19_stress_fail_ci
                    ENVIRONMENT "BS_DAY19_PROFILE=smoke_fail_ci"
 )
 
+blessstar_add_unit_test(bs_test_attach_concurrency
+  SOURCES adapter/test/AttachConcurrencyTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_state
+    bs_kernel_common
+)
+target_include_directories(bs_test_attach_concurrency
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+set_tests_properties(bs_test_attach_concurrency
+  PROPERTIES LABELS "unit;day20;attach;regression" TIMEOUT 180
+                   RESOURCE_LOCK "attach_hermetic_temp"
+)
+
 # ---------------------------------------------------------------------------
 # Comprehensive (still unit scope; may be slower)
 # ---------------------------------------------------------------------------

@@ -88,7 +88,7 @@
       "rss_delta_mb_max": 50.0,
       "outcome_ok_rate_min": 0.995,
       "disk_budget_mb": 2048,
-      "notes": "GitHub-hosted ubuntu cap (~350min stress + build); kappa=23 vs smoke 900s; Linux 72h full deferred"
+      "notes": "ubuntu gha_6h κ=23; slope gate uses XIX-MEM-10 tail W=10min regression (not full-run)"
     }
   },
   "kappa_smoke_over_full": 288,

@@ -31,6 +31,7 @@ struct AttachContext
     int             owns_registry;
     int             kernel_started;
     int             pipeline_registry_bound;
+    void*           session_state; /* AttachSessionState (attach_session.cpp) */
 };
 
 int  bs_adapter_attach_ctx_init_config_manager(AttachContext* ctx);

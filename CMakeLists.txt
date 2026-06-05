@@ -264,6 +264,7 @@ add_library(bs_adapter_attach
   adapter/src/attach_runtime.cpp
   adapter/src/attach_context.cpp
   adapter/src/attach_config.cpp
+  adapter/src/attach_session.cpp
   adapter/src/attach_execute.cpp
 )
 target_include_directories(bs_adapter_attach

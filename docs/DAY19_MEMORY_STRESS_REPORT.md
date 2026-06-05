@@ -11,7 +11,7 @@
 | smoke | 900s | 1500 | 30 | 100KB | **XIX-MEM-10**: ≥99.5% `BATCH_ALL_OK` |
 | smoke_fail | 900s | 1500 | 30 | 12 good + 3 fault URIs | **XIX-MEM-13**: success rate ≤82%; taxonomy + abort mins |
 | smoke_fail_ci | 25s | 30 | 5 | 4 good + 3 fault | Quick negative harness check |
-| gha_6h | ~5h50m (21000s) | 34500 | 690 | 100KB | **XIX-MEM-10** smoke thresholds; GitHub ubuntu 360min cap |
+| gha_6h | ~5h50m (21000s) | 34500 | 690 | 100KB | run **#26933094585**: quotas OK; fail **full-run** slope 2.479 — fix: **tail W=10min** gate per XIX-MEM-10 |
 | full | 72h | 8640 | 144 | 100KB | **XIX-MEM-10**: ≥99.9%; disk ≤2GB |
 
 ## Latest runs (GitHub Actions · `e10630c`)

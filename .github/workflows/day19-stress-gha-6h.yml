@@ -1,4 +1,4 @@
-# T19 gha_6h (~5h50m) — GitHub-hosted ubuntu; fits 360min job cap. Linux 72h full remains deferred.
+# T19 gha_6h (~5h50m stress + build) — GitHub-hosted ubuntu; fits 360min job cap. Linux 72h full deferred.
 #
 # Triggers: manual dispatch, optional weekly (Monday 02:00 UTC). Does not block PR ci.yml.
 name: day19-stress-gha-6h
@@ -40,6 +40,7 @@ jobs:
           BUILD_DIR: ${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}
           BS_DAY19_PROFILE: ${{ github.event.inputs.profile || 'gha_6h' }}
           BS_DAY19_STRESS_OUT: docs/day19_stress_gha_6h_latest.csv
+          BS_DAY19_STRESS_JSON: docs/day19_stress_gha_6h_latest.json
         run: bash tools/scripts/perf/run_day19_stress_gha_6h_linux.sh
 
       - name: Upload gha_6h artifacts

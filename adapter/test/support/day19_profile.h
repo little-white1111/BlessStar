@@ -80,14 +80,14 @@ inline BsDay19Profile bs_day19_profile_full()
     return p;
 }
 
-/** ~5h50m GitHub-hosted ubuntu cap (kappa=23 vs smoke); not a substitute for Linux 72h full. */
+/** ~5h50m GitHub ubuntu cap (kappa=23); slope gate = tail W=10min per XIX-MEM-10. */
 inline BsDay19Profile bs_day19_profile_gha_6h()
 {
-    BsDay19Profile p            = bs_day19_profile_smoke();
-    p.name                      = "gha_6h";
-    p.duration_sec_max          = 21000;
-    p.min_day_reloads           = 34500;
-    p.min_night_batches         = 690;
+    BsDay19Profile p   = bs_day19_profile_smoke();
+    p.name             = "gha_6h";
+    p.duration_sec_max = 21000;
+    p.min_day_reloads  = 34500;
+    p.min_night_batches = 690;
     return p;
 }
 

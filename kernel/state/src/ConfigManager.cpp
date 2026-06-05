@@ -58,6 +58,7 @@ int lookup_state(StateBus* bus, const char* path, ConfigState* state, bool* foun
 int emit_transition(ConfigManager* cm, const char* path, ConfigState from, ConfigState to,
                     const void* data, size_t dataSize)
 {
+    /* Phase 1: commit state under StateBus lock (no listener callbacks yet). */
     if (bs_state_bus_set_state(cm->state_bus, path, to, data, dataSize) != 0)
         return -1;
 
@@ -72,13 +73,15 @@ int emit_transition(ConfigManager* cm, const char* path, ConfigState from, Confi
     payload.toState    = to;
     payload.version    = entry->version;
     payload.timestamp  = entry->timestamp;
+    const void* snapshot = entry->dataSnapshot;
 
+    /* Phase 2: publish + drain + watch notify outside StateBus mutation. */
     if (bs_event_bus_publish(cm->event_bus, &payload) != 0)
         return -1;
     if (bs_event_bus_drain(cm->event_bus) != 0)
         return -1;
 
-    bs_watch_manager_notify(cm->watch_manager, path, payload.type, entry->dataSnapshot);
+    bs_watch_manager_notify(cm->watch_manager, path, payload.type, snapshot);
     return 0;
 }
 } // namespace
