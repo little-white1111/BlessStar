@@ -152,7 +152,7 @@ jobs:
       - name: Build (TSan)
         run: |
           cmake --build build-tsan -j 4 --target bs_test_attach_concurrency \
-            bs_test_kernel_executor bs_test_kernel_pool \
+            bs_test_attach_watch_benchmark bs_test_kernel_executor bs_test_kernel_pool \
             bs_test_reload_per_batch_parallel_exec
 
       - name: Test / day20 + kernel_pool concurrency

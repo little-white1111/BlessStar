@@ -631,7 +631,10 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
     }
 
     if (actx_for_window)
+    {
+        bs_adapter_attach_session_drain_pending_notifications(actx_for_window);
         bs_adapter_attach_session_end_write_window(actx_for_window);
+    }
     return 0;
 }
 

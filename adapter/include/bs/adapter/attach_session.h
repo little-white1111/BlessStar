@@ -32,6 +32,9 @@ extern "C"
     void bs_adapter_attach_session_begin_write_window(AttachContext* ctx);
     void bs_adapter_attach_session_end_write_window(AttachContext* ctx);
 
+    /** Block until phase-2 watch notify jobs finish (call before end_write_window). */
+    void bs_adapter_attach_session_drain_pending_notifications(AttachContext* ctx);
+
     int  bs_adapter_attach_session_try_read_lock(AttachContext* ctx);
     void bs_adapter_attach_session_read_unlock(AttachContext* ctx);
 

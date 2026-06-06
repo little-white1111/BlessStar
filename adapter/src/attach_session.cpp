@@ -112,6 +112,11 @@ void bs_adapter_attach_session_end_write_window(AttachContext* ctx)
     st->wait_cv.notify_all();
 }
 
+void bs_adapter_attach_session_drain_pending_notifications(AttachContext* ctx)
+{
+    bs_adapter_attach_notify_queue_flush(ctx);
+}
+
 int bs_adapter_attach_session_try_read_lock(AttachContext* ctx)
 {
     auto* st = session_of(ctx);
