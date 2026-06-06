@@ -521,12 +521,18 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
 
         if (ctrl->scheme == BS_ATTACH_SCHEME_PER_PATH)
         {
-            if (pool_ready && exec_path_ir(actx, &w, ctrl) != 0)
+            if (pool_ready)
             {
-                batch_had_failure = true;
-                bs_io_read_result_free(&result);
-                gc_path_work(&w);
-                continue;
+                /* P1: pool exec must not run under session write-window (matches PER_BATCH). */
+                end_write_window_if_open();
+                if (exec_path_ir(actx, &w, ctrl) != 0)
+                {
+                    batch_had_failure = true;
+                    bs_io_read_result_free(&result);
+                    gc_path_work(&w);
+                    continue;
+                }
+                begin_write_window();
             }
             if (persist_per_path(ctrl, &w, &result) != BS_ATTACH_OK)
                 ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;

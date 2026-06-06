@@ -113,7 +113,7 @@
       "gate_id": "GATE-REGRESSION",
       "stage": "ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
       "covers": ["C-IX-4", "C-ST-13", "C-FN-1", "C-FN-2", "C-FN-3", "C-CF-1", "C-CF-2"],
       "default_blocking": true,
       "timeout_s": 1800

@@ -30,7 +30,7 @@
     {
       "gate_id": "GATE-REGRESSION",
       "runner": "ctest",
-      "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
+      "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
       "entry_kind": "command"
     }
   ]

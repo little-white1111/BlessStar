@@ -40,7 +40,7 @@ inline BsDay19Profile bs_day19_profile_ci()
     p.min_night_batches         = 5;
     p.path_pool_size            = 4;
     p.paths_per_batch           = 4;
-    p.fixture_kb                = 100;
+    p.fixture_kb                = 4;
     p.rss_sample_interval_sec   = 5;
     p.rss_slope_mb_per_hour_max = 500.0; /* ci: slope not enforced in test */
     p.rss_delta_mb_max          = 200.0;
