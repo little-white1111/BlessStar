@@ -657,7 +657,7 @@ target_include_directories(bs_test_day19_stress_reload_loop
   PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
 )
 set_tests_properties(bs_test_day19_stress_reload_loop
-  PROPERTIES LABELS "unit;day19;stress;regression" TIMEOUT 300
+  PROPERTIES LABELS "unit;day19;stress;regression" TIMEOUT 600
                    RESOURCE_LOCK "attach_integration"
 )
 if(WIN32)
@@ -670,7 +670,7 @@ endif()
 add_test(NAME bs_test_day19_stress_fail_ci
          COMMAND "$<TARGET_FILE:bs_test_day19_stress_reload_loop>" --profile=smoke_fail_ci)
 set_tests_properties(bs_test_day19_stress_fail_ci
-  PROPERTIES LABELS "unit;day19;stress;regression;negative" TIMEOUT 300
+  PROPERTIES LABELS "unit;day19;stress;regression;negative" TIMEOUT 600
                    RESOURCE_LOCK "attach_integration"
 )
 

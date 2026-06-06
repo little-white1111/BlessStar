@@ -94,11 +94,11 @@ jobs:
 
       - name: Test / CTest (Unix)
         if: runner.os != 'Windows'
-        run: ctest --test-dir build_ci_test --output-on-failure
+        run: ctest --test-dir build_ci_test --output-on-failure -j 1
 
       - name: Test / CTest (Windows)
         if: runner.os == 'Windows'
-        run: ctest --test-dir build_ci_test --output-on-failure -C Release
+        run: ctest --test-dir build_ci_test --output-on-failure -C Release -j 1
 
   sanitizer:
     name: sanitizer (Linux Clang ASan+UBSan)
