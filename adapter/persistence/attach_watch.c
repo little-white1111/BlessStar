@@ -142,29 +142,50 @@ void bs_adapter_attach_persist_watch_unsubscribe(int token)
     watch_unlock();
 }
 
+static void record_publish_callback_error(const BsAttachWatchEvent* ev)
+{
+    if (!ev)
+        return;
+    g_audit.publish_callback_error_count++;
+    g_audit.last_callback_error_epoch = ev->epoch;
+    g_audit.last_callback_error_stage = (uint32_t)ev->stage;
+    if ((uint32_t)ev->stage <
+        (sizeof(g_audit.callback_error_by_stage) / sizeof(g_audit.callback_error_by_stage[0])))
+        g_audit.callback_error_by_stage[(uint32_t)ev->stage]++;
+}
+
 int bs_adapter_attach_persist_watch_publish(const BsAttachWatchEvent* ev)
 {
     if (!ev)
         return -1;
+
+    BsAttachWatchSubscriber fns[BS_ATTACH_WATCH_MAX_SUBSCRIBERS];
+    void*                   users[BS_ATTACH_WATCH_MAX_SUBSCRIBERS];
+    size_t                  n = 0;
+
     watch_lock();
-    int rc = 0;
     for (size_t i = 0; i < BS_ATTACH_WATCH_MAX_SUBSCRIBERS; ++i)
     {
         if (!g_slots[i].used || !g_slots[i].fn)
             continue;
-        const int sub_rc = g_slots[i].fn(ev, g_slots[i].user);
+        fns[n]   = g_slots[i].fn;
+        users[n] = g_slots[i].user;
+        ++n;
+    }
+    watch_unlock();
+
+    int rc = 0;
+    for (size_t i = 0; i < n; ++i)
+    {
+        const int sub_rc = fns[i](ev, users[i]);
         if (sub_rc != 0)
         {
-            g_audit.publish_callback_error_count++;
-            g_audit.last_callback_error_epoch = ev->epoch;
-            g_audit.last_callback_error_stage = (uint32_t)ev->stage;
-            if ((uint32_t)ev->stage < (sizeof(g_audit.callback_error_by_stage) /
-                                       sizeof(g_audit.callback_error_by_stage[0])))
-                g_audit.callback_error_by_stage[(uint32_t)ev->stage]++;
+            watch_lock();
+            record_publish_callback_error(ev);
+            watch_unlock();
             rc = sub_rc;
         }
     }
-    watch_unlock();
     return rc;
 }
 
