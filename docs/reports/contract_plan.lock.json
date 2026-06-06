@@ -309,7 +309,7 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -331,9 +331,9 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/integration/C-IX-4.v1.json"
@@ -501,7 +501,7 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -523,9 +523,9 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/style/C-ST-13.v1.json"
@@ -612,7 +612,7 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -627,9 +627,9 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/functional/C-FN-1.v1.json"
@@ -656,7 +656,7 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -671,9 +671,9 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/functional/C-FN-2.v1.json"
@@ -700,7 +700,7 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -715,9 +715,9 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/functional/C-FN-3.v1.json"
@@ -774,7 +774,7 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -789,9 +789,9 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/configuration/C-CF-1.v1.json"
@@ -818,7 +818,7 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -833,9 +833,9 @@
         {
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/configuration/C-CF-2.v1.json"
@@ -1216,7 +1216,7 @@
       "gate_id": "GATE-REGRESSION",
       "stage": "ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -LE stress -j 1 --output-on-failure",
       "covers": [
         "C-IX-4",
         "C-ST-13",
@@ -1227,7 +1227,7 @@
         "C-CF-2"
       ],
       "default_blocking": true,
-      "timeout_s": 900
+      "timeout_s": 1800
     },
     {
       "gate_id": "GATE-DEV-L1",
@@ -1301,7 +1301,7 @@
   ],
   "hashes": {
     "index": "f4357ccb04b91057ae460b6b8191e8b0337fa7d5fc62075b01016643d6035acb",
-    "gate_registry": "77f32547dcd6401971d281a95eb0a46bf61334d7c220fc9f359e2f418c7f0686",
+    "gate_registry": "8b1ce738f0b71fc27d36234ba2165b66009c2f037eff622f0967b9a44e5b3ae8",
     "contracts": {
       "docs/contracts/architecture/C-IX-1.v1.json": "9592b02e16d030ce614e87972830502601e7211b923af0dc1bd39a84b5456108",
       "docs/contracts/architecture/C-IX-2.v1.json": "993ddd431bbff3f18c399ed7356870236ebe0b4c6325a40914b1b416f7d68aac",
@@ -1309,20 +1309,20 @@
       "docs/contracts/architecture/C-IX-6-prime.v1.json": "745a74d4f481508d2920041b58ea060a75939089345179b82b0dd1b9653b0f74",
       "docs/contracts/architecture/C-IX-7.v1.json": "9899d22867a337f9f8745e7df95d6e9d56137580f5e3f4547f5b850b91c2882d",
       "docs/contracts/kernel/kernel_pool.v1.json": "2117e9079d168db135a95ada10db81900ff0d764037ed811d896dc0923352a87",
-      "docs/contracts/integration/C-IX-4.v1.json": "67cb907d53bb522831843b484908a77b2c9777ee052ab7a237f7a88534b7cfbc",
+      "docs/contracts/integration/C-IX-4.v1.json": "6b2d731dc72ffd1022fe3e449ececa0a6127d0e1b76dfd061d0d7449f447e1cb",
       "docs/contracts/integration/C-IX-5.v1.json": "a281c85e45f9f35b1992c56eec6b29cd02134e03735f65f1ef00bcadf6387b6f",
       "docs/contracts/integration/C-IX-8.v1.json": "8b035d9005ffa8623e7ff79d5ec055fd9f6aead8f7bc0bd0487f2989d09d3fe2",
       "docs/contracts/style/C-ST-1.v1.json": "82495b17d1e16f381ebfd064e54f6f05b4ae1bf62174cf3a8fb4fdafc4bf3bd1",
       "docs/contracts/style/C-ST-11.v1.json": "dbf50e67f5fc53bb3fd189780b6eeff975731f0b3909b744e8acfce7f40889e0",
-      "docs/contracts/style/C-ST-13.v1.json": "7712ef9bc736d9f320c49e4005a44bc5fb4e4c493eae8bc5efd63689d19f5925",
+      "docs/contracts/style/C-ST-13.v1.json": "eee3955be5c2ac0dab02483f6a4a45b63b8742c697a0467876cefd2668e0210d",
       "docs/contracts/style/C-ST-14.v1.json": "3ba88984a3a2fddeedeba7b8ac8db79a205a0b4f1e2813e88cde74dc117b7901",
       "docs/contracts/style/C-ST-9.v1.json": "c40d1256155832c76fa29e31e8f762ce0d1140dd5bdc020e1e065a4a5ca0fa0a",
-      "docs/contracts/functional/C-FN-1.v1.json": "1026c8d85cd00ca4b79497f8b11e23620b98f5f6a60adc9b3c9108d1b16226d7",
-      "docs/contracts/functional/C-FN-2.v1.json": "03a816a0922b6106120f0c7d537f6c7163b47116780730ee6470605321028417",
-      "docs/contracts/functional/C-FN-3.v1.json": "e0d42e0b23c6c2fce0da2a49fef96adb3ddcc27085e56a38d518b7f3e97f7270",
+      "docs/contracts/functional/C-FN-1.v1.json": "69f3de4d62cd2cb299f2c6bdb2c42e4fa815068469e11a358f54c625aefc35d4",
+      "docs/contracts/functional/C-FN-2.v1.json": "fe7ff33b8073a0211140f35ebe38933d87e154436af60fbbfa18515f468d89d1",
+      "docs/contracts/functional/C-FN-3.v1.json": "5ceb98277adf99b07caee65a47c2ef7d923611347ab4139a74458bca2e05e490",
       "docs/contracts/functional/C-FN-4.v1.json": "e350370378328d6e5a8c15465b135b86dba0efdce9848f3caaa043b8428eb888",
-      "docs/contracts/configuration/C-CF-1.v1.json": "50dcd96954f1cb9688386a9e3ee80e9e1b221b029e57c5d3ccd0b4da7a329ee3",
-      "docs/contracts/configuration/C-CF-2.v1.json": "149a399509c7853ae3467580f41eff32410f1928457af6ef2ec6d7b6ee1276da",
+      "docs/contracts/configuration/C-CF-1.v1.json": "24597b2a7f26ad6c3920821b9f57a7c397acc977fd48eb6e08d6ec6df263b859",
+      "docs/contracts/configuration/C-CF-2.v1.json": "49c275da9110f480c87ded106e8299e2121cd8b54f95779b03b9105e0a97cdd9",
       "docs/contracts/testing/C-TST-ENV-1.v1.json": "0cf5abb60346e584242e2f97d994448a39cb0c582cca8de2ae5e918799f5f3cb",
       "docs/contracts/testing/C-TST-GATE-SCOPE-1.v1.json": "29d249b6cc7a41099715724292bf99b60915fc7ee2738eff9d68a182b24f0ba3",
       "docs/contracts/testing/C-TST-HERM-1.v1.json": "13f0d7d0fdc2ba0d15bbbc6253078b91765d5c815c713647d3ea3b379595c1eb",

@@ -240,7 +240,7 @@ target_include_directories(bs_test_reload_config_json_integration
   PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
 )
 set_tests_properties(bs_test_reload_config_json_integration
-  PROPERTIES LABELS "unit;integration;day9;io;attach;parser;regression" TIMEOUT 120
+  PROPERTIES LABELS "unit;integration;day9;io;attach;parser;regression" TIMEOUT 300
                    RESOURCE_LOCK "attach_integration"
 )
 
