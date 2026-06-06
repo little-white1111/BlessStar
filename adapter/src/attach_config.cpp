@@ -72,10 +72,7 @@ int bs_adapter_attach_config_sync_path(AttachContext* ctx, const char* config_pa
         return -1;
 
     if (bs_reentrancy_in_state_callback())
-    {
-        bs_reentrancy_trap_listener_write_violation();
         return BS_ATTACH_CONC_ERR_REENTRANT;
-    }
 
 #if defined(BS_TESTING)
     if (g_sync_fail_path && std::strcmp(config_path, g_sync_fail_path) == 0)
@@ -195,10 +192,7 @@ int bs_adapter_attach_config_rollback_path(AttachContext* ctx, const char* confi
         return -1;
 
     if (bs_reentrancy_in_state_callback())
-    {
-        bs_reentrancy_trap_listener_write_violation();
         return BS_ATTACH_CONC_ERR_REENTRANT;
-    }
 
     const int in_window        = bs_adapter_attach_session_in_write_window(ctx);
     int       owned_write_lock = 0;

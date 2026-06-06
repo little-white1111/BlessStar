@@ -389,10 +389,7 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         return -4;
 
     if (bs_reentrancy_in_state_callback())
-    {
-        bs_reentrancy_trap_listener_write_violation();
         return BS_ATTACH_CONC_ERR_REENTRANT;
-    }
 
     AttachActiveGuard active_guard;
     if (!bs_adapter_attach_is_log_ready())

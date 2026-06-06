@@ -28,7 +28,8 @@ extern "C"
     void bs_reentrancy_enter_kernel_execute(void);
     void bs_reentrancy_leave_kernel_execute(void);
 
-    /** Debug trap when listener attempts attach write (T20.8). No-op in release. */
+    /** Debug trap when listener attempts attach write (T20.8). Reserved; graceful paths return
+     * BS_ATTACH_CONC_ERR_REENTRANT without calling this. No-op in release. */
     void bs_reentrancy_trap_listener_write_violation(void);
 
 #ifdef __cplusplus
