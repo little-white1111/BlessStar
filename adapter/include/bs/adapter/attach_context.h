@@ -71,10 +71,16 @@ extern "C"
 /** RAII for T20.0b active-ctx access guard. */
 struct AttachActiveGuard
 {
-    AttachActiveGuard() { bs_adapter_attach_ctx_active_access_enter(); }
+    AttachActiveGuard()
+    {
+        bs_adapter_attach_ctx_active_access_enter();
+    }
     AttachActiveGuard(const AttachActiveGuard&)            = delete;
     AttachActiveGuard& operator=(const AttachActiveGuard&) = delete;
-    ~AttachActiveGuard() { bs_adapter_attach_ctx_active_access_leave(); }
+    ~AttachActiveGuard()
+    {
+        bs_adapter_attach_ctx_active_access_leave();
+    }
 };
 
 #endif

@@ -132,7 +132,7 @@ int bs_adapter_attach_exec_parsed_ir(AttachContext* ctx, IRInstructionList* inst
     if (report_out)
         *report_out = nullptr;
 
-    int skip = 0;
+    int            skip   = 0;
     AttachContext* active = resolve_active_ctx(ctx, &skip);
     if (skip)
         return 0;
@@ -163,7 +163,7 @@ int bs_adapter_attach_exec_gated_ir(AttachContext* ctx, const char* uri,
     if (report_out)
         *report_out = nullptr;
 
-    int skip = 0;
+    int            skip   = 0;
     AttachContext* active = resolve_active_ctx(ctx, &skip);
     if (skip)
         return 0;
@@ -179,7 +179,7 @@ int bs_adapter_attach_exec_gated_ir(AttachContext* ctx, const char* uri,
         return -1;
     }
 
-    const int exec_rc = bs_adapter_attach_exec_parsed_ir(active, parsed.instructions, report_out);
+    const int exec_rc   = bs_adapter_attach_exec_parsed_ir(active, parsed.instructions, report_out);
     parsed.instructions = nullptr;
     bs_adapter_parser_result_destroy(&parsed);
     return exec_rc;

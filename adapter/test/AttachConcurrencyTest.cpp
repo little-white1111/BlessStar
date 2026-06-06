@@ -10,9 +10,10 @@
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_with_report.h"
 
-#include <atomic>
 #include <cstdio>
 #include <cstring>
+
+#include <atomic>
 #include <filesystem>
 #include <string>
 #include <thread>
@@ -58,7 +59,7 @@ struct ReloadReentryProbe
 static void reload_reentry_listener(const ConfigEvent* event, void* user_data)
 {
     (void)event;
-    auto*        p = static_cast<ReloadReentryProbe*>(user_data);
+    auto*             p       = static_cast<ReloadReentryProbe*>(user_data);
     static const char kTiny[] = "{}";
     p->sync_rc = bs_adapter_attach_config_sync_path(p->ctx, p->uri, kTiny, sizeof(kTiny) - 1);
 }
@@ -71,12 +72,12 @@ static int test_concurrent_read_write(BsTestAttachIoFixture* fix, const std::str
     std::atomic<int>      write_done{0};
     std::atomic<uint64_t> last_rev{0};
 
-    auto reader = [&]() {
+    auto reader = [&]()
+    {
         for (int i = 0; i < 40; ++i)
         {
             BsAttachSnapshotMeta meta{};
-            const int rc =
-                bs_adapter_attach_config_get_snapshot_meta(fix->ctx, uri.c_str(), &meta);
+            const int rc = bs_adapter_attach_config_get_snapshot_meta(fix->ctx, uri.c_str(), &meta);
             if (rc == BS_ATTACH_CONC_ERR_READ_BLOCKED)
                 continue;
             if (rc != 0)
@@ -97,14 +98,16 @@ static int test_concurrent_read_write(BsTestAttachIoFixture* fix, const std::str
 
     std::thread writers[1];
     std::thread readers[10];
-    writers[0] = std::thread([&]() {
-        for (int i = 0; i < 8; ++i)
+    writers[0] = std::thread(
+        [&]()
         {
-            if (run_one_reload(fix, uri.c_str()) != 0)
-                read_errors.fetch_add(1);
-            write_done.fetch_add(1);
-        }
-    });
+            for (int i = 0; i < 8; ++i)
+            {
+                if (run_one_reload(fix, uri.c_str()) != 0)
+                    read_errors.fetch_add(1);
+                write_done.fetch_add(1);
+            }
+        });
     for (auto& t : readers)
         t = std::thread(reader);
     writers[0].join();
@@ -116,8 +119,26 @@ static int test_concurrent_read_write(BsTestAttachIoFixture* fix, const std::str
     return 0;
 }
 
-static int test_reload_reentrant_from_listener(BsTestAttachIoFixture* fix,
-                                               const std::string&     uri)
+static int test_pending_write_blocks_new_read(BsTestAttachIoFixture* fix, const std::string& uri)
+{
+    BS_TEST_REQUIRE("prime", run_one_reload(fix, uri.c_str()) == 0);
+    bs_adapter_attach_session_begin_write_window(fix->ctx);
+    BsAttachSnapshotMeta meta{};
+    const int blocked = bs_adapter_attach_config_get_snapshot_meta(fix->ctx, uri.c_str(), &meta);
+    bs_adapter_attach_session_end_write_window(fix->ctx);
+    BS_TEST_REQUIRE("read-blocked", blocked == BS_ATTACH_CONC_ERR_READ_BLOCKED);
+    return 0;
+}
+
+static int test_wait_notify_timeout(BsTestAttachIoFixture* fix, const std::string& uri)
+{
+    const uint64_t future_rev = bs_adapter_attach_session_path_revision(fix->ctx, uri.c_str()) + 99;
+    const int      rc = bs_adapter_attach_config_wait_notify(fix->ctx, uri.c_str(), future_rev, 50);
+    BS_TEST_REQUIRE("notify-timeout", rc == BS_ATTACH_CONC_ERR_NOTIFY_TIMEOUT);
+    return 0;
+}
+
+static int test_reload_reentrant_from_listener(BsTestAttachIoFixture* fix, const std::string& uri)
 {
     EventBus* bus = bs_adapter_attach_config_event_bus(fix->ctx);
     BS_TEST_REQUIRE("bus", bus != nullptr);
@@ -133,14 +154,13 @@ static int test_reload_reentrant_from_listener(BsTestAttachIoFixture* fix,
 
 static int test_large_snapshot_chunked(BsTestAttachIoFixture* fix)
 {
-    constexpr size_t kLarge = 12u * 1024u * 1024u;
+    constexpr size_t           kLarge = 12u * 1024u * 1024u;
     std::vector<unsigned char> payload(kLarge, 0x5a);
-    payload[0] = '{';
+    payload[0]          = '{';
     payload[kLarge - 1] = '}';
 
-    BS_TEST_REQUIRE("sync",
-                    bs_adapter_attach_config_sync_path(fix->ctx, kLargePath, payload.data(),
-                                                       payload.size()) == 0);
+    BS_TEST_REQUIRE("sync", bs_adapter_attach_config_sync_path(fix->ctx, kLargePath, payload.data(),
+                                                               payload.size()) == 0);
 
     BsAttachSnapshotMeta meta{};
     BS_TEST_REQUIRE("meta",
@@ -149,18 +169,17 @@ static int test_large_snapshot_chunked(BsTestAttachIoFixture* fix)
 
     int      handle = -1;
     uint64_t rev    = 0;
-    BS_TEST_REQUIRE("open",
-                    bs_adapter_attach_config_open_snapshot_read(fix->ctx, kLargePath, &handle,
-                                                                &rev) == 0);
+    BS_TEST_REQUIRE("open", bs_adapter_attach_config_open_snapshot_read(fix->ctx, kLargePath,
+                                                                        &handle, &rev) == 0);
 
-    size_t   offset = 0;
-    size_t   total_read = 0;
+    size_t                     offset     = 0;
+    size_t                     total_read = 0;
     std::vector<unsigned char> chunk(meta.chunk_cap ? meta.chunk_cap : 65536);
     while (offset < kLarge)
     {
-        size_t n = 0;
-        const int rc = bs_adapter_attach_config_read_snapshot_chunk(
-            fix->ctx, handle, offset, chunk.data(), chunk.size(), &n);
+        size_t    n  = 0;
+        const int rc = bs_adapter_attach_config_read_snapshot_chunk(fix->ctx, handle, offset,
+                                                                    chunk.data(), chunk.size(), &n);
         BS_TEST_REQUIRE("chunk", rc == 0);
         if (n == 0)
             break;
@@ -191,6 +210,8 @@ int main()
     const std::string uri = bs_test_path_to_file_uri(cfg);
 
     BS_TEST_REQUIRE("conc-rw", test_concurrent_read_write(&fix, uri) == 0);
+    BS_TEST_REQUIRE("pending-write", test_pending_write_blocks_new_read(&fix, uri) == 0);
+    BS_TEST_REQUIRE("wait-notify", test_wait_notify_timeout(&fix, uri) == 0);
     BS_TEST_REQUIRE("reentry", test_reload_reentrant_from_listener(&fix, uri) == 0);
     BS_TEST_REQUIRE("chunk", test_large_snapshot_chunked(&fix) == 0);
 

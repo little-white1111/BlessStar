@@ -1,10 +1,9 @@
-#include "bs/kernel/runtime/kernel_pool.h"
-
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/pipeline/Stage.h"
 #include "bs/kernel/pipeline/pipeline.h"
 #include "bs/kernel/report/report.h"
 #include "bs/kernel/runtime/Kernel.h"
+#include "bs/kernel/runtime/kernel_pool.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -13,32 +12,74 @@
 #include <windows.h>
 typedef CRITICAL_SECTION   BsPoolMutex;
 typedef CONDITION_VARIABLE BsPoolCond;
-static void bs_pool_mutex_init(BsPoolMutex* mu) { InitializeCriticalSection(mu); }
-static void bs_pool_mutex_destroy(BsPoolMutex* mu) { DeleteCriticalSection(mu); }
-static void bs_pool_mutex_lock(BsPoolMutex* mu) { EnterCriticalSection(mu); }
-static void bs_pool_mutex_unlock(BsPoolMutex* mu) { LeaveCriticalSection(mu); }
-static void bs_pool_cond_init(BsPoolCond* cv) { InitializeConditionVariable(cv); }
-static void bs_pool_cond_destroy(BsPoolCond* cv) { (void)cv; }
+static void                bs_pool_mutex_init(BsPoolMutex* mu)
+{
+    InitializeCriticalSection(mu);
+}
+static void bs_pool_mutex_destroy(BsPoolMutex* mu)
+{
+    DeleteCriticalSection(mu);
+}
+static void bs_pool_mutex_lock(BsPoolMutex* mu)
+{
+    EnterCriticalSection(mu);
+}
+static void bs_pool_mutex_unlock(BsPoolMutex* mu)
+{
+    LeaveCriticalSection(mu);
+}
+static void bs_pool_cond_init(BsPoolCond* cv)
+{
+    InitializeConditionVariable(cv);
+}
+static void bs_pool_cond_destroy(BsPoolCond* cv)
+{
+    (void)cv;
+}
 static void bs_pool_cond_wait(BsPoolCond* cv, BsPoolMutex* mu)
 {
     (void)SleepConditionVariableCS(cv, mu, INFINITE);
 }
-static void bs_pool_cond_broadcast(BsPoolCond* cv) { WakeAllConditionVariable(cv); }
+static void bs_pool_cond_broadcast(BsPoolCond* cv)
+{
+    WakeAllConditionVariable(cv);
+}
 #else
 #include <pthread.h>
 typedef pthread_mutex_t BsPoolMutex;
 typedef pthread_cond_t  BsPoolCond;
-static void bs_pool_mutex_init(BsPoolMutex* mu) { (void)pthread_mutex_init(mu, NULL); }
-static void bs_pool_mutex_destroy(BsPoolMutex* mu) { (void)pthread_mutex_destroy(mu); }
-static void bs_pool_mutex_lock(BsPoolMutex* mu) { (void)pthread_mutex_lock(mu); }
-static void bs_pool_mutex_unlock(BsPoolMutex* mu) { (void)pthread_mutex_unlock(mu); }
-static void bs_pool_cond_init(BsPoolCond* cv) { (void)pthread_cond_init(cv, NULL); }
-static void bs_pool_cond_destroy(BsPoolCond* cv) { (void)pthread_cond_destroy(cv); }
+static void             bs_pool_mutex_init(BsPoolMutex* mu)
+{
+    (void)pthread_mutex_init(mu, NULL);
+}
+static void bs_pool_mutex_destroy(BsPoolMutex* mu)
+{
+    (void)pthread_mutex_destroy(mu);
+}
+static void bs_pool_mutex_lock(BsPoolMutex* mu)
+{
+    (void)pthread_mutex_lock(mu);
+}
+static void bs_pool_mutex_unlock(BsPoolMutex* mu)
+{
+    (void)pthread_mutex_unlock(mu);
+}
+static void bs_pool_cond_init(BsPoolCond* cv)
+{
+    (void)pthread_cond_init(cv, NULL);
+}
+static void bs_pool_cond_destroy(BsPoolCond* cv)
+{
+    (void)pthread_cond_destroy(cv);
+}
 static void bs_pool_cond_wait(BsPoolCond* cv, BsPoolMutex* mu)
 {
     (void)pthread_cond_wait(cv, mu);
 }
-static void bs_pool_cond_broadcast(BsPoolCond* cv) { (void)pthread_cond_broadcast(cv); }
+static void bs_pool_cond_broadcast(BsPoolCond* cv)
+{
+    (void)pthread_cond_broadcast(cv);
+}
 #endif
 
 #define BS_KERNEL_POOL_DEFAULT_STEADY 3u
@@ -50,7 +91,7 @@ static void bs_pool_cond_broadcast(BsPoolCond* cv) { (void)pthread_cond_broadcas
 
 typedef enum BsKernelPoolSlotKind
 {
-    BS_KERNEL_POOL_SLOT_STEADY = 0,
+    BS_KERNEL_POOL_SLOT_STEADY  = 0,
     BS_KERNEL_POOL_SLOT_DYNAMIC = 1
 } BsKernelPoolSlotKind;
 
@@ -133,7 +174,7 @@ static BsKernelPoolSlot* kernel_pool_create_slot(BsKernelPool* pool, BsKernelPoo
     if (kind == BS_KERNEL_POOL_SLOT_DYNAMIC)
     {
         const uint32_t delta = pool->config.priority_dynamic_delta * (dynamic_index + 1u);
-        slot->priority      = delta < slot->priority ? slot->priority - delta : 0u;
+        slot->priority       = delta < slot->priority ? slot->priority - delta : 0u;
     }
 
     slot->kernel = bs_kernel_create(NULL);
@@ -203,7 +244,7 @@ BsKernelPool* bs_kernel_pool_create(const BsKernelPoolConfig* config)
         pool->config.steady_count = BS_KERNEL_POOL_DEFAULT_STEADY;
     if (pool->config.max_instances < pool->config.steady_count)
         pool->config.max_instances = pool->config.steady_count;
-    pool->stats.steady_count = pool->config.steady_count;
+    pool->stats.steady_count  = pool->config.steady_count;
     pool->stats.max_instances = pool->config.max_instances;
     bs_pool_mutex_init(&pool->mu);
     bs_pool_cond_init(&pool->cv);
@@ -293,9 +334,9 @@ int bs_kernel_pool_submit(BsKernelPool* pool, const IRInstruction* ir, Report** 
         return BS_KERNEL_POOL_ERR_STOPPING;
     }
 
-    uint64_t my_ticket = 0u;
+    uint64_t my_ticket  = 0u;
     int      has_ticket = 0;
-    int      selected = -1;
+    int      selected   = -1;
     for (;;)
     {
         selected = kernel_pool_select_idle_slot(pool);
@@ -303,8 +344,8 @@ int bs_kernel_pool_submit(BsKernelPool* pool, const IRInstruction* ir, Report** 
             break;
         if (pool->slot_count < pool->config.max_instances && !has_ticket)
         {
-            BsKernelPoolSlot* slot =
-                kernel_pool_create_slot(pool, BS_KERNEL_POOL_SLOT_DYNAMIC, pool->stats.dynamic_slots);
+            BsKernelPoolSlot* slot = kernel_pool_create_slot(pool, BS_KERNEL_POOL_SLOT_DYNAMIC,
+                                                             pool->stats.dynamic_slots);
             if (!slot)
             {
                 bs_pool_mutex_unlock(&pool->mu);
@@ -322,7 +363,7 @@ int bs_kernel_pool_submit(BsKernelPool* pool, const IRInstruction* ir, Report** 
         }
         if (!has_ticket)
         {
-            my_ticket = pool->next_ticket++;
+            my_ticket  = pool->next_ticket++;
             has_ticket = 1;
             pool->waiters++;
         }
@@ -341,7 +382,7 @@ int bs_kernel_pool_submit(BsKernelPool* pool, const IRInstruction* ir, Report** 
     }
 
     BsKernelPoolSlot* slot = pool->slots[selected];
-    slot->busy = 1;
+    slot->busy             = 1;
     pool->stats.busy_slots++;
     pool->stats.submitted_jobs++;
     if (has_ticket)
@@ -410,9 +451,9 @@ void bs_kernel_pool_destroy(BsKernelPool* pool)
         bs_pool_cond_wait(&pool->cv, &pool->mu);
     BsKernelPoolSlot** slots = pool->slots;
     uint32_t           count = pool->slot_count;
-    pool->slots             = NULL;
-    pool->slot_count        = 0u;
-    pool->slot_capacity     = 0u;
+    pool->slots              = NULL;
+    pool->slot_count         = 0u;
+    pool->slot_capacity      = 0u;
     bs_pool_mutex_unlock(&pool->mu);
 
     for (uint32_t i = 0; i < count; i++)

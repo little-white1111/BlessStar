@@ -1,3 +1,9 @@
+#ifdef _WIN32
+#define NOMINMAX
+#include <psapi.h>
+#include <windows.h>
+#endif
+
 #include "bs/adapter/persistence/attach_watch.h"
 
 #include <chrono>
@@ -8,12 +14,6 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-
-#ifdef _WIN32
-#define NOMINMAX
-#include <psapi.h>
-#include <windows.h>
-#endif
 
 static size_t current_rss_bytes()
 {

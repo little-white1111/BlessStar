@@ -53,10 +53,10 @@ static void flip_last_byte(const fs::path& p)
 
 int main()
 {
-    const auto now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                            std::chrono::steady_clock::now().time_since_epoch())
-                            .count();
-    const uint32_t     salt = std::random_device{}();
+    const auto         now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                    std::chrono::steady_clock::now().time_since_epoch())
+                                    .count();
+    const uint32_t     salt   = std::random_device{}();
     std::ostringstream dir_name;
     dir_name << "bs_day15_watch_" << now_ns << "_" << salt;
     const fs::path tmp = fs::temp_directory_path() / dir_name.str();

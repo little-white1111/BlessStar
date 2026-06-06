@@ -59,7 +59,8 @@ static uint64_t dir_size_bytes(const fs::path& root)
     return total;
 }
 
-static void tally_failure_kind(BsDay19PathKind kind, int* fail_parse, int* fail_gate, int* fail_read)
+static void tally_failure_kind(BsDay19PathKind kind, int* fail_parse, int* fail_gate,
+                               int* fail_read)
 {
     switch (kind)
     {
@@ -95,10 +96,10 @@ int main(int argc, char** argv)
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
-    const bool                      failure_stress = bs_day19_profile_is_failure_stress(profile);
-    std::vector<std::string>        uris;
-    std::vector<BsDay19PathEntry>   path_entries;
-    const size_t                    fixture_bytes = static_cast<size_t>(profile.fixture_kb) * 1024u;
+    const bool                    failure_stress = bs_day19_profile_is_failure_stress(profile);
+    std::vector<std::string>      uris;
+    std::vector<BsDay19PathEntry> path_entries;
+    const size_t                  fixture_bytes = static_cast<size_t>(profile.fixture_kb) * 1024u;
     if (failure_stress)
     {
         BS_TEST_REQUIRE("paths-fail",
@@ -119,10 +120,10 @@ int main(int argc, char** argv)
     const auto t0          = std::chrono::steady_clock::now();
     auto       last_sample = t0;
 
-    int  day_ok      = 0;
-    int  day_total   = 0;
-    int  night_ok    = 0;
-    int  night_total = 0;
+    int  day_ok              = 0;
+    int  day_total           = 0;
+    int  night_ok            = 0;
+    int  night_total         = 0;
     int  path_i              = 0;
     bool steady_mark         = false;
     int  fail_parse          = 0;
@@ -170,8 +171,8 @@ int main(int argc, char** argv)
             bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
             bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
-            const size_t       idx  = static_cast<size_t>(path_i % uris.size());
-            const std::string& uri  = uris[idx];
+            const size_t          idx = static_cast<size_t>(path_i % uris.size());
+            const std::string&    uri = uris[idx];
             const BsDay19PathKind kind =
                 failure_stress ? path_entries[idx].kind : BS_DAY19_PATH_GOOD;
             path_i++;
@@ -197,8 +198,8 @@ int main(int argc, char** argv)
                  std::strcmp(profile.name, "full") == 0) &&
                 day_total % 1000 == 0)
             {
-                std::fprintf(stderr, "[day19] progress elapsed=%ds day=%d/%d night=%d/%d\n", elapsed,
-                             day_total, profile.min_day_reloads, night_total,
+                std::fprintf(stderr, "[day19] progress elapsed=%ds day=%d/%d night=%d/%d\n",
+                             elapsed, day_total, profile.min_day_reloads, night_total,
                              profile.min_night_batches);
             }
             bs_adapter_attach_reload_batch_destroy(ctrl);
@@ -243,9 +244,9 @@ int main(int argc, char** argv)
             }
             else
             {
-                const int n =
-                    profile.paths_per_batch < profile.path_pool_size ? profile.paths_per_batch
-                                                                     : profile.path_pool_size;
+                const int n = profile.paths_per_batch < profile.path_pool_size
+                                  ? profile.paths_per_batch
+                                  : profile.path_pool_size;
                 for (int p = 0; p < n; ++p)
                 {
                     if (bs_adapter_attach_reload_batch_add_path(
@@ -276,23 +277,20 @@ int main(int argc, char** argv)
     if (warmup_skip + 3 > samples.size())
         warmup_skip = samples.size() > 3 ? samples.size() - 3 : 0;
 
-    const int interval =
-        profile.rss_sample_interval_sec > 0 ? profile.rss_sample_interval_sec : 60;
+    const int interval = profile.rss_sample_interval_sec > 0 ? profile.rss_sample_interval_sec : 60;
     /* XIX-MEM-10: W=10min (PR/smoke/gha_6h) or W=60min (full) for slope + delta windows. */
-    const int slope_window_min =
-        (std::strcmp(profile.name, "full") == 0) ? 60 : 10;
-    const size_t window_samples =
-        static_cast<size_t>((slope_window_min * 60) / interval);
-    const size_t win = window_samples < (samples.size() - warmup_skip)
-                           ? window_samples
-                           : (samples.size() - warmup_skip);
+    const int    slope_window_min = (std::strcmp(profile.name, "full") == 0) ? 60 : 10;
+    const size_t window_samples   = static_cast<size_t>((slope_window_min * 60) / interval);
+    const size_t win              = window_samples < (samples.size() - warmup_skip)
+                                        ? window_samples
+                                        : (samples.size() - warmup_skip);
 
     const double slope_endpoint_ws = bs_day19_rss_slope_endpoint_mb_per_hour(samples);
     /* Gate: tail W-window regression (not full-run; avoids Linux VmRSS warmup drift). */
     double slope_reg_ws =
         bs_day19_rss_slope_regression_tail_mb_per_hour(samples, win, false /* use_private */);
-    const double slope_reg_full_ws = bs_day19_rss_slope_regression_mb_per_hour(
-        samples, warmup_skip, false /* use_private */);
+    const double slope_reg_full_ws =
+        bs_day19_rss_slope_regression_mb_per_hour(samples, warmup_skip, false /* use_private */);
     double delta_ws   = bs_day19_rss_delta_windowed_mb(samples, warmup_skip, win, false);
     double delta_priv = bs_day19_rss_delta_windowed_mb(samples, warmup_skip, win, true);
 
@@ -344,7 +342,7 @@ int main(int argc, char** argv)
         }
     }
 
-    int         exit_code = 0;
+    int         exit_code   = 0;
     const char* fail_reason = "ok";
 
     const bool diag = (std::getenv("BS_DAY19_RSS_DIAG") != nullptr) ||
@@ -387,8 +385,7 @@ int main(int argc, char** argv)
         else if (fail_parse < profile.min_fail_parse || fail_gate < profile.min_fail_gate ||
                  fail_read < profile.min_fail_read)
         {
-            std::fprintf(stderr,
-                         "FAIL: failure taxonomy parse=%d gate=%d read=%d (min %d/%d/%d)\n",
+            std::fprintf(stderr, "FAIL: failure taxonomy parse=%d gate=%d read=%d (min %d/%d/%d)\n",
                          fail_parse, fail_gate, fail_read, profile.min_fail_parse,
                          profile.min_fail_gate, profile.min_fail_read);
             exit_code   = 1;
@@ -425,8 +422,7 @@ int main(int argc, char** argv)
         exit_code   = 1;
         fail_reason = "rss_delta";
     }
-    if (exit_code == 0 &&
-        disk > static_cast<uint64_t>(profile.disk_budget_mb) * 1024u * 1024u)
+    if (exit_code == 0 && disk > static_cast<uint64_t>(profile.disk_budget_mb) * 1024u * 1024u)
     {
         std::fprintf(stderr, "FAIL: disk %llu > budget %d MB\n",
                      static_cast<unsigned long long>(disk / (1024u * 1024u)),

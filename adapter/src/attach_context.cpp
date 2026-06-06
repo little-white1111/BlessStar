@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+
 #include <mutex>
 
 #include "attach_context_internal.h"
@@ -28,13 +29,13 @@ static int attach_audit_stage_execute(Stage* /*stage*/, const IRInstruction* inp
     return 0;
 }
 
-static AttachContext* g_active_ctx = nullptr;
-static std::mutex     g_active_ctx_mu;
+static AttachContext*   g_active_ctx = nullptr;
+static std::mutex       g_active_ctx_mu;
 static thread_local int g_active_ctx_access_depth = 0;
-static AttachContext  g_ephemeral_log_ctx;
-static AttachContext  g_legacy_bootstrap_ctx;
-static int            g_ephemeral_initialized = 0;
-static int            g_legacy_initialized    = 0;
+static AttachContext    g_ephemeral_log_ctx;
+static AttachContext    g_legacy_bootstrap_ctx;
+static int              g_ephemeral_initialized = 0;
+static int              g_legacy_initialized    = 0;
 
 static void ensure_ephemeral_initialized(void)
 {

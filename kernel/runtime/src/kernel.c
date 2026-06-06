@@ -1,5 +1,5 @@
-#include "bs/kernel/ir/ir.h"
 #include "bs/kernel/common/bs_reentrancy.h"
+#include "bs/kernel/ir/ir.h"
 #include "bs/kernel/pipeline/pipeline.h"
 #include "bs/kernel/report/report.h"
 #include "bs/kernel/runtime/Config.h"
@@ -15,29 +15,83 @@
 typedef HANDLE             BsThread;
 typedef CRITICAL_SECTION   BsMutex;
 typedef CONDITION_VARIABLE BsCond;
-static void bs_mutex_init(BsMutex* mu) { InitializeCriticalSection(mu); }
-static void bs_mutex_destroy(BsMutex* mu) { DeleteCriticalSection(mu); }
-static void bs_mutex_lock(BsMutex* mu) { EnterCriticalSection(mu); }
-static void bs_mutex_unlock(BsMutex* mu) { LeaveCriticalSection(mu); }
-static void bs_cond_init(BsCond* cv) { InitializeConditionVariable(cv); }
-static void bs_cond_destroy(BsCond* cv) { (void)cv; }
-static void bs_cond_wait(BsCond* cv, BsMutex* mu) { SleepConditionVariableCS(cv, mu, INFINITE); }
-static void bs_cond_signal(BsCond* cv) { WakeConditionVariable(cv); }
-static void bs_cond_broadcast(BsCond* cv) { WakeAllConditionVariable(cv); }
+static void                bs_mutex_init(BsMutex* mu)
+{
+    InitializeCriticalSection(mu);
+}
+static void bs_mutex_destroy(BsMutex* mu)
+{
+    DeleteCriticalSection(mu);
+}
+static void bs_mutex_lock(BsMutex* mu)
+{
+    EnterCriticalSection(mu);
+}
+static void bs_mutex_unlock(BsMutex* mu)
+{
+    LeaveCriticalSection(mu);
+}
+static void bs_cond_init(BsCond* cv)
+{
+    InitializeConditionVariable(cv);
+}
+static void bs_cond_destroy(BsCond* cv)
+{
+    (void)cv;
+}
+static void bs_cond_wait(BsCond* cv, BsMutex* mu)
+{
+    SleepConditionVariableCS(cv, mu, INFINITE);
+}
+static void bs_cond_signal(BsCond* cv)
+{
+    WakeConditionVariable(cv);
+}
+static void bs_cond_broadcast(BsCond* cv)
+{
+    WakeAllConditionVariable(cv);
+}
 #else
 #include <pthread.h>
 typedef pthread_t       BsThread;
 typedef pthread_mutex_t BsMutex;
 typedef pthread_cond_t  BsCond;
-static void bs_mutex_init(BsMutex* mu) { (void)pthread_mutex_init(mu, NULL); }
-static void bs_mutex_destroy(BsMutex* mu) { (void)pthread_mutex_destroy(mu); }
-static void bs_mutex_lock(BsMutex* mu) { (void)pthread_mutex_lock(mu); }
-static void bs_mutex_unlock(BsMutex* mu) { (void)pthread_mutex_unlock(mu); }
-static void bs_cond_init(BsCond* cv) { (void)pthread_cond_init(cv, NULL); }
-static void bs_cond_destroy(BsCond* cv) { (void)pthread_cond_destroy(cv); }
-static void bs_cond_wait(BsCond* cv, BsMutex* mu) { (void)pthread_cond_wait(cv, mu); }
-static void bs_cond_signal(BsCond* cv) { (void)pthread_cond_signal(cv); }
-static void bs_cond_broadcast(BsCond* cv) { (void)pthread_cond_broadcast(cv); }
+static void             bs_mutex_init(BsMutex* mu)
+{
+    (void)pthread_mutex_init(mu, NULL);
+}
+static void bs_mutex_destroy(BsMutex* mu)
+{
+    (void)pthread_mutex_destroy(mu);
+}
+static void bs_mutex_lock(BsMutex* mu)
+{
+    (void)pthread_mutex_lock(mu);
+}
+static void bs_mutex_unlock(BsMutex* mu)
+{
+    (void)pthread_mutex_unlock(mu);
+}
+static void bs_cond_init(BsCond* cv)
+{
+    (void)pthread_cond_init(cv, NULL);
+}
+static void bs_cond_destroy(BsCond* cv)
+{
+    (void)pthread_cond_destroy(cv);
+}
+static void bs_cond_wait(BsCond* cv, BsMutex* mu)
+{
+    (void)pthread_cond_wait(cv, mu);
+}
+static void bs_cond_signal(BsCond* cv)
+{
+    (void)pthread_cond_signal(cv);
+}
+static void bs_cond_broadcast(BsCond* cv)
+{
+    (void)pthread_cond_broadcast(cv);
+}
 #endif
 
 #define PIPELINE_INITIAL_CAPACITY 4
@@ -60,12 +114,12 @@ typedef struct PipelineEntry
 
 typedef struct KernelExecJob
 {
-    PipelineEntry*       pipeline_ref;
-    const IRInstruction* ir;
-    Report*             report;
-    int                 result;
-    int                 done;
-    BsCond              done_cv;
+    PipelineEntry*        pipeline_ref;
+    const IRInstruction*  ir;
+    Report*               report;
+    int                   result;
+    int                   done;
+    BsCond                done_cv;
     struct KernelExecJob* next;
 } KernelExecJob;
 
@@ -580,8 +634,8 @@ int bs_kernel_register_pipeline(Kernel* kernel, const char* name, void* pipeline
         }
     }
 
-    kernel->pipelines[kernel->pipeline_count].name     = strdup(name);
-    kernel->pipelines[kernel->pipeline_count].pipeline = pipeline;
+    kernel->pipelines[kernel->pipeline_count].name        = strdup(name);
+    kernel->pipelines[kernel->pipeline_count].pipeline    = pipeline;
     kernel->pipelines[kernel->pipeline_count].active_jobs = 0;
     kernel->pipelines[kernel->pipeline_count].accepting   = 1;
     kernel->pipeline_count++;

@@ -4,10 +4,11 @@
 #include "bs/kernel/report/report.h"
 #include "bs/kernel/runtime/Kernel.h"
 
-#include <atomic>
 #include <cassert>
 #include <chrono>
 #include <cstdio>
+
+#include <atomic>
 #include <thread>
 #include <vector>
 
@@ -35,12 +36,13 @@ static int serial_stage_execute(Stage* stage, const IRInstruction* input, IRInst
     return 0;
 }
 
-static void attach_default_pipeline(Kernel* kernel, Pipeline** out_pipeline, SerialStageContext* ctx)
+static void attach_default_pipeline(Kernel* kernel, Pipeline** out_pipeline,
+                                    SerialStageContext* ctx)
 {
     Pipeline* pipeline = bs_pipeline_create();
     assert(pipeline != nullptr);
     Stage stage{};
-    stage.name = "serial";
+    stage.name    = "serial";
     stage.execute = serial_stage_execute;
     stage.context = ctx;
     assert(bs_pipeline_add_stage(pipeline, &stage) == 0);
@@ -53,24 +55,26 @@ static void test_ordered_worker_serializes_concurrent_execute()
     Kernel* kernel = bs_kernel_create(nullptr);
     assert(kernel != nullptr);
     SerialStageContext ctx;
-    Pipeline* pipeline = nullptr;
+    Pipeline*          pipeline = nullptr;
     attach_default_pipeline(kernel, &pipeline, &ctx);
     assert(bs_kernel_start(kernel) == 0);
 
-    constexpr int kJobs = 8;
+    constexpr int            kJobs = 8;
     std::vector<std::thread> threads;
     threads.reserve(kJobs);
     for (int i = 0; i < kJobs; ++i)
     {
-        threads.emplace_back([kernel, i]() {
-            IRInstruction* ir = bs_ir_instruction_create("noop", i % 2 == 0 ? "even" : "odd");
-            assert(ir != nullptr);
-            Report* report = bs_kernel_execute(kernel, ir);
-            assert(report != nullptr);
-            assert(bs_report_get_status(report) == REPORT_STATUS_SUCCESS);
-            bs_report_destroy(report);
-            bs_ir_instruction_destroy(ir);
-        });
+        threads.emplace_back(
+            [kernel, i]()
+            {
+                IRInstruction* ir = bs_ir_instruction_create("noop", i % 2 == 0 ? "even" : "odd");
+                assert(ir != nullptr);
+                Report* report = bs_kernel_execute(kernel, ir);
+                assert(report != nullptr);
+                assert(bs_report_get_status(report) == REPORT_STATUS_SUCCESS);
+                bs_report_destroy(report);
+                bs_ir_instruction_destroy(ir);
+            });
     }
     for (auto& thread : threads)
         thread.join();
@@ -87,18 +91,20 @@ static void test_stop_drains_running_job()
     Kernel* kernel = bs_kernel_create(nullptr);
     assert(kernel != nullptr);
     SerialStageContext ctx;
-    Pipeline* pipeline = nullptr;
+    Pipeline*          pipeline = nullptr;
     attach_default_pipeline(kernel, &pipeline, &ctx);
     assert(bs_kernel_start(kernel) == 0);
 
-    std::thread worker([kernel]() {
-        IRInstruction* ir = bs_ir_instruction_create("noop", "stop-drain");
-        assert(ir != nullptr);
-        Report* report = bs_kernel_execute(kernel, ir);
-        assert(report != nullptr);
-        bs_report_destroy(report);
-        bs_ir_instruction_destroy(ir);
-    });
+    std::thread worker(
+        [kernel]()
+        {
+            IRInstruction* ir = bs_ir_instruction_create("noop", "stop-drain");
+            assert(ir != nullptr);
+            Report* report = bs_kernel_execute(kernel, ir);
+            assert(report != nullptr);
+            bs_report_destroy(report);
+            bs_ir_instruction_destroy(ir);
+        });
     while (ctx.entered.load() == 0)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     assert(bs_kernel_stop(kernel) == 0);

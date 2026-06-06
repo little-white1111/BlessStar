@@ -28,15 +28,15 @@ extern "C"
      * Takes ownership of @p instructions (must not be NULL).
      * Retains latest per path; evicts unpinned older revisions (IR-SNAPSHOT-2).
      */
-    BsAttachIrSnapshotHandle bs_adapter_attach_ir_snapshot_publish(AttachContext* ctx,
-                                                                   const char*    path,
-                                                                   uint64_t       revision,
+    BsAttachIrSnapshotHandle bs_adapter_attach_ir_snapshot_publish(AttachContext*     ctx,
+                                                                   const char*        path,
+                                                                   uint64_t           revision,
                                                                    IRInstructionList* instructions);
 
     void bs_adapter_attach_ir_snapshot_pin(AttachContext* ctx, BsAttachIrSnapshotHandle handle);
     void bs_adapter_attach_ir_snapshot_unpin(AttachContext* ctx, BsAttachIrSnapshotHandle handle);
 
-    IRInstructionList* bs_adapter_attach_ir_snapshot_instructions(AttachContext* ctx,
+    IRInstructionList* bs_adapter_attach_ir_snapshot_instructions(AttachContext*           ctx,
                                                                   BsAttachIrSnapshotHandle handle);
 
 #ifdef __cplusplus

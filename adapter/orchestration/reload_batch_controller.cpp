@@ -16,13 +16,13 @@
 #include "bs/adapter/persistence/attach_audit.h"
 #include "bs/adapter/persistence/attach_store.h"
 
-#include <atomic>
 #include <cstdio>
 #include <cstring>
-#include <mutex>
-#include <thread>
 
+#include <atomic>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -32,7 +32,7 @@ struct PathWork
     PathOrchestrationState   state         = BS_ORCH_PENDING;
     uint64_t                 base_revision = 0;
     std::vector<uint8_t>     staged_payload;
-    IRInstructionList*       gated_ir            = nullptr;
+    IRInstructionList*       gated_ir           = nullptr;
     BsAttachIrSnapshotHandle ir_snapshot_handle = 0;
 };
 
@@ -180,21 +180,19 @@ static void gc_path_work(PathWork* w)
 static int gate_path_work(ReloadBatchController* ctrl, PathWork* w, IoReadResult* result,
                           BsReloadGateDetail* detail)
 {
-    AttachContext* actx = bs_adapter_attach_ctx_get_active();
-    const int      pool_ready =
-        actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
+    AttachContext* actx       = bs_adapter_attach_ctx_get_active();
+    const int      pool_ready = actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
 
     if (!pool_ready)
     {
         if (!ctrl->gate_fn)
             return bs_adapter_attach_reload_default_path_gate(nullptr, w->uri.c_str(), result,
-                                                             detail);
+                                                              detail);
         return ctrl->gate_fn(ctrl->gate_ctx, w->uri.c_str(), result, detail);
     }
 
     BsConfigParseResult parsed{};
-    const int           parse_rc =
-        bs_adapter_attach_reload_parse_and_verify_bytes(result, &parsed, detail);
+    const int parse_rc = bs_adapter_attach_reload_parse_and_verify_bytes(result, &parsed, detail);
     if (parse_rc != BS_RELOAD_GATE_OK)
     {
         bs_adapter_parser_result_destroy(&parsed);
@@ -225,8 +223,8 @@ static int publish_path_ir(AttachContext* actx, PathWork* w)
 {
     if (!actx || !w->gated_ir)
         return -1;
-    w->ir_snapshot_handle = bs_adapter_attach_ir_snapshot_publish(
-        actx, w->uri.c_str(), w->base_revision, w->gated_ir);
+    w->ir_snapshot_handle =
+        bs_adapter_attach_ir_snapshot_publish(actx, w->uri.c_str(), w->base_revision, w->gated_ir);
     w->gated_ir = nullptr;
     return w->ir_snapshot_handle ? 0 : -1;
 }
@@ -240,7 +238,7 @@ static int exec_path_ir(AttachContext* actx, PathWork* w, ReloadBatchController*
     bs_adapter_attach_ir_snapshot_pin(actx, w->ir_snapshot_handle);
     IRInstructionList* instructions =
         bs_adapter_attach_ir_snapshot_instructions(actx, w->ir_snapshot_handle);
-    Report* report = nullptr;
+    Report*   report  = nullptr;
     const int exec_rc = bs_adapter_attach_exec_parsed_ir(actx, instructions, &report);
     bs_adapter_attach_ir_snapshot_unpin(actx, w->ir_snapshot_handle);
     if (report)
@@ -480,9 +478,8 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             continue;
         }
 
-        AttachContext* actx = bs_adapter_attach_ctx_get_active();
-        const int      pool_ready =
-            actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
+        AttachContext* actx       = bs_adapter_attach_ctx_get_active();
+        const int      pool_ready = actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
         if (pool_ready && publish_path_ir(actx, &w) != 0)
         {
             w.state           = BS_ORCH_GATE_REJECTED;
@@ -538,13 +535,15 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             {
                 if (w.state != BS_ORCH_STAGED)
                     continue;
-                workers.emplace_back([&w, actx, ctrl, &fail_mu, &exec_failed]() {
-                    if (exec_path_ir(actx, &w, ctrl) != 0)
+                workers.emplace_back(
+                    [&w, actx, ctrl, &fail_mu, &exec_failed]()
                     {
-                        std::lock_guard<std::mutex> lock(fail_mu);
-                        exec_failed = true;
-                    }
-                });
+                        if (exec_path_ir(actx, &w, ctrl) != 0)
+                        {
+                            std::lock_guard<std::mutex> lock(fail_mu);
+                            exec_failed = true;
+                        }
+                    });
             }
             for (auto& worker : workers)
                 worker.join();

@@ -2,20 +2,21 @@
 
 #include "bs/adapter/attach_ir_snapshot.h"
 
-#include "attach_context_internal.h"
-
-#include <algorithm>
 #include <cassert>
 #include <cstring>
+
+#include <algorithm>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include "attach_context_internal.h"
 
 struct IrSnapshotEntry
 {
     BsAttachIrSnapshotHandle handle = 0;
     std::string              path;
-    uint64_t                 revision = 0;
+    uint64_t                 revision     = 0;
     IRInstructionList*       instructions = nullptr;
     uint32_t                 pin_count    = 0;
     int                      is_latest    = 0;
@@ -23,8 +24,8 @@ struct IrSnapshotEntry
 
 struct IrSnapshotStore
 {
-    std::mutex               mu;
-    uint64_t                 next_handle = 1;
+    std::mutex                   mu;
+    uint64_t                     next_handle = 1;
     std::vector<IrSnapshotEntry> entries;
 };
 
@@ -88,7 +89,7 @@ void bs_adapter_attach_ir_snapshot_destroy(AttachContext* ctx)
 }
 
 BsAttachIrSnapshotHandle bs_adapter_attach_ir_snapshot_publish(AttachContext* ctx, const char* path,
-                                                               uint64_t revision,
+                                                               uint64_t           revision,
                                                                IRInstructionList* instructions)
 {
     if (!ctx || !path || !instructions)
@@ -106,12 +107,12 @@ BsAttachIrSnapshotHandle bs_adapter_attach_ir_snapshot_publish(AttachContext* ct
     }
 
     IrSnapshotEntry entry{};
-    entry.handle        = store->next_handle++;
-    entry.path          = path;
-    entry.revision      = revision;
-    entry.instructions  = instructions;
-    entry.pin_count     = 0;
-    entry.is_latest     = 1;
+    entry.handle       = store->next_handle++;
+    entry.path         = path;
+    entry.revision     = revision;
+    entry.instructions = instructions;
+    entry.pin_count    = 0;
+    entry.is_latest    = 1;
     store->entries.push_back(entry);
 
     evict_unpinned_non_latest(store, path);
@@ -124,7 +125,7 @@ void bs_adapter_attach_ir_snapshot_pin(AttachContext* ctx, BsAttachIrSnapshotHan
     if (!store)
         return;
     std::lock_guard<std::mutex> lock(store->mu);
-    IrSnapshotEntry* entry = find_entry(store, handle);
+    IrSnapshotEntry*            entry = find_entry(store, handle);
     if (entry)
         entry->pin_count++;
 }
@@ -135,7 +136,7 @@ void bs_adapter_attach_ir_snapshot_unpin(AttachContext* ctx, BsAttachIrSnapshotH
     if (!store)
         return;
     std::lock_guard<std::mutex> lock(store->mu);
-    IrSnapshotEntry* entry = find_entry(store, handle);
+    IrSnapshotEntry*            entry = find_entry(store, handle);
     if (!entry || entry->pin_count == 0)
         return;
     entry->pin_count--;
@@ -144,20 +145,20 @@ void bs_adapter_attach_ir_snapshot_unpin(AttachContext* ctx, BsAttachIrSnapshotH
         if (entry->instructions)
             bs_ir_instruction_list_destroy(entry->instructions);
         const BsAttachIrSnapshotHandle doomed = entry->handle;
-        store->entries.erase(
-            std::remove_if(store->entries.begin(), store->entries.end(),
-                           [doomed](const IrSnapshotEntry& e) { return e.handle == doomed; }),
-            store->entries.end());
+        store->entries.erase(std::remove_if(store->entries.begin(), store->entries.end(),
+                                            [doomed](const IrSnapshotEntry& e)
+                                            { return e.handle == doomed; }),
+                             store->entries.end());
     }
 }
 
-IRInstructionList* bs_adapter_attach_ir_snapshot_instructions(AttachContext* ctx,
+IRInstructionList* bs_adapter_attach_ir_snapshot_instructions(AttachContext*           ctx,
                                                               BsAttachIrSnapshotHandle handle)
 {
     IrSnapshotStore* store = snapshot_store(ctx);
     if (!store)
         return nullptr;
     std::lock_guard<std::mutex> lock(store->mu);
-    IrSnapshotEntry* entry = find_entry(store, handle);
+    IrSnapshotEntry*            entry = find_entry(store, handle);
     return entry ? entry->instructions : nullptr;
 }

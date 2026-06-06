@@ -1,11 +1,10 @@
+#include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/state/ConfigManager.h"
 #include "bs/kernel/state/ConfigState.h"
 
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_session.h"
-
-#include "bs/kernel/common/bs_reentrancy.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -73,14 +72,17 @@ int bs_adapter_attach_config_sync_path(AttachContext* ctx, const char* config_pa
         return -1;
 
     if (bs_reentrancy_in_state_callback())
+    {
+        bs_reentrancy_trap_listener_write_violation();
         return BS_ATTACH_CONC_ERR_REENTRANT;
+    }
 
 #if defined(BS_TESTING)
     if (g_sync_fail_path && std::strcmp(config_path, g_sync_fail_path) == 0)
         return -99;
 #endif
 
-    const int in_window = bs_adapter_attach_session_in_write_window(ctx);
+    const int in_window        = bs_adapter_attach_session_in_write_window(ctx);
     int       owned_write_lock = 0;
     if (!in_window)
     {
@@ -126,13 +128,23 @@ int bs_adapter_attach_config_checkpoint_path(AttachContext* ctx, const char* con
     if (!cm || !config_path)
         return -1;
 
+    const int wk = bs_adapter_attach_session_try_write_lock(ctx);
+    if (wk != 0)
+        return wk;
+
     ConfigState state = CONFIG_STATE_INITIAL;
     const int   st_rc = bs_config_manager_get_config_state(cm, config_path, &state);
     if (st_rc == -2)
+    {
+        bs_adapter_attach_session_write_unlock(ctx);
         return 0;
+    }
 
     if (st_rc != 0)
+    {
+        bs_adapter_attach_session_write_unlock(ctx);
         return st_rc;
+    }
 
     out->had_prior   = 1;
     out->prior_state = state;
@@ -140,7 +152,10 @@ int bs_adapter_attach_config_checkpoint_path(AttachContext* ctx, const char* con
     void*  snap = nullptr;
     size_t sz   = 0;
     if (bs_config_manager_get_config_snapshot(cm, config_path, &snap, &sz) != 0)
+    {
+        bs_adapter_attach_session_write_unlock(ctx);
         return -1;
+    }
 
     if (sz > 0 && snap)
     {
@@ -148,6 +163,7 @@ int bs_adapter_attach_config_checkpoint_path(AttachContext* ctx, const char* con
         if (!out->prior_data)
         {
             std::free(snap);
+            bs_adapter_attach_session_write_unlock(ctx);
             return -1;
         }
         std::memcpy(out->prior_data, snap, sz);
@@ -155,6 +171,7 @@ int bs_adapter_attach_config_checkpoint_path(AttachContext* ctx, const char* con
     }
 
     std::free(snap);
+    bs_adapter_attach_session_write_unlock(ctx);
     return 0;
 }
 
@@ -177,26 +194,49 @@ int bs_adapter_attach_config_rollback_path(AttachContext* ctx, const char* confi
     if (!cm || !config_path)
         return -1;
 
+    if (bs_reentrancy_in_state_callback())
+    {
+        bs_reentrancy_trap_listener_write_violation();
+        return BS_ATTACH_CONC_ERR_REENTRANT;
+    }
+
+    const int in_window        = bs_adapter_attach_session_in_write_window(ctx);
+    int       owned_write_lock = 0;
+    if (!in_window)
+    {
+        const int wk = bs_adapter_attach_session_try_write_lock(ctx);
+        if (wk != 0)
+            return wk;
+        owned_write_lock = 1;
+    }
+
+    auto finish = [&](int rc)
+    {
+        if (owned_write_lock)
+            bs_adapter_attach_session_write_unlock(ctx);
+        return rc;
+    };
+
     if (!checkpoint || !checkpoint->had_prior)
-        return bs_config_manager_unload_config(cm, config_path);
+        return finish(bs_config_manager_unload_config(cm, config_path));
 
     if (checkpoint->prior_state == CONFIG_STATE_CLOSED ||
         checkpoint->prior_state == CONFIG_STATE_INITIAL)
-        return bs_config_manager_unload_config(cm, config_path);
+        return finish(bs_config_manager_unload_config(cm, config_path));
 
     if (checkpoint->prior_state == CONFIG_STATE_ACTIVE)
     {
         if (checkpoint->prior_size > 0 && checkpoint->prior_data)
-            return bs_config_manager_hot_update(cm, config_path, checkpoint->prior_data,
-                                                checkpoint->prior_size);
-        return bs_config_manager_unload_config(cm, config_path);
+            return finish(bs_config_manager_hot_update(cm, config_path, checkpoint->prior_data,
+                                                       checkpoint->prior_size));
+        return finish(bs_config_manager_unload_config(cm, config_path));
     }
 
     if (checkpoint->prior_size > 0 && checkpoint->prior_data)
-        return bs_config_manager_reload_config(cm, config_path, checkpoint->prior_data,
-                                               checkpoint->prior_size);
+        return finish(bs_config_manager_reload_config(cm, config_path, checkpoint->prior_data,
+                                                      checkpoint->prior_size));
 
-    return bs_config_manager_unload_config(cm, config_path);
+    return finish(bs_config_manager_unload_config(cm, config_path));
 }
 
 /** C-01: freeze marker enters ConfigManager via sync_path (LOADING->ACTIVE on first load). */
@@ -211,6 +251,48 @@ EventBus* bs_adapter_attach_config_event_bus(AttachContext* ctx)
 {
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     return cm ? bs_config_manager_get_event_bus(cm) : nullptr;
+}
+
+void bs_adapter_attach_config_register_phase2_notify(AttachContext*               ctx,
+                                                     BsAttachPhase2NotifyBridgeFn fn)
+{
+    ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
+    if (!cm)
+        return;
+    bs_config_manager_set_phase2_notify_hook(cm, fn, ctx);
+}
+
+void bs_adapter_attach_config_clear_phase2_notify(AttachContext* ctx)
+{
+    ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
+    if (!cm)
+        return;
+    bs_config_manager_set_phase2_notify_hook(cm, nullptr, nullptr);
+}
+
+int bs_adapter_attach_config_snapshot_bytes_locked(AttachContext* ctx, const char* config_path,
+                                                   size_t* total_out, void** bytes_out,
+                                                   size_t* bytes_len_out)
+{
+    if (!total_out || !bytes_out || !bytes_len_out)
+        return -1;
+    *total_out     = 0;
+    *bytes_out     = nullptr;
+    *bytes_len_out = 0;
+
+    ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
+    if (!cm || !config_path)
+        return -1;
+
+    void*     snap = nullptr;
+    size_t    sz   = 0;
+    const int rc   = bs_config_manager_get_config_snapshot(cm, config_path, &snap, &sz);
+    if (rc != 0)
+        return rc;
+    *total_out     = sz;
+    *bytes_out     = snap;
+    *bytes_len_out = sz;
+    return 0;
 }
 
 #if defined(BS_TESTING)

@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <cstdio>
+
 #include <thread>
 #include <vector>
 
@@ -35,7 +36,7 @@ static void test_pool_submit_transfers_report_ownership()
 {
     BsKernelPoolConfig config;
     bs_kernel_pool_config_init_default(&config);
-    config.steady_count = 1;
+    config.steady_count  = 1;
     config.max_instances = 2;
 
     BsKernelPool* pool = bs_kernel_pool_create(&config);
@@ -64,27 +65,29 @@ static void test_pool_accepts_parallel_submitters()
 {
     BsKernelPoolConfig config;
     bs_kernel_pool_config_init_default(&config);
-    config.steady_count = 2;
+    config.steady_count  = 2;
     config.max_instances = 4;
 
     BsKernelPool* pool = bs_kernel_pool_create(&config);
     assert(pool != nullptr);
     assert(bs_kernel_pool_warmup(pool) == BS_KERNEL_POOL_OK);
 
-    constexpr int kJobs = 12;
+    constexpr int            kJobs = 12;
     std::vector<std::thread> threads;
     threads.reserve(kJobs);
     for (int i = 0; i < kJobs; ++i)
     {
-        threads.emplace_back([pool, i]() {
-            IRInstruction* ir = bs_ir_instruction_create("noop", i % 2 == 0 ? "a" : "b");
-            assert(ir != nullptr);
-            Report* report = nullptr;
-            assert(bs_kernel_pool_submit(pool, ir, &report) == BS_KERNEL_POOL_OK);
-            assert(report != nullptr);
-            bs_report_destroy(report);
-            bs_ir_instruction_destroy(ir);
-        });
+        threads.emplace_back(
+            [pool, i]()
+            {
+                IRInstruction* ir = bs_ir_instruction_create("noop", i % 2 == 0 ? "a" : "b");
+                assert(ir != nullptr);
+                Report* report = nullptr;
+                assert(bs_kernel_pool_submit(pool, ir, &report) == BS_KERNEL_POOL_OK);
+                assert(report != nullptr);
+                bs_report_destroy(report);
+                bs_ir_instruction_destroy(ir);
+            });
     }
     for (auto& thread : threads)
         thread.join();

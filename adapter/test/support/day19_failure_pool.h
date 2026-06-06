@@ -6,10 +6,10 @@
 
 #include <cstddef>
 #include <cstring>
-#include <string>
-#include <vector>
 
 #include <filesystem>
+#include <string>
+#include <vector>
 
 #include "day19_fixture_gen.h"
 #include "test_temp_dir.h"
@@ -26,7 +26,7 @@ enum BsDay19PathKind : int
 
 struct BsDay19PathEntry
 {
-    std::string uri;
+    std::string     uri;
     BsDay19PathKind kind = BS_DAY19_PATH_GOOD;
 };
 
@@ -36,7 +36,8 @@ inline std::string bs_day19_gate_reject_v1_json()
 }
 
 /** good_count files + one parse/gate/read fault URI each; day cycle uses full list. */
-inline int bs_day19_write_failure_path_pool(const fs::path& work, int good_count, size_t fixture_bytes,
+inline int bs_day19_write_failure_path_pool(const fs::path& work, int good_count,
+                                            size_t                         fixture_bytes,
                                             std::vector<BsDay19PathEntry>* out)
 {
     if (!out || good_count < 1)
@@ -53,7 +54,7 @@ inline int bs_day19_write_failure_path_pool(const fs::path& work, int good_count
     }
 
     {
-        const fs::path f = work / "bad-parse.json";
+        const fs::path f   = work / "bad-parse.json";
         const char*    bad = "{not-valid-json";
         if (!bs_test_write_binary_file(f, bad, std::strlen(bad)))
             return -1;
@@ -61,8 +62,8 @@ inline int bs_day19_write_failure_path_pool(const fs::path& work, int good_count
     }
 
     {
-        const fs::path       f = work / "bad-gate.json";
-        const std::string    gj = bs_day19_gate_reject_v1_json();
+        const fs::path    f  = work / "bad-gate.json";
+        const std::string gj = bs_day19_gate_reject_v1_json();
         if (!bs_test_write_binary_file(f, gj.data(), gj.size()))
             return -1;
         out->push_back({bs_test_path_to_file_uri(f), BS_DAY19_PATH_GATE_FAIL});

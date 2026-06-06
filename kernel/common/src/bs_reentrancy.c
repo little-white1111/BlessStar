@@ -4,12 +4,12 @@
 
 #ifdef _WIN32
 #include <windows.h>
-static __declspec(thread) int g_in_state_callback = 0;
-static __declspec(thread) int g_in_attach_write   = 0;
+static __declspec(thread) int g_in_state_callback    = 0;
+static __declspec(thread) int g_in_attach_write      = 0;
 static __declspec(thread) int g_kernel_execute_depth = 0;
 #else
-static __thread int g_in_state_callback = 0;
-static __thread int g_in_attach_write   = 0;
+static __thread int g_in_state_callback    = 0;
+static __thread int g_in_attach_write      = 0;
 static __thread int g_kernel_execute_depth = 0;
 #endif
 
