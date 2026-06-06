@@ -4,10 +4,16 @@
   "version": "v1",
   "priority": "testing",
   "status": "active",
-  "scope": ["ci", "ctest", "docs"],
+  "scope": [
+    "ci",
+    "ctest",
+    "docs"
+  ],
   "stage": "preflight",
   "rule": "L1 contract_gate_runner uses --through-stage ci (inclusive). Staging and prod_ops gates are excluded from PR/day17. Registry defaults for GATE-STAGING-ACCEPTANCE and GATE-PROD-SMOKE use --dry-run. L2 bulk ctest_label scenarios (integration, day14) must not be invoked from day17 ctest commands.",
-  "gate_refs": ["GATE-TEST-L1-GATE-SCOPE"],
+  "gate_refs": [
+    "GATE-TEST-L1-GATE-SCOPE"
+  ],
   "blocking": true,
   "owner": "subtask-b",
   "evidence": [

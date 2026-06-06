@@ -110,7 +110,7 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -125,9 +125,9 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/architecture/C-IX-2.v1.json"
@@ -495,7 +495,7 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command"
         },
         {
@@ -516,9 +516,9 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure"
         },
         {
           "gate_id": "GATE-REGRESSION",
@@ -606,7 +606,7 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command"
         },
         {
@@ -620,9 +620,9 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure"
         },
         {
           "gate_id": "GATE-REGRESSION",
@@ -694,7 +694,7 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command"
         },
         {
@@ -708,9 +708,9 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure"
         },
         {
           "gate_id": "GATE-REGRESSION",
@@ -768,7 +768,7 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command"
         },
         {
@@ -782,9 +782,9 @@
         {
           "gate_id": "GATE-INTEGRATION",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure"
         },
         {
           "gate_id": "GATE-REGRESSION",
@@ -1201,7 +1201,7 @@
       "gate_id": "GATE-INTEGRATION",
       "stage": "ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
       "covers": [
         "C-IX-2",
         "C-ST-13",
@@ -1301,10 +1301,10 @@
   ],
   "hashes": {
     "index": "f4357ccb04b91057ae460b6b8191e8b0337fa7d5fc62075b01016643d6035acb",
-    "gate_registry": "e686dbbdf54cdaab182439213857e8ae92ab7498780f47edb2c986ff885c92c1",
+    "gate_registry": "7920a8c9dff709e86f9f9908a34fc7e152fec51e7d072ae0ba5f6057201ef1cf",
     "contracts": {
       "docs/contracts/architecture/C-IX-1.v1.json": "9592b02e16d030ce614e87972830502601e7211b923af0dc1bd39a84b5456108",
-      "docs/contracts/architecture/C-IX-2.v1.json": "ab4abf2c5bfb69f134e0763d152e1e7167538b274ffecf0c7d2b577a93f42194",
+      "docs/contracts/architecture/C-IX-2.v1.json": "993ddd431bbff3f18c399ed7356870236ebe0b4c6325a40914b1b416f7d68aac",
       "docs/contracts/architecture/C-IX-3.v1.json": "224a98cb2409a965bc2acd2ecb71d7ba5f716cfee8f74cedf5820d5bc8529267",
       "docs/contracts/architecture/C-IX-6-prime.v1.json": "745a74d4f481508d2920041b58ea060a75939089345179b82b0dd1b9653b0f74",
       "docs/contracts/architecture/C-IX-7.v1.json": "9899d22867a337f9f8745e7df95d6e9d56137580f5e3f4547f5b850b91c2882d",
@@ -1314,14 +1314,14 @@
       "docs/contracts/integration/C-IX-8.v1.json": "8b035d9005ffa8623e7ff79d5ec055fd9f6aead8f7bc0bd0487f2989d09d3fe2",
       "docs/contracts/style/C-ST-1.v1.json": "82495b17d1e16f381ebfd064e54f6f05b4ae1bf62174cf3a8fb4fdafc4bf3bd1",
       "docs/contracts/style/C-ST-11.v1.json": "dbf50e67f5fc53bb3fd189780b6eeff975731f0b3909b744e8acfce7f40889e0",
-      "docs/contracts/style/C-ST-13.v1.json": "23a7cbe2a753024c1aa3b1428122a171a620efd5c30fd3f036d725f64e739acf",
+      "docs/contracts/style/C-ST-13.v1.json": "fca1355344da78598343000eac6785e12f4c9d8d1466b43a91d72b53d7f3e900",
       "docs/contracts/style/C-ST-14.v1.json": "3ba88984a3a2fddeedeba7b8ac8db79a205a0b4f1e2813e88cde74dc117b7901",
       "docs/contracts/style/C-ST-9.v1.json": "c40d1256155832c76fa29e31e8f762ce0d1140dd5bdc020e1e065a4a5ca0fa0a",
-      "docs/contracts/functional/C-FN-1.v1.json": "2363d350b17518cc76250a95d9fa8f38339cd5b5f23749c5e96a447bb01fef9c",
+      "docs/contracts/functional/C-FN-1.v1.json": "b302bce0f9c7da01ccc2193ea18ced0fc915d4eaf6e726ff76e213c9e5f1b59f",
       "docs/contracts/functional/C-FN-2.v1.json": "e44712018617f5fd774946eeb97deda57355e4b9dbfdefb07eb3d2b49c09b8fd",
-      "docs/contracts/functional/C-FN-3.v1.json": "73513dbe6d4b783ff05f670ee4c26a9330b59da01bcfd4276975df03401efff4",
+      "docs/contracts/functional/C-FN-3.v1.json": "bd219fed137ff056e8143313ce6e8df9cb5ad9145057e1bd3b295f6e59f246cf",
       "docs/contracts/functional/C-FN-4.v1.json": "e350370378328d6e5a8c15465b135b86dba0efdce9848f3caaa043b8428eb888",
-      "docs/contracts/configuration/C-CF-1.v1.json": "04172270c59e92e34154d1088fad278df9729852eeb979472461292b55f2eecf",
+      "docs/contracts/configuration/C-CF-1.v1.json": "3bb6e3b06967ce1a929bb44b0120142ea77bbd4bcc7849ffecee6d8424496db4",
       "docs/contracts/configuration/C-CF-2.v1.json": "ff674eab5db56d2a6468d060f5ef281f5f3b7707153d461d46b4f76e4bb98c80",
       "docs/contracts/testing/C-TST-ENV-1.v1.json": "0cf5abb60346e584242e2f97d994448a39cb0c582cca8de2ae5e918799f5f3cb",
       "docs/contracts/testing/C-TST-GATE-SCOPE-1.v1.json": "29d249b6cc7a41099715724292bf99b60915fc7ee2738eff9d68a182b24f0ba3",

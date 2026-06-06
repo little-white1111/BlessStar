@@ -221,7 +221,7 @@ set_tests_properties(bs_test_app_vendor_reload_integration
     LABELS "unit;integration;app;day17;regression"
     TIMEOUT 180
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    RESOURCE_LOCK "attach_hermetic_temp"
+    RESOURCE_LOCK "attach_integration"
 )
 blessstar_add_unit_test(bs_test_reload_config_json_integration
   SOURCES adapter/test/ReloadConfigJsonIntegrationTest.cpp
@@ -237,6 +237,7 @@ target_include_directories(bs_test_reload_config_json_integration
 )
 set_tests_properties(bs_test_reload_config_json_integration
   PROPERTIES LABELS "unit;integration;day9;io;attach;parser;regression" TIMEOUT 120
+                   RESOURCE_LOCK "attach_integration"
 )
 
 # ---------------------------------------------------------------------------
@@ -332,6 +333,7 @@ target_include_directories(bs_test_reload_per_batch_config_manager
 target_compile_definitions(bs_test_reload_per_batch_config_manager PRIVATE BS_TESTING)
 set_tests_properties(bs_test_reload_per_batch_config_manager
   PROPERTIES LABELS "unit;integration;state;day17;regression" TIMEOUT 120
+                   RESOURCE_LOCK "attach_integration"
 )
 blessstar_add_unit_test(bs_test_reload_ir_execute_integration
   SOURCES adapter/test/ReloadIrExecuteIntegrationTest.cpp
@@ -343,6 +345,7 @@ target_include_directories(bs_test_reload_ir_execute_integration
 )
 set_tests_properties(bs_test_reload_ir_execute_integration
   PROPERTIES LABELS "unit;integration;runtime;attach;day17;regression" TIMEOUT 120
+                   RESOURCE_LOCK "attach_integration"
 )
 blessstar_add_unit_test(bs_test_reload_per_batch_parallel_exec
   SOURCES adapter/test/ReloadPerBatchParallelExecTest.cpp
@@ -354,6 +357,7 @@ target_include_directories(bs_test_reload_per_batch_parallel_exec
 )
 set_tests_properties(bs_test_reload_per_batch_parallel_exec
   PROPERTIES LABELS "unit;integration;runtime;kernel_pool;regression" TIMEOUT 120
+                   RESOURCE_LOCK "attach_integration"
 )
 blessstar_add_unit_test(bs_test_io_facade_max_read
   SOURCES kernel/io/test/IoFacadeMaxReadTest.cpp
@@ -671,7 +675,7 @@ target_include_directories(bs_test_attach_concurrency
 )
 set_tests_properties(bs_test_attach_concurrency
   PROPERTIES LABELS "unit;day20;attach;regression" TIMEOUT 180
-                   RESOURCE_LOCK "attach_hermetic_temp"
+                   RESOURCE_LOCK "attach_integration"
 )
 
 blessstar_add_unit_test(bs_test_attach_watch_benchmark

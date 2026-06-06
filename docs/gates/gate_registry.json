@@ -104,7 +104,7 @@
       "gate_id": "GATE-INTEGRATION",
       "stage": "ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
       "covers": ["C-IX-2", "C-ST-13", "C-FN-1", "C-FN-3", "C-CF-1"],
       "default_blocking": true,
       "timeout_s": 300

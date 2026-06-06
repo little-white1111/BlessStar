@@ -4,13 +4,20 @@
   "version": "v1",
   "priority": "testing",
   "status": "active",
-  "scope": ["ops", "production"],
+  "scope": [
+    "ops",
+    "production"
+  ],
   "stage": "prod_ops",
   "rule": "Production allows only short non-destructive smoke from ops/smoke/prod; forbids ctest regression and contract_gate_runner.",
-  "gate_refs": ["GATE-PROD-SMOKE"],
+  "gate_refs": [
+    "GATE-PROD-SMOKE"
+  ],
   "blocking": true,
   "owner": "subtask-b",
-  "evidence": ["ops/smoke/prod/scenarios.v1.json"],
+  "evidence": [
+    "ops/smoke/prod/scenarios.v1.json"
+  ],
   "deprecate": null,
   "implementations": [
     {

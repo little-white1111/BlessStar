@@ -24,7 +24,7 @@
     {
       "gate_id": "GATE-INTEGRATION",
       "runner": "ctest",
-      "entry": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+      "entry": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
       "entry_kind": "command"
     },
     {
