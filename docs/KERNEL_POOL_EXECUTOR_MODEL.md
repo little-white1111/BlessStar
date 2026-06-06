@@ -49,7 +49,7 @@
 
 ## Sanitizer 门禁（TSan）
 
-- **MVP 硬门禁**：**Linux** GitHub Actions `ci.yml` → job **`tsan (Linux Clang day20)`**，`ctest -L "day20|kernel_pool"`。
+- **MVP 硬门禁**：**Linux** GitHub Actions **`day21`** workflow（`.github/workflows/day21.yml`）→ `ctest -L kernel_pool` + TSan；全仓回归见 **`full test`**（`ci.yml`）。
 - **Windows TSan**：**非** MVP 门禁；不以 Windows 本地 TSan 作为闭合条件。
 - **取证**：PR 合并前/后 Actions run URL 写入 `项目修改记录.md` **21.7** 与架构 § **IMPL-21-CI-01**。
 

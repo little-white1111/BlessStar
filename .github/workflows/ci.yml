@@ -1,4 +1,6 @@
-name: ci
+# Full repo regression (all CTest + purity + contract + sanitizer + meson).
+# Day21 scoped gate: .github/workflows/day21.yml
+name: full test
 
 on:
   push:
