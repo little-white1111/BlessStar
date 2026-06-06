@@ -24,7 +24,7 @@
     {
       "gate_id": "GATE-DEV-L1",
       "runner": "ctest",
-      "entry": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+      "entry": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure",
       "entry_kind": "command"
     },
     {

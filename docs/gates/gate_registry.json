@@ -122,7 +122,7 @@
       "gate_id": "GATE-DEV-L1",
       "stage": "dev_ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure",
       "covers": ["C-TST-L1-1"],
       "default_blocking": true,
       "timeout_s": 1900

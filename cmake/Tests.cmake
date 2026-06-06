@@ -463,7 +463,8 @@ set_tests_properties(bs_test_attach_manifest_yaml
 set_tests_properties(bs_test_plugin_log_domains_attach_integration
   PROPERTIES LABELS "unit;registry;attach;day8;integration;regression" TIMEOUT 120)
 set_tests_properties(bs_test_day8_attach_full_integration
-  PROPERTIES LABELS "unit;registry;attach;day8;io;integration;regression" TIMEOUT 120)
+  PROPERTIES LABELS "unit;registry;attach;day8;io;integration;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration")
 
 # IO regression (local/CI):
 #   ctest --test-dir <build> -C <Config> -L io --output-on-failure
@@ -890,6 +891,6 @@ if(Python3_FOUND)
             --through-stage ci
   )
   set_tests_properties(bs_test_day17_contract_gate_runner
-    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 600
+    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 1900
   )
 endif()

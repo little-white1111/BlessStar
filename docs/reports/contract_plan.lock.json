@@ -946,7 +946,7 @@
         {
           "gate_id": "GATE-DEV-L1",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure",
           "entry_kind": "command"
         },
         {
@@ -960,9 +960,9 @@
         {
           "gate_id": "GATE-DEV-L1",
           "runner": "ctest",
-          "entry": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+          "entry": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure",
           "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure"
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure"
         },
         {
           "gate_id": "GATE-TEST-L1-GATE-SCOPE",
@@ -1233,7 +1233,7 @@
       "gate_id": "GATE-DEV-L1",
       "stage": "dev_ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure",
       "covers": [
         "C-TST-L1-1"
       ],
@@ -1301,7 +1301,7 @@
   ],
   "hashes": {
     "index": "f4357ccb04b91057ae460b6b8191e8b0337fa7d5fc62075b01016643d6035acb",
-    "gate_registry": "50e95c7018012dfa90d72a491e62fe3597a053d39ad21750ca706c59a87be0a6",
+    "gate_registry": "77f32547dcd6401971d281a95eb0a46bf61334d7c220fc9f359e2f418c7f0686",
     "contracts": {
       "docs/contracts/architecture/C-IX-1.v1.json": "9592b02e16d030ce614e87972830502601e7211b923af0dc1bd39a84b5456108",
       "docs/contracts/architecture/C-IX-2.v1.json": "993ddd431bbff3f18c399ed7356870236ebe0b4c6325a40914b1b416f7d68aac",
@@ -1326,7 +1326,7 @@
       "docs/contracts/testing/C-TST-ENV-1.v1.json": "0cf5abb60346e584242e2f97d994448a39cb0c582cca8de2ae5e918799f5f3cb",
       "docs/contracts/testing/C-TST-GATE-SCOPE-1.v1.json": "29d249b6cc7a41099715724292bf99b60915fc7ee2738eff9d68a182b24f0ba3",
       "docs/contracts/testing/C-TST-HERM-1.v1.json": "13f0d7d0fdc2ba0d15bbbc6253078b91765d5c815c713647d3ea3b379595c1eb",
-      "docs/contracts/testing/C-TST-L1-1.v1.json": "0a08c297c0a85863b16658840cd99140dbcbd8c5b0d48db2ff5335080413a681",
+      "docs/contracts/testing/C-TST-L1-1.v1.json": "71de72d2bad44074a88ff28129c1c9a8d748d84cef0d447f3aada8a47b0487e9",
       "docs/contracts/testing/C-TST-L2-1.v1.json": "f1c5b98e31782bbb68f6759dc073f289a1a725f4bf6ad45876c52c4c440f4c46",
       "docs/contracts/testing/C-TST-L3-1.v1.json": "81ae0c546cfa2db465fa1d3efd1c41e3c3d0764a81501f86c9ae13c262480189",
       "docs/contracts/testing/C-TST-POL-1.v1.json": "f0ed288a044e7e1b3825c5d81eac0bb33ec61c42cd8a12adceb57b7a87e0f3c5"
