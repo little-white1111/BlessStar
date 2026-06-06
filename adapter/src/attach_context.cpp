@@ -31,11 +31,11 @@ static int attach_audit_stage_execute(Stage* /*stage*/, const IRInstruction* inp
 }
 
 static thread_local std::vector<AttachContext*> g_active_ctx_stack;
-static thread_local int                       g_active_ctx_access_depth = 0;
-static thread_local AttachContext             g_ephemeral_log_ctx;
-static thread_local int                       g_ephemeral_initialized = 0;
-static AttachContext                          g_legacy_bootstrap_ctx;
-static int                                    g_legacy_initialized = 0;
+static thread_local int                         g_active_ctx_access_depth = 0;
+static thread_local AttachContext               g_ephemeral_log_ctx;
+static thread_local int                         g_ephemeral_initialized = 0;
+static AttachContext                            g_legacy_bootstrap_ctx;
+static int                                      g_legacy_initialized = 0;
 
 static AttachContext* active_ctx_top(void)
 {
@@ -453,7 +453,7 @@ void bs_adapter_attach_ctx_shutdown_all_logs(void)
     {
         bs_log_shutdown_bus_ctx(&g_ephemeral_log_ctx.log_state);
         g_ephemeral_log_ctx.log_bus_bound = 0;
-        g_ephemeral_initialized         = 0;
+        g_ephemeral_initialized           = 0;
     }
 
     if (g_legacy_initialized &&

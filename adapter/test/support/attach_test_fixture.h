@@ -13,9 +13,9 @@
 #include "bs/adapter/log/log_bus.h"
 #include "bs/adapter/registry_bootstrap.h"
 
-#include "day12_attach_fixture.h"
-
 #include <cstdio>
+
+#include "day12_attach_fixture.h"
 
 #define BS_TEST_REQUIRE(phase, cond)                                                               \
     do                                                                                             \
@@ -37,11 +37,14 @@ struct BsTestAttachIoFixture
 /** RAII: push ctx as active for the current thread for the fixture lifetime. */
 struct BsTestAttachActiveScope
 {
-    explicit BsTestAttachActiveScope(AttachContext* ctx) : scope_(ctx) {}
+    explicit BsTestAttachActiveScope(AttachContext* ctx)
+        : scope_(ctx)
+    {
+    }
     BsTestAttachActiveScope(const BsTestAttachActiveScope&)            = delete;
     BsTestAttachActiveScope& operator=(const BsTestAttachActiveScope&) = delete;
 
-private:
+  private:
     AttachScope scope_;
 };
 

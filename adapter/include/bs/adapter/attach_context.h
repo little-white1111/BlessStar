@@ -45,7 +45,7 @@ extern "C"
     void bs_adapter_attach_ctx_pop_active(AttachContext* ctx);
 
     /** Replace stack top (or push if empty). Legacy tests may still call this directly. */
-    void bs_adapter_attach_ctx_set_active(AttachContext* ctx);
+    void           bs_adapter_attach_ctx_set_active(AttachContext* ctx);
     AttachContext* bs_adapter_attach_ctx_get_active(void);
 
     /** 1 if ctx is the current thread's active attach context. */
@@ -93,7 +93,8 @@ struct AttachActiveGuard
 /** RAII push/pop for per-thread active AttachContext (P2 instance scope). */
 struct AttachScope
 {
-    explicit AttachScope(AttachContext* ctx) : ctx_(ctx)
+    explicit AttachScope(AttachContext* ctx)
+        : ctx_(ctx)
     {
         bs_adapter_attach_ctx_push_active(ctx_);
     }
@@ -104,7 +105,7 @@ struct AttachScope
         bs_adapter_attach_ctx_pop_active(ctx_);
     }
 
-private:
+  private:
     AttachContext* ctx_;
 };
 

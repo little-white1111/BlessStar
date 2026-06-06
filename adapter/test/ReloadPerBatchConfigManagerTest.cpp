@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "support/attach_test_fixture.h"
 #include "support/config_v1_golden.h"
 #include "support/day12_attach_fixture.h"
 

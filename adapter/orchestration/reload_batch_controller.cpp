@@ -19,13 +19,13 @@
 #include <cstdio>
 #include <cstring>
 
+#include <algorithm>
 #include <atomic>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
 struct PathWork
 {
@@ -412,15 +412,17 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
     if (!actx || !bs_adapter_attach_ctx_is_log_bus_bound(actx))
         return -2;
 
-    int write_window_open = 0;
-    auto end_write_window_if_open = [&]() {
+    int  write_window_open        = 0;
+    auto end_write_window_if_open = [&]()
+    {
         if (write_window_open && actx)
         {
             bs_adapter_attach_session_end_write_window(actx);
             write_window_open = 0;
         }
     };
-    auto begin_write_window = [&]() {
+    auto begin_write_window = [&]()
+    {
         if (!write_window_open && actx)
         {
             bs_adapter_attach_session_begin_write_window(actx);

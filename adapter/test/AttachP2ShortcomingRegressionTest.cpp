@@ -3,10 +3,11 @@
  *
  * | ID | Risk | Pre-fix expectation | Post-fix expectation |
  * |----|------|---------------------|----------------------|
- * | AG-TLS-LOG | Parallel log harness cross-talk | Wrong callback counts | Per-thread isolated counts |
- * | AG-TLS-CTX | Parallel active ctx cross-talk | Same get_active on two threads | Distinct ctx pointers |
- * | AG-RELOAD-CTX | Off-thread run without set_attach_ctx | run fails (-2) | set_attach_ctx then succeeds |
- * | AG-POOL-WW | PER_BATCH pool exec holds write-window | reads BLOCKED during reload | reads succeed during pool phase |
+ * | AG-TLS-LOG | Parallel log harness cross-talk | Wrong callback counts | Per-thread isolated
+ * counts | | AG-TLS-CTX | Parallel active ctx cross-talk | Same get_active on two threads |
+ * Distinct ctx pointers | | AG-RELOAD-CTX | Off-thread run without set_attach_ctx | run fails (-2)
+ * | set_attach_ctx then succeeds | | AG-POOL-WW | PER_BATCH pool exec holds write-window | reads
+ * BLOCKED during reload | reads succeed during pool phase |
  */
 
 #include "bs/kernel/common/bs_log.h"
@@ -20,11 +21,11 @@
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_gate_default.h"
 
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 
 #include <atomic>
-#include <chrono>
 #include <filesystem>
 #include <string>
 #include <thread>
@@ -65,14 +66,14 @@ static void count_log(uint16_t, BsLogLevel, const char*, void* user)
 /** AG-TLS-LOG: bs_test_log_bind_memory_bus must be per-thread isolated. */
 static int test_parallel_test_log_bus_isolated(void)
 {
-    std::atomic<int> count_a{0};
-    std::atomic<int> count_b{0};
-    std::atomic<int> worker_fail{0};
+    std::atomic<int>     count_a{0};
+    std::atomic<int>     count_b{0};
+    std::atomic<int>     worker_fail{0};
     ArchGapTwoWorkerSync bind_sync;
     ArchGapTwoWorkerSync emit_sync;
 
-    auto worker = [&](std::atomic<int>* counter, void (*on_line)(uint16_t, BsLogLevel, const char*,
-                                                                  void*))
+    auto worker =
+        [&](std::atomic<int>* counter, void (*on_line)(uint16_t, BsLogLevel, const char*, void*))
     {
         if (bs_test_log_bind_memory_bus(on_line, counter) != 0)
         {
@@ -104,9 +105,9 @@ static int test_parallel_adapter_log_bus_isolated(void)
     BS_TEST_REQUIRE("adapter-ctx-a", ctx_a != nullptr);
     BS_TEST_REQUIRE("adapter-ctx-b", ctx_b != nullptr);
 
-    std::atomic<int> count_a{0};
-    std::atomic<int> count_b{0};
-    std::atomic<int> worker_fail{0};
+    std::atomic<int>     count_a{0};
+    std::atomic<int>     count_b{0};
+    std::atomic<int>     worker_fail{0};
     ArchGapTwoWorkerSync bind_sync;
     ArchGapTwoWorkerSync emit_sync;
 
@@ -149,11 +150,11 @@ static int test_parallel_active_ctx_isolated(void)
 
     std::atomic<AttachContext*> seen_a{nullptr};
     std::atomic<AttachContext*> seen_b{nullptr};
-    ArchGapTwoWorkerSync          record_sync;
+    ArchGapTwoWorkerSync        record_sync;
 
     auto worker = [&](AttachContext* ctx, std::atomic<AttachContext*>* out)
     {
-        AttachScope scope(ctx);
+        AttachScope       scope(ctx);
         AttachActiveGuard guard;
         out->store(bs_adapter_attach_ctx_get_active());
         record_sync.arrive_and_wait();
@@ -197,11 +198,7 @@ static int test_reload_off_thread_requires_set_attach_ctx(BsTestAttachIoFixture*
     BS_TEST_REQUIRE("add", bs_adapter_attach_reload_batch_add_path(ctrl, uri) == 0);
 
     std::atomic<int> worker_rc{-999};
-    std::thread      worker(
-        [&]
-        {
-            worker_rc.store(bs_adapter_attach_reload_batch_run(ctrl));
-        });
+    std::thread      worker([&] { worker_rc.store(bs_adapter_attach_reload_batch_run(ctrl)); });
     worker.join();
     BS_TEST_REQUIRE("off-thread-no-ctx", worker_rc.load() == -2);
 
@@ -218,20 +215,18 @@ static int test_reload_off_thread_requires_set_attach_ctx(BsTestAttachIoFixture*
 
 /** AG-POOL-WW: PER_BATCH pool parallel exec must release write-window so readers progress. */
 static int test_per_batch_pool_phase_allows_concurrent_read(BsTestAttachIoFixture* fix,
-                                                          const char*            uri,
-                                                          const fs::path&        work_dir)
+                                                            const char*            uri,
+                                                            const fs::path&        work_dir)
 {
     static const char k_seed[] = "seed-config";
-    BS_TEST_REQUIRE("seed-sync",
-                    bs_adapter_attach_config_sync_path(fix->ctx, uri, k_seed, sizeof(k_seed) - 1) ==
-                        0);
+    BS_TEST_REQUIRE("seed-sync", bs_adapter_attach_config_sync_path(fix->ctx, uri, k_seed,
+                                                                    sizeof(k_seed) - 1) == 0);
 
     std::atomic<bool> reloading{false};
     std::atomic<bool> reader_done{false};
     std::atomic<int>  reads_ok_while_reloading{0};
 
-    const auto reader_deadline =
-        std::chrono::steady_clock::now() + std::chrono::seconds(90);
+    const auto reader_deadline = std::chrono::steady_clock::now() + std::chrono::seconds(90);
 
     std::thread reader(
         [&]
@@ -258,9 +253,9 @@ static int test_per_batch_pool_phase_allows_concurrent_read(BsTestAttachIoFixtur
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
     bs_adapter_attach_reload_batch_set_default_gate(ctrl);
 
-    const std::string pool1 = bs_test_path_to_file_uri(work_dir / "pool_gap1.json");
-    const std::string pool2 = bs_test_path_to_file_uri(work_dir / "pool_gap2.json");
-    const std::string pool3 = bs_test_path_to_file_uri(work_dir / "pool_gap3.json");
+    const std::string pool1  = bs_test_path_to_file_uri(work_dir / "pool_gap1.json");
+    const std::string pool2  = bs_test_path_to_file_uri(work_dir / "pool_gap2.json");
+    const std::string pool3  = bs_test_path_to_file_uri(work_dir / "pool_gap3.json");
     const char*       uris[] = {pool1.c_str(), pool2.c_str(), pool3.c_str()};
     for (const char* u : uris)
         BS_TEST_REQUIRE("pool-add", bs_adapter_attach_reload_batch_add_path(ctrl, u) == 0);
@@ -288,7 +283,7 @@ int main()
     BS_TEST_REQUIRE("tls-active-ctx", test_parallel_active_ctx_isolated() == 0);
 
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_attach_p2_arch_gap"));
-    BsTestAttachIoFixture  fix{};
+    BsTestAttachIoFixture    fix{};
     fix.ctx = bs_adapter_attach_ctx_create();
     BS_TEST_REQUIRE("ctx", fix.ctx != nullptr);
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
@@ -296,17 +291,15 @@ int main()
     BS_TEST_REQUIRE("pool-warmed", bs_adapter_attach_ctx_is_kernel_pool_warmed(fix.ctx) == 1);
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
-    const fs::path    cfg = tmp_guard.path / "reload_ctx.json";
-    BS_TEST_REQUIRE("write-uri",
-                    bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
-                                              kBlessStarConfigV1GoldenLen));
+    const fs::path cfg = tmp_guard.path / "reload_ctx.json";
+    BS_TEST_REQUIRE("write-uri", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
+                                                           kBlessStarConfigV1GoldenLen));
 
     const std::string read_uri = bs_test_path_to_file_uri(cfg);
     BS_TEST_REQUIRE("reload-ctx",
                     test_reload_off_thread_requires_set_attach_ctx(&fix, read_uri.c_str()) == 0);
-    BS_TEST_REQUIRE("pool-ww",
-                    test_per_batch_pool_phase_allows_concurrent_read(&fix, read_uri.c_str(),
-                                                                     tmp_guard.path) == 0);
+    BS_TEST_REQUIRE("pool-ww", test_per_batch_pool_phase_allows_concurrent_read(
+                                   &fix, read_uri.c_str(), tmp_guard.path) == 0);
 
     bs_test_attach_teardown(&fix);
     std::fprintf(stderr, "AttachP2ShortcomingRegressionTest: PASS\n");
