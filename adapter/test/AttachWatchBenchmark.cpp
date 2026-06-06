@@ -1,11 +1,3 @@
-#ifdef _WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <psapi.h>
-#include <windows.h>
-#endif
-
 #include "bs/adapter/persistence/attach_watch.h"
 
 #include <chrono>
@@ -20,9 +12,6 @@
 static size_t current_rss_bytes()
 {
 #ifdef _WIN32
-    PROCESS_MEMORY_COUNTERS_EX pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)) != 0)
-        return (size_t)pmc.WorkingSetSize;
     return 0;
 #else
     return 0;
