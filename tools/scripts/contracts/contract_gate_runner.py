@@ -9,6 +9,7 @@ import argparse
 import json
 import subprocess
 import sys
+import tempfile
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,17 +21,27 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 
 def _run_command(command: str, cwd: Path) -> tuple[int, str]:
-    proc = subprocess.run(
-        command,
-        cwd=str(cwd),
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-    )
-    return proc.returncode, proc.stdout
+    """Run gate command; capture to a temp file (avoid Windows PIPE buffer deadlock)."""
+    with tempfile.NamedTemporaryFile(
+        mode="w+", encoding="utf-8", errors="replace", delete=False, suffix=".log"
+    ) as log_f:
+        log_path = Path(log_f.name)
+    try:
+        with log_path.open("w", encoding="utf-8", errors="replace") as out_f:
+            proc = subprocess.run(
+                command,
+                cwd=str(cwd),
+                shell=True,
+                stdout=out_f,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+        output = log_path.read_text(encoding="utf-8", errors="replace")
+        return proc.returncode, output
+    finally:
+        log_path.unlink(missing_ok=True)
 
 
 def _priority_rank(priority_order: list[str]) -> dict[str, int]:
