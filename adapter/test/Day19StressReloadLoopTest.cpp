@@ -166,6 +166,7 @@ int main(int argc, char** argv)
         {
             ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(16);
             BS_TEST_REQUIRE("day-ctrl", ctrl != nullptr);
+            bs_adapter_attach_reload_batch_set_attach_ctx(ctrl, fix.ctx);
             bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
             bs_adapter_attach_reload_batch_set_default_gate(ctrl);
             bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
@@ -209,6 +210,7 @@ int main(int argc, char** argv)
         {
             ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(32);
             BS_TEST_REQUIRE("night-ctrl", ctrl != nullptr);
+            bs_adapter_attach_reload_batch_set_attach_ctx(ctrl, fix.ctx);
             bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
             bs_adapter_attach_reload_batch_set_default_gate(ctrl);
             bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_BATCH);

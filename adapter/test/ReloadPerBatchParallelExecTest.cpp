@@ -50,7 +50,7 @@ int main()
     assert(ctrl != nullptr);
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
     bs_adapter_attach_reload_batch_set_default_gate(ctrl);
-    day12_wire_reload_defaults(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
+    bs_test_attach_bind_reload_ctx(ctrl, fix.ctx, BS_ATTACH_SCHEME_PER_BATCH);
 
     const char* uris[] = {"file:///pool/p1.json", "file:///pool/p2.json", "file:///pool/p3.json"};
     for (const char* uri : uris)

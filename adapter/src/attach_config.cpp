@@ -247,6 +247,13 @@ EventBus* bs_adapter_attach_config_event_bus(AttachContext* ctx)
     return cm ? bs_config_manager_get_event_bus(cm) : nullptr;
 }
 
+void bs_adapter_attach_config_drain_deferred_events(AttachContext* ctx)
+{
+    EventBus* bus = bs_adapter_attach_config_event_bus(ctx);
+    if (bus)
+        (void)bs_event_bus_drain(bus);
+}
+
 void bs_adapter_attach_config_register_phase2_notify(AttachContext*               ctx,
                                                      BsAttachPhase2NotifyBridgeFn fn)
 {

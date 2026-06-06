@@ -26,6 +26,9 @@ extern "C"
     /** EventBus facet of ctx's ConfigManager (NULL if no manager). */
     EventBus* bs_adapter_attach_config_event_bus(AttachContext* ctx);
 
+    /** Flush EventBus listeners deferred during reload write-window (P2 callback layering). */
+    void bs_adapter_attach_config_drain_deferred_events(AttachContext* ctx);
+
     /**
      * @deprecated T20.3: prefer bs_adapter_attach_config_get_snapshot_meta + chunk APIs.
      * Retained for BS_TESTING / legacy integration tests only.

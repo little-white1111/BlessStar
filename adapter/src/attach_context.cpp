@@ -16,6 +16,7 @@
 #include <cstring>
 
 #include <mutex>
+#include <vector>
 
 #include "attach_context_internal.h"
 
@@ -29,13 +30,50 @@ static int attach_audit_stage_execute(Stage* /*stage*/, const IRInstruction* inp
     return 0;
 }
 
-static AttachContext*   g_active_ctx = nullptr;
-static std::mutex       g_active_ctx_mu;
-static thread_local int g_active_ctx_access_depth = 0;
-static AttachContext    g_ephemeral_log_ctx;
-static AttachContext    g_legacy_bootstrap_ctx;
-static int              g_ephemeral_initialized = 0;
-static int              g_legacy_initialized    = 0;
+static thread_local std::vector<AttachContext*> g_active_ctx_stack;
+static thread_local int                       g_active_ctx_access_depth = 0;
+static thread_local AttachContext             g_ephemeral_log_ctx;
+static thread_local int                       g_ephemeral_initialized = 0;
+static AttachContext                          g_legacy_bootstrap_ctx;
+static int                                    g_legacy_initialized = 0;
+
+static AttachContext* active_ctx_top(void)
+{
+    return g_active_ctx_stack.empty() ? nullptr : g_active_ctx_stack.back();
+}
+
+static void sync_log_state_from_active(void)
+{
+    AttachContext* top = active_ctx_top();
+    bs_log_set_current_state(top ? &top->log_state : nullptr);
+}
+
+static void pop_active_ctx_if_present(AttachContext* ctx)
+{
+    if (g_active_ctx_stack.empty())
+        return;
+    if (ctx == nullptr)
+    {
+        g_active_ctx_stack.pop_back();
+        sync_log_state_from_active();
+        return;
+    }
+    if (g_active_ctx_stack.back() == ctx)
+    {
+        g_active_ctx_stack.pop_back();
+        sync_log_state_from_active();
+        return;
+    }
+    for (auto it = g_active_ctx_stack.begin(); it != g_active_ctx_stack.end(); ++it)
+    {
+        if (*it == ctx)
+        {
+            g_active_ctx_stack.erase(it);
+            sync_log_state_from_active();
+            break;
+        }
+    }
+}
 
 static void ensure_ephemeral_initialized(void)
 {
@@ -100,14 +138,7 @@ void bs_adapter_attach_ctx_destroy(AttachContext* ctx)
     if (!ctx)
         return;
 
-    {
-        std::lock_guard<std::mutex> lock(g_active_ctx_mu);
-        if (g_active_ctx == ctx)
-        {
-            g_active_ctx = nullptr;
-            bs_log_set_current_state(nullptr);
-        }
-    }
+    pop_active_ctx_if_present(ctx);
 
     bs_adapter_attach_session_destroy(ctx);
 
@@ -320,11 +351,24 @@ void bs_adapter_attach_ctx_set_log_level(AttachContext* ctx, BsLogLevel level)
     bs_log_set_global_level_ctx(&ctx->log_state, level);
 }
 
+void bs_adapter_attach_ctx_push_active(AttachContext* ctx)
+{
+    g_active_ctx_stack.push_back(ctx);
+    sync_log_state_from_active();
+}
+
+void bs_adapter_attach_ctx_pop_active(AttachContext* ctx)
+{
+    pop_active_ctx_if_present(ctx);
+}
+
 void bs_adapter_attach_ctx_set_active(AttachContext* ctx)
 {
-    std::lock_guard<std::mutex> lock(g_active_ctx_mu);
-    g_active_ctx = ctx;
-    bs_log_set_current_state(ctx ? &ctx->log_state : nullptr);
+    if (g_active_ctx_stack.empty())
+        g_active_ctx_stack.push_back(ctx);
+    else
+        g_active_ctx_stack.back() = ctx;
+    sync_log_state_from_active();
 }
 
 void bs_adapter_attach_ctx_active_access_enter(void)
@@ -344,8 +388,12 @@ AttachContext* bs_adapter_attach_ctx_get_active(void)
     assert(g_active_ctx_access_depth > 0 &&
            "g_active_ctx requires AttachActiveGuard (bs_adapter_attach_ctx_active_access_enter)");
 #endif
-    std::lock_guard<std::mutex> lock(g_active_ctx_mu);
-    return g_active_ctx;
+    return active_ctx_top();
+}
+
+int bs_adapter_attach_ctx_is_active(const AttachContext* ctx)
+{
+    return ctx && active_ctx_top() == ctx;
 }
 
 int bs_adapter_attach_ctx_is_kernel_running(const AttachContext* ctx)
@@ -357,12 +405,10 @@ int bs_adapter_attach_ctx_is_kernel_running(const AttachContext* ctx)
 
 void bs_adapter_attach_ensure_active_ctx(void)
 {
-    std::lock_guard<std::mutex> lock(g_active_ctx_mu);
-    if (!g_active_ctx)
+    if (g_active_ctx_stack.empty())
     {
         ensure_ephemeral_initialized();
-        g_active_ctx = &g_ephemeral_log_ctx;
-        bs_log_set_current_state(&g_ephemeral_log_ctx.log_state);
+        bs_adapter_attach_ctx_push_active(&g_ephemeral_log_ctx);
     }
 }
 
@@ -396,19 +442,18 @@ AttachContext* bs_adapter_attach_ctx_legacy_bootstrap(void)
 
 void bs_adapter_attach_ctx_shutdown_all_logs(void)
 {
+    AttachContext* top = active_ctx_top();
+    if (top && (top->log_bus_bound || top->log_state.bus))
     {
-        std::lock_guard<std::mutex> lock(g_active_ctx_mu);
-        if (g_active_ctx && (g_active_ctx->log_bus_bound || g_active_ctx->log_state.bus))
-        {
-            bs_log_shutdown_bus_ctx(&g_active_ctx->log_state);
-            g_active_ctx->log_bus_bound = 0;
-        }
+        bs_log_shutdown_bus_ctx(&top->log_state);
+        top->log_bus_bound = 0;
     }
 
     if (g_ephemeral_initialized && g_ephemeral_log_ctx.log_state.bus)
     {
         bs_log_shutdown_bus_ctx(&g_ephemeral_log_ctx.log_state);
         g_ephemeral_log_ctx.log_bus_bound = 0;
+        g_ephemeral_initialized         = 0;
     }
 
     if (g_legacy_initialized &&

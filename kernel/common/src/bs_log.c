@@ -4,9 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 
-static BsLogState  g_fallback_log_state;
-static int         g_fallback_initialized = 0;
-static BsLogState* g_current_log_state    = NULL;
+static BsLogState g_fallback_log_state;
+static int        g_fallback_initialized = 0;
+#ifdef _WIN32
+static __declspec(thread) BsLogState* g_current_log_state = NULL;
+#else
+static _Thread_local BsLogState* g_current_log_state = NULL;
+#endif
 
 static void ensure_fallback_initialized(void)
 {

@@ -92,7 +92,7 @@ static int run_per_batch_with_ctx(AttachContext* ctx, ReloadBatchController* ctr
                                                    const_cast<char*>(reject_uri));
     else
         bs_adapter_attach_reload_batch_set_gate_fn(ctrl, mock_gate_pass, nullptr);
-    day12_wire_reload_defaults(ctrl, BS_ATTACH_SCHEME_PER_BATCH);
+    day12_wire_reload_defaults(ctrl, BS_ATTACH_SCHEME_PER_BATCH, ctx);
     return bs_adapter_attach_reload_batch_run(ctrl);
 }
 
@@ -164,11 +164,10 @@ static int test_sync_fail_maps_persist_rejected(void)
     bs_adapter_attach_reload_batch_add_path(ctrl, uri);
 
     bs_adapter_attach_config_testing_set_sync_fail_path(uri);
-    bs_adapter_attach_ctx_set_active(ctx);
     bs_adapter_attach_ctx_set_log_bus_bound(ctx, 1);
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
     bs_adapter_attach_reload_batch_set_gate_fn(ctrl, mock_gate_pass, nullptr);
-    day12_wire_reload_defaults(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    bs_test_attach_bind_reload_ctx(ctrl, ctx, BS_ATTACH_SCHEME_PER_PATH);
 
     if (bs_adapter_attach_reload_batch_run(ctrl) != 0)
         return 1;

@@ -49,7 +49,7 @@ int main()
     assert(ctrl != nullptr);
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, golden_read, nullptr);
     bs_adapter_attach_reload_batch_set_default_gate(ctrl);
-    day12_wire_reload_defaults(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    bs_test_attach_bind_reload_ctx(ctrl, fix.ctx, BS_ATTACH_SCHEME_PER_PATH);
 
     const char* uri = "file:///t8/ir-execute.json";
     assert(bs_adapter_attach_reload_batch_add_path(ctrl, uri) == 0);

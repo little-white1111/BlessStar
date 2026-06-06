@@ -13,6 +13,7 @@
 #include "bs/adapter/persistence/attach_store.h"
 
 struct Report;
+typedef struct AttachContext AttachContext;
 
 #ifdef __cplusplus
 extern "C"
@@ -81,6 +82,10 @@ extern "C"
                                                                size_t                 cap_bytes);
 
     int bs_adapter_attach_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri);
+
+    /** Explicit attach session for reload (set before run(); required for off-thread run). */
+    void bs_adapter_attach_reload_batch_set_attach_ctx(ReloadBatchController* ctrl,
+                                                       AttachContext*         ctx);
 
     int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl);
 

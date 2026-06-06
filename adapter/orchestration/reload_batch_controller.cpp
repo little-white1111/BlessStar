@@ -25,6 +25,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 struct PathWork
 {
@@ -54,7 +55,16 @@ struct ReloadBatchController
     size_t         session_memory_cap = BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT;
     size_t         session_bytes_used = 0;
     BsAttachStore* attach_store       = nullptr;
+    AttachContext* attach_ctx         = nullptr;
 };
+
+static AttachContext* resolve_attach_ctx(ReloadBatchController* ctrl)
+{
+    if (ctrl && ctrl->attach_ctx)
+        return ctrl->attach_ctx;
+    AttachActiveGuard guard;
+    return bs_adapter_attach_ctx_get_active();
+}
 
 static void report_audit_failure(ReloadBatchController* ctrl, const char* uri, const char* stage,
                                  int abort_code, const char* detail);
@@ -100,6 +110,13 @@ void bs_adapter_attach_reload_batch_set_gate_fn(ReloadBatchController* ctrl, Rel
         return;
     ctrl->gate_fn  = fn;
     ctrl->gate_ctx = user_ctx;
+}
+
+void bs_adapter_attach_reload_batch_set_attach_ctx(ReloadBatchController* ctrl, AttachContext* ctx)
+{
+    if (!ctrl)
+        return;
+    ctrl->attach_ctx = ctx;
 }
 
 void bs_adapter_attach_reload_batch_set_default_gate(ReloadBatchController* ctrl)
@@ -180,7 +197,7 @@ static void gc_path_work(PathWork* w)
 static int gate_path_work(ReloadBatchController* ctrl, PathWork* w, IoReadResult* result,
                           BsReloadGateDetail* detail)
 {
-    AttachContext* actx       = bs_adapter_attach_ctx_get_active();
+    AttachContext* actx       = resolve_attach_ctx(ctrl);
     const int      pool_ready = actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
 
     if (!pool_ready)
@@ -363,7 +380,7 @@ static int persist_per_path(ReloadBatchController* ctrl, PathWork* w, const IoRe
         bs_adapter_attach_persist_report_persist_ok(
             ctrl->report, ctrl->scheme, session_batch_epoch(ctrl), w->uri.c_str(), new_rev);
     }
-    AttachContext* actx = bs_adapter_attach_ctx_get_active();
+    AttachContext* actx = resolve_attach_ctx(ctrl);
     if (actx && bs_adapter_attach_config_has_manager(actx) && result && result->data &&
         result->length > 0)
     {
@@ -391,21 +408,34 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
     if (bs_reentrancy_in_state_callback())
         return BS_ATTACH_CONC_ERR_REENTRANT;
 
-    AttachActiveGuard active_guard;
-    if (!bs_adapter_attach_is_log_ready())
+    AttachContext* actx = resolve_attach_ctx(ctrl);
+    if (!actx || !bs_adapter_attach_ctx_is_log_bus_bound(actx))
         return -2;
 
-    AttachContext* actx_for_window = bs_adapter_attach_ctx_get_active();
-    if (actx_for_window)
-        bs_adapter_attach_session_begin_write_window(actx_for_window);
+    int write_window_open = 0;
+    auto end_write_window_if_open = [&]() {
+        if (write_window_open && actx)
+        {
+            bs_adapter_attach_session_end_write_window(actx);
+            write_window_open = 0;
+        }
+    };
+    auto begin_write_window = [&]() {
+        if (!write_window_open && actx)
+        {
+            bs_adapter_attach_session_begin_write_window(actx);
+            write_window_open = 1;
+        }
+    };
+
+    begin_write_window();
 
     if (!ctrl->gate_fn)
         bs_adapter_attach_reload_batch_set_default_gate(ctrl);
 
     if (load_session_revisions(ctrl) != 0)
     {
-        if (actx_for_window)
-            bs_adapter_attach_session_end_write_window(actx_for_window);
+        end_write_window_if_open();
         return -1;
     }
 
@@ -475,8 +505,7 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             continue;
         }
 
-        AttachContext* actx       = bs_adapter_attach_ctx_get_active();
-        const int      pool_ready = actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
+        const int pool_ready = actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
         if (pool_ready && publish_path_ir(actx, &w) != 0)
         {
             w.state           = BS_ORCH_GATE_REJECTED;
@@ -522,9 +551,15 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
 
     if (ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH && !batch_had_failure)
     {
-        AttachContext* actx = bs_adapter_attach_ctx_get_active();
-        if (actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx))
+        const bool pool_parallel =
+            actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx) &&
+            std::any_of(ctrl->paths.begin(), ctrl->paths.end(),
+                        [](const PathWork& w) { return w.state == BS_ORCH_STAGED; });
+        if (pool_parallel)
         {
+            /* P1: pool exec must not run under session write-window (session_mu exclusive). */
+            end_write_window_if_open();
+
             std::vector<std::thread> workers;
             std::mutex               fail_mu;
             bool                     exec_failed = false;
@@ -570,6 +605,7 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         }
         else if (!ctrl->paths.empty())
         {
+            begin_write_window();
             const int bc = bs_adapter_attach_persist_store_batch_commit(ctrl->attach_store);
             if (bc != BS_ATTACH_OK)
             {
@@ -585,7 +621,6 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             else
             {
                 const uint64_t epoch = session_batch_epoch(ctrl);
-                AttachContext* actx  = bs_adapter_attach_ctx_get_active();
                 for (auto& w : ctrl->paths)
                 {
                     if (w.state == BS_ORCH_STAGED)
@@ -627,8 +662,7 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         }
     }
 
-    if (actx_for_window)
-        bs_adapter_attach_session_end_write_window(actx_for_window);
+    end_write_window_if_open();
     return 0;
 }
 

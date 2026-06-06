@@ -98,6 +98,7 @@ void bs_adapter_attach_session_begin_write_window(AttachContext* ctx)
     st->session_mu.lock();
     st->write_depth.fetch_add(1);
     bs_reentrancy_enter_attach_write();
+    bs_reentrancy_enter_attach_write_window();
 }
 
 void bs_adapter_attach_session_end_write_window(AttachContext* ctx)
@@ -105,11 +106,21 @@ void bs_adapter_attach_session_end_write_window(AttachContext* ctx)
     auto* st = session_of(ctx);
     if (!st || st->write_depth.load() == 0)
         return;
+
+    const int closing_outer_window = (st->write_depth.load() == 1);
+
     bs_reentrancy_leave_attach_write();
+    bs_reentrancy_leave_attach_write_window();
     st->session_mu.unlock();
     if (st->write_depth.fetch_sub(1) == 1)
         st->block_new_reads.store(false);
     st->wait_cv.notify_all();
+
+    if (closing_outer_window)
+    {
+        bs_adapter_attach_config_drain_deferred_events(ctx);
+        bs_adapter_attach_notify_queue_flush(ctx);
+    }
 }
 
 void bs_adapter_attach_session_drain_pending_notifications(AttachContext* ctx)

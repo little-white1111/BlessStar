@@ -1,3 +1,4 @@
+#include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/state/ConfigManager.h"
 #include "bs/kernel/state/EventBus.h"
 #include "bs/kernel/state/StateBus.h"
@@ -80,13 +81,15 @@ int emit_transition(ConfigManager* cm, const char* path, ConfigState from, Confi
     /* Phase 2: publish + drain + watch notify outside StateBus mutation. */
     if (bs_event_bus_publish(cm->event_bus, &payload) != 0)
         return -1;
-    if (bs_event_bus_drain(cm->event_bus) != 0)
+
+    const int defer_event_drain = bs_reentrancy_in_attach_write_window();
+    if (!defer_event_drain && bs_event_bus_drain(cm->event_bus) != 0)
         return -1;
 
     if (cm->phase2_notify_fn)
         cm->phase2_notify_fn(cm, cm->watch_manager, path, payload.type, snapshot, entry->dataSize,
                              cm->phase2_notify_user);
-    else
+    else if (!defer_event_drain)
         bs_watch_manager_notify(cm->watch_manager, path, payload.type, snapshot);
     return 0;
 }

@@ -23,6 +23,12 @@ extern "C"
     void bs_reentrancy_enter_attach_write(void);
     void bs_reentrancy_leave_attach_write(void);
 
+    /** Reload write-window bracket (distinct from ephemeral sync_path write lock). */
+    int bs_reentrancy_in_attach_write_window(void);
+
+    void bs_reentrancy_enter_attach_write_window(void);
+    void bs_reentrancy_leave_attach_write_window(void);
+
     int bs_reentrancy_kernel_execute_depth(void);
 
     void bs_reentrancy_enter_kernel_execute(void);

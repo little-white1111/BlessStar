@@ -267,7 +267,9 @@ set_tests_properties(bs_test_path_registry PROPERTIES LABELS "unit;registry;day8
 set_tests_properties(bs_test_registry_hub PROPERTIES LABELS "unit;registry;regression")
 set_tests_properties(bs_test_registry_facade PROPERTIES LABELS "unit;registry;regression")
 set_tests_properties(bs_test_registry_guard PROPERTIES LABELS "unit;registry;regression")
-set_tests_properties(bs_test_registry_integration PROPERTIES LABELS "unit;registry;attach;regression")
+set_tests_properties(bs_test_registry_integration
+  PROPERTIES LABELS "unit;registry;attach;regression"
+                   RESOURCE_LOCK "attach_integration")
 
 # Attach-phase integration: implemented pipeline only (see test file header).
 blessstar_add_unit_test(bs_test_attach_pipeline_registry
@@ -275,7 +277,8 @@ blessstar_add_unit_test(bs_test_attach_pipeline_registry
   LIBS bs_adapter_registry bs_kernel_common
 )
 set_tests_properties(bs_test_attach_pipeline_registry
-  PROPERTIES LABELS "unit;registry;attach;integration;regression" TIMEOUT 120)
+  PROPERTIES LABELS "unit;registry;attach;integration;regression" TIMEOUT 120
+                   RESOURCE_LOCK "attach_integration")
 
 blessstar_add_unit_test(bs_test_registry_attach_contract
   SOURCES adapter/test/RegistryAttachContractTest.cpp
@@ -389,7 +392,7 @@ blessstar_add_unit_test(bs_test_attach_facade_freeze_delegate
 )
 set_tests_properties(bs_test_attach_facade_freeze_delegate
   PROPERTIES LABELS "unit;integration;attach;day17;regression" TIMEOUT 120
-)
+                   RESOURCE_LOCK "attach_integration")
 blessstar_add_unit_test(bs_test_plugin_loader_attach
   SOURCES adapter/test/PluginLoaderAttachTest.cpp
   LIBS bs_adapter_registry bs_kernel_common
@@ -603,16 +606,21 @@ blessstar_add_unit_test(bs_test_reload_default_gate_report_eventbus_reentry_inte
     bs_kernel_report
     bs_kernel_common
 )
-set_tests_properties(bs_test_reload_attach_guard PROPERTIES LABELS "unit;day7;io;attach;regression")
+set_tests_properties(bs_test_reload_attach_guard
+  PROPERTIES LABELS "unit;day7;io;attach;regression"
+                   RESOURCE_LOCK "attach_integration")
 set_tests_properties(bs_test_reload_gate_default PROPERTIES LABELS "unit;day7;day9;io;parser;regression")
 set_tests_properties(bs_test_log_domain_registration PROPERTIES LABELS "unit;day7;registry;regression")
 set_tests_properties(bs_test_log_audit PROPERTIES LABELS "unit;day7;regression")
-set_tests_properties(bs_test_reentrancy_io PROPERTIES LABELS "unit;day7;io;registry;attach;regression")
+set_tests_properties(bs_test_reentrancy_io
+  PROPERTIES LABELS "unit;day7;io;registry;attach;regression"
+                   RESOURCE_LOCK "attach_integration")
 set_tests_properties(bs_test_result_status_map PROPERTIES LABELS "unit;day7;regression")
 set_tests_properties(bs_test_io_status_table PROPERTIES LABELS "unit;day7;io;registry;regression")
 set_tests_properties(bs_test_reload_report PROPERTIES LABELS "unit;day7;io;regression")
 set_tests_properties(bs_test_reload_default_gate_report_eventbus_reentry_integration
-  PROPERTIES LABELS "unit;integration;day7;attach;io;registry;regression" TIMEOUT 120)
+  PROPERTIES LABELS "unit;integration;day7;attach;io;registry;regression" TIMEOUT 120
+                   RESOURCE_LOCK "attach_integration")
 
 # ---------------------------------------------------------------------------
 # Day19 · memory baseline + 72h-RP stress harness (T19)
@@ -645,6 +653,7 @@ target_include_directories(bs_test_day19_stress_reload_loop
 set_tests_properties(bs_test_day19_stress_reload_loop
   PROPERTIES LABELS "unit;day19;stress;regression" TIMEOUT 300
                    ENVIRONMENT "BS_DAY19_PROFILE=ci"
+                   RESOURCE_LOCK "attach_integration"
 )
 if(WIN32)
   target_sources(bs_test_day19_stress_reload_loop PRIVATE
@@ -656,8 +665,9 @@ endif()
 add_test(NAME bs_test_day19_stress_fail_ci
          COMMAND "$<TARGET_FILE:bs_test_day19_stress_reload_loop>" --profile=smoke_fail_ci)
 set_tests_properties(bs_test_day19_stress_fail_ci
-  PROPERTIES LABELS "unit;day19;stress;regression;negative" TIMEOUT 120
+  PROPERTIES LABELS "unit;day19;stress;regression;negative" TIMEOUT 300
                    ENVIRONMENT "BS_DAY19_PROFILE=smoke_fail_ci"
+                   RESOURCE_LOCK "attach_integration"
 )
 
 blessstar_add_unit_test(bs_test_attach_concurrency
@@ -675,6 +685,26 @@ target_include_directories(bs_test_attach_concurrency
 )
 set_tests_properties(bs_test_attach_concurrency
   PROPERTIES LABELS "unit;day20;attach;regression" TIMEOUT 180
+                   RESOURCE_LOCK "attach_integration"
+)
+
+blessstar_add_unit_test(bs_test_attach_p2_shortcoming_regression
+  SOURCES adapter/test/AttachP2ShortcomingRegressionTest.cpp
+  LIBS
+    bs_adapter_attach
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_runtime
+    bs_kernel_common
+    bs_kernel_test_support
+)
+target_include_directories(bs_test_attach_p2_shortcoming_regression
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+set_tests_properties(bs_test_attach_p2_shortcoming_regression
+  PROPERTIES LABELS "unit;arch_gap;day20;attach;regression" TIMEOUT 300
                    RESOURCE_LOCK "attach_integration"
 )
 

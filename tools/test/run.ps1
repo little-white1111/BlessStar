@@ -8,13 +8,20 @@
 .PARAMETER Config
   Build configuration for multi-config generators (e.g. Release, Debug).
   If empty, uses environment variable BLESSSTAR_CTEST_CONFIG when set.
+
+.PARAMETER Prepare
+  Stop stale python/ctest/bs_test_* processes before ctest (avoids attach_integration lock wait).
 #>
 param(
   [string]$BuildDir = "build",
-  [string]$Config = ""
+  [string]$Config = "",
+  [switch]$Prepare
 )
 
 $ErrorActionPreference = "Stop"
+if ($Prepare) {
+  & "$PSScriptRoot/stop_stale_ctest.ps1"
+}
 $resolved = Resolve-Path -LiteralPath $BuildDir -ErrorAction SilentlyContinue
 if (-not $resolved) {
   throw "Build directory not found: $BuildDir"
