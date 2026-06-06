@@ -4,7 +4,7 @@
 function(blessstar_add_unit_test name)
   set(_opts "")
   set(_one "")
-  set(_multi SOURCES LIBS)
+  set(_multi SOURCES LIBS TEST_ARGS)
   cmake_parse_arguments(_arg "${_opts}" "${_one}" "${_multi}" ${ARGN})
   if(NOT _arg_SOURCES)
     message(FATAL_ERROR "blessstar_add_unit_test(${name}): SOURCES required")
@@ -39,7 +39,11 @@ function(blessstar_add_unit_test name)
       endif()
     endif()
   endif()
-  add_test(NAME ${name} COMMAND "$<TARGET_FILE:${name}>")
+  if(_arg_TEST_ARGS)
+    add_test(NAME ${name} COMMAND "$<TARGET_FILE:${name}>" ${_arg_TEST_ARGS})
+  else()
+    add_test(NAME ${name} COMMAND "$<TARGET_FILE:${name}>")
+  endif()
   set_tests_properties(${name} PROPERTIES TIMEOUT 300 LABELS "unit")
   set_property(GLOBAL APPEND PROPERTY BLESSSTAR_UNIT_TEST_TARGETS "${name}")
 endfunction()
@@ -640,6 +644,7 @@ endif()
 
 blessstar_add_unit_test(bs_test_day19_stress_reload_loop
   SOURCES adapter/test/Day19StressReloadLoopTest.cpp
+  TEST_ARGS --profile=ci
   LIBS
     bs_adapter_registry
     bs_adapter_orchestration
@@ -652,7 +657,6 @@ target_include_directories(bs_test_day19_stress_reload_loop
 )
 set_tests_properties(bs_test_day19_stress_reload_loop
   PROPERTIES LABELS "unit;day19;stress;regression" TIMEOUT 300
-                   ENVIRONMENT "BS_DAY19_PROFILE=ci"
                    RESOURCE_LOCK "attach_integration"
 )
 if(WIN32)
@@ -666,7 +670,6 @@ add_test(NAME bs_test_day19_stress_fail_ci
          COMMAND "$<TARGET_FILE:bs_test_day19_stress_reload_loop>" --profile=smoke_fail_ci)
 set_tests_properties(bs_test_day19_stress_fail_ci
   PROPERTIES LABELS "unit;day19;stress;regression;negative" TIMEOUT 300
-                   ENVIRONMENT "BS_DAY19_PROFILE=smoke_fail_ci"
                    RESOURCE_LOCK "attach_integration"
 )
 
