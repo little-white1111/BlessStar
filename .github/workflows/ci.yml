@@ -150,10 +150,13 @@ jobs:
             -DBLESSSTAR_SANITIZER_CI=ON
 
       - name: Build (TSan)
-        run: cmake --build build-tsan -j 4 --target bs_test_attach_concurrency
+        run: |
+          cmake --build build-tsan -j 4 --target bs_test_attach_concurrency \
+            bs_test_kernel_executor bs_test_kernel_pool \
+            bs_test_reload_per_batch_parallel_exec
 
-      - name: Test / day20 concurrency
-        run: ctest --test-dir build-tsan -L day20 --output-on-failure
+      - name: Test / day20 + kernel_pool concurrency
+        run: ctest --test-dir build-tsan -L "day20|kernel_pool" --output-on-failure
 
   meson:
     name: meson (${{ matrix.os }})

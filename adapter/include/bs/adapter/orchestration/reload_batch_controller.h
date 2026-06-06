@@ -34,7 +34,9 @@ extern "C"
         BS_ORCH_GATE_REJECTED    = 4,
         BS_ORCH_FAILED_READ      = 5,
         BS_ORCH_PERSIST_REJECTED = 6,
-        BS_ORCH_STAGED           = 7
+        BS_ORCH_STAGED           = 7,
+        BS_ORCH_EXECUTING        = 8,
+        BS_ORCH_EXEC_REJECTED    = 9
     } PathOrchestrationState;
 
 #define BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT (16u * 1024u * 1024u)

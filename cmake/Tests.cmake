@@ -344,6 +344,17 @@ target_include_directories(bs_test_reload_ir_execute_integration
 set_tests_properties(bs_test_reload_ir_execute_integration
   PROPERTIES LABELS "unit;integration;runtime;attach;day17;regression" TIMEOUT 120
 )
+blessstar_add_unit_test(bs_test_reload_per_batch_parallel_exec
+  SOURCES adapter/test/ReloadPerBatchParallelExecTest.cpp
+  LIBS bs_adapter_orchestration bs_adapter_registry bs_adapter_attach bs_adapter_log
+       bs_kernel_runtime bs_kernel_common
+)
+target_include_directories(bs_test_reload_per_batch_parallel_exec
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+set_tests_properties(bs_test_reload_per_batch_parallel_exec
+  PROPERTIES LABELS "unit;integration;runtime;kernel_pool;regression" TIMEOUT 120
+)
 blessstar_add_unit_test(bs_test_io_facade_max_read
   SOURCES kernel/io/test/IoFacadeMaxReadTest.cpp
   LIBS bs_kernel_io bs_kernel_common
@@ -470,6 +481,20 @@ blessstar_add_unit_test(bs_test_kernel_runtime
 )
 set_tests_properties(bs_test_kernel_runtime
   PROPERTIES LABELS "unit;runtime;regression;day17" TIMEOUT 120
+)
+blessstar_add_unit_test(bs_test_kernel_executor
+  SOURCES kernel/runtime/test/KernelExecutorTest.cpp
+  LIBS bs_kernel_runtime bs_kernel_pipeline bs_kernel_ir bs_kernel_report_core
+)
+set_tests_properties(bs_test_kernel_executor
+  PROPERTIES LABELS "unit;runtime;kernel_conc;kernel_pool;regression" TIMEOUT 120
+)
+blessstar_add_unit_test(bs_test_kernel_pool
+  SOURCES kernel/runtime/test/KernelPoolTest.cpp
+  LIBS bs_kernel_runtime bs_kernel_ir bs_kernel_report_core
+)
+set_tests_properties(bs_test_kernel_pool
+  PROPERTIES LABELS "unit;runtime;kernel_conc;kernel_pool;regression" TIMEOUT 120
 )
 
 # ---------------------------------------------------------------------------
@@ -647,6 +672,14 @@ target_include_directories(bs_test_attach_concurrency
 set_tests_properties(bs_test_attach_concurrency
   PROPERTIES LABELS "unit;day20;attach;regression" TIMEOUT 180
                    RESOURCE_LOCK "attach_hermetic_temp"
+)
+
+blessstar_add_unit_test(bs_test_attach_watch_benchmark
+  SOURCES adapter/test/AttachWatchBenchmark.cpp
+  LIBS bs_adapter_persistence
+)
+set_tests_properties(bs_test_attach_watch_benchmark
+  PROPERTIES LABELS "unit;day20;attach;benchmark" TIMEOUT 180
 )
 
 # ---------------------------------------------------------------------------

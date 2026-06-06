@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(blessstar_pure_kernel_skeleton LANGUAGES C CXX)
 
+find_package(Threads REQUIRED)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -108,6 +110,7 @@ target_link_libraries(bs_kernel_pipeline
 # ------------------------------
 add_library(bs_kernel_runtime
   kernel/runtime/src/kernel.c
+  kernel/runtime/src/kernel_pool.c
   kernel/runtime/src/context.c
   kernel/runtime/src/config.c
 )
@@ -121,6 +124,7 @@ target_link_libraries(bs_kernel_runtime
     bs_kernel_ir
     bs_kernel_report_core
     bs_kernel_common
+    Threads::Threads
 )
 
 # ------------------------------
@@ -265,7 +269,9 @@ add_library(bs_adapter_attach
   adapter/src/attach_context.cpp
   adapter/src/attach_config.cpp
   adapter/src/attach_session.cpp
+  adapter/src/attach_notify_queue.cpp
   adapter/src/attach_execute.cpp
+  adapter/src/attach_ir_snapshot.cpp
 )
 target_include_directories(bs_adapter_attach
   PUBLIC

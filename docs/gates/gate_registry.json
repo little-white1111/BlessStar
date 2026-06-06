@@ -47,6 +47,15 @@
       "timeout_s": 120
     },
     {
+      "gate_id": "GATE-KERNEL-POOL-CONFIG",
+      "stage": "ci",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_kernel_pool_config.py",
+      "covers": ["C-KERNEL-POOL-1"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
       "gate_id": "GATE-STYLE-PREFIX",
       "stage": "read",
       "runner": "python",

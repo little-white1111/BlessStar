@@ -3,6 +3,7 @@
   "description": "D-scheme contract index (stage-first + lock plan + repo-native verify layout).",
   "priority_order": [
     "architecture",
+    "kernel",
     "integration",
     "style",
     "functional",
@@ -30,6 +31,7 @@
   ],
   "contract_roots": {
     "architecture": "docs/contracts/architecture",
+    "kernel": "docs/contracts/kernel",
     "integration": "docs/contracts/integration",
     "style": "docs/contracts/style",
     "functional": "docs/contracts/functional",

@@ -3,8 +3,8 @@
 
 /*
  * C-ST-7 contract block:
- * Thread safety: Kernel instance is not thread-safe across threads.
- * Error semantics: NULL Kernel* on create failure; async execute enqueues IR copies for drain.
+ * Thread safety: bs_kernel_execute is serialized by a per-Kernel ordered worker.
+ * Error semantics: NULL Kernel* on create failure; NULL Report* on execute failure.
  * Platform notes: Optional runtime orchestrator; links report + pipeline registries.
  *   Pipeline pointers are caller-owned; destroy unregisters names only (see attach teardown).
  *   bs_kernel_execute uses pipeline name "default" when registered (XVII-KERNEL-4/5).
@@ -30,6 +30,15 @@ extern "C"
         KERNEL_STATE_STOPPING,
         KERNEL_STATE_ERROR
     } KernelState;
+
+    enum
+    {
+        BS_KERNEL_ERR_INVALID_ARG = -1,
+        BS_KERNEL_ERR_NOT_RUNNING = -2,
+        BS_KERNEL_ERR_NO_PIPELINE = -3,
+        BS_KERNEL_ERR_EXEC_FAILED = -4,
+        BS_KERNEL_ERR_STOPPING    = -5
+    };
 
     Kernel* bs_kernel_create(const KernelConfig* config);
     void    bs_kernel_destroy(Kernel* kernel);
