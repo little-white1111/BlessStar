@@ -1,3 +1,6 @@
+#include "bs/kernel/state/ConfigManager.h"
+#include "bs/kernel/state/StateBus.h"
+
 #include <condition_variable>
 
 #include <atomic>
@@ -6,6 +9,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "attach_notify_queue_internal.h"
 
@@ -13,10 +17,10 @@ namespace
 {
 struct WatchNotifyJob
 {
-    WatchManager*   wm = nullptr;
-    std::string     path;
-    ConfigEventType type     = CONFIG_EVENT_ENTER_INITIAL;
-    const void*     snapshot = nullptr;
+    WatchManager*        wm = nullptr;
+    std::string          path;
+    ConfigEventType      type = CONFIG_EVENT_ENTER_INITIAL;
+    std::vector<uint8_t> snapshot_bytes;
 };
 
 struct AttachNotifyQueue
@@ -49,21 +53,40 @@ void run_worker(AttachNotifyQueue* q)
             q->in_flight.fetch_add(1);
         }
 
-        if (job.wm && job.path.c_str())
-            (void)bs_watch_manager_notify(job.wm, job.path.c_str(), job.type, job.snapshot);
+        if (job.wm && !job.path.empty())
+        {
+            const void* snap = job.snapshot_bytes.empty() ? nullptr : job.snapshot_bytes.data();
+            (void)bs_watch_manager_notify(job.wm, job.path.c_str(), job.type, snap);
+        }
 
         q->in_flight.fetch_sub(1);
         q->cv.notify_all();
     }
 }
 
-void phase2_watch_hook(ConfigManager* /*cm*/, WatchManager* wm, const char* path,
-                       ConfigEventType type, const void* snapshot, void* user_data)
+void phase2_watch_hook(ConfigManager* cm, WatchManager* wm, const char* path, ConfigEventType type,
+                       const void* snapshot, void* user_data)
 {
+    (void)snapshot;
     auto* ctx = static_cast<AttachContext*>(user_data);
     if (!ctx)
         return;
-    bs_adapter_attach_notify_queue_enqueue_watch(ctx, wm, path, type, snapshot);
+
+    size_t      snap_size = 0;
+    const void* snap_ptr  = snapshot;
+    if (cm && path)
+    {
+        StateBus*   bus   = bs_config_manager_get_state_bus(cm);
+        StateEntry* entry = nullptr;
+        if (bus && bs_state_bus_get_state(bus, path, &entry) == 0 && entry && entry->dataSnapshot &&
+            entry->dataSize > 0)
+        {
+            snap_ptr  = entry->dataSnapshot;
+            snap_size = entry->dataSize;
+        }
+    }
+
+    bs_adapter_attach_notify_queue_enqueue_watch(ctx, wm, path, type, snap_ptr, snap_size);
 }
 
 } // namespace
@@ -81,17 +104,21 @@ void bs_adapter_attach_notify_queue_bind(AttachContext* ctx)
 
 void bs_adapter_attach_notify_queue_enqueue_watch(AttachContext* ctx, WatchManager* wm,
                                                   const char* path, ConfigEventType type,
-                                                  const void* snapshot)
+                                                  const void* snapshot, size_t snapshot_size)
 {
     auto* q = queue_of(ctx);
     if (!q || !wm || !path)
         return;
 
     WatchNotifyJob job{};
-    job.wm       = wm;
-    job.path     = path;
-    job.type     = type;
-    job.snapshot = snapshot;
+    job.wm   = wm;
+    job.path = path;
+    job.type = type;
+    if (snapshot && snapshot_size > 0)
+    {
+        const auto* bytes = static_cast<const uint8_t*>(snapshot);
+        job.snapshot_bytes.assign(bytes, bytes + snapshot_size);
+    }
 
     {
         std::lock_guard<std::mutex> lock(q->mu);

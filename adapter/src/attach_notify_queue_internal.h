@@ -17,7 +17,7 @@ extern "C"
 
     void bs_adapter_attach_notify_queue_enqueue_watch(AttachContext* ctx, WatchManager* wm,
                                                       const char* path, ConfigEventType type,
-                                                      const void* snapshot);
+                                                      const void* snapshot, size_t snapshot_size);
 
 #ifdef __cplusplus
 }
