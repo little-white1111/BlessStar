@@ -40,7 +40,8 @@ static int run_one_reload(BsTestAttachIoFixture* fix, const char* uri)
     if (!ctrl)
         return -1;
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, fix);
-    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+    bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+    day12_wire_reload_defaults(ctrl, BS_ATTACH_SCHEME_PER_PATH);
     const int add_rc = bs_adapter_attach_reload_batch_add_path(ctrl, uri);
     const int run_rc = (add_rc == 0) ? bs_adapter_attach_reload_batch_run(ctrl) : -1;
     const int ok =

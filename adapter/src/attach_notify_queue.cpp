@@ -1,6 +1,3 @@
-#include "bs/kernel/state/ConfigManager.h"
-#include "bs/kernel/state/StateBus.h"
-
 #include <condition_variable>
 
 #include <atomic>
@@ -65,28 +62,13 @@ void run_worker(AttachNotifyQueue* q)
 }
 
 void phase2_watch_hook(ConfigManager* cm, WatchManager* wm, const char* path, ConfigEventType type,
-                       const void* snapshot, void* user_data)
+                       const void* snapshot, size_t snapshot_size, void* user_data)
 {
-    (void)snapshot;
+    (void)cm;
     auto* ctx = static_cast<AttachContext*>(user_data);
     if (!ctx)
         return;
-
-    size_t      snap_size = 0;
-    const void* snap_ptr  = snapshot;
-    if (cm && path)
-    {
-        StateBus*   bus   = bs_config_manager_get_state_bus(cm);
-        StateEntry* entry = nullptr;
-        if (bus && bs_state_bus_get_state(bus, path, &entry) == 0 && entry && entry->dataSnapshot &&
-            entry->dataSize > 0)
-        {
-            snap_ptr  = entry->dataSnapshot;
-            snap_size = entry->dataSize;
-        }
-    }
-
-    bs_adapter_attach_notify_queue_enqueue_watch(ctx, wm, path, type, snap_ptr, snap_size);
+    bs_adapter_attach_notify_queue_enqueue_watch(ctx, wm, path, type, snapshot, snapshot_size);
 }
 
 } // namespace

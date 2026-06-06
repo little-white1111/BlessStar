@@ -84,7 +84,7 @@ int emit_transition(ConfigManager* cm, const char* path, ConfigState from, Confi
         return -1;
 
     if (cm->phase2_notify_fn)
-        cm->phase2_notify_fn(cm, cm->watch_manager, path, payload.type, snapshot,
+        cm->phase2_notify_fn(cm, cm->watch_manager, path, payload.type, snapshot, entry->dataSize,
                              cm->phase2_notify_user);
     else
         bs_watch_manager_notify(cm->watch_manager, path, payload.type, snapshot);

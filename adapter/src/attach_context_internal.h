@@ -61,7 +61,7 @@ int           bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* c
 
 typedef void (*BsAttachPhase2NotifyBridgeFn)(ConfigManager* cm, WatchManager* wm, const char* path,
                                              ConfigEventType type, const void* snapshot,
-                                             void* user_data);
+                                             size_t snapshot_size, void* user_data);
 
 void bs_adapter_attach_config_register_phase2_notify(AttachContext*               ctx,
                                                      BsAttachPhase2NotifyBridgeFn fn);

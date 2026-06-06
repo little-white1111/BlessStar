@@ -62,7 +62,8 @@ extern "C"
     /** Optional ordered phase-2 watch notify (T20.6); NULL hook keeps synchronous notify. */
     typedef void (*BsConfigManagerPhase2NotifyFn)(ConfigManager* cm, WatchManager* wm,
                                                   const char* path, ConfigEventType type,
-                                                  const void* snapshot, void* user_data);
+                                                  const void* snapshot, size_t snapshot_size,
+                                                  void* user_data);
 
     void bs_config_manager_set_phase2_notify_hook(ConfigManager*                cm,
                                                   BsConfigManagerPhase2NotifyFn fn,

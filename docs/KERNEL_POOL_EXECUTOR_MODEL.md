@@ -68,7 +68,7 @@ ctest --test-dir build_ci_test -C Release -R bs_test_reload_per_batch_parallel_e
 - **T-POOL-16**：`KernelExecutorTest` + `KernelPoolTest`
 - **T-POOL-17**：`ReloadPerBatchParallelExecTest`（3 path PER_BATCH 并行 exec）
 
-Linux TSan（CI `tsan` job）：`-L "day20|kernel_pool"`。
+Linux TSan（CI `tsan` job）：`ctest -L kernel_pool` + `ctest -R bs_test_attach_concurrency`（**不含** `attach_watch_benchmark`；benchmark 在 TSan 下过慢）。
 
 ## 交叉引用
 
