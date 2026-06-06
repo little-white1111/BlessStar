@@ -80,6 +80,9 @@ static void tally_failure_kind(BsDay19PathKind kind, int* fail_parse, int* fail_
 
 int main(int argc, char** argv)
 {
+    (void)std::setvbuf(stdout, nullptr, _IONBF, 0);
+    (void)std::setvbuf(stderr, nullptr, _IONBF, 0);
+
     const BsDay19Profile profile = bs_day19_profile_from_argv_env(argc, argv);
     std::printf("Day19Stress profile=%s duration_max=%d day_reload_min=%d night_batch_min=%d\n",
                 profile.name, profile.duration_sec_max, profile.min_day_reloads,

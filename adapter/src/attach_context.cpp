@@ -442,12 +442,10 @@ AttachContext* bs_adapter_attach_ctx_legacy_bootstrap(void)
 
 void bs_adapter_attach_ctx_shutdown_all_logs(void)
 {
-    AttachContext* top = active_ctx_top();
-    if (top && (top->log_bus_bound || top->log_state.bus))
-    {
-        bs_log_shutdown_bus_ctx(&top->log_state);
-        top->log_bus_bound = 0;
-    }
+    /* Do not dereference TLS stack entries at process exit: tests may destroy ctx
+     * without popping the stack (ASan heap-use-after-free in active_ctx_top). */
+    g_active_ctx_stack.clear();
+    sync_log_state_from_active();
 
     if (g_ephemeral_initialized && g_ephemeral_log_ctx.log_state.bus)
     {

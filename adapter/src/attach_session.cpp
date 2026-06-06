@@ -92,6 +92,9 @@ void bs_adapter_attach_session_begin_write_window(AttachContext* ctx)
     auto* st = session_of(ctx);
     if (!st)
         return;
+    /* Same-thread read guard imbalance must not block write-window open (smoke_fail_ci). */
+    while (g_attach_read_lock_depth > 0)
+        bs_adapter_attach_session_read_unlock(ctx);
     st->block_new_reads.store(true);
     std::unique_lock<std::mutex> w(st->wait_mu);
     st->wait_cv.wait(w, [&] { return st->active_readers.load() == 0; });
@@ -420,12 +423,8 @@ int bs_adapter_attach_config_read_since_meta(AttachContext* ctx, const char* con
         bs_adapter_attach_config_wait_notify(ctx, config_path, revision_min, timeout_ms);
     if (wait_rc != 0)
         return wait_rc;
-    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
-    if (lk != 0)
-        return lk;
-    int rc = bs_adapter_attach_config_get_snapshot_meta(ctx, config_path, out);
+    const int rc = bs_adapter_attach_config_get_snapshot_meta(ctx, config_path, out);
     if (rc == 0 && out->revision < revision_min)
-        rc = BS_ATTACH_CONC_ERR_REVISION_CHANGED;
-    bs_adapter_attach_session_read_unlock(ctx);
+        return BS_ATTACH_CONC_ERR_REVISION_CHANGED;
     return rc;
 }
