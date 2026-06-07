@@ -121,9 +121,11 @@ bs_day19_rss_slope_regression_mb_per_hour(const std::vector<BsDay19RssSample>& s
     return b_per_sec * 3600.0;
 }
 
-/** XIX-MEM-10: least-squares slope (MB/h) on the last `tail_count` samples (W-minute tail window). */
-inline double bs_day19_rss_slope_regression_tail_mb_per_hour(
-    const std::vector<BsDay19RssSample>& samples, size_t tail_count, bool use_private)
+/** XIX-MEM-10: least-squares slope (MB/h) on the last `tail_count` samples (W-minute tail window).
+ */
+inline double
+bs_day19_rss_slope_regression_tail_mb_per_hour(const std::vector<BsDay19RssSample>& samples,
+                                               size_t tail_count, bool use_private)
 {
     if (samples.empty() || tail_count == 0)
         return 0.0;

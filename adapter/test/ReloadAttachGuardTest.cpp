@@ -22,6 +22,7 @@ int main()
 
     ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(4);
     assert(ctrl != nullptr);
+    bs_adapter_attach_reload_batch_set_attach_ctx(ctrl, ctx);
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, noop_read, nullptr);
     bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
     assert(bs_adapter_attach_reload_batch_add_path(ctrl, "file:///x") == 0);

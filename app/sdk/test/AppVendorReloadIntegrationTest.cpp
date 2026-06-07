@@ -76,8 +76,8 @@ int main()
     BS_TEST_REQUIRE("reload", ctrl != nullptr);
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
     bs_adapter_attach_reload_batch_set_gate_fn(ctrl, app_precheck_fn, nullptr);
+    bs_test_attach_bind_reload_ctx(ctrl, fix.ctx, BS_ATTACH_SCHEME_PER_PATH);
     const fs::path manifest_path = temp_dir / "manifest.bs";
-    bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
     bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
     Report* report = bs_report_create("app_vendor_reload_integration");

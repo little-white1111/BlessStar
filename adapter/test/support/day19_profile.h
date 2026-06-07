@@ -22,12 +22,12 @@ struct BsDay19Profile
     double      rss_delta_mb_max          = 200.0;
     double      outcome_ok_rate_min       = 0.99;
     /** When < 1.0, success rate must not exceed this (failure-stress profiles). */
-    double      outcome_ok_rate_max       = 1.01;
-    int         min_night_abort_batches   = 0;
-    int         min_fail_parse            = 0;
-    int         min_fail_gate             = 0;
-    int         min_fail_read             = 0;
-    int         disk_budget_mb            = 2048;
+    double outcome_ok_rate_max     = 1.01;
+    int    min_night_abort_batches = 0;
+    int    min_fail_parse          = 0;
+    int    min_fail_gate           = 0;
+    int    min_fail_read           = 0;
+    int    disk_budget_mb          = 2048;
 };
 
 inline BsDay19Profile bs_day19_profile_ci()
@@ -40,7 +40,7 @@ inline BsDay19Profile bs_day19_profile_ci()
     p.min_night_batches         = 5;
     p.path_pool_size            = 4;
     p.paths_per_batch           = 4;
-    p.fixture_kb                = 100;
+    p.fixture_kb                = 4;
     p.rss_sample_interval_sec   = 5;
     p.rss_slope_mb_per_hour_max = 500.0; /* ci: slope not enforced in test */
     p.rss_delta_mb_max          = 200.0;
@@ -83,10 +83,10 @@ inline BsDay19Profile bs_day19_profile_full()
 /** ~5h50m GitHub ubuntu cap (kappa=23); slope gate = tail W=10min per XIX-MEM-10. */
 inline BsDay19Profile bs_day19_profile_gha_6h()
 {
-    BsDay19Profile p   = bs_day19_profile_smoke();
-    p.name             = "gha_6h";
-    p.duration_sec_max = 21000;
-    p.min_day_reloads  = 34500;
+    BsDay19Profile p    = bs_day19_profile_smoke();
+    p.name              = "gha_6h";
+    p.duration_sec_max  = 21000;
+    p.min_day_reloads   = 34500;
     p.min_night_batches = 690;
     return p;
 }

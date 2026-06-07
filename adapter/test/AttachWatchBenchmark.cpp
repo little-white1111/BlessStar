@@ -9,18 +9,9 @@
 #include <thread>
 #include <vector>
 
-#ifdef _WIN32
-#define NOMINMAX
-#include <psapi.h>
-#include <windows.h>
-#endif
-
 static size_t current_rss_bytes()
 {
 #ifdef _WIN32
-    PROCESS_MEMORY_COUNTERS_EX pmc;
-    if (GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)) != 0)
-        return (size_t)pmc.WorkingSetSize;
     return 0;
 #else
     return 0;

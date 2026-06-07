@@ -1,4 +1,6 @@
-name: ci
+# Full repo regression (all CTest + purity + contract + sanitizer + meson).
+# Day21 scoped gate: .github/workflows/day21.yml
+name: full test
 
 on:
   push:
@@ -92,11 +94,11 @@ jobs:
 
       - name: Test / CTest (Unix)
         if: runner.os != 'Windows'
-        run: ctest --test-dir build_ci_test --output-on-failure
+        run: ctest --test-dir build_ci_test --output-on-failure -j 1
 
       - name: Test / CTest (Windows)
         if: runner.os == 'Windows'
-        run: ctest --test-dir build_ci_test --output-on-failure -C Release
+        run: ctest --test-dir build_ci_test --output-on-failure -C Release -j 1
 
   sanitizer:
     name: sanitizer (Linux Clang ASan+UBSan)
@@ -150,10 +152,12 @@ jobs:
             -DBLESSSTAR_SANITIZER_CI=ON
 
       - name: Build (TSan)
-        run: cmake --build build-tsan -j 4 --target bs_test_attach_concurrency
+        run: |
+          cmake --build build-tsan -j 4 --target bs_test_kernel_executor bs_test_kernel_pool \
+            bs_test_reload_per_batch_parallel_exec
 
-      - name: Test / day20 concurrency
-        run: ctest --test-dir build-tsan -L day20 --output-on-failure
+      - name: Test / kernel_pool (TSan · IMPL-21-CI-01)
+        run: ctest --test-dir build-tsan -L kernel_pool --output-on-failure
 
   meson:
     name: meson (${{ matrix.os }})

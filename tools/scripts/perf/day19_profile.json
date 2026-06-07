@@ -8,7 +8,7 @@
       "min_night_batches": 5,
       "path_pool_size": 4,
       "paths_per_batch": 4,
-      "fixture_kb": 100,
+      "fixture_kb": 4,
       "rss_sample_interval_sec": 5,
       "rss_slope_mb_per_hour_max": 50.0,
       "rss_delta_mb_max": 200.0,

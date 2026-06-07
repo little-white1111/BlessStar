@@ -1,12 +1,15 @@
+#include "bs/kernel/common/bs_reentrancy.h"
+
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_session.h"
-
 #include "bs/adapter/parser/json_lexer.h"
 
-#include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <cstring>
+
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -15,29 +18,31 @@
 #include <vector>
 
 #include "attach_context_internal.h"
+#include "attach_notify_queue_internal.h"
 
 namespace
 {
 struct SnapshotReadHandle
 {
-    int                     used = 0;
-    std::string             path;
-    uint64_t                revision = 0;
+    int                                         used = 0;
+    std::string                                 path;
+    uint64_t                                    revision = 0;
     std::shared_ptr<std::vector<unsigned char>> blob;
 };
 
 struct AttachSessionState
 {
-    std::shared_mutex              session_mu;
-    std::mutex                     wait_mu;
-    std::condition_variable        wait_cv;
-    std::atomic<int>               active_readers{0};
-    std::atomic<int>               write_depth{0};
-    std::atomic<bool>              block_new_reads{false};
-    std::atomic<bool>              closing{false};
+    std::shared_mutex                         session_mu;
+    std::mutex                                wait_mu;
+    std::condition_variable                   wait_cv;
+    std::atomic<int>                          active_readers{0};
+    std::atomic<int>                          write_depth{0};
+    std::atomic<bool>                         block_new_reads{false};
+    std::atomic<bool>                         closing{false};
     std::unordered_map<std::string, uint64_t> path_revision;
-    std::mutex                     rev_mu;
-    SnapshotReadHandle             handles[16];
+    std::mutex                                rev_mu;
+    std::condition_variable                   rev_cv;
+    SnapshotReadHandle                        handles[16];
 };
 
 thread_local int g_attach_read_lock_depth = 0;
@@ -60,6 +65,8 @@ void bs_adapter_attach_session_init(AttachContext* ctx)
     if (!ctx || ctx->session_state)
         return;
     ctx->session_state = new AttachSessionState();
+    ctx->notify_queue  = nullptr;
+    bs_adapter_attach_notify_queue_bind(ctx);
 }
 
 void bs_adapter_attach_session_destroy(AttachContext* ctx)
@@ -70,8 +77,12 @@ void bs_adapter_attach_session_destroy(AttachContext* ctx)
     st->closing.store(true);
     st->block_new_reads.store(true);
     {
-        std::unique_lock<std::shared_mutex> lock(st->session_mu);
+        std::unique_lock<std::mutex> w(st->wait_mu);
+        st->wait_cv.wait(w, [&] { return st->active_readers.load() == 0; });
     }
+    bs_adapter_attach_config_clear_phase2_notify(ctx);
+    bs_adapter_attach_notify_queue_flush(ctx);
+    bs_adapter_attach_notify_queue_shutdown(ctx);
     delete st;
     ctx->session_state = nullptr;
 }
@@ -81,11 +92,16 @@ void bs_adapter_attach_session_begin_write_window(AttachContext* ctx)
     auto* st = session_of(ctx);
     if (!st)
         return;
+    /* Same-thread read guard imbalance must not block write-window open (smoke_fail_ci). */
+    while (g_attach_read_lock_depth > 0)
+        bs_adapter_attach_session_read_unlock(ctx);
     st->block_new_reads.store(true);
     std::unique_lock<std::mutex> w(st->wait_mu);
     st->wait_cv.wait(w, [&] { return st->active_readers.load() == 0; });
     st->session_mu.lock();
     st->write_depth.fetch_add(1);
+    bs_reentrancy_enter_attach_write();
+    bs_reentrancy_enter_attach_write_window();
 }
 
 void bs_adapter_attach_session_end_write_window(AttachContext* ctx)
@@ -93,10 +109,26 @@ void bs_adapter_attach_session_end_write_window(AttachContext* ctx)
     auto* st = session_of(ctx);
     if (!st || st->write_depth.load() == 0)
         return;
+
+    const int closing_outer_window = (st->write_depth.load() == 1);
+
+    bs_reentrancy_leave_attach_write();
+    bs_reentrancy_leave_attach_write_window();
     st->session_mu.unlock();
     if (st->write_depth.fetch_sub(1) == 1)
         st->block_new_reads.store(false);
     st->wait_cv.notify_all();
+
+    if (closing_outer_window)
+    {
+        bs_adapter_attach_config_drain_deferred_events(ctx);
+        bs_adapter_attach_notify_queue_flush(ctx);
+    }
+}
+
+void bs_adapter_attach_session_drain_pending_notifications(AttachContext* ctx)
+{
+    bs_adapter_attach_notify_queue_flush(ctx);
 }
 
 int bs_adapter_attach_session_try_read_lock(AttachContext* ctx)
@@ -137,6 +169,7 @@ int bs_adapter_attach_session_try_write_lock(AttachContext* ctx)
         return BS_ATTACH_CONC_ERR_CLOSED;
     st->session_mu.lock();
     st->write_depth.fetch_add(1);
+    bs_reentrancy_enter_attach_write();
     return 0;
 }
 
@@ -145,6 +178,7 @@ void bs_adapter_attach_session_write_unlock(AttachContext* ctx)
     auto* st = session_of(ctx);
     if (!st || st->write_depth.load() == 0)
         return;
+    bs_reentrancy_leave_attach_write();
     st->session_mu.unlock();
     st->write_depth.fetch_sub(1);
 }
@@ -155,7 +189,7 @@ uint64_t bs_adapter_attach_session_path_revision(AttachContext* ctx, const char*
     if (!st || !path)
         return 0;
     std::lock_guard<std::mutex> lock(st->rev_mu);
-    const auto it = st->path_revision.find(path);
+    const auto                  it = st->path_revision.find(path);
     return it == st->path_revision.end() ? 0 : it->second;
 }
 
@@ -166,6 +200,7 @@ void bs_adapter_attach_session_bump_revision(AttachContext* ctx, const char* pat
         return;
     std::lock_guard<std::mutex> lock(st->rev_mu);
     st->path_revision[path] = st->path_revision[path] + 1;
+    st->rev_cv.notify_all();
 }
 
 int bs_adapter_attach_session_in_write_window(AttachContext* ctx)
@@ -177,22 +212,23 @@ int bs_adapter_attach_session_in_write_window(AttachContext* ctx)
 static int snapshot_bytes(AttachContext* ctx, const char* config_path, size_t* total,
                           std::shared_ptr<std::vector<unsigned char>>* blob_out)
 {
-    void*  snap = nullptr;
-    size_t sz   = 0;
-    const int rc = bs_adapter_attach_config_get_snapshot(ctx, config_path, &snap, &sz);
+    void*     snap = nullptr;
+    size_t    sz   = 0;
+    const int rc =
+        bs_adapter_attach_config_snapshot_bytes_locked(ctx, config_path, &sz, &snap, &sz);
     if (rc != 0)
         return rc;
     auto blob = std::make_shared<std::vector<unsigned char>>(sz);
     if (sz > 0 && snap)
         std::memcpy(blob->data(), snap, sz);
     std::free(snap);
-    *total   = sz;
+    *total    = sz;
     *blob_out = blob;
     return 0;
 }
 
 int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* config_path,
-                                                BsAttachSnapshotMeta* out)
+                                               BsAttachSnapshotMeta* out)
 {
     if (!out)
         return -1;
@@ -204,7 +240,7 @@ int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* c
     if (lk != 0)
         return lk;
 
-    size_t total = 0;
+    size_t                                      total = 0;
     std::shared_ptr<std::vector<unsigned char>> blob;
     const int rc = snapshot_bytes(ctx, config_path, &total, &blob);
     if (rc == 0)
@@ -229,9 +265,9 @@ int bs_adapter_attach_config_get_snapshot_copy(AttachContext* ctx, const char* c
     if (lk != 0)
         return lk;
 
-    size_t total = 0;
+    size_t                                      total = 0;
     std::shared_ptr<std::vector<unsigned char>> blob;
-    int    rc = snapshot_bytes(ctx, config_path, &total, &blob);
+    int rc = snapshot_bytes(ctx, config_path, &total, &blob);
     if (rc == 0)
     {
         *revision_out = bs_adapter_attach_session_path_revision(ctx, config_path);
@@ -262,9 +298,9 @@ int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* 
     if (lk != 0)
         return lk;
 
-    size_t total = 0;
+    size_t                                      total = 0;
     std::shared_ptr<std::vector<unsigned char>> blob;
-    int    rc = snapshot_bytes(ctx, config_path, &total, &blob);
+    int rc = snapshot_bytes(ctx, config_path, &total, &blob);
     if (rc != 0)
     {
         bs_adapter_attach_session_read_unlock(ctx);
@@ -285,12 +321,12 @@ int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* 
     {
         if (!h.used)
         {
-            h.used     = 1;
-            h.path     = config_path ? config_path : "";
-            h.revision = rev;
-            h.blob     = blob;
-            *handle_out    = static_cast<int>(&h - st->handles);
-            *revision_out  = rev;
+            h.used        = 1;
+            h.path        = config_path ? config_path : "";
+            h.revision    = rev;
+            h.blob        = blob;
+            *handle_out   = static_cast<int>(&h - st->handles);
+            *revision_out = rev;
             return 0;
         }
     }
@@ -315,8 +351,8 @@ int bs_adapter_attach_config_read_snapshot_chunk(AttachContext* ctx, int handle,
         return BS_ATTACH_CONC_ERR_INVALID_HANDLE;
     }
 
-    const SnapshotReadHandle& h = st->handles[handle];
-    const uint64_t          cur = bs_adapter_attach_session_path_revision(ctx, h.path.c_str());
+    const SnapshotReadHandle& h   = st->handles[handle];
+    const uint64_t            cur = bs_adapter_attach_session_path_revision(ctx, h.path.c_str());
     if (cur != h.revision)
     {
         bs_adapter_attach_session_read_unlock(ctx);
@@ -332,7 +368,7 @@ int bs_adapter_attach_config_read_snapshot_chunk(AttachContext* ctx, int handle,
 
     const size_t chunk_cap =
         static_cast<size_t>(default_chunk_cap() < buf_cap ? default_chunk_cap() : buf_cap);
-    const size_t n = total - offset;
+    const size_t n      = total - offset;
     const size_t copy_n = n < chunk_cap ? n : chunk_cap;
     if (copy_n > 0 && h.blob)
         std::memcpy(buf, h.blob->data() + offset, copy_n);
@@ -349,4 +385,46 @@ void bs_adapter_attach_config_close_snapshot_read(AttachContext* ctx, int handle
     st->handles[handle].used = 0;
     st->handles[handle].blob.reset();
     st->handles[handle].path.clear();
+}
+
+int bs_adapter_attach_config_wait_notify(AttachContext* ctx, const char* config_path,
+                                         uint64_t revision_min, int timeout_ms)
+{
+    auto* st = session_of(ctx);
+    if (!st || !config_path)
+        return -1;
+    if (st->closing.load())
+        return BS_ATTACH_CONC_ERR_CLOSED;
+
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms);
+    std::unique_lock<std::mutex> lock(st->rev_mu);
+    for (;;)
+    {
+        const auto     it  = st->path_revision.find(config_path);
+        const uint64_t rev = it == st->path_revision.end() ? 0 : it->second;
+        if (rev >= revision_min)
+            return 0;
+        if (st->closing.load())
+            return BS_ATTACH_CONC_ERR_CLOSED;
+        if (timeout_ms < 0)
+            st->rev_cv.wait(lock);
+        else if (st->rev_cv.wait_until(lock, deadline) == std::cv_status::timeout)
+            return BS_ATTACH_CONC_ERR_NOTIFY_TIMEOUT;
+    }
+}
+
+int bs_adapter_attach_config_read_since_meta(AttachContext* ctx, const char* config_path,
+                                             uint64_t revision_min, int timeout_ms,
+                                             BsAttachSnapshotMeta* out)
+{
+    if (!out)
+        return -1;
+    const int wait_rc =
+        bs_adapter_attach_config_wait_notify(ctx, config_path, revision_min, timeout_ms);
+    if (wait_rc != 0)
+        return wait_rc;
+    const int rc = bs_adapter_attach_config_get_snapshot_meta(ctx, config_path, out);
+    if (rc == 0 && out->revision < revision_min)
+        return BS_ATTACH_CONC_ERR_REVISION_CHANGED;
+    return rc;
 }

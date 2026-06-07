@@ -117,7 +117,8 @@ static int phase_c_reload_default_gate_and_report(const ReloadHarness* h, const 
 
     FacadeReadCtx read_ctx{h->io};
     bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &read_ctx);
-    day12_wire_reload_defaults(ctrl);
+    bs_adapter_attach_reload_batch_set_attach_ctx(ctrl, h->actx);
+    day12_wire_reload_defaults(ctrl, BS_ATTACH_SCHEME_PER_PATH, h->actx);
     /* gate_fn intentionally unset -> default ir_gate (IMPL-06-02) */
 
     Report* report = bs_report_create("reload_default_gate_report");

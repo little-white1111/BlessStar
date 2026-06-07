@@ -1,3 +1,4 @@
+#include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/state/ConfigManager.h"
 #include "bs/kernel/state/EventBus.h"
 #include "bs/kernel/state/StateBus.h"
@@ -7,9 +8,11 @@
 
 struct ConfigManager
 {
-    StateBus*     state_bus;
-    EventBus*     event_bus;
-    WatchManager* watch_manager;
+    StateBus*                     state_bus;
+    EventBus*                     event_bus;
+    WatchManager*                 watch_manager;
+    BsConfigManagerPhase2NotifyFn phase2_notify_fn;
+    void*                         phase2_notify_user;
 };
 
 namespace
@@ -67,21 +70,27 @@ int emit_transition(ConfigManager* cm, const char* path, ConfigState from, Confi
         return -1;
 
     ConfigEvent payload{};
-    payload.configPath = path;
-    payload.type       = event_type_for_state(to);
-    payload.fromState  = from;
-    payload.toState    = to;
-    payload.version    = entry->version;
-    payload.timestamp  = entry->timestamp;
+    payload.configPath   = path;
+    payload.type         = event_type_for_state(to);
+    payload.fromState    = from;
+    payload.toState      = to;
+    payload.version      = entry->version;
+    payload.timestamp    = entry->timestamp;
     const void* snapshot = entry->dataSnapshot;
 
     /* Phase 2: publish + drain + watch notify outside StateBus mutation. */
     if (bs_event_bus_publish(cm->event_bus, &payload) != 0)
         return -1;
-    if (bs_event_bus_drain(cm->event_bus) != 0)
+
+    const int defer_event_drain = bs_reentrancy_in_attach_write_window();
+    if (!defer_event_drain && bs_event_bus_drain(cm->event_bus) != 0)
         return -1;
 
-    bs_watch_manager_notify(cm->watch_manager, path, payload.type, snapshot);
+    if (cm->phase2_notify_fn)
+        cm->phase2_notify_fn(cm, cm->watch_manager, path, payload.type, snapshot, entry->dataSize,
+                             cm->phase2_notify_user);
+    else if (!defer_event_drain)
+        bs_watch_manager_notify(cm->watch_manager, path, payload.type, snapshot);
     return 0;
 }
 } // namespace
@@ -91,9 +100,11 @@ ConfigManager* bs_config_manager_create()
     ConfigManager* cm = new ConfigManager();
     if (!cm)
         return nullptr;
-    cm->state_bus     = bs_state_bus_create();
-    cm->event_bus     = bs_event_bus_create();
-    cm->watch_manager = bs_watch_manager_create();
+    cm->state_bus          = bs_state_bus_create();
+    cm->event_bus          = bs_event_bus_create();
+    cm->watch_manager      = bs_watch_manager_create();
+    cm->phase2_notify_fn   = nullptr;
+    cm->phase2_notify_user = nullptr;
     if (!cm->state_bus || !cm->event_bus || !cm->watch_manager)
     {
         bs_config_manager_destroy(cm);
@@ -265,4 +276,13 @@ EventBus* bs_config_manager_get_event_bus(ConfigManager* cm)
 WatchManager* bs_config_manager_get_watch_manager(ConfigManager* cm)
 {
     return cm ? cm->watch_manager : nullptr;
+}
+
+void bs_config_manager_set_phase2_notify_hook(ConfigManager* cm, BsConfigManagerPhase2NotifyFn fn,
+                                              void* user_data)
+{
+    if (!cm)
+        return;
+    cm->phase2_notify_fn   = fn;
+    cm->phase2_notify_user = user_data;
 }

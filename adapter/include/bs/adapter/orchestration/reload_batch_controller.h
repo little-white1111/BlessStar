@@ -13,6 +13,7 @@
 #include "bs/adapter/persistence/attach_store.h"
 
 struct Report;
+typedef struct AttachContext AttachContext;
 
 #ifdef __cplusplus
 extern "C"
@@ -34,7 +35,9 @@ extern "C"
         BS_ORCH_GATE_REJECTED    = 4,
         BS_ORCH_FAILED_READ      = 5,
         BS_ORCH_PERSIST_REJECTED = 6,
-        BS_ORCH_STAGED           = 7
+        BS_ORCH_STAGED           = 7,
+        BS_ORCH_EXECUTING        = 8,
+        BS_ORCH_EXEC_REJECTED    = 9
     } PathOrchestrationState;
 
 #define BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT (16u * 1024u * 1024u)
@@ -79,6 +82,10 @@ extern "C"
                                                                size_t                 cap_bytes);
 
     int bs_adapter_attach_reload_batch_add_path(ReloadBatchController* ctrl, const char* uri);
+
+    /** Explicit attach session for reload (set before run(); required for off-thread run). */
+    void bs_adapter_attach_reload_batch_set_attach_ctx(ReloadBatchController* ctrl,
+                                                       AttachContext*         ctx);
 
     int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl);
 

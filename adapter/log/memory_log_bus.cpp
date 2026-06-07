@@ -12,7 +12,7 @@ struct MemoryBusCtx
     void* user;
 };
 
-static MemoryBusCtx g_mem_ctx{};
+static thread_local MemoryBusCtx g_mem_ctx{};
 
 static void memory_emit(uint16_t domain_id, BsLogLevel level, const char* fmt, va_list ap)
 {

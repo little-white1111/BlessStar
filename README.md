@@ -52,7 +52,7 @@
 
 - CMake：`CMakeLists.txt`
 - Meson：`meson.build`
-- GitHub Actions：`.github/workflows/ci.yml`（manifest 校验 + **clang-format**（仅 Linux）+ CMake **`-DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON`** + 构建 + **CTest**；Meson 另 job）
+- GitHub Actions：**`full test`**（`.github/workflows/ci.yml` · 全仓回归）+ **`day21`**（`.github/workflows/day21.yml` · `feat/day21*` 分支 · `-L kernel_pool` + TSan）
 
 本地若要对齐 CI 的「警告即错误」：
 

@@ -15,6 +15,8 @@
 
 #include <cstdio>
 
+#include "day12_attach_fixture.h"
+
 #define BS_TEST_REQUIRE(phase, cond)                                                               \
     do                                                                                             \
     {                                                                                              \
@@ -31,6 +33,28 @@ struct BsTestAttachIoFixture
     RegistryFacade* facade = nullptr;
     IoFacade*       io     = nullptr;
 };
+
+/** RAII: push ctx as active for the current thread for the fixture lifetime. */
+struct BsTestAttachActiveScope
+{
+    explicit BsTestAttachActiveScope(AttachContext* ctx)
+        : scope_(ctx)
+    {
+    }
+    BsTestAttachActiveScope(const BsTestAttachActiveScope&)            = delete;
+    BsTestAttachActiveScope& operator=(const BsTestAttachActiveScope&) = delete;
+
+  private:
+    AttachScope scope_;
+};
+
+/** Bind reload controller to attach session + day12 defaults (integration tests). */
+inline void bs_test_attach_bind_reload_ctx(ReloadBatchController* ctrl, AttachContext* ctx,
+                                           BsAttachScheme scheme = BS_ATTACH_SCHEME_PER_PATH)
+{
+    bs_adapter_attach_reload_batch_set_attach_ctx(ctrl, ctx);
+    day12_wire_reload_defaults(ctrl, scheme, ctx);
+}
 
 inline int bs_test_attach_bootstrap_begin_ctx(BsTestAttachIoFixture* fix)
 {

@@ -1,3 +1,4 @@
+#include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/pipeline/pipeline.h"
 #include "bs/kernel/report/report.h"
@@ -9,8 +10,93 @@
 #include <string.h>
 #include <time.h>
 
+#ifdef _WIN32
+#include <windows.h>
+typedef HANDLE             BsThread;
+typedef CRITICAL_SECTION   BsMutex;
+typedef CONDITION_VARIABLE BsCond;
+static void                bs_mutex_init(BsMutex* mu)
+{
+    InitializeCriticalSection(mu);
+}
+static void bs_mutex_destroy(BsMutex* mu)
+{
+    DeleteCriticalSection(mu);
+}
+static void bs_mutex_lock(BsMutex* mu)
+{
+    EnterCriticalSection(mu);
+}
+static void bs_mutex_unlock(BsMutex* mu)
+{
+    LeaveCriticalSection(mu);
+}
+static void bs_cond_init(BsCond* cv)
+{
+    InitializeConditionVariable(cv);
+}
+static void bs_cond_destroy(BsCond* cv)
+{
+    (void)cv;
+}
+static void bs_cond_wait(BsCond* cv, BsMutex* mu)
+{
+    SleepConditionVariableCS(cv, mu, INFINITE);
+}
+static void bs_cond_signal(BsCond* cv)
+{
+    WakeConditionVariable(cv);
+}
+static void bs_cond_broadcast(BsCond* cv)
+{
+    WakeAllConditionVariable(cv);
+}
+#else
+#include <pthread.h>
+typedef pthread_t       BsThread;
+typedef pthread_mutex_t BsMutex;
+typedef pthread_cond_t  BsCond;
+static void             bs_mutex_init(BsMutex* mu)
+{
+    (void)pthread_mutex_init(mu, NULL);
+}
+static void bs_mutex_destroy(BsMutex* mu)
+{
+    (void)pthread_mutex_destroy(mu);
+}
+static void bs_mutex_lock(BsMutex* mu)
+{
+    (void)pthread_mutex_lock(mu);
+}
+static void bs_mutex_unlock(BsMutex* mu)
+{
+    (void)pthread_mutex_unlock(mu);
+}
+static void bs_cond_init(BsCond* cv)
+{
+    (void)pthread_cond_init(cv, NULL);
+}
+static void bs_cond_destroy(BsCond* cv)
+{
+    (void)pthread_cond_destroy(cv);
+}
+static void bs_cond_wait(BsCond* cv, BsMutex* mu)
+{
+    (void)pthread_cond_wait(cv, mu);
+}
+static void bs_cond_signal(BsCond* cv)
+{
+    (void)pthread_cond_signal(cv);
+}
+static void bs_cond_broadcast(BsCond* cv)
+{
+    (void)pthread_cond_broadcast(cv);
+}
+#endif
+
 #define PIPELINE_INITIAL_CAPACITY 4
 #define KERNEL_ASYNC_QUEUE_CAP 32
+#define BS_KERNEL_EXEC_INLINE_DEPTH_MAX 2
 
 typedef struct KernelAsyncNode
 {
@@ -22,7 +108,20 @@ typedef struct PipelineEntry
 {
     const char* name;
     void*       pipeline;
+    size_t      active_jobs;
+    int         accepting;
 } PipelineEntry;
+
+typedef struct KernelExecJob
+{
+    PipelineEntry*        pipeline_ref;
+    const IRInstruction*  ir;
+    Report*               report;
+    int                   result;
+    int                   done;
+    BsCond                done_cv;
+    struct KernelExecJob* next;
+} KernelExecJob;
 
 struct Kernel
 {
@@ -37,9 +136,179 @@ struct Kernel
     KernelAsyncNode* async_head;
     KernelAsyncNode* async_tail;
     size_t           async_count;
+    BsMutex          registry_mu;
+    BsCond           registry_cv;
+    BsMutex          exec_mu;
+    BsCond           exec_cv;
+    BsThread         exec_thread;
+    int              exec_thread_started;
+    int              exec_stop_requested;
+    KernelExecJob*   exec_head;
+    KernelExecJob*   exec_tail;
 };
 
 static const char* KERNEL_VERSION = "1.0.0";
+
+static void kernel_release_pipeline_ref(Kernel* kernel, PipelineEntry* ref)
+{
+    if (!kernel || !ref)
+        return;
+    bs_mutex_lock(&kernel->registry_mu);
+    if (ref->active_jobs > 0)
+        ref->active_jobs--;
+    bs_cond_broadcast(&kernel->registry_cv);
+    bs_mutex_unlock(&kernel->registry_mu);
+}
+
+static PipelineEntry* kernel_acquire_pipeline_ref(Kernel* kernel)
+{
+    if (!kernel)
+        return NULL;
+
+    bs_mutex_lock(&kernel->registry_mu);
+    PipelineEntry* selected = NULL;
+    for (size_t i = 0; i < kernel->pipeline_count; i++)
+    {
+        if (kernel->pipelines[i].accepting && kernel->pipelines[i].name &&
+            strcmp(kernel->pipelines[i].name, "default") == 0)
+        {
+            selected = &kernel->pipelines[i];
+            break;
+        }
+    }
+    if (!selected)
+    {
+        for (size_t i = 0; i < kernel->pipeline_count; i++)
+        {
+            if (kernel->pipelines[i].accepting)
+            {
+                selected = &kernel->pipelines[i];
+                break;
+            }
+        }
+    }
+    if (selected)
+        selected->active_jobs++;
+    bs_mutex_unlock(&kernel->registry_mu);
+    return selected;
+}
+
+static Report* kernel_execute_with_ref(Kernel* kernel, PipelineEntry* ref, const IRInstruction* ir)
+{
+    if (!kernel || !ref || !ref->pipeline || !ir)
+        return NULL;
+
+    Report* pipe_report = NULL;
+    bs_reentrancy_enter_kernel_execute();
+    (void)bs_pipeline_reset((Pipeline*)ref->pipeline);
+    const int rc = bs_pipeline_execute((Pipeline*)ref->pipeline, ir, &pipe_report);
+    bs_reentrancy_leave_kernel_execute();
+    if (rc != 0)
+    {
+        if (pipe_report)
+            bs_report_destroy(pipe_report);
+        return NULL;
+    }
+
+    kernel->execution_count++;
+    return pipe_report;
+}
+
+static void kernel_exec_enqueue(Kernel* kernel, KernelExecJob* job)
+{
+    job->next = NULL;
+    if (!kernel->exec_tail)
+        kernel->exec_head = kernel->exec_tail = job;
+    else
+    {
+        kernel->exec_tail->next = job;
+        kernel->exec_tail       = job;
+    }
+    bs_cond_signal(&kernel->exec_cv);
+}
+
+static KernelExecJob* kernel_exec_pop(Kernel* kernel)
+{
+    KernelExecJob* job = kernel->exec_head;
+    if (!job)
+        return NULL;
+    kernel->exec_head = job->next;
+    if (!kernel->exec_head)
+        kernel->exec_tail = NULL;
+    job->next = NULL;
+    return job;
+}
+
+#ifdef _WIN32
+static DWORD WINAPI kernel_executor_worker_main(LPVOID arg)
+#else
+static void* kernel_executor_worker_main(void* arg)
+#endif
+{
+    Kernel* kernel = (Kernel*)arg;
+    for (;;)
+    {
+        bs_mutex_lock(&kernel->exec_mu);
+        while (!kernel->exec_head && !kernel->exec_stop_requested)
+            bs_cond_wait(&kernel->exec_cv, &kernel->exec_mu);
+        if (!kernel->exec_head && kernel->exec_stop_requested)
+        {
+            bs_mutex_unlock(&kernel->exec_mu);
+            break;
+        }
+        KernelExecJob* job = kernel_exec_pop(kernel);
+        bs_mutex_unlock(&kernel->exec_mu);
+
+        job->report = kernel_execute_with_ref(kernel, job->pipeline_ref, job->ir);
+        job->result = job->report ? 0 : -1;
+        kernel_release_pipeline_ref(kernel, job->pipeline_ref);
+
+        bs_mutex_lock(&kernel->exec_mu);
+        job->done = 1;
+        bs_cond_signal(&job->done_cv);
+        bs_mutex_unlock(&kernel->exec_mu);
+    }
+#ifdef _WIN32
+    return 0;
+#else
+    return NULL;
+#endif
+}
+
+static int kernel_start_executor(Kernel* kernel)
+{
+    if (!kernel || kernel->exec_thread_started)
+        return 0;
+    kernel->exec_stop_requested = 0;
+#ifdef _WIN32
+    kernel->exec_thread = CreateThread(NULL, 0, kernel_executor_worker_main, kernel, 0, NULL);
+    if (!kernel->exec_thread)
+        return -1;
+#else
+    if (pthread_create(&kernel->exec_thread, NULL, kernel_executor_worker_main, kernel) != 0)
+        return -1;
+#endif
+    kernel->exec_thread_started = 1;
+    return 0;
+}
+
+static void kernel_stop_executor(Kernel* kernel)
+{
+    if (!kernel || !kernel->exec_thread_started)
+        return;
+    bs_mutex_lock(&kernel->exec_mu);
+    kernel->exec_stop_requested = 1;
+    bs_cond_broadcast(&kernel->exec_cv);
+    bs_mutex_unlock(&kernel->exec_mu);
+#ifdef _WIN32
+    WaitForSingleObject(kernel->exec_thread, INFINITE);
+    CloseHandle(kernel->exec_thread);
+    kernel->exec_thread = NULL;
+#else
+    (void)pthread_join(kernel->exec_thread, NULL);
+#endif
+    kernel->exec_thread_started = 0;
+}
 
 Kernel* bs_kernel_create(const KernelConfig* config)
 {
@@ -95,6 +364,14 @@ Kernel* bs_kernel_create(const KernelConfig* config)
     kernel->async_head        = NULL;
     kernel->async_tail        = NULL;
     kernel->async_count       = 0;
+    bs_mutex_init(&kernel->registry_mu);
+    bs_cond_init(&kernel->registry_cv);
+    bs_mutex_init(&kernel->exec_mu);
+    bs_cond_init(&kernel->exec_cv);
+    kernel->exec_thread_started = 0;
+    kernel->exec_stop_requested = 0;
+    kernel->exec_head           = NULL;
+    kernel->exec_tail           = NULL;
 
     return kernel;
 }
@@ -103,6 +380,9 @@ void bs_kernel_destroy(Kernel* kernel)
 {
     if (!kernel)
         return;
+
+    if (kernel->state == KERNEL_STATE_RUNNING || kernel->state == KERNEL_STATE_STOPPING)
+        (void)bs_kernel_stop(kernel);
 
     for (size_t i = 0; i < kernel->pipeline_count; i++)
     {
@@ -130,6 +410,11 @@ void bs_kernel_destroy(Kernel* kernel)
         free(node);
         node = next;
     }
+
+    bs_cond_destroy(&kernel->exec_cv);
+    bs_mutex_destroy(&kernel->exec_mu);
+    bs_cond_destroy(&kernel->registry_cv);
+    bs_mutex_destroy(&kernel->registry_mu);
 
     free(kernel);
 }
@@ -177,6 +462,11 @@ int bs_kernel_start(Kernel* kernel)
 
     // Initialize components
     bs_context_set_metadata(kernel->context, "kernel.version", KERNEL_VERSION);
+    if (kernel_start_executor(kernel) != 0)
+    {
+        kernel->state = KERNEL_STATE_ERROR;
+        return -1;
+    }
 
     kernel->start_time = (uint64_t)time(NULL);
     kernel->state      = KERNEL_STATE_RUNNING;
@@ -193,7 +483,7 @@ int bs_kernel_stop(Kernel* kernel)
 
     kernel->state = KERNEL_STATE_STOPPING;
 
-    // Cleanup components
+    kernel_stop_executor(kernel);
     kernel->execution_count = 0;
 
     kernel->state = KERNEL_STATE_STOPPED;
@@ -213,23 +503,43 @@ Report* bs_kernel_execute(Kernel* kernel, const IRInstruction* ir)
     if (kernel->state != KERNEL_STATE_RUNNING)
         return NULL;
 
-    Pipeline* pipeline = (Pipeline*)bs_kernel_get_pipeline(kernel, "default");
-    if (!pipeline && kernel->pipeline_count > 0)
-        pipeline = (Pipeline*)kernel->pipelines[0].pipeline;
-
-    if (!pipeline)
+    PipelineEntry* pipeline_ref = kernel_acquire_pipeline_ref(kernel);
+    if (!pipeline_ref)
         return NULL;
 
-    Report* pipe_report = NULL;
-    if (bs_pipeline_execute(pipeline, ir, &pipe_report) != 0)
+    if (bs_reentrancy_kernel_execute_depth() > 0)
     {
-        if (pipe_report)
-            bs_report_destroy(pipe_report);
-        return NULL;
+        if (bs_reentrancy_kernel_execute_depth() >= BS_KERNEL_EXEC_INLINE_DEPTH_MAX)
+        {
+            kernel_release_pipeline_ref(kernel, pipeline_ref);
+            return NULL;
+        }
+        Report* inline_report = kernel_execute_with_ref(kernel, pipeline_ref, ir);
+        kernel_release_pipeline_ref(kernel, pipeline_ref);
+        return inline_report;
     }
 
-    kernel->execution_count++;
-    return pipe_report;
+    KernelExecJob job;
+    memset(&job, 0, sizeof(job));
+    job.pipeline_ref = pipeline_ref;
+    job.ir           = ir;
+    bs_cond_init(&job.done_cv);
+
+    bs_mutex_lock(&kernel->exec_mu);
+    if (kernel->exec_stop_requested || !kernel->exec_thread_started)
+    {
+        bs_mutex_unlock(&kernel->exec_mu);
+        bs_cond_destroy(&job.done_cv);
+        kernel_release_pipeline_ref(kernel, pipeline_ref);
+        return NULL;
+    }
+    kernel_exec_enqueue(kernel, &job);
+    while (!job.done)
+        bs_cond_wait(&job.done_cv, &kernel->exec_mu);
+    bs_mutex_unlock(&kernel->exec_mu);
+
+    bs_cond_destroy(&job.done_cv);
+    return job.result == 0 ? job.report : NULL;
 }
 
 int bs_kernel_execute_async(Kernel* kernel, const IRInstruction* ir)
@@ -284,6 +594,11 @@ int bs_kernel_drain_async_queue(Kernel* kernel)
 
 static int kernel_resize_pipelines(Kernel* kernel, size_t new_capacity)
 {
+    for (size_t i = 0; i < kernel->pipeline_count; i++)
+    {
+        while (kernel->pipelines[i].active_jobs > 0)
+            bs_cond_wait(&kernel->registry_cv, &kernel->registry_mu);
+    }
     PipelineEntry* new_pipelines =
         (PipelineEntry*)realloc(kernel->pipelines, sizeof(PipelineEntry) * new_capacity);
     if (!new_pipelines)
@@ -299,10 +614,12 @@ int bs_kernel_register_pipeline(Kernel* kernel, const char* name, void* pipeline
     if (!kernel || !name || !pipeline)
         return -1;
 
+    bs_mutex_lock(&kernel->registry_mu);
     if (kernel->pipeline_count >= kernel->pipeline_capacity)
     {
         if (kernel_resize_pipelines(kernel, kernel->pipeline_capacity * 2) != 0)
         {
+            bs_mutex_unlock(&kernel->registry_mu);
             return -1;
         }
     }
@@ -312,14 +629,18 @@ int bs_kernel_register_pipeline(Kernel* kernel, const char* name, void* pipeline
     {
         if (strcmp(kernel->pipelines[i].name, name) == 0)
         {
+            bs_mutex_unlock(&kernel->registry_mu);
             return -1;
         }
     }
 
-    kernel->pipelines[kernel->pipeline_count].name     = strdup(name);
-    kernel->pipelines[kernel->pipeline_count].pipeline = pipeline;
+    kernel->pipelines[kernel->pipeline_count].name        = strdup(name);
+    kernel->pipelines[kernel->pipeline_count].pipeline    = pipeline;
+    kernel->pipelines[kernel->pipeline_count].active_jobs = 0;
+    kernel->pipelines[kernel->pipeline_count].accepting   = 1;
     kernel->pipeline_count++;
 
+    bs_mutex_unlock(&kernel->registry_mu);
     return 0;
 }
 
@@ -328,10 +649,14 @@ int bs_kernel_unregister_pipeline(Kernel* kernel, const char* name)
     if (!kernel || !name)
         return -1;
 
+    bs_mutex_lock(&kernel->registry_mu);
     for (size_t i = 0; i < kernel->pipeline_count; i++)
     {
         if (strcmp(kernel->pipelines[i].name, name) == 0)
         {
+            kernel->pipelines[i].accepting = 0;
+            while (kernel->pipelines[i].active_jobs > 0)
+                bs_cond_wait(&kernel->registry_cv, &kernel->registry_mu);
             free((void*)kernel->pipelines[i].name);
 
             for (size_t j = i; j < kernel->pipeline_count - 1; j++)
@@ -340,10 +665,12 @@ int bs_kernel_unregister_pipeline(Kernel* kernel, const char* name)
             }
 
             kernel->pipeline_count--;
+            bs_mutex_unlock(&kernel->registry_mu);
             return 0;
         }
     }
 
+    bs_mutex_unlock(&kernel->registry_mu);
     return -1;
 }
 
@@ -352,14 +679,18 @@ void* bs_kernel_get_pipeline(Kernel* kernel, const char* name)
     if (!kernel || !name)
         return NULL;
 
+    bs_mutex_lock(&kernel->registry_mu);
     for (size_t i = 0; i < kernel->pipeline_count; i++)
     {
         if (strcmp(kernel->pipelines[i].name, name) == 0)
         {
-            return kernel->pipelines[i].pipeline;
+            void* pipeline = kernel->pipelines[i].pipeline;
+            bs_mutex_unlock(&kernel->registry_mu);
+            return pipeline;
         }
     }
 
+    bs_mutex_unlock(&kernel->registry_mu);
     return NULL;
 }
 

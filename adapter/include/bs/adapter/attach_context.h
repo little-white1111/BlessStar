@@ -40,15 +40,29 @@ extern "C"
     BsLogLevel bs_adapter_attach_ctx_get_log_level(const AttachContext* ctx);
     void       bs_adapter_attach_ctx_set_log_level(AttachContext* ctx, BsLogLevel level);
 
-    /** Single active ctx for reload / attach_runtime / bootstrap delegation. */
+    /** Per-thread active ctx stack (top = current). Prefer AttachScope in C++ tests. */
+    void bs_adapter_attach_ctx_push_active(AttachContext* ctx);
+    void bs_adapter_attach_ctx_pop_active(AttachContext* ctx);
+
+    /** Replace stack top (or push if empty). Legacy tests may still call this directly. */
     void           bs_adapter_attach_ctx_set_active(AttachContext* ctx);
     AttachContext* bs_adapter_attach_ctx_get_active(void);
+
+    /** 1 if ctx is the current thread's active attach context. */
+    int bs_adapter_attach_ctx_is_active(const AttachContext* ctx);
+
+    /** T20.0b: bracket get_active; debug builds assert when depth is zero. */
+    void bs_adapter_attach_ctx_active_access_enter(void);
+    void bs_adapter_attach_ctx_active_access_leave(void);
 
     /** Bind external RegistryFacade; ctx does not take ownership. */
     void bs_adapter_attach_ctx_use_external_registry(AttachContext* ctx, RegistryFacade* facade);
 
     /** 1 if ctx has a Kernel in KERNEL_STATE_RUNNING (after freeze_ctx). */
     int bs_adapter_attach_ctx_is_kernel_running(const AttachContext* ctx);
+
+    /** 1 if KernelPool warmup completed on ctx (day21 A''' reload exec gate). */
+    int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx);
 
     void bs_adapter_attach_ensure_active_ctx(void);
 
@@ -60,6 +74,41 @@ extern "C"
 
 #ifdef __cplusplus
 }
+
+/** RAII for T20.0b active-ctx access guard. */
+struct AttachActiveGuard
+{
+    AttachActiveGuard()
+    {
+        bs_adapter_attach_ctx_active_access_enter();
+    }
+    AttachActiveGuard(const AttachActiveGuard&)            = delete;
+    AttachActiveGuard& operator=(const AttachActiveGuard&) = delete;
+    ~AttachActiveGuard()
+    {
+        bs_adapter_attach_ctx_active_access_leave();
+    }
+};
+
+/** RAII push/pop for per-thread active AttachContext (P2 instance scope). */
+struct AttachScope
+{
+    explicit AttachScope(AttachContext* ctx)
+        : ctx_(ctx)
+    {
+        bs_adapter_attach_ctx_push_active(ctx_);
+    }
+    AttachScope(const AttachScope&)            = delete;
+    AttachScope& operator=(const AttachScope&) = delete;
+    ~AttachScope()
+    {
+        bs_adapter_attach_ctx_pop_active(ctx_);
+    }
+
+  private:
+    AttachContext* ctx_;
+};
+
 #endif
 
 #endif /* BS_ADAPTER_ATTACH_CONTEXT_H */

@@ -220,7 +220,8 @@
 - **变更摘要**: 一句话描述做了什么
 - **变更细节**: 关键代码片段/接口签名/状态转换图等（让主任务尽量不打开文件也能审核）
 - **关联测试**: 本次变更相关的测试用例文件（如适用）
-- **合规校验**: 是否通过 ASan/UBSan/Valgrind/代码规范检查等（如：✅ clang-format、无 ASan 告警）
+- **契约绑定**（若适用）: 契约 ID（如 `C-ST-1`）、`gate_refs` / `GATE-*`、脚本或 ctest 路径、`validate`/`compile`/`day17` 结果
+- **合规校验**: 是否通过 ASan/UBSan/Valgrind/代码规范检查等（如：✅ clang-format、无 ASan 告警）；动过契约时须含 ✅ `contract_validate` + ✅ `contract_compile`
 - **备注**: 遗留问题、临时方案、耦合说明等
 
 ### 每日记录区模板
@@ -238,6 +239,7 @@
 - **变更细节**:
   - ...
 - **关联测试**: ...
+- **契约绑定**（若适用）: ...
 - **合规校验**: ...
 - **备注**: ...
 ```
@@ -293,6 +295,16 @@
 - 确保符合单向依赖铁则
 - 记录到"项目修改记录.md"
 
+#### 阶段1b：契约绑定（触达可验收边界时必做）
+- **唯一机器真相源**：`docs/contracts/index.json`（`script_layout`、`add_gate_workflow`、`repository_layout`）
+- 若当日决策涉及新/改契约、Gate、门禁脚本或 ctest 标签：
+  - 更新 `docs/contracts/<type>/*.v1.json`（`rule` + `gate_refs[]` + `implementations[]`）
+  - 更新 `docs/gates/gate_registry.json`（`command` + `covers`，与契约双向一致）
+  - 脚本落在 `index.json` → `allowed_entry_prefixes` 内（通常 `tools/scripts/gates/` 或 `tools/purity/`）
+  - 运行：`contract_validate_instances.py` → `contract_compile.py`；按需 `contract_gate_runner.py`
+  - 改 gate 定义后：`tools/scripts/maintenance/sync_contract_implementations.py`
+- **`rule` 仅人读/AI 读语义；执行靠 `implementations` + gate `command`**
+
 #### 阶段2：测试方案设计
 - 根据架构设计设计测试用例
 - 覆盖基础功能测试、边界测试、特殊值测试
@@ -321,11 +333,16 @@
 - 优化建议文档
 
 #### 质量门禁（必须通过）
-1. ✅ 所有单元测试通过
-2. ✅ 无内存泄漏（ASan检测）
+1. ✅ 所有单元测试通过（以 CTest 已注册用例为准；推荐 `ctest --test-dir build_ci_test -C Release` 或 `tools/test/run.ps1`）
+2. ✅ 无内存泄漏（ASan检测，按计划/CI 启用时）
 3. ✅ 代码格式符合规范（clang-format）
 4. ✅ 无编译警告
-5. ✅ 性能达到预期基准
+5. ✅ 性能达到预期基准（按计划/CI 启用时）
+6. ✅ **契约校验**（当日修改过 `docs/contracts/**`、`docs/gates/**` 或相关 gate 脚本时）：`python tools/scripts/contracts/contract_validate_instances.py`
+7. ✅ **契约编译**（同上）：`python tools/scripts/contracts/contract_compile.py`（生成/更新 `docs/reports/contract_plan.lock.json`）
+8. ✅ **契约门禁执行**（改 gate 行为或主任务明确要求时）：`python tools/scripts/contracts/contract_gate_runner.py` 和/或 `ctest -L day17`（及决策要求的 `integration`/`regression`）
+
+子任务B 在 Cursor 中的**完整细则**见 **`.cursor/agents/subtask-b-eng.md`**（`/subtask-b-eng`）。触达契约路径时 `.cursor/rules/subtask-b-contracts.mdc` 仅作指向提醒。
 
 ---
 
@@ -342,7 +359,7 @@
 
 **Cursor 对话入口（已验证）**：输入 **`/subtask-b-eng`**（定义见 `.cursor/agents/subtask-b-eng.md`）。
 
-> **为何没有 `/subtask-b`？** Cursor 将标识符 `subtask-b` 保留给后台 `Task(subagent_type="subtask-b")` 委派，与 `.cursor/agents/` 的 slash 命令**同名冲突**，故补全列表不会出现 `/subtask-b`。主任务后台委派仍用 `subtask-b`；你在聊天里请用 **`/subtask-b-eng`**，规则与子任务B 完全相同。完整提示词见 `.cursor/subtask-b-prompt-archive.md`。
+> **为何没有 `/subtask-b`？** Cursor 将标识符 `subtask-b` 保留给后台 `Task(subagent_type="subtask-b")` 委派，与 `.cursor/agents/` 的 slash 命令**同名冲突**，故补全列表不会出现 `/subtask-b`。主任务后台委派仍用 `subtask-b`；你在聊天里请用 **`/subtask-b-eng`**，规则定义在 **`.cursor/agents/subtask-b-eng.md`**（含契约绑定、T5 厂商配置接入、质量门禁）。
 
 ### 协作流程
 1. 用户激活主任务

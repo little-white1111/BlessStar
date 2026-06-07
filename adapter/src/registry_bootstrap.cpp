@@ -17,7 +17,8 @@ static AttachContext* active_ctx_for_facade(RegistryFacade* facade)
 {
     if (!facade)
         return nullptr;
-    AttachContext* active = bs_adapter_attach_ctx_get_active();
+    AttachActiveGuard guard;
+    AttachContext*    active = bs_adapter_attach_ctx_get_active();
     if (!active || bs_adapter_attach_ctx_registry(active) != facade)
         return nullptr;
     return active;
@@ -151,6 +152,8 @@ int bs_adapter_registry_bootstrap_freeze_ctx(AttachContext* ctx)
     if (bs_adapter_attach_notify_registry_frozen(ctx) != 0)
         return -1;
     if (bs_adapter_attach_ctx_start_kernel(ctx) != 0)
+        return -1;
+    if (bs_adapter_attach_ctx_warmup_kernel_pool(ctx) != 0)
         return -1;
     return 0;
 }

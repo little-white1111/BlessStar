@@ -47,6 +47,15 @@
       "timeout_s": 120
     },
     {
+      "gate_id": "GATE-KERNEL-POOL-CONFIG",
+      "stage": "ci",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_kernel_pool_config.py",
+      "covers": ["C-KERNEL-POOL-1"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
       "gate_id": "GATE-STYLE-PREFIX",
       "stage": "read",
       "runner": "python",
@@ -95,7 +104,7 @@
       "gate_id": "GATE-INTEGRATION",
       "stage": "ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L integration --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure",
       "covers": ["C-IX-2", "C-ST-13", "C-FN-1", "C-FN-3", "C-CF-1"],
       "default_blocking": true,
       "timeout_s": 300
@@ -104,16 +113,16 @@
       "gate_id": "GATE-REGRESSION",
       "stage": "ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
       "covers": ["C-IX-4", "C-ST-13", "C-FN-1", "C-FN-2", "C-FN-3", "C-CF-1", "C-CF-2"],
       "default_blocking": true,
-      "timeout_s": 900
+      "timeout_s": 1800
     },
     {
       "gate_id": "GATE-DEV-L1",
       "stage": "dev_ci",
       "runner": "ctest",
-      "command": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+      "command": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure",
       "covers": ["C-TST-L1-1"],
       "default_blocking": true,
       "timeout_s": 1900

@@ -4,10 +4,14 @@
   "version": "v1",
   "priority": "functional",
   "status": "active",
-  "scope": ["app"],
+  "scope": [
+    "app"
+  ],
   "stage": "parse",
   "rule": "App SDK must implement VendorConfigNormalizer and VendorReloadFacade under app/sdk only; normalized output must be BlessStar Config JSON v1 bytes consumable by bs_adapter_parser_parse_bytes.",
-  "gate_refs": ["GATE-APP-VENDOR-NORMALIZE"],
+  "gate_refs": [
+    "GATE-APP-VENDOR-NORMALIZE"
+  ],
   "blocking": true,
   "owner": "subtask-b-eng",
   "evidence": [

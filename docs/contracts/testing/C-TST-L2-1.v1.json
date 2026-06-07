@@ -4,13 +4,20 @@
   "version": "v1",
   "priority": "testing",
   "status": "active",
-  "scope": ["ops", "staging"],
+  "scope": [
+    "ops",
+    "staging"
+  ],
   "stage": "staging",
   "rule": "L2 Staging acceptance is exclusive to post-deploy CD: ops/acceptance/staging/scenarios.v1.json (including bulk ctest_label integration and day14). These scenarios must not run inside L1 contract_gate_runner or day17 without --through-stage ci skip of staging stage.",
-  "gate_refs": ["GATE-STAGING-ACCEPTANCE"],
+  "gate_refs": [
+    "GATE-STAGING-ACCEPTANCE"
+  ],
   "blocking": true,
   "owner": "subtask-b",
-  "evidence": ["ops/acceptance/staging/scenarios.v1.json"],
+  "evidence": [
+    "ops/acceptance/staging/scenarios.v1.json"
+  ],
   "deprecate": null,
   "implementations": [
     {

@@ -4,19 +4,27 @@
   "version": "v1",
   "priority": "testing",
   "status": "active",
-  "scope": ["ci", "ctest"],
+  "scope": [
+    "ci",
+    "ctest"
+  ],
   "stage": "dev_ci",
   "rule": "L1 Dev CI: ctest -L day17 and full inventory in tier_assignments.json. contract_gate_runner in day17 must use --through-stage ci only; must not run Staging acceptance or bulk ctest -L integration/day14 as part of PR gates.",
-  "gate_refs": ["GATE-DEV-L1", "GATE-TEST-L1-GATE-SCOPE"],
+  "gate_refs": [
+    "GATE-DEV-L1",
+    "GATE-TEST-L1-GATE-SCOPE"
+  ],
   "blocking": true,
   "owner": "subtask-b",
-  "evidence": ["docs/reports/contract-gate-report.json"],
+  "evidence": [
+    "docs/reports/contract-gate-report.json"
+  ],
   "deprecate": null,
   "implementations": [
     {
       "gate_id": "GATE-DEV-L1",
       "runner": "ctest",
-      "entry": "ctest --test-dir build_ci_test -C Release -L day17 --output-on-failure",
+      "entry": "ctest --test-dir build_ci_test -C Release -L day17 -j 1 --output-on-failure",
       "entry_kind": "command"
     },
     {

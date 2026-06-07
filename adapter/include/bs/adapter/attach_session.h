@@ -32,6 +32,9 @@ extern "C"
     void bs_adapter_attach_session_begin_write_window(AttachContext* ctx);
     void bs_adapter_attach_session_end_write_window(AttachContext* ctx);
 
+    /** Block until phase-2 watch notify jobs finish (call before end_write_window). */
+    void bs_adapter_attach_session_drain_pending_notifications(AttachContext* ctx);
+
     int  bs_adapter_attach_session_try_read_lock(AttachContext* ctx);
     void bs_adapter_attach_session_read_unlock(AttachContext* ctx);
 
@@ -51,19 +54,74 @@ extern "C"
      * Copy full snapshot when total_size <= max_bytes; else BS_ATTACH_CONC_ERR_TOO_LARGE.
      */
     int bs_adapter_attach_config_get_snapshot_copy(AttachContext* ctx, const char* config_path,
-                                                  void* buf, size_t buf_cap, size_t* out_size,
-                                                  uint64_t* revision_out);
+                                                   void* buf, size_t buf_cap, size_t* out_size,
+                                                   uint64_t* revision_out);
 
     int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* config_path,
-                                                  int* handle_out, uint64_t* revision_out);
+                                                    int* handle_out, uint64_t* revision_out);
 
     int bs_adapter_attach_config_read_snapshot_chunk(AttachContext* ctx, int handle, size_t offset,
-                                                   void* buf, size_t buf_cap, size_t* out_len);
+                                                     void* buf, size_t buf_cap, size_t* out_len);
 
     void bs_adapter_attach_config_close_snapshot_read(AttachContext* ctx, int handle);
 
+    /** Strong-consistency optional (XX-CONC-1): wait until path revision >= revision_min. */
+    int bs_adapter_attach_config_wait_notify(AttachContext* ctx, const char* config_path,
+                                             uint64_t revision_min, int timeout_ms);
+
+    int bs_adapter_attach_config_read_since_meta(AttachContext* ctx, const char* config_path,
+                                                 uint64_t revision_min, int timeout_ms,
+                                                 BsAttachSnapshotMeta* out);
+
 #ifdef __cplusplus
 }
+
+struct AttachReadGuard
+{
+    AttachContext* ctx;
+    int            rc;
+
+    explicit AttachReadGuard(AttachContext* c)
+        : ctx(c)
+        , rc(bs_adapter_attach_session_try_read_lock(c))
+    {
+    }
+    AttachReadGuard(const AttachReadGuard&)            = delete;
+    AttachReadGuard& operator=(const AttachReadGuard&) = delete;
+    ~AttachReadGuard()
+    {
+        if (rc == 0)
+            bs_adapter_attach_session_read_unlock(ctx);
+    }
+    int status() const
+    {
+        return rc;
+    }
+};
+
+struct AttachWriteGuard
+{
+    AttachContext* ctx;
+    int            rc;
+
+    explicit AttachWriteGuard(AttachContext* c)
+        : ctx(c)
+        , rc(bs_adapter_attach_session_try_write_lock(c))
+    {
+    }
+    AttachWriteGuard(const AttachWriteGuard&)            = delete;
+    AttachWriteGuard& operator=(const AttachWriteGuard&) = delete;
+    ~AttachWriteGuard()
+    {
+        if (rc == 0)
+            bs_adapter_attach_session_write_unlock(ctx);
+    }
+    int status() const
+    {
+        return rc;
+    }
+};
+
 #endif
 
 #endif /* BS_ADAPTER_ATTACH_SESSION_H */
