@@ -440,6 +440,50 @@ int bs_kernel_pool_get_stats(BsKernelPool* pool, BsKernelPoolStats* out_stats)
     return BS_KERNEL_POOL_OK;
 }
 
+int bs_kernel_pool_reset_all_pipelines(BsKernelPool* pool)
+{
+    if (!pool)
+        return BS_KERNEL_POOL_ERR_INVALID_ARG;
+
+    bs_pool_mutex_lock(&pool->mu);
+    while (pool->stats.busy_slots > 0u)
+        bs_pool_cond_wait(&pool->cv, &pool->mu);
+
+    int rc = BS_KERNEL_POOL_OK;
+    for (uint32_t i = 0; i < pool->slot_count; i++)
+    {
+        BsKernelPoolSlot* slot = pool->slots[i];
+        if (slot && slot->pipeline && bs_pipeline_reset(slot->pipeline) != 0)
+            rc = BS_KERNEL_POOL_ERR_EXEC_FAILED;
+    }
+
+    bs_pool_mutex_unlock(&pool->mu);
+    return rc;
+}
+
+#if defined(BS_TESTING)
+uint32_t bs_kernel_pool_testing_count_non_idle_stages(BsKernelPool* pool)
+{
+    if (!pool)
+        return 0u;
+    uint32_t non_idle = 0u;
+    bs_pool_mutex_lock(&pool->mu);
+    for (uint32_t i = 0; i < pool->slot_count; i++)
+    {
+        BsKernelPoolSlot* slot = pool->slots[i];
+        if (!slot || !slot->pipeline)
+            continue;
+        for (Stage* stage = slot->pipeline->stages; stage; stage = stage->next)
+        {
+            if (bs_stage_get_state(stage) != STAGE_STATE_IDLE)
+                non_idle++;
+        }
+    }
+    bs_pool_mutex_unlock(&pool->mu);
+    return non_idle;
+}
+#endif
+
 void bs_kernel_pool_destroy(BsKernelPool* pool)
 {
     if (!pool)

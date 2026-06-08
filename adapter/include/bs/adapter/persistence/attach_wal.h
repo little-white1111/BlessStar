@@ -85,6 +85,14 @@ extern "C"
     int bs_adapter_attach_persist_wal_purge_old_segments(const char* active_wal_path,
                                                          uint64_t    manifest_epoch);
 
+    /**
+     * Coalesced purge: when @p inout_last_purged_through is non-NULL, skip epochs already
+     * purged on this store handle (AG-DAY19-WAL-PURGE-1).
+     */
+    int bs_adapter_attach_persist_wal_purge_old_segments_ex(const char* active_wal_path,
+                                                            uint64_t    manifest_epoch,
+                                                            uint64_t*   inout_last_purged_through);
+
 #if defined(BS_TESTING)
     /**
      * Debug-only dump for framing WAL (H2).

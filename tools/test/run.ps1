@@ -10,12 +10,13 @@
   If empty, uses environment variable BLESSSTAR_CTEST_CONFIG when set.
 
 .PARAMETER Prepare
-  Stop stale python/ctest/bs_test_* processes before ctest (avoids attach_integration lock wait).
+  Stop stale python/ctest/bs_test_* before ctest (default: true; avoids attach_integration lock false timeouts).
+  Pass -Prepare:$false to skip.
 #>
 param(
   [string]$BuildDir = "build",
   [string]$Config = "",
-  [switch]$Prepare
+  [switch]$Prepare = $true
 )
 
 $ErrorActionPreference = "Stop"

@@ -126,6 +126,7 @@ target_link_libraries(bs_kernel_runtime
     bs_kernel_common
     Threads::Threads
 )
+target_compile_definitions(bs_kernel_runtime PRIVATE BS_TESTING)
 
 # ------------------------------
 # Kernel: state (config lifecycle)

@@ -10,6 +10,7 @@
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/attach_session.h"
 #include "bs/adapter/log/log_bus.h"
+#include "bs/adapter/persistence/attach_store.h"
 
 #include <cassert>
 #include <cstdlib>
@@ -154,6 +155,7 @@ void bs_adapter_attach_ctx_destroy(AttachContext* ctx)
 
     bs_adapter_attach_ctx_destroy_config_manager(ctx);
     bs_adapter_attach_ir_snapshot_destroy(ctx);
+    bs_adapter_attach_ctx_close_persist_store(ctx);
     if (ctx->kernel_pool)
     {
         bs_kernel_pool_destroy(ctx->kernel_pool);
@@ -312,11 +314,41 @@ int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx)
     return ctx && ctx->kernel_pool_warmed;
 }
 
+int bs_adapter_attach_kernel_reset_all_pipelines(AttachContext* ctx)
+{
+    if (!ctx)
+        return -1;
+    int rc = 0;
+    if (ctx->default_pipeline && bs_pipeline_reset(ctx->default_pipeline) != 0)
+        rc = -1;
+    if (ctx->kernel_pool && bs_kernel_pool_reset_all_pipelines(ctx->kernel_pool) != BS_KERNEL_POOL_OK)
+        rc = -1;
+    return rc;
+}
+
 #if defined(BS_TESTING)
 void bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(AttachContext* ctx)
 {
     if (ctx)
         ctx->kernel_pool_warmed = 0;
+}
+
+unsigned bs_adapter_attach_kernel_testing_count_non_idle_stages(AttachContext* ctx)
+{
+    if (!ctx)
+        return 0u;
+    unsigned non_idle = 0u;
+    if (ctx->default_pipeline)
+    {
+        for (Stage* stage = ctx->default_pipeline->stages; stage; stage = stage->next)
+        {
+            if (bs_stage_get_state(stage) != STAGE_STATE_IDLE)
+                non_idle++;
+        }
+    }
+    if (ctx->kernel_pool)
+        non_idle += bs_kernel_pool_testing_count_non_idle_stages(ctx->kernel_pool);
+    return non_idle;
 }
 #endif
 
@@ -448,6 +480,29 @@ void bs_adapter_attach_ctx_use_external_registry(AttachContext* ctx, RegistryFac
         ctx->log_bus_bound = 0;
         bs_log_state_init(&ctx->log_state);
     }
+}
+
+BsAttachStore* bs_adapter_attach_ctx_persist_store(AttachContext* ctx)
+{
+    return ctx ? ctx->persist_store : nullptr;
+}
+
+int bs_adapter_attach_ctx_open_persist_store(AttachContext* ctx, const char* manifest_path)
+{
+    if (!ctx)
+        return -1;
+    if (ctx->persist_store)
+        return 0;
+    ctx->persist_store = bs_adapter_attach_persist_store_open(manifest_path);
+    return ctx->persist_store ? 0 : -1;
+}
+
+void bs_adapter_attach_ctx_close_persist_store(AttachContext* ctx)
+{
+    if (!ctx || !ctx->persist_store)
+        return;
+    bs_adapter_attach_persist_store_close(ctx->persist_store);
+    ctx->persist_store = nullptr;
 }
 
 AttachContext* bs_adapter_attach_ctx_legacy_bootstrap(void)

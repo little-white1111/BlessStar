@@ -20,7 +20,7 @@ def main() -> int:
         help="CMake build directory (default: build_ci_test)",
     )
     parser.add_argument("-C", "--config", default="Release", help="Multi-config generator config")
-    parser.add_argument("-j", "--parallel", type=int, default=8, help="CTest parallel jobs")
+    parser.add_argument("-j", "--parallel", type=int, default=1, help="CTest parallel jobs (default 1: attach_integration lock)")
     parser.add_argument(
         "-n", "--iterations", type=int, default=20, help="Number of regression sweeps"
     )
@@ -41,6 +41,14 @@ def main() -> int:
         label_args.extend(["-LE", "day17"])
 
     for i in range(1, args.iterations + 1):
+        if sys.platform == "win32":
+            prep = _REPO / "tools" / "test" / "stop_stale_ctest.ps1"
+            if prep.is_file():
+                subprocess.run(
+                    ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(prep)],
+                    cwd=_REPO,
+                    check=False,
+                )
         cmd = [
             "ctest",
             "--test-dir",

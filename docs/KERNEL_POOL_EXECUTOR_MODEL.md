@@ -55,8 +55,31 @@
 
 ## 与第 19 天 profile 关系（**XIX-MEM-8** / **R21-04**）
 
-- **day19** 默认 harness profile 仍为**单写者多读者**，**不**启用 pool 并行 exec。
+- **day19** harness 仍为**单写者多读者**（同 ctx 写窗口串行）；**不**在 day 段启用 pool 并行 exec。
 - pool 并行与 TSan 覆盖使用 **`kernel_pool`** / **`kernel_conc`** 标签，与 day19 smoke **分 profile** 统计。
+- Day19 smoke/full 长跑 profile 可调用 `bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed`（**仅 BS_TESTING**），使 PER_PATH reload 走 **inline gate/exec**，避免 100KB 夹具在 GHA 墙钟下过慢；**非** pool 功能回退。
+
+## 与第 22 天 RS′ 关系（**RES-IX-17** · Reload Session 三层复用）
+
+RS′ 与 KernelPool **分层**，**禁止**将 `ReloadBatchController` 池化为第二套执行池。
+
+| 层 | 对象 | 生命周期 | 与 pool 关系 |
+|----|------|----------|--------------|
+| **L1** | `AttachContext` + `BsKernelPool` + `BsAttachStore`（`persist_store`） | freeze → warmup 一次；store 跨 reload | pool **仅**负责 exec submit |
+| **L2** | `ReloadBatchController` | `reset → add → run` 短会话 | **不** checkout/checkin；同 ctx **禁止** 并行 `run` |
+| **L3** | `ReloadSessionPolicy`（Day19 等） | 测试/配置 | `kReuseController` / `kOneShot` / `kBatchNight` |
+
+**Day19 默认（T-RS.3）**
+
+| 阶段 | Policy | 行为 |
+|------|--------|------|
+| day（smoke/ci/full） | **kReuseController** | 单 ctrl + `reload_batch_reset`；**iter = run 次数** |
+| night | **kBatchNight** | PER_BATCH 多 URI 一批 |
+| arch_gap | **kOneShot** | `create → run → destroy` 泄漏/regression 路径 |
+
+**Store 与 pool 勿混**：`BsAttachStore` 挂 **`AttachContext::persist_store`**（挂点 A）；`destroy(ctrl)` **不** close store。WAL purge 使用 **`wal_last_purge_through`** 增量 coalesce（**RS-CK-8**），避免长驻 store 上重复全量扫描。
+
+**交叉引用**：`架构方案选择记录.md` § 第22天 **RS′**；`docs/DAY20_CONCURRENCY_MODEL.md`（写窗口互斥）。
 
 ## 测试
 

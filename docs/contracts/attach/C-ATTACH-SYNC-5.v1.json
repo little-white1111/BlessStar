@@ -1,0 +1,31 @@
+{
+  "id": "C-ATTACH-SYNC-5",
+  "type": "attach",
+  "version": "v1",
+  "priority": "attach",
+  "status": "active",
+  "scope": [
+    "adapter/session",
+    "adapter/persistence"
+  ],
+  "stage": "ci",
+  "rule": "External disk manifest changes must not be served as fresh ConfigManager reads; read APIs compare manifest revision with session path_revision and reject stale reads.",
+  "gate_refs": [
+    "GATE-ATTACH-SYNC-PROD"
+  ],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": [
+    "架构方案选择记录.md",
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-ATTACH-SYNC-PROD",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+      "entry_kind": "script"
+    }
+  ]
+}

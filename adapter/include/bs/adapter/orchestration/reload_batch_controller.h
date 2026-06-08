@@ -89,6 +89,9 @@ extern "C"
 
     int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl);
 
+    /** RES-IX-17: clear L2 session state; does not close ctx persist_store. */
+    void bs_adapter_attach_reload_batch_reset(ReloadBatchController* ctrl);
+
     BatchOutcome bs_adapter_attach_reload_batch_outcome(const ReloadBatchController* ctrl);
 
     PathOrchestrationState
@@ -97,6 +100,7 @@ extern "C"
 #if defined(BS_TESTING)
     /** Simulate crash after pool EXEC (per_batch): writes EXEC mark then aborts before persist. */
     void bs_adapter_attach_reload_batch_testing_set_abort_after_exec(int enabled);
+
 #endif
 
 #ifdef __cplusplus

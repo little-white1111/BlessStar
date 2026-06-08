@@ -38,6 +38,7 @@
     "architecture",
     "kernel",
     "integration",
+    "attach",
     "style",
     "functional",
     "configuration",
@@ -411,6 +412,186 @@
         }
       ],
       "path": "docs/contracts/integration/C-IX-8.v1.json"
+    },
+    {
+      "id": "C-ATTACH-SYNC-1",
+      "type": "attach",
+      "version": "v1",
+      "status": "active",
+      "priority": "attach",
+      "stage": "ci",
+      "blocking": true,
+      "gate_refs": [
+        "GATE-ATTACH-SYNC-PROD"
+      ],
+      "implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script"
+        }
+      ],
+      "resolved_implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_sync_prod_paths.py"
+        }
+      ],
+      "path": "docs/contracts/attach/C-ATTACH-SYNC-1.v1.json"
+    },
+    {
+      "id": "C-ATTACH-SYNC-2",
+      "type": "attach",
+      "version": "v1",
+      "status": "active",
+      "priority": "attach",
+      "stage": "ci",
+      "blocking": true,
+      "gate_refs": [
+        "GATE-ATTACH-SYNC-PROD"
+      ],
+      "implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script"
+        }
+      ],
+      "resolved_implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_sync_prod_paths.py"
+        }
+      ],
+      "path": "docs/contracts/attach/C-ATTACH-SYNC-2.v1.json"
+    },
+    {
+      "id": "C-ATTACH-SYNC-3",
+      "type": "attach",
+      "version": "v1",
+      "status": "active",
+      "priority": "attach",
+      "stage": "ci",
+      "blocking": true,
+      "gate_refs": [
+        "GATE-ATTACH-SYNC-PROD"
+      ],
+      "implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script"
+        }
+      ],
+      "resolved_implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_sync_prod_paths.py"
+        }
+      ],
+      "path": "docs/contracts/attach/C-ATTACH-SYNC-3.v1.json"
+    },
+    {
+      "id": "C-ATTACH-SYNC-4",
+      "type": "attach",
+      "version": "v1",
+      "status": "active",
+      "priority": "attach",
+      "stage": "ci",
+      "blocking": true,
+      "gate_refs": [
+        "GATE-ATTACH-SYNC-PROD"
+      ],
+      "implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script"
+        }
+      ],
+      "resolved_implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_sync_prod_paths.py"
+        }
+      ],
+      "path": "docs/contracts/attach/C-ATTACH-SYNC-4.v1.json"
+    },
+    {
+      "id": "C-ATTACH-SYNC-5",
+      "type": "attach",
+      "version": "v1",
+      "status": "active",
+      "priority": "attach",
+      "stage": "ci",
+      "blocking": true,
+      "gate_refs": [
+        "GATE-ATTACH-SYNC-PROD"
+      ],
+      "implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script"
+        }
+      ],
+      "resolved_implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_sync_prod_paths.py"
+        }
+      ],
+      "path": "docs/contracts/attach/C-ATTACH-SYNC-5.v1.json"
+    },
+    {
+      "id": "C-ATTACH-SYNC-6",
+      "type": "attach",
+      "version": "v1",
+      "status": "active",
+      "priority": "attach",
+      "stage": "ci",
+      "blocking": true,
+      "gate_refs": [
+        "GATE-ATTACH-SYNC-PROD"
+      ],
+      "implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script"
+        }
+      ],
+      "resolved_implementations": [
+        {
+          "gate_id": "GATE-ATTACH-SYNC-PROD",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_sync_prod_paths.py"
+        }
+      ],
+      "path": "docs/contracts/attach/C-ATTACH-SYNC-6.v1.json"
     },
     {
       "id": "C-ST-1",
@@ -1268,6 +1449,22 @@
       "timeout_s": 300
     },
     {
+      "gate_id": "GATE-ATTACH-SYNC-PROD",
+      "stage": "ci",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_attach_sync_prod_paths.py",
+      "covers": [
+        "C-ATTACH-SYNC-1",
+        "C-ATTACH-SYNC-2",
+        "C-ATTACH-SYNC-3",
+        "C-ATTACH-SYNC-4",
+        "C-ATTACH-SYNC-5",
+        "C-ATTACH-SYNC-6"
+      ],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
       "gate_id": "GATE-DEV-L1",
       "stage": "dev_ci",
       "runner": "ctest",
@@ -1338,8 +1535,8 @@
     }
   ],
   "hashes": {
-    "index": "f4357ccb04b91057ae460b6b8191e8b0337fa7d5fc62075b01016643d6035acb",
-    "gate_registry": "bc793d0f409d5e0918d4a866eed2ca1c1064efd37f9ae57fb3ac010e025f41d2",
+    "index": "61d74298f2228a2a12043a40d65884ad203c24c63dce881fcfdf11b3f47c00a5",
+    "gate_registry": "3b0c63a8722bf802c33dd8c3bcfaf3bcca95a0e17a3d27e365d2273cdf765e31",
     "contracts": {
       "docs/contracts/architecture/C-IX-1.v1.json": "9592b02e16d030ce614e87972830502601e7211b923af0dc1bd39a84b5456108",
       "docs/contracts/architecture/C-IX-2.v1.json": "993ddd431bbff3f18c399ed7356870236ebe0b4c6325a40914b1b416f7d68aac",
@@ -1350,6 +1547,12 @@
       "docs/contracts/integration/C-IX-4.v1.json": "67cb907d53bb522831843b484908a77b2c9777ee052ab7a237f7a88534b7cfbc",
       "docs/contracts/integration/C-IX-5.v1.json": "a281c85e45f9f35b1992c56eec6b29cd02134e03735f65f1ef00bcadf6387b6f",
       "docs/contracts/integration/C-IX-8.v1.json": "8b035d9005ffa8623e7ff79d5ec055fd9f6aead8f7bc0bd0487f2989d09d3fe2",
+      "docs/contracts/attach/C-ATTACH-SYNC-1.v1.json": "1b055fc26a76e283f72a7ba1b44b8375398dcefe6b194f398e8bb3e2964a1fd8",
+      "docs/contracts/attach/C-ATTACH-SYNC-2.v1.json": "fe54b2cbf3eee04bf384ef9c24df73fe8c50cc47ee73c3591efb9467d93134e4",
+      "docs/contracts/attach/C-ATTACH-SYNC-3.v1.json": "af41b9aaecc284c1b99a2f3925ab492e2e6d1e0c3d7609ebe0f644cd5e848668",
+      "docs/contracts/attach/C-ATTACH-SYNC-4.v1.json": "e926cecc64c03a906e1414d087cbadce9898f495d905a4a73c42be4ac12dcc09",
+      "docs/contracts/attach/C-ATTACH-SYNC-5.v1.json": "49aa5f0f06c25c3bd02f4867f157783cb40ebf985173f59b041b07d1684fac96",
+      "docs/contracts/attach/C-ATTACH-SYNC-6.v1.json": "37b762f89df41fed36d6a1a06c53f00252907cf6c20b76c80ad57b290e4eb1b3",
       "docs/contracts/style/C-ST-1.v1.json": "82495b17d1e16f381ebfd064e54f6f05b4ae1bf62174cf3a8fb4fdafc4bf3bd1",
       "docs/contracts/style/C-ST-11.v1.json": "dbf50e67f5fc53bb3fd189780b6eeff975731f0b3909b744e8acfce7f40889e0",
       "docs/contracts/style/C-ST-13.v1.json": "7712ef9bc736d9f320c49e4005a44bc5fb4e4c493eae8bc5efd63689d19f5925",

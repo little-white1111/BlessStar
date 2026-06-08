@@ -4,6 +4,7 @@
 #include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_session.h"
 #include "bs/adapter/parser/json_lexer.h"
+#include "bs/adapter/persistence/attach_store.h"
 
 #include <chrono>
 #include <condition_variable>
@@ -206,6 +207,17 @@ void bs_adapter_attach_session_bump_revision(AttachContext* ctx, const char* pat
     st->rev_cv.notify_all();
 }
 
+void bs_adapter_attach_session_set_path_revision(AttachContext* ctx, const char* path,
+                                                 uint64_t revision)
+{
+    auto* st = session_of(ctx);
+    if (!st || !path)
+        return;
+    std::lock_guard<std::mutex> lock(st->rev_mu);
+    st->path_revision[path] = revision;
+    st->rev_cv.notify_all();
+}
+
 int bs_adapter_attach_session_in_write_window(AttachContext* ctx)
 {
     auto* st = session_of(ctx);
@@ -244,6 +256,41 @@ static int snapshot_bytes(AttachContext* ctx, const char* config_path, size_t* t
     return 0;
 }
 
+static int manifest_revision_for_read(AttachContext* ctx, const char* config_path,
+                                      uint64_t* manifest_rev_out)
+{
+    if (!manifest_rev_out)
+        return -1;
+    *manifest_rev_out = 0;
+    if (!ctx || !config_path)
+        return -1;
+
+    BsAttachStore* store = bs_adapter_attach_ctx_persist_store(ctx);
+    if (!store)
+        return 0;
+
+    const int reload_rc = bs_adapter_attach_persist_store_reload_manifest(store);
+    if (reload_rc != BS_ATTACH_OK)
+        return reload_rc;
+    return bs_adapter_attach_persist_store_get_revision(store, config_path, manifest_rev_out);
+}
+
+static int check_reader_revision_fresh(AttachContext* ctx, const char* config_path,
+                                       uint64_t* session_rev_out)
+{
+    if (!session_rev_out)
+        return -1;
+    *session_rev_out = bs_adapter_attach_session_path_revision(ctx, config_path);
+
+    uint64_t manifest_rev = 0;
+    const int manifest_rc = manifest_revision_for_read(ctx, config_path, &manifest_rev);
+    if (manifest_rc != 0)
+        return manifest_rc;
+    if (bs_adapter_attach_ctx_persist_store(ctx) && manifest_rev != *session_rev_out)
+        return BS_ATTACH_ERR_REVISION_STALE;
+    return 0;
+}
+
 int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* config_path,
                                                BsAttachSnapshotMeta* out)
 {
@@ -262,10 +309,15 @@ int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* c
     const int rc = snapshot_bytes(ctx, config_path, &total, &blob);
     if (rc == 0)
     {
+        uint64_t session_rev = 0;
+        const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &session_rev);
+        if (fresh_rc != 0)
+        {
+            bs_adapter_attach_session_read_unlock(ctx);
+            return fresh_rc;
+        }
         out->total_size = total;
-        out->revision   = bs_adapter_attach_session_path_revision(ctx, config_path);
-        if (out->revision == 0 && total > 0)
-            out->revision = 1;
+        out->revision   = session_rev;
     }
     bs_adapter_attach_session_read_unlock(ctx);
     return rc;
@@ -287,9 +339,14 @@ int bs_adapter_attach_config_get_snapshot_copy(AttachContext* ctx, const char* c
     int rc = snapshot_bytes(ctx, config_path, &total, &blob);
     if (rc == 0)
     {
-        *revision_out = bs_adapter_attach_session_path_revision(ctx, config_path);
-        if (*revision_out == 0 && total > 0)
-            *revision_out = 1;
+        uint64_t session_rev = 0;
+        const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &session_rev);
+        if (fresh_rc != 0)
+        {
+            bs_adapter_attach_session_read_unlock(ctx);
+            return fresh_rc;
+        }
+        *revision_out = session_rev;
         if (total > BS_JSON_MAX_INPUT_BYTES)
             rc = BS_ATTACH_CONC_ERR_TOO_LARGE;
         else if (total > buf_cap)
@@ -324,9 +381,13 @@ int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* 
         return rc;
     }
 
-    uint64_t rev = bs_adapter_attach_session_path_revision(ctx, config_path);
-    if (rev == 0 && total > 0)
-        rev = 1;
+    uint64_t rev = 0;
+    const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &rev);
+    if (fresh_rc != 0)
+    {
+        bs_adapter_attach_session_read_unlock(ctx);
+        return fresh_rc;
+    }
 
     bs_adapter_attach_session_read_unlock(ctx);
 
@@ -369,7 +430,13 @@ int bs_adapter_attach_config_read_snapshot_chunk(AttachContext* ctx, int handle,
     }
 
     const SnapshotReadHandle& h   = st->handles[handle];
-    const uint64_t            cur = bs_adapter_attach_session_path_revision(ctx, h.path.c_str());
+    uint64_t                  cur = 0;
+    const int fresh_rc = check_reader_revision_fresh(ctx, h.path.c_str(), &cur);
+    if (fresh_rc != 0)
+    {
+        bs_adapter_attach_session_read_unlock(ctx);
+        return fresh_rc;
+    }
     if (cur != h.revision)
     {
         bs_adapter_attach_session_read_unlock(ctx);

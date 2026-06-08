@@ -7,6 +7,14 @@
 #include <cstdlib>
 #include <cstring>
 
+/** RES-IX-17 / T-RS.3: reload session modeling (iter counts runs, not destroys). */
+enum BsDay19ReloadSessionPolicy
+{
+    BS_DAY19_RS_ONE_SHOT          = 0,
+    BS_DAY19_RS_REUSE_CONTROLLER  = 1,
+    BS_DAY19_RS_BATCH_NIGHT       = 2
+};
+
 struct BsDay19Profile
 {
     const char* name                      = "ci";
@@ -28,7 +36,34 @@ struct BsDay19Profile
     int    min_fail_gate           = 0;
     int    min_fail_read           = 0;
     int    disk_budget_mb          = 2048;
+    BsDay19ReloadSessionPolicy reload_session_policy_day =
+        BS_DAY19_RS_REUSE_CONTROLLER;
+    BsDay19ReloadSessionPolicy reload_session_policy_night = BS_DAY19_RS_BATCH_NIGHT;
 };
+
+inline BsDay19ReloadSessionPolicy bs_day19_reload_policy_from_env(const char* phase)
+{
+    const char* env = std::getenv("BS_DAY19_RELOAD_POLICY");
+    if (!env || env[0] == '\0')
+        return BS_DAY19_RS_REUSE_CONTROLLER;
+    if (std::strcmp(env, "one_shot") == 0)
+        return BS_DAY19_RS_ONE_SHOT;
+    if (std::strcmp(env, "reuse") == 0)
+        return BS_DAY19_RS_REUSE_CONTROLLER;
+    if (std::strcmp(env, "batch") == 0 && phase && std::strcmp(phase, "night") == 0)
+        return BS_DAY19_RS_BATCH_NIGHT;
+    return BS_DAY19_RS_REUSE_CONTROLLER;
+}
+
+inline void bs_day19_profile_apply_reload_policy_env(BsDay19Profile* profile)
+{
+    if (!profile)
+        return;
+    const BsDay19ReloadSessionPolicy day =
+        bs_day19_reload_policy_from_env("day");
+    if (std::getenv("BS_DAY19_RELOAD_POLICY") != nullptr)
+        profile->reload_session_policy_day = day;
+}
 
 inline BsDay19Profile bs_day19_profile_ci()
 {
@@ -52,6 +87,8 @@ inline BsDay19Profile bs_day19_profile_smoke()
 {
     BsDay19Profile p{};
     p.name                      = "smoke";
+    /* P1 exit: loop breaks only when elapsed>=duration_sec_max AND day>=min_day_reloads AND
+     * night>=min_night_batches (wall clock may exceed duration_sec_max). */
     p.duration_sec_max          = 900;
     p.day_wall_fraction         = 0.7;
     p.min_day_reloads           = 1500;
@@ -153,5 +190,7 @@ inline BsDay19Profile bs_day19_profile_from_argv_env(int argc, char** argv)
         if (std::strncmp(arg, prefix, sizeof(prefix) - 1) == 0)
             name = arg + sizeof(prefix) - 1;
     }
-    return bs_day19_profile_from_name(name);
+    BsDay19Profile profile = bs_day19_profile_from_name(name);
+    bs_day19_profile_apply_reload_policy_env(&profile);
+    return profile;
 }

@@ -128,6 +128,12 @@ static int hydrate_uri(const char* uri, uint64_t, void* user_ctx)
         h->rc = sync_rc;
         return sync_rc;
     }
+    const int post_rc = bs_adapter_attach_post_config_sync(h->ctx, uri, h->store);
+    if (post_rc != 0)
+    {
+        h->rc = post_rc;
+        return post_rc;
+    }
     return BS_ATTACH_OK;
 }
 

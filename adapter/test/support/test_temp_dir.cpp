@@ -1,21 +1,31 @@
 #include <chrono>
 #include <cstdint>
 
+#include <atomic>
 #include <fstream>
-#include <random>
 #include <sstream>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "test_temp_dir.h"
 
 fs::path bs_test_unique_temp_dir(const char* prefix)
 {
-    // clang-format off
+    static std::atomic<uint32_t> counter{0};
     const auto now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now().time_since_epoch()).count();
-    const uint32_t salt = std::random_device{}();
-    // clang-format on
+#ifdef _WIN32
+    const uint32_t pid = static_cast<uint32_t>(GetCurrentProcessId());
+#else
+    const uint32_t pid = static_cast<uint32_t>(getpid());
+#endif
+    const uint32_t salt = counter.fetch_add(1, std::memory_order_relaxed);
     std::ostringstream dir_name;
-    dir_name << prefix << '_' << now_ns << '_' << salt;
+    dir_name << prefix << '_' << pid << '_' << now_ns << '_' << salt;
     const fs::path  tmp = fs::temp_directory_path() / dir_name.str();
     std::error_code ec;
     fs::remove_all(tmp, ec);

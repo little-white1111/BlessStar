@@ -56,8 +56,9 @@ struct ReloadBatchController
     std::string    manifest_path;
     size_t         session_memory_cap = BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT;
     size_t         session_bytes_used = 0;
-    BsAttachStore* attach_store       = nullptr;
-    AttachContext* attach_ctx         = nullptr;
+    BsAttachStore* attach_store = nullptr;
+    AttachContext* attach_ctx   = nullptr;
+    int store_owned = 0; /* 1 if controller opened store (no ctx persist_store) */
 };
 
 #if defined(BS_TESTING)
@@ -128,20 +129,55 @@ ReloadBatchController* bs_adapter_attach_reload_batch_create(unsigned max_inflig
     return c;
 }
 
+static void release_path_work_ir(PathWork* w)
+{
+    if (!w)
+        return;
+    if (w->gated_ir)
+    {
+        bs_ir_instruction_list_destroy(w->gated_ir);
+        w->gated_ir = nullptr;
+    }
+    w->staged_payload.clear();
+    w->ir_snapshot_handle = 0;
+    w->state              = BS_ORCH_PENDING;
+    w->base_revision      = 0;
+}
+
+void bs_adapter_attach_reload_batch_reset(ReloadBatchController* ctrl)
+{
+    if (!ctrl)
+        return;
+
+    AttachContext* actx = resolve_attach_ctx(ctrl);
+    if (actx && bs_adapter_attach_session_in_write_window(actx))
+        bs_adapter_attach_session_end_write_window(actx);
+
+    if (ctrl->attach_store && ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH)
+        bs_adapter_attach_persist_store_batch_abort(ctrl->attach_store);
+
+    for (auto& w : ctrl->paths)
+        release_path_work_ir(&w);
+    ctrl->paths.clear();
+    ctrl->uri_index.clear();
+    ctrl->session_bytes_used = 0;
+    ctrl->outcome            = BATCH_ALL_OK;
+
+    if (actx)
+        bs_adapter_attach_ir_snapshot_clear_all(actx);
+}
+
 void bs_adapter_attach_reload_batch_destroy(ReloadBatchController* ctrl)
 {
     if (!ctrl)
         return;
-    for (auto& w : ctrl->paths)
-    {
-        if (w.gated_ir)
-        {
-            bs_ir_instruction_list_destroy(w.gated_ir);
-            w.gated_ir = nullptr;
-        }
-    }
-    bs_adapter_attach_persist_store_close(ctrl->attach_store);
+
+    bs_adapter_attach_reload_batch_reset(ctrl);
+
+    if (ctrl->store_owned)
+        bs_adapter_attach_persist_store_close(ctrl->attach_store);
     ctrl->attach_store = nullptr;
+    ctrl->store_owned  = 0;
     delete ctrl;
 }
 
@@ -318,6 +354,15 @@ static int exec_path_ir(AttachContext* actx, PathWork* w, ReloadBatchController*
         report_audit_failure(ctrl, w->uri.c_str(), "ir_execute", exec_rc, "exec rejected");
         return exec_rc;
     }
+    if (bs_adapter_attach_ir_snapshot_remove(actx, w->ir_snapshot_handle) != 0)
+    {
+        w->state      = BS_ORCH_EXEC_REJECTED;
+        ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
+        report_audit_failure(ctrl, w->uri.c_str(), "ir_snapshot", -1,
+                             "snapshot remove failed");
+        return -1;
+    }
+    w->ir_snapshot_handle = 0;
     w->state = BS_ORCH_STAGED;
     return 0;
 }
@@ -367,16 +412,39 @@ static void report_audit_failure(ReloadBatchController* ctrl, const char* uri, c
 
 static int ensure_attach_store(ReloadBatchController* ctrl)
 {
-    if (ctrl->attach_store)
-        return 0;
-    const char* path   = ctrl->manifest_path.empty() ? nullptr : ctrl->manifest_path.c_str();
+    if (!ctrl || ctrl->attach_store)
+        return ctrl && ctrl->attach_store ? 0 : -1;
+
+    AttachContext* actx = resolve_attach_ctx(ctrl);
+    if (actx)
+    {
+        BsAttachStore* ctx_store = bs_adapter_attach_ctx_persist_store(actx);
+        if (!ctx_store && !ctrl->manifest_path.empty())
+        {
+            if (bs_adapter_attach_ctx_open_persist_store(actx, ctrl->manifest_path.c_str()) != 0)
+                return -1;
+            ctx_store = bs_adapter_attach_ctx_persist_store(actx);
+        }
+        if (ctx_store)
+        {
+            ctrl->attach_store = ctx_store;
+            return 0;
+        }
+    }
+
+    const char* path = ctrl->manifest_path.empty() ? nullptr : ctrl->manifest_path.c_str();
     ctrl->attach_store = bs_adapter_attach_persist_store_open(path);
-    return ctrl->attach_store ? 0 : -1;
+    if (!ctrl->attach_store)
+        return -1;
+    ctrl->store_owned = 1;
+    return 0;
 }
 
 static int load_session_revisions(ReloadBatchController* ctrl)
 {
     if (ensure_attach_store(ctrl) != 0)
+        return -1;
+    if (bs_adapter_attach_persist_store_reload_manifest(ctrl->attach_store) != BS_ATTACH_OK)
         return -1;
     for (auto& w : ctrl->paths)
     {
@@ -443,6 +511,15 @@ static int persist_per_path(ReloadBatchController* ctrl, PathWork* w, const IoRe
             report_audit_failure(ctrl, w->uri.c_str(), "config_sync", sync_rc,
                                  "config manager sync failed");
             return sync_rc;
+        }
+        const int post_rc =
+            bs_adapter_attach_post_config_sync(actx, w->uri.c_str(), ctrl->attach_store);
+        if (post_rc != 0)
+        {
+            w->state = BS_ORCH_PERSIST_REJECTED;
+            report_audit_failure(ctrl, w->uri.c_str(), "config_sync", post_rc,
+                                 "post config sync failed");
+            return post_rc;
         }
     }
     return BS_ATTACH_OK;
@@ -746,6 +823,18 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
                                 batch_had_failure = true;
                                 report_audit_failure(ctrl, w.uri.c_str(), "config_sync", sync_rc,
                                                      "config manager sync failed");
+                                gc_path_work(&w);
+                                continue;
+                            }
+                            const int post_rc = bs_adapter_attach_post_config_sync(
+                                actx, w.uri.c_str(), ctrl->attach_store);
+                            if (post_rc != 0)
+                            {
+                                w.state           = BS_ORCH_PERSIST_REJECTED;
+                                ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
+                                batch_had_failure = true;
+                                report_audit_failure(ctrl, w.uri.c_str(), "config_sync", post_rc,
+                                                     "post config sync failed");
                                 gc_path_work(&w);
                                 continue;
                             }

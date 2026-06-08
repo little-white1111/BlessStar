@@ -22,6 +22,7 @@
 #include "bs/adapter/attach_context.h"
 
 struct Pipeline;
+struct BsAttachStore;
 
 struct AttachContext
 {
@@ -39,6 +40,7 @@ struct AttachContext
     BsKernelPool*   kernel_pool;
     int             kernel_pool_warmed;
     void*           ir_snapshot_store; /* IrSnapshotStore (attach_ir_snapshot.cpp) */
+    BsAttachStore*  persist_store;     /* RES-IX-17: L1 attach persistence (reload borrow) */
 };
 
 int  bs_adapter_attach_ctx_init_config_manager(AttachContext* ctx);

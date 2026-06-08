@@ -713,6 +713,30 @@ set_tests_properties(bs_test_attach_p2_shortcoming_regression
                    RESOURCE_LOCK "attach_integration"
 )
 
+blessstar_add_unit_test(bs_test_attach_day19_shortcoming_regression
+  SOURCES adapter/test/AttachDay19ShortcomingRegressionTest.cpp
+  LIBS
+    bs_adapter_attach
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_runtime
+    bs_kernel_common
+    bs_kernel_test_support
+)
+target_include_directories(bs_test_attach_day19_shortcoming_regression
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_day19_shortcoming_regression PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_day19_shortcoming_regression
+  PROPERTIES LABELS "unit;arch_gap;day19;attach;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+set_tests_properties(bs_test_attach_p2_shortcoming_regression
+  PROPERTIES DEPENDS bs_test_attach_day19_shortcoming_regression
+)
+
 blessstar_add_unit_test(bs_test_attach_recover_cold
   SOURCES adapter/test/AttachRecoverColdTest.cpp
   LIBS
@@ -767,6 +791,83 @@ target_include_directories(bs_test_attach_recover_sidecar
 target_compile_definitions(bs_test_attach_recover_sidecar PRIVATE BS_TESTING)
 set_tests_properties(bs_test_attach_recover_sidecar
   PROPERTIES LABELS "unit;recover;arch_gap;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+
+blessstar_add_unit_test(bs_test_attach_recover_concurrency
+  SOURCES adapter/test/AttachRecoverConcurrencyTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_attach_recover_concurrency
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_recover_concurrency PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_recover_concurrency
+  PROPERTIES LABELS "unit;recover;arch_gap;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+
+blessstar_add_unit_test(bs_test_attach_dual_truth_sync
+  SOURCES adapter/test/AttachDualTruthSyncTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_attach_dual_truth_sync
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_dual_truth_sync PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_dual_truth_sync
+  PROPERTIES LABELS "unit;arch_gap;runtime;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+
+blessstar_add_unit_test(bs_test_attach_wire_full_chain_integration
+  SOURCES adapter/test/AttachWireFullChainIntegrationTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_attach_wire_full_chain_integration
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_wire_full_chain_integration PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_wire_full_chain_integration
+  PROPERTIES LABELS "unit;wire;integration;arch_gap;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+
+blessstar_add_unit_test(bs_test_attach_notify_flush
+  SOURCES adapter/test/AttachNotifyFlushTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+    bs_kernel_state
+)
+target_include_directories(bs_test_attach_notify_flush
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_notify_flush PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_notify_flush
+  PROPERTIES LABELS "unit;arch_gap;day20;attach;regression" TIMEOUT 300
                    RESOURCE_LOCK "attach_integration"
 )
 
@@ -851,6 +952,14 @@ if(Python3_FOUND)
   )
   set_tests_properties(bs_test_day17_vendor_config_boundary_check
     PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
+  )
+
+  add_test(
+    NAME bs_test_attach_sync_prod_paths_check
+    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_attach_sync_prod_paths.py"
+  )
+  set_tests_properties(bs_test_attach_sync_prod_paths_check
+    PROPERTIES LABELS "unit;docs;arch_gap;regression" TIMEOUT 60
   )
 
   add_test(

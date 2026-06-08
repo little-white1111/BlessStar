@@ -5,6 +5,7 @@
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_session.h"
+#include "bs/adapter/persistence/attach_store.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -62,6 +63,16 @@ int bs_adapter_attach_config_has_manager(AttachContext* ctx)
     return (ctx && bs_adapter_attach_ctx_config_manager(ctx)) ? 1 : 0;
 }
 
+int bs_adapter_attach_config_subscribe_state_watch(AttachContext* ctx, const char* config_path,
+                                                   BsAttachConfigWatchCallback callback,
+                                                   void* user_data)
+{
+    ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
+    if (!cm || !config_path || !callback)
+        return -1;
+    return bs_config_manager_subscribe_state_change(cm, config_path, callback, user_data);
+}
+
 int bs_adapter_attach_config_sync_path(AttachContext* ctx, const char* config_path,
                                        const void* data, size_t data_size)
 {
@@ -103,12 +114,25 @@ int bs_adapter_attach_config_sync_path(AttachContext* ctx, const char* config_pa
     else
         rc = bs_config_manager_reload_config(cm, config_path, data, data_size);
 
-    if (rc == 0)
-        bs_adapter_attach_session_bump_revision(ctx, config_path);
-
     if (owned_write_lock)
         bs_adapter_attach_session_write_unlock(ctx);
     return rc;
+}
+
+int bs_adapter_attach_post_config_sync(AttachContext* ctx, const char* config_path,
+                                       BsAttachStore* store)
+{
+    if (!ctx || !config_path || !store)
+        return -1;
+
+    uint64_t manifest_rev = 0;
+    const int rev_rc =
+        bs_adapter_attach_persist_store_get_revision(store, config_path, &manifest_rev);
+    if (rev_rc != BS_ATTACH_OK)
+        return rev_rc;
+
+    bs_adapter_attach_session_set_path_revision(ctx, config_path, manifest_rev);
+    return bs_adapter_attach_kernel_reset_all_pipelines(ctx);
 }
 
 int bs_adapter_attach_config_checkpoint_path(AttachContext* ctx, const char* config_path,

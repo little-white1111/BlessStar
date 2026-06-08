@@ -43,6 +43,9 @@ extern "C"
     /** Clear all unpinned snapshots (REC-A'-7 exec rollback). */
     void bs_adapter_attach_ir_snapshot_clear_all(AttachContext* ctx);
 
+    /** Destroy one unpinned snapshot after successful exec consume (REC-G03-3b). */
+    int bs_adapter_attach_ir_snapshot_remove(AttachContext* ctx, BsAttachIrSnapshotHandle handle);
+
     /** Entry count for recover/arch_gap tests. */
     size_t bs_adapter_attach_ir_snapshot_entry_count(AttachContext* ctx);
 

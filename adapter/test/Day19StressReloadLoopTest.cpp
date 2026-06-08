@@ -6,6 +6,7 @@
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/orchestration/reload_batch_controller.h"
 #include "bs/adapter/orchestration/reload_with_report.h"
+#include "bs/adapter/persistence/attach_store.h"
 
 #include <chrono>
 #include <cstdio>
@@ -125,8 +126,31 @@ int main(int argc, char** argv)
                         write_path_pool(work, profile.path_pool_size, fixture_bytes, &uris) == 0);
     }
 
-    const fs::path                manifest_path = work / "manifest.bs";
+    const fs::path manifest_path = work / "manifest.bs";
+    BS_TEST_REQUIRE("ctx-store-open",
+                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
+                                                             manifest_path.string().c_str()) == 0);
+    BsAttachStore* stress_store = bs_adapter_attach_ctx_persist_store(fix.ctx);
+    BS_TEST_REQUIRE("stress-store", stress_store != nullptr);
+    /* P2 harness: XIX-MEM smoke/full measure RSS, not manifest fsync ATOM (day14 covers fsync). */
+    if (day19_profile_prefers_inline_kernel_exec(profile))
+        bs_adapter_attach_persist_store_set_fsync_policy(stress_store, BS_ATTACH_FSYNC_NEVER);
     std::vector<BsDay19RssSample> samples;
+
+    const bool day_reuse =
+        profile.reload_session_policy_day == BS_DAY19_RS_REUSE_CONTROLLER;
+    ReloadBatchController* day_ctrl = nullptr;
+    if (day_reuse)
+    {
+        day_ctrl = bs_adapter_attach_reload_batch_create(16);
+        BS_TEST_REQUIRE("day-ctrl-reuse", day_ctrl != nullptr);
+        bs_adapter_attach_reload_batch_set_attach_ctx(day_ctrl, fix.ctx);
+        bs_adapter_attach_reload_batch_set_read_fn(day_ctrl, facade_read_fn, &fix);
+        bs_adapter_attach_reload_batch_set_default_gate(day_ctrl);
+        bs_adapter_attach_reload_batch_set_attach_scheme(day_ctrl, BS_ATTACH_SCHEME_PER_PATH);
+        bs_adapter_attach_reload_batch_set_manifest_path(day_ctrl,
+                                                         manifest_path.string().c_str());
+    }
 
     const auto t0          = std::chrono::steady_clock::now();
     auto       last_sample = t0;
@@ -175,13 +199,22 @@ int main(int argc, char** argv)
 
         if (day_phase)
         {
-            ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(16);
-            BS_TEST_REQUIRE("day-ctrl", ctrl != nullptr);
-            bs_adapter_attach_reload_batch_set_attach_ctx(ctrl, fix.ctx);
-            bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
-            bs_adapter_attach_reload_batch_set_default_gate(ctrl);
-            bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
-            bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
+            ReloadBatchController* ctrl = day_ctrl;
+            if (!day_reuse)
+            {
+                ctrl = bs_adapter_attach_reload_batch_create(16);
+                BS_TEST_REQUIRE("day-ctrl", ctrl != nullptr);
+                bs_adapter_attach_reload_batch_set_attach_ctx(ctrl, fix.ctx);
+                bs_adapter_attach_reload_batch_set_read_fn(ctrl, facade_read_fn, &fix);
+                bs_adapter_attach_reload_batch_set_default_gate(ctrl);
+                bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
+                bs_adapter_attach_reload_batch_set_manifest_path(ctrl,
+                                                                 manifest_path.string().c_str());
+            }
+            else
+            {
+                bs_adapter_attach_reload_batch_reset(ctrl);
+            }
 
             const size_t          idx = static_cast<size_t>(path_i % uris.size());
             const std::string&    uri = uris[idx];
@@ -216,7 +249,8 @@ int main(int argc, char** argv)
                              elapsed, day_total, profile.min_day_reloads, night_total,
                              profile.min_night_batches);
             }
-            bs_adapter_attach_reload_batch_destroy(ctrl);
+            if (!day_reuse)
+                bs_adapter_attach_reload_batch_destroy(ctrl);
             continue;
         }
         if (need_night)
@@ -474,6 +508,9 @@ int main(int argc, char** argv)
             std::fclose(jf);
         }
     }
+
+    if (day_ctrl)
+        bs_adapter_attach_reload_batch_destroy(day_ctrl);
 
     bs_test_attach_teardown(&fix);
 

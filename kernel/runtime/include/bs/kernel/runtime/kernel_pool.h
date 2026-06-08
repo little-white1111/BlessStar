@@ -61,8 +61,13 @@ extern "C"
     BsKernelPool* bs_kernel_pool_create(const BsKernelPoolConfig* config);
     int           bs_kernel_pool_warmup(BsKernelPool* pool);
     int  bs_kernel_pool_submit(BsKernelPool* pool, const IRInstruction* ir, Report** out_report);
+    int  bs_kernel_pool_reset_all_pipelines(BsKernelPool* pool);
     int  bs_kernel_pool_get_stats(BsKernelPool* pool, BsKernelPoolStats* out_stats);
     void bs_kernel_pool_destroy(BsKernelPool* pool);
+
+#if defined(BS_TESTING)
+    uint32_t bs_kernel_pool_testing_count_non_idle_stages(BsKernelPool* pool);
+#endif
 
 #ifdef __cplusplus
 }

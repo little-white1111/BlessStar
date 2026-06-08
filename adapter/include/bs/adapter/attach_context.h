@@ -12,6 +12,8 @@
  *   exec_* / reload_* / persist_* - see docs/BLESSSTAR_NAMING_CONTRACT.md.
  */
 
+#include "bs/adapter/persistence/attach_store.h"
+
 #include "bs/kernel/common/bs_log.h"
 #include "bs/kernel/registry/registry_facade.h"
 
@@ -64,13 +66,25 @@ extern "C"
     /** 1 if KernelPool warmup completed on ctx (day21 A''' reload exec gate). */
     int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx);
 
+    /** REC-G03-3a: reset default Kernel and all KernelPool slot pipelines after config_sync. */
+    int bs_adapter_attach_kernel_reset_all_pipelines(AttachContext* ctx);
+
 #if defined(BS_TESTING)
     /** Day19 smoke/full: inline Kernel exec for 100KB fixtures (pool path too slow for GHA). */
     void bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(AttachContext* ctx);
+
+    /** AG-KERNEL-RESET-1: non-idle stages across default + pool pipelines. */
+    unsigned bs_adapter_attach_kernel_testing_count_non_idle_stages(AttachContext* ctx);
 #endif
 
     /** REC-A'-14: destroy any old KernelPool, recreate it, and warm it before cold recover. */
     int bs_adapter_attach_ctx_rebuild_kernel_pool(AttachContext* ctx);
+
+    /** RES-IX-17: ctx-owned persist store (destroy(ctrl) does not close). */
+    BsAttachStore* bs_adapter_attach_ctx_persist_store(AttachContext* ctx);
+    int            bs_adapter_attach_ctx_open_persist_store(AttachContext* ctx,
+                                                            const char*    manifest_path);
+    void           bs_adapter_attach_ctx_close_persist_store(AttachContext* ctx);
 
     void bs_adapter_attach_ensure_active_ctx(void);
 

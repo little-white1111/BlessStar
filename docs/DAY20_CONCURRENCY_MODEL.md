@@ -25,7 +25,16 @@
 
 ## revision 对齐
 
-- 进程内 `path_revision` 在每次成功 `sync_path` 后递增，与 persist store revision **独立**；冲突语义见 **RES-IX-12**，不与 attach 域 `REVISION_CHANGED` 自动重试混用。
+- REC-G-03 后，产品 reload / recover 路径在每次成功 `config_sync` 后执行 post-sync：`path_revision` 直接写为 manifest revision，不再使用本地 `bump++` 作为产品真相。
+- 读 API 会在存在 ctx-owned persist store 时刷新 manifest 并比较 `manifest_rev` 与 `path_revision`；不一致返回 `BS_ATTACH_ERR_REVISION_STALE`，不触发 lazy reload。
+- 测试仍可直接调用 `config_sync` 而不 commit；该路径不代表产品写配置。
+
+## Notify 弱一致与 flush
+
+- Notify 仍是弱一致观察通道，真相以 StateBus + revision 为准；允许 listener 业务副作用滞后，但禁止 revision 回退。
+- 最外层 `end_write_window` 负责完成边界：先 `drain_deferred_events`，再 `notify_queue_flush`；`reload_batch_run` 成功返回前必须清空写窗口内积压的 EventBus 事件和 phase-2 watch 队列。
+- `attach_watch` 属于 persist 侧单次 publish 同步完成，不纳入 ConfigManager 写窗口 flush 的统一完成点。
+- REC-G-03 不新增 notify QPS limiter，也不把 listener 业务副作用完成作为 MVP 闭合条件。
 
 ## 废弃 API（T20.3）
 

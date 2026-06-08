@@ -9,9 +9,11 @@
  */
 
 #include "bs/kernel/state/ConfigState.h"
+#include "bs/kernel/state/ConfigEvent.h"
 #include "bs/kernel/state/EventBus.h"
 
 #include "bs/adapter/attach_context.h"
+#include "bs/adapter/persistence/attach_store.h"
 
 #include <stddef.h>
 
@@ -45,12 +47,23 @@ extern "C"
     /** Returns 1 if ctx has a ConfigManager (reload CM sync enabled). */
     int bs_adapter_attach_config_has_manager(AttachContext* ctx);
 
+    /** Subscribe to ConfigManager state-watch (adapter facade; tests avoid direct ConfigManager.h). */
+    typedef void (*BsAttachConfigWatchCallback)(const char* path, ConfigEventType type,
+                                                const void* snapshot, void* user_data);
+    int bs_adapter_attach_config_subscribe_state_watch(AttachContext* ctx, const char* config_path,
+                                                       BsAttachConfigWatchCallback callback,
+                                                       void* user_data);
+
     /**
      * Route bytes to load_config / reload_config / hot_update from current ConfigState (B-01/B-02).
      * INITIAL|CLOSED|not-found -> load; ACTIVE -> hot_update; LOADING|UPDATING|ERROR -> reload.
      */
     int bs_adapter_attach_config_sync_path(AttachContext* ctx, const char* config_path,
                                            const void* data, size_t data_size);
+
+    /** Bind session revision to manifest revision and reset runtime pipelines after sync. */
+    int bs_adapter_attach_post_config_sync(AttachContext* ctx, const char* config_path,
+                                           BsAttachStore* store);
 
     /** After registry freeze: publish attach-frozen config into ConfigManager. */
     int bs_adapter_attach_notify_registry_frozen(AttachContext* ctx);

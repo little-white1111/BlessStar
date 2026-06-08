@@ -56,6 +56,9 @@ extern "C"
     int bs_adapter_attach_persist_store_get_revision(const BsAttachStore* store, const char* uri,
                                                      uint64_t* rev_out);
 
+    /** Reload manifest state from disk before revision-sensitive reads. */
+    int bs_adapter_attach_persist_store_reload_manifest(BsAttachStore* store);
+
     /** Canonical path from manifest (RES-IX-8 uri->path); empty if unknown. */
     int bs_adapter_attach_persist_store_get_canonical_path(const BsAttachStore* store,
                                                            const char* uri, char* out_path,
@@ -99,6 +102,15 @@ extern "C"
     /** Testing only: inject malloc failures (see ZK LibCMocks pattern). */
     void bs_adapter_attach_persist_store_set_malloc_hook(BsAttachMallocFn fn);
     void bs_adapter_attach_persist_store_reset_malloc_hook(void);
+
+    /** AG-DAY19-WAL-PURGE-1: coalesced purge cursor on this store handle. */
+    uint64_t bs_adapter_attach_persist_store_testing_wal_last_purge_through(
+        const BsAttachStore* store);
+    void bs_adapter_attach_persist_store_testing_purge_wal(BsAttachStore* store);
+
+    /** AG-RS-STORE-1: count successful store_open (decremented on close). */
+    int  bs_adapter_attach_persist_store_testing_open_count(void);
+    void bs_adapter_attach_persist_store_testing_reset_open_count(void);
 #endif
 
 #ifdef __cplusplus

@@ -6,11 +6,16 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <atomic>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#if defined(BS_TESTING)
+static std::atomic<int> g_attach_store_open_count{0};
+#endif
 
 #include "attach_crc32.h"
 #include "attach_fsync.h"
@@ -38,6 +43,7 @@ struct BsAttachStore
     int                                          wal_exec_rollback_detected = 0;
     uint64_t                                     wal_exec_rollback_epoch    = 0;
     BsAttachFsyncPolicy                          fsync_policy = BS_ATTACH_FSYNC_BATCH_COMMIT;
+    uint64_t                                     wal_last_purge_through = 0;
 };
 
 static BsAttachMallocFn g_malloc_hook = nullptr;
@@ -348,6 +354,15 @@ static void open_wal(BsAttachStore* store)
     store->wal      = bs_adapter_attach_persist_wal_open(store->wal_path.c_str());
 }
 
+/* RS-CK-8 / RES-IX-17: incremental WAL purge for long-lived ctx persist_store. */
+static void purge_wal_for_store(BsAttachStore* store)
+{
+    if (!store || store->memory_only || !store->wal)
+        return;
+    (void)bs_adapter_attach_persist_wal_purge_old_segments_ex(
+        store->wal_path.c_str(), store->batch_epoch, &store->wal_last_purge_through);
+}
+
 BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path)
 {
     auto* s = static_cast<BsAttachStore*>(attach_malloc(sizeof(BsAttachStore)));
@@ -371,8 +386,11 @@ BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path)
         (void)bs_adapter_attach_persist_wal_recover_unfinished(s->wal, s->batch_epoch);
         s->wal_exec_rollback_detected =
             bs_adapter_attach_persist_wal_had_exec_rollback(s->wal, &s->wal_exec_rollback_epoch);
-        (void)bs_adapter_attach_persist_wal_purge_old_segments(s->wal_path.c_str(), s->batch_epoch);
+        purge_wal_for_store(s);
     }
+#if defined(BS_TESTING)
+    g_attach_store_open_count.fetch_add(1, std::memory_order_relaxed);
+#endif
     return s;
 }
 
@@ -380,6 +398,9 @@ void bs_adapter_attach_persist_store_close(BsAttachStore* store)
 {
     if (!store)
         return;
+#if defined(BS_TESTING)
+    g_attach_store_open_count.fetch_sub(1, std::memory_order_relaxed);
+#endif
     if (store->wal)
         bs_adapter_attach_persist_wal_close(store->wal);
     store->wal = nullptr;
@@ -400,6 +421,13 @@ int bs_adapter_attach_persist_store_get_revision(const BsAttachStore* store, con
     const auto it = store->revisions.find(uri);
     *rev_out      = (it == store->revisions.end()) ? 0 : it->second;
     return BS_ATTACH_OK;
+}
+
+int bs_adapter_attach_persist_store_reload_manifest(BsAttachStore* store)
+{
+    if (!store)
+        return BS_ATTACH_ERR_INVALID_ARG;
+    return load_manifest_file(store);
 }
 
 static int commit_one(BsAttachStore* store, const char* uri, const char* path, const void* data,
@@ -486,6 +514,7 @@ int bs_adapter_attach_persist_store_commit_per_path(BsAttachStore* store, const 
     if (rc != BS_ATTACH_OK)
         return rc;
     ++store->batch_epoch;
+    /* PER_PATH does not append WAL; purge on batch_commit + store_open only (RS-CK-8). */
     return save_manifest_file(store);
 }
 
@@ -634,6 +663,7 @@ int bs_adapter_attach_persist_store_batch_commit(BsAttachStore* store)
                                                       : BS_ATTACH_WATCH_RESULT_FAIL);
     }
 
+    purge_wal_for_store(store);
     return BS_ATTACH_OK;
 }
 
@@ -644,3 +674,26 @@ void bs_adapter_attach_persist_store_batch_abort(BsAttachStore* store)
     store->staged.clear();
     store->batch_open = false;
 }
+
+#if defined(BS_TESTING)
+uint64_t bs_adapter_attach_persist_store_testing_wal_last_purge_through(
+    const BsAttachStore* store)
+{
+    return store ? store->wal_last_purge_through : 0;
+}
+
+void bs_adapter_attach_persist_store_testing_purge_wal(BsAttachStore* store)
+{
+    purge_wal_for_store(store);
+}
+
+int bs_adapter_attach_persist_store_testing_open_count(void)
+{
+    return g_attach_store_open_count.load(std::memory_order_relaxed);
+}
+
+void bs_adapter_attach_persist_store_testing_reset_open_count(void)
+{
+    g_attach_store_open_count.store(0, std::memory_order_relaxed);
+}
+#endif

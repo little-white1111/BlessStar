@@ -128,6 +128,22 @@
       "timeout_s": 300
     },
     {
+      "gate_id": "GATE-ATTACH-SYNC-PROD",
+      "stage": "ci",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_attach_sync_prod_paths.py",
+      "covers": [
+        "C-ATTACH-SYNC-1",
+        "C-ATTACH-SYNC-2",
+        "C-ATTACH-SYNC-3",
+        "C-ATTACH-SYNC-4",
+        "C-ATTACH-SYNC-5",
+        "C-ATTACH-SYNC-6"
+      ],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
       "gate_id": "GATE-DEV-L1",
       "stage": "dev_ci",
       "runner": "ctest",

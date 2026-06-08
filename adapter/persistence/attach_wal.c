@@ -630,23 +630,10 @@ static uint64_t wal_max_committed_across_segments(const char* active_path, uint6
     return max_c;
 }
 
-int bs_adapter_attach_persist_wal_purge_old_segments(const char* active_wal_path,
-                                                     uint64_t    manifest_epoch)
+static int wal_purge_segment_epoch_range(const char* active_wal_path, uint64_t start_epoch,
+                                       uint64_t purge_through)
 {
-    if (!active_wal_path)
-        return BS_ATTACH_ERR_INVALID_ARG;
-
-    int corrupted = 0;
-    (void)wal_max_committed_across_segments(active_wal_path, manifest_epoch, &corrupted);
-    if (corrupted)
-        return BS_ATTACH_OK;
-
-    const uint64_t keep = (uint64_t)BS_ATTACH_WAL_PURGE_KEEP_EPOCHS;
-    if (manifest_epoch <= keep)
-        return BS_ATTACH_OK;
-
-    const uint64_t purge_through = manifest_epoch - keep;
-    for (uint64_t e = 1; e <= purge_through; ++e)
+    for (uint64_t e = start_epoch; e <= purge_through; ++e)
     {
         char seg[4096];
         if (wal_build_segment_path(active_wal_path, e, seg, sizeof(seg)) != BS_ATTACH_OK)
@@ -665,6 +652,42 @@ int bs_adapter_attach_persist_wal_purge_old_segments(const char* active_wal_path
     }
 
     return BS_ATTACH_OK;
+}
+
+int bs_adapter_attach_persist_wal_purge_old_segments(const char* active_wal_path,
+                                                     uint64_t    manifest_epoch)
+{
+    return bs_adapter_attach_persist_wal_purge_old_segments_ex(active_wal_path, manifest_epoch,
+                                                               NULL);
+}
+
+int bs_adapter_attach_persist_wal_purge_old_segments_ex(const char* active_wal_path,
+                                                        uint64_t    manifest_epoch,
+                                                        uint64_t*   inout_last_purged_through)
+{
+    if (!active_wal_path)
+        return BS_ATTACH_ERR_INVALID_ARG;
+
+    int corrupted = 0;
+    (void)wal_max_committed_across_segments(active_wal_path, manifest_epoch, &corrupted);
+    if (corrupted)
+        return BS_ATTACH_OK;
+
+    const uint64_t keep = (uint64_t)BS_ATTACH_WAL_PURGE_KEEP_EPOCHS;
+    if (manifest_epoch <= keep)
+        return BS_ATTACH_OK;
+
+    const uint64_t purge_through = manifest_epoch - keep;
+    uint64_t       start         = 1;
+    if (inout_last_purged_through && *inout_last_purged_through > 0)
+        start = *inout_last_purged_through + 1;
+    if (start > purge_through)
+        return BS_ATTACH_OK;
+
+    const int rc = wal_purge_segment_epoch_range(active_wal_path, start, purge_through);
+    if (rc == BS_ATTACH_OK && inout_last_purged_through)
+        *inout_last_purged_through = purge_through;
+    return rc;
 }
 
 int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t manifest_epoch)

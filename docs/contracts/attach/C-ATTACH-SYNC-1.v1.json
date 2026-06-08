@@ -1,0 +1,30 @@
+{
+  "id": "C-ATTACH-SYNC-1",
+  "type": "attach",
+  "version": "v1",
+  "priority": "attach",
+  "status": "active",
+  "scope": [
+    "adapter/test"
+  ],
+  "stage": "ci",
+  "rule": "Attach persistence tests may call persist_store_commit_per_path or batch_commit directly only inside adapter/test isolation paths; product code must not use this exception.",
+  "gate_refs": [
+    "GATE-ATTACH-SYNC-PROD"
+  ],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": [
+    "架构方案选择记录.md",
+    "docs/reports/contract-gate-report.json"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-ATTACH-SYNC-PROD",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_attach_sync_prod_paths.py",
+      "entry_kind": "script"
+    }
+  ]
+}
