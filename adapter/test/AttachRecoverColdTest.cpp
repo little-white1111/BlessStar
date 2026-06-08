@@ -69,8 +69,8 @@ static int assert_snapshot_equals(AttachContext* ctx, const std::string& uri)
     unsigned char buf[4096];
     size_t        out_size = 0;
     uint64_t      rev      = 0;
-    const int copy_rc = bs_adapter_attach_config_get_snapshot_copy(ctx, uri.c_str(), buf,
-                                                                   sizeof(buf), &out_size, &rev);
+    const int     copy_rc  = bs_adapter_attach_config_get_snapshot_copy(
+        ctx, uri.c_str(), buf, sizeof(buf), &out_size, &rev);
     if (copy_rc != 0)
         std::fprintf(stderr, "snapshot-copy rc=%d uri=%s recovering=%d\n", copy_rc, uri.c_str(),
                      bs_adapter_attach_session_is_recovering(ctx));
