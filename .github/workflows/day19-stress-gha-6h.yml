@@ -23,32 +23,7 @@ concurrency:
 
 jobs:
   gha-6h:
-    name: Day19 stress gha_6h (ubuntu ~5h50m)
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure
-        run: cmake -S . -B "${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}" -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build stress target
-        run: cmake --build "${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}" -j 2 --target bs_test_day19_stress_reload_loop
-
-      - name: Run gha_6h profile
-        env:
-          BUILD_DIR: ${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}
-          BS_DAY19_PROFILE: ${{ github.event.inputs.profile || 'gha_6h' }}
-          BS_DAY19_STRESS_OUT: docs/day19_stress_gha_6h_latest.csv
-          BS_DAY19_STRESS_JSON: docs/day19_stress_gha_6h_latest.json
-        run: bash tools/scripts/perf/run_day19_stress_gha_6h_linux.sh
-
-      - name: Upload gha_6h artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: day19-stress-gha-6h-${{ github.run_id }}
-          path: |
-            docs/day19_stress_gha_6h_latest.csv
-            docs/day19_stress_gha_6h_latest.json
-          if-no-files-found: ignore
+    uses: ./.github/workflows/day19-gha-6h-reusable.yml
+    with:
+      build_dir: ${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}
+      profile: ${{ github.event.inputs.profile || 'gha_6h' }}
