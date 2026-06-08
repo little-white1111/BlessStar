@@ -40,15 +40,29 @@ def _headers(token: str) -> dict[str, str]:
     }
 
 
-def fetch_json(url: str, token: str) -> dict:
+def fetch_json(url: str, token: str, max_retries: int = 5) -> dict:
     req = urllib.request.Request(url, headers=_headers(token))
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        print(f"[HTTP {exc.code}] {url}\n  {body[:300]}", file=sys.stderr)
-        raise
+    last_err: Exception | None = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            print(f"[HTTP {exc.code}] {url}\n  {body[:300]}", file=sys.stderr)
+            raise
+        except urllib.error.URLError as exc:
+            last_err = exc
+            if attempt >= max_retries:
+                break
+            wait_s = min(5 * attempt, 30)
+            print(
+                f"[retry {attempt}/{max_retries}] network error: {exc}; sleep {wait_s}s",
+                file=sys.stderr,
+            )
+            time.sleep(wait_s)
+    assert last_err is not None
+    raise last_err
 
 
 def list_runs(token: str, branch: str, per_page: int = 5) -> list[dict]:

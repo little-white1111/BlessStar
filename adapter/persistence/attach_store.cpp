@@ -38,8 +38,8 @@ struct BsAttachStore
     std::unordered_map<std::string, uint64_t>    revisions;
     std::unordered_map<std::string, std::string> canonical_paths;
     std::vector<StagedEntry>                     staged;
-    bool                                         batch_open   = false;
-    BsAttachWal*                                 wal          = nullptr;
+    bool                                         batch_open                 = false;
+    BsAttachWal*                                 wal                        = nullptr;
     int                                          wal_exec_rollback_detected = 0;
     uint64_t                                     wal_exec_rollback_epoch    = 0;
     BsAttachFsyncPolicy                          fsync_policy = BS_ATTACH_FSYNC_BATCH_COMMIT;
@@ -464,9 +464,8 @@ int bs_adapter_attach_persist_store_get_canonical_path(const BsAttachStore* stor
     return BS_ATTACH_OK;
 }
 
-int bs_adapter_attach_persist_store_foreach_uri(const BsAttachStore*     store,
-                                                BsAttachStoreUriVisitor visitor,
-                                                void*                   user_ctx)
+int bs_adapter_attach_persist_store_foreach_uri(const BsAttachStore*    store,
+                                                BsAttachStoreUriVisitor visitor, void* user_ctx)
 {
     if (!store || !visitor)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -492,7 +491,7 @@ int bs_adapter_attach_persist_store_append_phase_mark(BsAttachStore* store, uint
 }
 
 int bs_adapter_attach_persist_store_had_exec_rollback(const BsAttachStore* store,
-                                                      uint64_t*              epoch_out)
+                                                      uint64_t*            epoch_out)
 {
     if (!store)
         return 0;
@@ -636,8 +635,8 @@ int bs_adapter_attach_persist_store_batch_commit(BsAttachStore* store)
 
     if (!store->memory_only && store->wal)
     {
-        (void)bs_adapter_attach_persist_wal_append_phase_mark(
-            store->wal, next_epoch, BS_ATTACH_WAL_PHASE_COMMIT, 0);
+        (void)bs_adapter_attach_persist_wal_append_phase_mark(store->wal, next_epoch,
+                                                              BS_ATTACH_WAL_PHASE_COMMIT, 0);
     }
 
     store->staged.clear();
@@ -676,8 +675,7 @@ void bs_adapter_attach_persist_store_batch_abort(BsAttachStore* store)
 }
 
 #if defined(BS_TESTING)
-uint64_t bs_adapter_attach_persist_store_testing_wal_last_purge_through(
-    const BsAttachStore* store)
+uint64_t bs_adapter_attach_persist_store_testing_wal_last_purge_through(const BsAttachStore* store)
 {
     return store ? store->wal_last_purge_through : 0;
 }

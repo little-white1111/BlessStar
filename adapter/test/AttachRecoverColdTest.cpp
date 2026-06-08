@@ -19,8 +19,9 @@
 
 #if !defined(_WIN32)
 #include <signal.h>
-#include <sys/wait.h>
 #include <unistd.h>
+
+#include <sys/wait.h>
 #endif
 
 #include "support/attach_test_fixture.h"
@@ -52,13 +53,12 @@ static int write_config(const fs::path& path)
 static int prime_manifest(const fs::path& config_path, const fs::path& manifest_path,
                           std::string* uri_out)
 {
-    const std::string uri = bs_test_path_to_file_uri(config_path);
+    const std::string uri   = bs_test_path_to_file_uri(config_path);
     BsAttachStore*    store = bs_adapter_attach_persist_store_open(manifest_path.string().c_str());
     BS_TEST_REQUIRE("prime-store", store != nullptr);
-    BS_TEST_REQUIRE("prime-commit",
-                    bs_adapter_attach_persist_store_commit_per_path(
-                        store, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen,
-                        0) == BS_ATTACH_OK);
+    BS_TEST_REQUIRE("prime-commit", bs_adapter_attach_persist_store_commit_per_path(
+                                        store, uri.c_str(), kBlessStarConfigV1Golden,
+                                        kBlessStarConfigV1GoldenLen, 0) == BS_ATTACH_OK);
     bs_adapter_attach_persist_store_close(store);
     *uri_out = uri;
     return 0;
@@ -69,9 +69,8 @@ static int assert_snapshot_equals(AttachContext* ctx, const std::string& uri)
     unsigned char buf[4096];
     size_t        out_size = 0;
     uint64_t      rev      = 0;
-    const int copy_rc =
-        bs_adapter_attach_config_get_snapshot_copy(ctx, uri.c_str(), buf, sizeof(buf), &out_size,
-                                                   &rev);
+    const int copy_rc = bs_adapter_attach_config_get_snapshot_copy(ctx, uri.c_str(), buf,
+                                                                   sizeof(buf), &out_size, &rev);
     if (copy_rc != 0)
         std::fprintf(stderr, "snapshot-copy rc=%d uri=%s recovering=%d\n", copy_rc, uri.c_str(),
                      bs_adapter_attach_session_is_recovering(ctx));
@@ -91,9 +90,8 @@ static int recover_with_io(const fs::path& manifest_path, const std::string& uri
     BS_TEST_REQUIRE("recovering-flag", bs_adapter_attach_session_is_recovering(ctx) == 1);
 
     BsAttachSnapshotMeta meta{};
-    BS_TEST_REQUIRE("recovering-read",
-                    bs_adapter_attach_config_get_snapshot_meta(ctx, uri.c_str(), &meta) ==
-                        BS_ATTACH_ERR_RECOVERING);
+    BS_TEST_REQUIRE("recovering-read", bs_adapter_attach_config_get_snapshot_meta(
+                                           ctx, uri.c_str(), &meta) == BS_ATTACH_ERR_RECOVERING);
 
     BsTestAttachIoFixture fix{};
     fix.ctx = ctx;
@@ -106,13 +104,13 @@ static int recover_with_io(const fs::path& manifest_path, const std::string& uri
     BS_TEST_REQUIRE("recover-report", report != nullptr);
 
     BsAttachRecoverColdReloadOptions opts{};
-    opts.struct_size = sizeof(opts);
+    opts.struct_size               = sizeof(opts);
     const std::string manifest_str = manifest_path.string();
     opts.manifest_path             = manifest_str.c_str();
     opts.io_facade                 = fix.io;
-    opts.scheme        = BS_ATTACH_SCHEME_PER_PATH;
-    opts.max_inflight  = 4;
-    opts.report        = report;
+    opts.scheme                    = BS_ATTACH_SCHEME_PER_PATH;
+    opts.max_inflight              = 4;
+    opts.report                    = report;
 
     const int recover_rc = bs_adapter_attach_recover_cold_reload(ctx, &opts);
     if (recover_rc != 0)
@@ -130,7 +128,7 @@ static int recover_with_io(const fs::path& manifest_path, const std::string& uri
     return 0;
 }
 
-static int test_failed_cold_reload_keeps_recovering(const fs::path& manifest_path,
+static int test_failed_cold_reload_keeps_recovering(const fs::path&    manifest_path,
                                                     const std::string& uri)
 {
     AttachContext* ctx =
@@ -139,26 +137,25 @@ static int test_failed_cold_reload_keeps_recovering(const fs::path& manifest_pat
     bs_adapter_attach_ctx_set_log_bus_bound(ctx, 1);
 
     BsAttachRecoverColdReloadOptions opts{};
-    opts.struct_size = sizeof(opts);
+    opts.struct_size               = sizeof(opts);
     const std::string manifest_str = manifest_path.string();
     opts.manifest_path             = manifest_str.c_str();
     opts.read_fn                   = fail_read_fn;
-    opts.scheme        = BS_ATTACH_SCHEME_PER_PATH;
-    opts.max_inflight  = 4;
+    opts.scheme                    = BS_ATTACH_SCHEME_PER_PATH;
+    opts.max_inflight              = 4;
 
     BS_TEST_REQUIRE("fail-step2", bs_adapter_attach_recover_cold_reload(ctx, &opts) != 0);
     BS_TEST_REQUIRE("fail-still-recovering", bs_adapter_attach_session_is_recovering(ctx) == 1);
 
     BsAttachSnapshotMeta meta{};
-    BS_TEST_REQUIRE("fail-read-blocked",
-                    bs_adapter_attach_config_get_snapshot_meta(ctx, uri.c_str(), &meta) ==
-                        BS_ATTACH_ERR_RECOVERING);
+    BS_TEST_REQUIRE("fail-read-blocked", bs_adapter_attach_config_get_snapshot_meta(
+                                             ctx, uri.c_str(), &meta) == BS_ATTACH_ERR_RECOVERING);
     bs_adapter_attach_ctx_destroy(ctx);
     return 0;
 }
 
-static int prime_manifest_via_crashed_child(const fs::path& config_path, const fs::path& manifest_path,
-                                            std::string* uri_out)
+static int prime_manifest_via_crashed_child(const fs::path& config_path,
+                                            const fs::path& manifest_path, std::string* uri_out)
 {
 #if defined(_WIN32)
     return prime_manifest(config_path, manifest_path, uri_out);

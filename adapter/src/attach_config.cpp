@@ -65,7 +65,7 @@ int bs_adapter_attach_config_has_manager(AttachContext* ctx)
 
 int bs_adapter_attach_config_subscribe_state_watch(AttachContext* ctx, const char* config_path,
                                                    BsAttachConfigWatchCallback callback,
-                                                   void* user_data)
+                                                   void*                       user_data)
 {
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     if (!cm || !config_path || !callback)
@@ -125,7 +125,7 @@ int bs_adapter_attach_post_config_sync(AttachContext* ctx, const char* config_pa
     if (!ctx || !config_path || !store)
         return -1;
 
-    uint64_t manifest_rev = 0;
+    uint64_t  manifest_rev = 0;
     const int rev_rc =
         bs_adapter_attach_persist_store_get_revision(store, config_path, &manifest_rev);
     if (rev_rc != BS_ATTACH_OK)

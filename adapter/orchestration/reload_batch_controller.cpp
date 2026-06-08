@@ -8,6 +8,7 @@
 #include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_execute.h"
 #include "bs/adapter/attach_ir_snapshot.h"
+#include "bs/adapter/attach_recover_sidecar.h"
 #include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/attach_session.h"
 #include "bs/adapter/orchestration/reload_batch_controller.h"
@@ -16,7 +17,6 @@
 #include "bs/adapter/persistence/attach_audit.h"
 #include "bs/adapter/persistence/attach_store.h"
 #include "bs/adapter/persistence/attach_wal.h"
-#include "bs/adapter/attach_recover_sidecar.h"
 
 #include <cstdio>
 #include <cstring>
@@ -56,16 +56,16 @@ struct ReloadBatchController
     std::string    manifest_path;
     size_t         session_memory_cap = BS_ATTACH_SESSION_MEMORY_CAP_DEFAULT;
     size_t         session_bytes_used = 0;
-    BsAttachStore* attach_store = nullptr;
-    AttachContext* attach_ctx   = nullptr;
-    int store_owned = 0; /* 1 if controller opened store (no ctx persist_store) */
+    BsAttachStore* attach_store       = nullptr;
+    AttachContext* attach_ctx         = nullptr;
+    int            store_owned        = 0; /* 1 if controller opened store (no ctx persist_store) */
 };
 
 #if defined(BS_TESTING)
 static int g_testing_abort_after_exec = 0;
 #endif
 
-static int ensure_attach_store(ReloadBatchController* ctrl);
+static int      ensure_attach_store(ReloadBatchController* ctrl);
 static uint64_t session_batch_epoch(const ReloadBatchController* ctrl);
 
 static uint32_t uri_set_hash_for_ctrl(const ReloadBatchController* ctrl)
@@ -358,12 +358,11 @@ static int exec_path_ir(AttachContext* actx, PathWork* w, ReloadBatchController*
     {
         w->state      = BS_ORCH_EXEC_REJECTED;
         ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
-        report_audit_failure(ctrl, w->uri.c_str(), "ir_snapshot", -1,
-                             "snapshot remove failed");
+        report_audit_failure(ctrl, w->uri.c_str(), "ir_snapshot", -1, "snapshot remove failed");
         return -1;
     }
     w->ir_snapshot_handle = 0;
-    w->state = BS_ORCH_STAGED;
+    w->state              = BS_ORCH_STAGED;
     return 0;
 }
 
@@ -432,7 +431,7 @@ static int ensure_attach_store(ReloadBatchController* ctrl)
         }
     }
 
-    const char* path = ctrl->manifest_path.empty() ? nullptr : ctrl->manifest_path.c_str();
+    const char* path   = ctrl->manifest_path.empty() ? nullptr : ctrl->manifest_path.c_str();
     ctrl->attach_store = bs_adapter_attach_persist_store_open(path);
     if (!ctrl->attach_store)
         return -1;
@@ -697,9 +696,9 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
 
     if (ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH && !batch_had_failure)
     {
-        const bool has_staged = std::any_of(
-            ctrl->paths.begin(), ctrl->paths.end(),
-            [](const PathWork& w) { return w.state == BS_ORCH_STAGED; });
+        const bool has_staged =
+            std::any_of(ctrl->paths.begin(), ctrl->paths.end(),
+                        [](const PathWork& w) { return w.state == BS_ORCH_STAGED; });
         if (has_staged && write_phase_mark(ctrl, BS_ATTACH_WAL_PHASE_GATE) != BS_ATTACH_OK)
         {
             end_write_window_if_open();

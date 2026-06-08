@@ -62,8 +62,9 @@ static uint64_t dir_size_bytes(const fs::path& root)
 
 static bool day19_profile_prefers_inline_kernel_exec(const BsDay19Profile& profile)
 {
-    return std::strcmp(profile.name, "smoke") == 0 || std::strcmp(profile.name, "smoke_fail") == 0 ||
-           std::strcmp(profile.name, "full") == 0 || std::strcmp(profile.name, "gha_6h") == 0;
+    return std::strcmp(profile.name, "smoke") == 0 ||
+           std::strcmp(profile.name, "smoke_fail") == 0 || std::strcmp(profile.name, "full") == 0 ||
+           std::strcmp(profile.name, "gha_6h") == 0;
 }
 
 static void tally_failure_kind(BsDay19PathKind kind, int* fail_parse, int* fail_gate,
@@ -127,9 +128,8 @@ int main(int argc, char** argv)
     }
 
     const fs::path manifest_path = work / "manifest.bs";
-    BS_TEST_REQUIRE("ctx-store-open",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest_path.string().c_str()) == 0);
+    BS_TEST_REQUIRE("ctx-store-open", bs_adapter_attach_ctx_open_persist_store(
+                                          fix.ctx, manifest_path.string().c_str()) == 0);
     BsAttachStore* stress_store = bs_adapter_attach_ctx_persist_store(fix.ctx);
     BS_TEST_REQUIRE("stress-store", stress_store != nullptr);
     /* P2 harness: XIX-MEM smoke/full measure RSS, not manifest fsync ATOM (day14 covers fsync). */
@@ -137,8 +137,7 @@ int main(int argc, char** argv)
         bs_adapter_attach_persist_store_set_fsync_policy(stress_store, BS_ATTACH_FSYNC_NEVER);
     std::vector<BsDay19RssSample> samples;
 
-    const bool day_reuse =
-        profile.reload_session_policy_day == BS_DAY19_RS_REUSE_CONTROLLER;
+    const bool day_reuse = profile.reload_session_policy_day == BS_DAY19_RS_REUSE_CONTROLLER;
     ReloadBatchController* day_ctrl = nullptr;
     if (day_reuse)
     {
@@ -148,8 +147,7 @@ int main(int argc, char** argv)
         bs_adapter_attach_reload_batch_set_read_fn(day_ctrl, facade_read_fn, &fix);
         bs_adapter_attach_reload_batch_set_default_gate(day_ctrl);
         bs_adapter_attach_reload_batch_set_attach_scheme(day_ctrl, BS_ATTACH_SCHEME_PER_PATH);
-        bs_adapter_attach_reload_batch_set_manifest_path(day_ctrl,
-                                                         manifest_path.string().c_str());
+        bs_adapter_attach_reload_batch_set_manifest_path(day_ctrl, manifest_path.string().c_str());
     }
 
     const auto t0          = std::chrono::steady_clock::now();

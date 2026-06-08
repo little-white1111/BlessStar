@@ -43,8 +43,8 @@ extern "C"
 
     uint64_t bs_adapter_attach_session_path_revision(AttachContext* ctx, const char* path);
     void     bs_adapter_attach_session_bump_revision(AttachContext* ctx, const char* path);
-    void bs_adapter_attach_session_set_path_revision(AttachContext* ctx, const char* path,
-                                                     uint64_t revision);
+    void     bs_adapter_attach_session_set_path_revision(AttachContext* ctx, const char* path,
+                                                         uint64_t revision);
 
     /** Non-zero when reload write window holds the session exclusive lock. */
     int bs_adapter_attach_session_in_write_window(AttachContext* ctx);

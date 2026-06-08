@@ -1,10 +1,10 @@
 #include "bs/adapter/persistence/attach_runtime_sidecar.h"
 
-#include "attach_crc32.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "attach_crc32.h"
 
 typedef struct SidecarCollectCtx
 {
@@ -19,9 +19,8 @@ static int sidecar_path_for_manifest(const char* manifest_path, char* out, size_
 {
     if (!manifest_path || !out || out_cap == 0)
         return BS_ATTACH_ERR_INVALID_ARG;
-    const size_t n = strlen(manifest_path);
-    const size_t suffix_len =
-        sizeof(".runtime.ckpt") - 1; /* NOLINT(bugprone-sizeof-expression) */
+    const size_t n          = strlen(manifest_path);
+    const size_t suffix_len = sizeof(".runtime.ckpt") - 1; /* NOLINT(bugprone-sizeof-expression) */
     if (n + suffix_len + 1 > out_cap)
         return BS_ATTACH_ERR_LIMIT;
     memcpy(out, manifest_path, n);
@@ -108,8 +107,8 @@ static int collect_entry(const char* uri, uint64_t rev, void* user_ctx)
         return BS_ATTACH_ERR_LIMIT;
     }
 
-    ctx->entries[ctx->count].uri             = uri;
-    ctx->entries[ctx->count].revision        = rev;
+    ctx->entries[ctx->count].uri            = uri;
+    ctx->entries[ctx->count].revision       = rev;
     ctx->entries[ctx->count].payload_digest = payload_digest;
     ++ctx->count;
     return BS_ATTACH_OK;
@@ -142,8 +141,7 @@ int bs_adapter_attach_persist_sidecar_write(const char* manifest_path, const BsA
         return BS_ATTACH_ERR_INVALID_ARG;
 
     BsAttachRuntimeSidecarEntry stack_entries[64];
-    SidecarCollectCtx           collect = {stack_entries, 0, 64, (BsAttachStore*)store,
-                                 BS_ATTACH_OK};
+    SidecarCollectCtx collect = {stack_entries, 0, 64, (BsAttachStore*)store, BS_ATTACH_OK};
 
     if (bs_adapter_attach_persist_store_foreach_uri(store, collect_entry, &collect) !=
             BS_ATTACH_OK ||
@@ -163,7 +161,7 @@ int bs_adapter_attach_persist_sidecar_write(const char* manifest_path, const BsA
     if (!body)
         return BS_ATTACH_ERR_OOM;
 
-    size_t       off = 0;
+    size_t         off     = 0;
     const uint32_t magic   = BS_ATTACH_SIDECAR_MAGIC;
     const uint16_t version = BS_ATTACH_SIDECAR_VERSION;
     const uint64_t epoch   = bs_adapter_attach_persist_store_batch_epoch(store);
@@ -190,8 +188,8 @@ int bs_adapter_attach_persist_sidecar_write(const char* manifest_path, const BsA
             return BS_ATTACH_ERR_LIMIT;
         }
         const uint16_t uri_len = (uint16_t)ulen;
-        const uint64_t   rev     = collect.entries[i].revision;
-        const uint32_t   pdig    = collect.entries[i].payload_digest;
+        const uint64_t rev     = collect.entries[i].revision;
+        const uint32_t pdig    = collect.entries[i].payload_digest;
         if (append_bytes(body, body_cap, &off, &uri_len, 2) != BS_ATTACH_OK ||
             append_bytes(body, body_cap, &off, uri, ulen) != BS_ATTACH_OK ||
             append_bytes(body, body_cap, &off, &rev, 8) != BS_ATTACH_OK ||
@@ -273,8 +271,8 @@ static int read_u64(const uint8_t* data, size_t body_len, size_t* off, uint64_t*
     return 1;
 }
 
-int bs_adapter_attach_persist_sidecar_validate(const char* manifest_path, const BsAttachStore* store,
-                                               uint32_t required_flags)
+int bs_adapter_attach_persist_sidecar_validate(const char*          manifest_path,
+                                               const BsAttachStore* store, uint32_t required_flags)
 {
     if (!manifest_path || !store)
         return 0;
@@ -308,9 +306,9 @@ int bs_adapter_attach_persist_sidecar_validate(const char* manifest_path, const 
     }
     fclose(f);
 
-    const size_t   body_len    = (size_t)file_size - 4;
-    const uint32_t expect_crc  = bs_adapter_attach_persist_crc32(data, body_len);
-    uint32_t       got_crc     = 0;
+    const size_t   body_len   = (size_t)file_size - 4;
+    const uint32_t expect_crc = bs_adapter_attach_persist_crc32(data, body_len);
+    uint32_t       got_crc    = 0;
     memcpy(&got_crc, data + body_len, 4);
     if (expect_crc != got_crc)
     {
@@ -318,18 +316,18 @@ int bs_adapter_attach_persist_sidecar_validate(const char* manifest_path, const 
         return 0;
     }
 
-    size_t   off = 0;
-    uint32_t magic = 0;
-    uint16_t version = 0;
-    uint16_t flags = 0;
-    uint64_t epoch = 0;
+    size_t   off             = 0;
+    uint32_t magic           = 0;
+    uint16_t version         = 0;
+    uint16_t flags           = 0;
+    uint64_t epoch           = 0;
     uint32_t manifest_digest = 0;
-    uint32_t count = 0;
+    uint32_t count           = 0;
 
     if (!read_u32(data, body_len, &off, &magic) || magic != BS_ATTACH_SIDECAR_MAGIC ||
         !read_u16(data, body_len, &off, &version) || version != BS_ATTACH_SIDECAR_VERSION ||
-        !read_u16(data, body_len, &off, &flags) ||
-        (flags & required_flags) != required_flags || !read_u64(data, body_len, &off, &epoch) ||
+        !read_u16(data, body_len, &off, &flags) || (flags & required_flags) != required_flags ||
+        !read_u64(data, body_len, &off, &epoch) ||
         !read_u32(data, body_len, &off, &manifest_digest) ||
         !read_u32(data, body_len, &off, &count))
     {
@@ -344,7 +342,8 @@ int bs_adapter_attach_persist_sidecar_validate(const char* manifest_path, const 
     }
 
     uint32_t live_digest = 0;
-    if (bs_adapter_attach_persist_manifest_file_digest(manifest_path, &live_digest) != BS_ATTACH_OK ||
+    if (bs_adapter_attach_persist_manifest_file_digest(manifest_path, &live_digest) !=
+            BS_ATTACH_OK ||
         live_digest != manifest_digest)
     {
         free(data);
@@ -368,7 +367,7 @@ int bs_adapter_attach_persist_sidecar_validate(const char* manifest_path, const 
         memcpy(uri, data + off, uri_len);
         uri[uri_len] = '\0';
         off += uri_len;
-        uint64_t rev = 0;
+        uint64_t rev  = 0;
         uint32_t pdig = 0;
         if (!read_u64(data, body_len, &off, &rev) || !read_u32(data, body_len, &off, &pdig))
         {

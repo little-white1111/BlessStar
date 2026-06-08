@@ -28,7 +28,7 @@ extern "C"
 
     typedef struct BsAttachRecoverColdReloadOptions
     {
-        size_t struct_size;
+        size_t      struct_size;
         const char* manifest_path;
         IoFacade*   io_facade;
 
@@ -44,10 +44,10 @@ extern "C"
     } BsAttachRecoverColdReloadOptions;
 
     AttachContext*
-    bs_adapter_attach_recover_from_store(const char* manifest_path,
+    bs_adapter_attach_recover_from_store(const char*                            manifest_path,
                                          const BsAttachRecoverFromStoreOptions* opts);
 
-    int bs_adapter_attach_recover_cold_reload(AttachContext* ctx,
+    int bs_adapter_attach_recover_cold_reload(AttachContext*                          ctx,
                                               const BsAttachRecoverColdReloadOptions* opts);
 
 #ifdef __cplusplus

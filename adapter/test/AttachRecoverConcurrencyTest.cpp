@@ -16,10 +16,11 @@
 #include "bs/adapter/attach_session.h"
 #include "bs/adapter/persistence/attach_store.h"
 
-#include <atomic>
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+
+#include <atomic>
 #include <filesystem>
 #include <string>
 #include <thread>
@@ -47,19 +48,18 @@ static int write_config(const fs::path& path)
 static int prime_manifest(const fs::path& config_path, const fs::path& manifest_path,
                           std::string* uri_out)
 {
-    const std::string uri = bs_test_path_to_file_uri(config_path);
+    const std::string uri   = bs_test_path_to_file_uri(config_path);
     BsAttachStore*    store = bs_adapter_attach_persist_store_open(manifest_path.string().c_str());
     BS_TEST_REQUIRE("prime-store", store != nullptr);
-    BS_TEST_REQUIRE("prime-commit",
-                    bs_adapter_attach_persist_store_commit_per_path(
-                        store, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen,
-                        0) == BS_ATTACH_OK);
+    BS_TEST_REQUIRE("prime-commit", bs_adapter_attach_persist_store_commit_per_path(
+                                        store, uri.c_str(), kBlessStarConfigV1Golden,
+                                        kBlessStarConfigV1GoldenLen, 0) == BS_ATTACH_OK);
     bs_adapter_attach_persist_store_close(store);
     *uri_out = uri;
     return 0;
 }
 
-static int test_concurrent_reads_during_recovering(const fs::path& manifest_path,
+static int test_concurrent_reads_during_recovering(const fs::path&    manifest_path,
                                                    const std::string& uri)
 {
     AttachContext* ctx =
@@ -111,7 +111,7 @@ static int slow_facade_read(void* user_ctx, const char* uri, IoReadResult* out)
     return rc;
 }
 
-static int test_concurrent_reads_during_cold_reload(const fs::path& manifest_path,
+static int test_concurrent_reads_during_cold_reload(const fs::path&    manifest_path,
                                                     const std::string& uri)
 {
     AttachContext* ctx =
@@ -129,7 +129,7 @@ static int test_concurrent_reads_during_cold_reload(const fs::path& manifest_pat
     BS_TEST_REQUIRE("report", report != nullptr);
 
     BsAttachRecoverColdReloadOptions opts{};
-    opts.struct_size = sizeof(opts);
+    opts.struct_size               = sizeof(opts);
     const std::string manifest_str = manifest_path.string();
     opts.manifest_path             = manifest_str.c_str();
     opts.read_fn                   = slow_facade_read;
@@ -143,10 +143,7 @@ static int test_concurrent_reads_during_cold_reload(const fs::path& manifest_pat
     std::atomic<int> ok_reads{0};
 
     std::thread reload_thread(
-        [&]()
-        {
-            reload_rc.store(bs_adapter_attach_recover_cold_reload(ctx, &opts));
-        });
+        [&]() { reload_rc.store(bs_adapter_attach_recover_cold_reload(ctx, &opts)); });
 
     std::vector<std::thread> readers;
     for (int i = 0; i < 8; ++i)
@@ -157,7 +154,7 @@ static int test_concurrent_reads_during_cold_reload(const fs::path& manifest_pat
                 for (int j = 0; j < 60; ++j)
                 {
                     BsAttachSnapshotMeta meta{};
-                    const int rc =
+                    const int            rc =
                         bs_adapter_attach_config_get_snapshot_meta(ctx, uri.c_str(), &meta);
                     if (rc == BS_ATTACH_ERR_RECOVERING)
                         continue;

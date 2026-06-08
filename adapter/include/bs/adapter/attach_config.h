@@ -8,8 +8,8 @@
  * Platform notes: Replaces ad-hoc EventBus usage on attach freeze and reload success paths.
  */
 
-#include "bs/kernel/state/ConfigState.h"
 #include "bs/kernel/state/ConfigEvent.h"
+#include "bs/kernel/state/ConfigState.h"
 #include "bs/kernel/state/EventBus.h"
 
 #include "bs/adapter/attach_context.h"
@@ -47,12 +47,13 @@ extern "C"
     /** Returns 1 if ctx has a ConfigManager (reload CM sync enabled). */
     int bs_adapter_attach_config_has_manager(AttachContext* ctx);
 
-    /** Subscribe to ConfigManager state-watch (adapter facade; tests avoid direct ConfigManager.h). */
+    /** Subscribe to ConfigManager state-watch (adapter facade; tests avoid direct ConfigManager.h).
+     */
     typedef void (*BsAttachConfigWatchCallback)(const char* path, ConfigEventType type,
                                                 const void* snapshot, void* user_data);
     int bs_adapter_attach_config_subscribe_state_watch(AttachContext* ctx, const char* config_path,
                                                        BsAttachConfigWatchCallback callback,
-                                                       void* user_data);
+                                                       void*                       user_data);
 
     /**
      * Route bytes to load_config / reload_config / hot_update from current ConfigState (B-01/B-02).

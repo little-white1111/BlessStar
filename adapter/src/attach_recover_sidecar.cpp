@@ -1,8 +1,7 @@
-#include "bs/adapter/attach_recover_sidecar.h"
-
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/attach_errors.h"
+#include "bs/adapter/attach_recover_sidecar.h"
 #include "bs/adapter/attach_session.h"
 #include "bs/adapter/persistence/attach_runtime_sidecar.h"
 #include "bs/adapter/persistence/attach_store.h"
@@ -57,8 +56,8 @@ static int sidecar_may_fast_path(const char* manifest_path, BsAttachStore* store
         return 0;
     if (bs_adapter_attach_persist_store_had_exec_rollback(store, nullptr))
         return 0;
-    return bs_adapter_attach_persist_sidecar_validate(
-        manifest_path, store, BS_ATTACH_SIDECAR_FLAG_CLEAN_SHUTDOWN);
+    return bs_adapter_attach_persist_sidecar_validate(manifest_path, store,
+                                                      BS_ATTACH_SIDECAR_FLAG_CLEAN_SHUTDOWN);
 }
 
 int bs_adapter_attach_recover_sidecar_write_ready(AttachContext* ctx, const char* manifest_path)
@@ -69,8 +68,8 @@ int bs_adapter_attach_recover_sidecar_write_ready(AttachContext* ctx, const char
     BsAttachStore* store = bs_adapter_attach_persist_store_open(manifest_path);
     if (!store)
         return BS_ATTACH_ERR_IO;
-    const int rc = bs_adapter_attach_persist_sidecar_write(
-        manifest_path, store, BS_ATTACH_SIDECAR_FLAG_CLEAN_SHUTDOWN);
+    const int rc = bs_adapter_attach_persist_sidecar_write(manifest_path, store,
+                                                           BS_ATTACH_SIDECAR_FLAG_CLEAN_SHUTDOWN);
     bs_adapter_attach_persist_store_close(store);
     return rc;
 }
@@ -156,8 +155,7 @@ int bs_adapter_attach_recover_fast_hydrate(AttachContext* ctx, const char* manif
 
     bs_adapter_attach_session_begin_write_window(ctx);
     HydrateCtx h{ctx, store, BS_ATTACH_OK};
-    const int  foreach_rc =
-        bs_adapter_attach_persist_store_foreach_uri(store, hydrate_uri, &h);
+    const int  foreach_rc = bs_adapter_attach_persist_store_foreach_uri(store, hydrate_uri, &h);
     bs_adapter_attach_persist_store_close(store);
     bs_adapter_attach_session_end_write_window(ctx);
 

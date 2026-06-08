@@ -40,9 +40,8 @@ int main()
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
     const fs::path manifest = work / "wire.manifest";
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest.string().c_str()) == 0);
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest.string().c_str()) == 0);
 
     const fs::path cfg_a = work / "wire_a.json";
     const fs::path cfg_b = work / "wire_b.json";
@@ -70,13 +69,11 @@ int main()
     for (const std::string& uri : {uri_a, uri_b})
     {
         uint64_t manifest_rev = 0;
-        BS_TEST_REQUIRE("manifest-rev",
-                        bs_adapter_attach_persist_store_get_revision(store, uri.c_str(),
-                                                                     &manifest_rev) == BS_ATTACH_OK);
+        BS_TEST_REQUIRE("manifest-rev", bs_adapter_attach_persist_store_get_revision(
+                                            store, uri.c_str(), &manifest_rev) == BS_ATTACH_OK);
         BsAttachSnapshotMeta meta{};
-        BS_TEST_REQUIRE("meta",
-                        bs_adapter_attach_config_get_snapshot_meta(fix.ctx, uri.c_str(), &meta) ==
-                            0);
+        BS_TEST_REQUIRE(
+            "meta", bs_adapter_attach_config_get_snapshot_meta(fix.ctx, uri.c_str(), &meta) == 0);
         BS_TEST_REQUIRE("revision", meta.revision == manifest_rev);
     }
 

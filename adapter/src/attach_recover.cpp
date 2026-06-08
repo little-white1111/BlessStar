@@ -1,8 +1,7 @@
-#include "bs/adapter/attach_recover.h"
-
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_ir_snapshot.h"
+#include "bs/adapter/attach_recover.h"
 #include "bs/adapter/attach_recover_sidecar.h"
 #include "bs/adapter/attach_session.h"
 #include "bs/adapter/orchestration/reload_with_report.h"
@@ -107,8 +106,7 @@ int reconcile_cm_with_manifest(AttachContext* ctx, const char* manifest_path)
     if (!store)
         return BS_ATTACH_ERR_IO;
     ReconcileCtx r{ctx, store, BS_ATTACH_OK};
-    const int    rc =
-        bs_adapter_attach_persist_store_foreach_uri(store, reconcile_uri, &r);
+    const int    rc = bs_adapter_attach_persist_store_foreach_uri(store, reconcile_uri, &r);
     bs_adapter_attach_persist_store_close(store);
     if (rc != BS_ATTACH_OK)
         return rc;
@@ -116,9 +114,8 @@ int reconcile_cm_with_manifest(AttachContext* ctx, const char* manifest_path)
 }
 } // namespace
 
-AttachContext*
-bs_adapter_attach_recover_from_store(const char*                       manifest_path,
-                                     const BsAttachRecoverFromStoreOptions* opts)
+AttachContext* bs_adapter_attach_recover_from_store(const char* manifest_path,
+                                                    const BsAttachRecoverFromStoreOptions* opts)
 {
     (void)opts;
     if (!manifest_path || manifest_path[0] == '\0')
@@ -137,7 +134,7 @@ bs_adapter_attach_recover_from_store(const char*                       manifest_
     return ctx;
 }
 
-int bs_adapter_attach_recover_cold_reload(AttachContext*                         ctx,
+int bs_adapter_attach_recover_cold_reload(AttachContext*                          ctx,
                                           const BsAttachRecoverColdReloadOptions* opts)
 {
     if (!ctx)
@@ -164,8 +161,7 @@ int bs_adapter_attach_recover_cold_reload(AttachContext*                        
 
     if (bs_adapter_attach_recover_sidecar_can_fast_hydrate(manifest_path.c_str()))
     {
-        const int hydrate_rc =
-            bs_adapter_attach_recover_fast_hydrate(ctx, manifest_path.c_str());
+        const int hydrate_rc = bs_adapter_attach_recover_fast_hydrate(ctx, manifest_path.c_str());
         if (hydrate_rc == BS_ATTACH_OK)
         {
             const int reconcile_rc = reconcile_cm_with_manifest(ctx, manifest_path.c_str());
@@ -188,9 +184,8 @@ int bs_adapter_attach_recover_cold_reload(AttachContext*                        
     if (!read_fn)
         return BS_ATTACH_ERR_INVALID_ARG;
 
-    ReloadBatchController* ctrl =
-        bs_adapter_attach_reload_batch_create(opts && opts->max_inflight ? opts->max_inflight
-                                                                         : (unsigned)uris.uris.size());
+    ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(
+        opts && opts->max_inflight ? opts->max_inflight : (unsigned)uris.uris.size());
     if (!ctrl)
         return BS_ATTACH_ERR_OOM;
 

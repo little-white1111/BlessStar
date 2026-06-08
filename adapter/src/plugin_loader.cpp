@@ -1,10 +1,10 @@
+#include "bs/kernel/registry/registry_facade.h"
+
 #include "bs/adapter/attach_context.h"
 #include "bs/adapter/plugin/attach_manifest_yaml.h"
 #include "bs/adapter/plugin/plugin_api.h"
 #include "bs/adapter/plugin/plugin_loader.h"
 #include "bs/adapter/plugin/plugin_manifest_paths.h"
-
-#include "bs/kernel/registry/registry_facade.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -215,8 +215,7 @@ static int invoke_plugin(AttachContext* ctx, const PluginDesc* plugin, int idx)
         return -1;
     if (!is_enabled(idx))
         return 0;
-    if (is_loaded(plugin->manifest_id) &&
-        plugin_registered_on_facade(facade, plugin->manifest_id))
+    if (is_loaded(plugin->manifest_id) && plugin_registered_on_facade(facade, plugin->manifest_id))
         return 0;
     if (!deps_satisfied_idx(idx))
         return -1;

@@ -12,10 +12,10 @@
  *   exec_* / reload_* / persist_* - see docs/BLESSSTAR_NAMING_CONTRACT.md.
  */
 
-#include "bs/adapter/persistence/attach_store.h"
-
 #include "bs/kernel/common/bs_log.h"
 #include "bs/kernel/registry/registry_facade.h"
+
+#include "bs/adapter/persistence/attach_store.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -82,9 +82,8 @@ extern "C"
 
     /** RES-IX-17: ctx-owned persist store (destroy(ctrl) does not close). */
     BsAttachStore* bs_adapter_attach_ctx_persist_store(AttachContext* ctx);
-    int            bs_adapter_attach_ctx_open_persist_store(AttachContext* ctx,
-                                                            const char*    manifest_path);
-    void           bs_adapter_attach_ctx_close_persist_store(AttachContext* ctx);
+    int  bs_adapter_attach_ctx_open_persist_store(AttachContext* ctx, const char* manifest_path);
+    void bs_adapter_attach_ctx_close_persist_store(AttachContext* ctx);
 
     void bs_adapter_attach_ensure_active_ctx(void);
 

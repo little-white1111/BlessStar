@@ -40,13 +40,12 @@ static int golden_read(void*, const char*, IoReadResult* out)
 static int prime_manifest(const fs::path& config_path, const fs::path& manifest_path,
                           std::string* uri_out)
 {
-    const std::string uri = bs_test_path_to_file_uri(config_path);
+    const std::string uri   = bs_test_path_to_file_uri(config_path);
     BsAttachStore*    store = bs_adapter_attach_persist_store_open(manifest_path.string().c_str());
     BS_TEST_REQUIRE("prime-store", store != nullptr);
-    BS_TEST_REQUIRE("prime-commit",
-                    bs_adapter_attach_persist_store_commit_per_path(
-                        store, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen,
-                        0) == BS_ATTACH_OK);
+    BS_TEST_REQUIRE("prime-commit", bs_adapter_attach_persist_store_commit_per_path(
+                                        store, uri.c_str(), kBlessStarConfigV1Golden,
+                                        kBlessStarConfigV1GoldenLen, 0) == BS_ATTACH_OK);
     const uint64_t epoch = bs_adapter_attach_persist_store_batch_epoch(store);
     BS_TEST_REQUIRE("prime-epoch", epoch >= 1);
     bs_adapter_attach_persist_store_close(store);
@@ -54,8 +53,8 @@ static int prime_manifest(const fs::path& config_path, const fs::path& manifest_
     return 0;
 }
 
-static int test_exec_rollback_manifest_epoch_unchanged(const fs::path& cfg,
-                                                       const fs::path& manifest,
+static int test_exec_rollback_manifest_epoch_unchanged(const fs::path&    cfg,
+                                                       const fs::path&    manifest,
                                                        const std::string& uri)
 {
     BsTestAttachIoFixture fix{};
@@ -101,8 +100,7 @@ static int test_exec_rollback_manifest_epoch_unchanged(const fs::path& cfg,
                     bs_adapter_attach_persist_store_had_exec_rollback(probe, nullptr) == 1);
     bs_adapter_attach_persist_store_close(probe);
 
-    AttachContext* rec =
-        bs_adapter_attach_recover_from_store(manifest.string().c_str(), nullptr);
+    AttachContext* rec = bs_adapter_attach_recover_from_store(manifest.string().c_str(), nullptr);
     BS_TEST_REQUIRE("recover-step1", rec != nullptr);
     bs_adapter_attach_ctx_set_active(rec);
 
@@ -116,7 +114,7 @@ static int test_exec_rollback_manifest_epoch_unchanged(const fs::path& cfg,
     BS_TEST_REQUIRE("recover-report", report != nullptr);
 
     BsAttachRecoverColdReloadOptions opts{};
-    opts.struct_size = sizeof(opts);
+    opts.struct_size               = sizeof(opts);
     const std::string manifest_str = manifest.string();
     opts.manifest_path             = manifest_str.c_str();
     opts.io_facade                 = rec_fix.io;
@@ -164,12 +162,11 @@ static int test_per_path_has_no_phase_mark_wal(const fs::path& cfg, const fs::pa
     bs_adapter_attach_reload_batch_destroy(ctrl);
 
     const std::string wal_path = manifest.string() + ".wal";
-    BsAttachWal*        wal      = bs_adapter_attach_persist_wal_open(wal_path.c_str());
+    BsAttachWal*      wal      = bs_adapter_attach_persist_wal_open(wal_path.c_str());
     BS_TEST_REQUIRE("wal", wal != nullptr);
     size_t phase_marks = 0;
-    BS_TEST_REQUIRE("count",
-                    bs_adapter_attach_persist_wal_count_record_type(wal, 5, &phase_marks) ==
-                        BS_ATTACH_OK);
+    BS_TEST_REQUIRE("count", bs_adapter_attach_persist_wal_count_record_type(
+                                 wal, 5, &phase_marks) == BS_ATTACH_OK);
     BS_TEST_REQUIRE("no-phase-mark", phase_marks == 0);
     bs_adapter_attach_persist_wal_close(wal);
 
@@ -189,8 +186,8 @@ int main()
 
     std::string uri;
     BS_TEST_REQUIRE("prime", prime_manifest(cfg, manifest, &uri) == 0);
-    BS_TEST_REQUIRE("exec-rollback", test_exec_rollback_manifest_epoch_unchanged(cfg, manifest, uri) ==
-                                         0);
+    BS_TEST_REQUIRE("exec-rollback",
+                    test_exec_rollback_manifest_epoch_unchanged(cfg, manifest, uri) == 0);
     BS_TEST_REQUIRE("scheme-guard", test_per_path_has_no_phase_mark_wal(cfg, manifest, uri) == 0);
 
     std::fprintf(stderr, "AttachRecoverFsmTest: PASS\n");

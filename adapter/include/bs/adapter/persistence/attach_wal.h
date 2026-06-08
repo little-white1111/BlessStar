@@ -69,11 +69,11 @@ extern "C"
      */
     int bs_adapter_attach_persist_wal_append_phase_mark(BsAttachWal* wal, uint64_t batch_epoch,
                                                         BsAttachWalRecoverPhase phase,
-                                                        uint32_t                  uri_set_hash);
+                                                        uint32_t                uri_set_hash);
 
     /** 1 if the last recover_unfinished detected EXEC-or-later orphan rollback (REC-A'-7). */
     int bs_adapter_attach_persist_wal_had_exec_rollback(const BsAttachWal* wal,
-                                                          uint64_t*          epoch_out);
+                                                        uint64_t*          epoch_out);
 
     /**
      * Remove orphan staging files for batches with epoch > @p manifest_epoch that lack commit.

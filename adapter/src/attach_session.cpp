@@ -282,8 +282,8 @@ static int check_reader_revision_fresh(AttachContext* ctx, const char* config_pa
         return -1;
     *session_rev_out = bs_adapter_attach_session_path_revision(ctx, config_path);
 
-    uint64_t manifest_rev = 0;
-    const int manifest_rc = manifest_revision_for_read(ctx, config_path, &manifest_rev);
+    uint64_t  manifest_rev = 0;
+    const int manifest_rc  = manifest_revision_for_read(ctx, config_path, &manifest_rev);
     if (manifest_rc != 0)
         return manifest_rc;
     if (bs_adapter_attach_ctx_persist_store(ctx) && manifest_rev != *session_rev_out)
@@ -309,8 +309,8 @@ int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* c
     const int rc = snapshot_bytes(ctx, config_path, &total, &blob);
     if (rc == 0)
     {
-        uint64_t session_rev = 0;
-        const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &session_rev);
+        uint64_t  session_rev = 0;
+        const int fresh_rc    = check_reader_revision_fresh(ctx, config_path, &session_rev);
         if (fresh_rc != 0)
         {
             bs_adapter_attach_session_read_unlock(ctx);
@@ -339,8 +339,8 @@ int bs_adapter_attach_config_get_snapshot_copy(AttachContext* ctx, const char* c
     int rc = snapshot_bytes(ctx, config_path, &total, &blob);
     if (rc == 0)
     {
-        uint64_t session_rev = 0;
-        const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &session_rev);
+        uint64_t  session_rev = 0;
+        const int fresh_rc    = check_reader_revision_fresh(ctx, config_path, &session_rev);
         if (fresh_rc != 0)
         {
             bs_adapter_attach_session_read_unlock(ctx);
@@ -381,7 +381,7 @@ int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* 
         return rc;
     }
 
-    uint64_t rev = 0;
+    uint64_t  rev      = 0;
     const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &rev);
     if (fresh_rc != 0)
     {
@@ -429,9 +429,9 @@ int bs_adapter_attach_config_read_snapshot_chunk(AttachContext* ctx, int handle,
         return BS_ATTACH_CONC_ERR_INVALID_HANDLE;
     }
 
-    const SnapshotReadHandle& h   = st->handles[handle];
-    uint64_t                  cur = 0;
-    const int fresh_rc = check_reader_revision_fresh(ctx, h.path.c_str(), &cur);
+    const SnapshotReadHandle& h        = st->handles[handle];
+    uint64_t                  cur      = 0;
+    const int                 fresh_rc = check_reader_revision_fresh(ctx, h.path.c_str(), &cur);
     if (fresh_rc != 0)
     {
         bs_adapter_attach_session_read_unlock(ctx);

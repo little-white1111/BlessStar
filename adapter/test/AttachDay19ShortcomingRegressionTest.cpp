@@ -3,13 +3,15 @@
  *
  * | ID | Risk | Pre-fix expectation | Post-fix expectation |
  * |----|------|---------------------|----------------------|
- * | AG-DAY19-MANIFEST-1 | PER_PATH manifest fsync per commit slows smoke | ALWAYS slower than NEVER | NEVER bounded (<15s for N=40) |
- * | AG-DAY19-WAL-PURGE-1 | Repeated WAL purge rescans 1..epoch | Second purge rescans full range | Coalesced second purge is fast |
- * | AG-DAY19-STORE-1 | store_open per reload + purge O(n^2) | 80 reloads >> budget | ctx persist_store + coalesce <120s |
- * | AG-DAY19-POOL-1 | freeze pool warmup on 100KB reload | Warmed reload slower | clear_kernel_pool_warmed faster |
- * | AG-RS-RESET-1 | reset leaves no path/IR leak across 100 runs | uri_index grows | reset clears; IR bounded |
- * | AG-RS-STORE-1 | ctx persist_store no extra store_open | open_count rises | single open for 100 runs |
- * | AG-RS-ONE-SHOT-1 | kOneShot destroy(ctrl) keeps ctx store | store closed on destroy | ctx store survives |
+ * | AG-DAY19-MANIFEST-1 | PER_PATH manifest fsync per commit slows smoke | ALWAYS slower than NEVER
+ * | NEVER bounded (<15s for N=40) | | AG-DAY19-WAL-PURGE-1 | Repeated WAL purge rescans 1..epoch |
+ * Second purge rescans full range | Coalesced second purge is fast | | AG-DAY19-STORE-1 |
+ * store_open per reload + purge O(n^2) | 80 reloads >> budget | ctx persist_store + coalesce <120s
+ * | | AG-DAY19-POOL-1 | freeze pool warmup on 100KB reload | Warmed reload slower |
+ * clear_kernel_pool_warmed faster | | AG-RS-RESET-1 | reset leaves no path/IR leak across 100 runs
+ * | uri_index grows | reset clears; IR bounded | | AG-RS-STORE-1 | ctx persist_store no extra
+ * store_open | open_count rises | single open for 100 runs | | AG-RS-ONE-SHOT-1 | kOneShot
+ * destroy(ctrl) keeps ctx store | store closed on destroy | ctx store survives |
  */
 
 #include "bs/adapter/attach_context.h"
@@ -40,8 +42,8 @@ static int facade_read_fn(void* user_ctx, const char* uri, IoReadResult* out)
 
 static int64_t steady_ms_since(const std::chrono::steady_clock::time_point& t0)
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-               std::chrono::steady_clock::now() - t0)
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                 t0)
         .count();
 }
 
@@ -58,11 +60,10 @@ static int test_manifest_fsync_per_path_throughput(void)
     {
         const fs::path cfg_path = tmp_guard.path / (std::string(tag) + ".json");
         BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg_path, kBlessStarConfigV1Golden,
-                                                              kBlessStarConfigV1GoldenLen));
-        const std::string uri     = bs_test_path_to_file_uri(cfg_path);
+                                                               kBlessStarConfigV1GoldenLen));
+        const std::string uri      = bs_test_path_to_file_uri(cfg_path);
         const fs::path    manifest = tmp_guard.path / (std::string(tag) + ".bs");
-        BsAttachStore* store =
-            bs_adapter_attach_persist_store_open(manifest.string().c_str());
+        BsAttachStore*    store = bs_adapter_attach_persist_store_open(manifest.string().c_str());
         BS_TEST_REQUIRE("store-open", store != nullptr);
         bs_adapter_attach_persist_store_set_fsync_policy(store, policy);
         BS_TEST_REQUIRE("policy-set",
@@ -81,10 +82,11 @@ static int test_manifest_fsync_per_path_throughput(void)
         return 0;
     };
 
-    int64_t never_ms  = 0;
-    int64_t batch_ms  = 0;
+    int64_t never_ms = 0;
+    int64_t batch_ms = 0;
     BS_TEST_REQUIRE("bench-never", bench_commits(BS_ATTACH_FSYNC_NEVER, "never", &never_ms) == 0);
-    BS_TEST_REQUIRE("bench-batch", bench_commits(BS_ATTACH_FSYNC_BATCH_COMMIT, "batch", &batch_ms) == 0);
+    BS_TEST_REQUIRE("bench-batch",
+                    bench_commits(BS_ATTACH_FSYNC_BATCH_COMMIT, "batch", &batch_ms) == 0);
 
     BS_TEST_REQUIRE("never-bounded", never_ms < 20000);
 #ifndef _WIN32
@@ -116,7 +118,8 @@ static int test_wal_purge_coalesced_on_store(void)
                         bs_adapter_attach_persist_store_batch_stage(
                             store, uri.c_str(), kBlessStarConfigV1Golden,
                             kBlessStarConfigV1GoldenLen, static_cast<uint64_t>(i)) == BS_ATTACH_OK);
-        BS_TEST_REQUIRE("commit", bs_adapter_attach_persist_store_batch_commit(store) == BS_ATTACH_OK);
+        BS_TEST_REQUIRE("commit",
+                        bs_adapter_attach_persist_store_batch_commit(store) == BS_ATTACH_OK);
     }
 
     const uint64_t epoch = bs_adapter_attach_persist_store_batch_epoch(store);
@@ -124,14 +127,14 @@ static int test_wal_purge_coalesced_on_store(void)
 
     const auto t0 = std::chrono::steady_clock::now();
     bs_adapter_attach_persist_store_testing_purge_wal(store);
-    const int64_t first_ms = steady_ms_since(t0);
+    const int64_t  first_ms = steady_ms_since(t0);
     const uint64_t after_first =
         bs_adapter_attach_persist_store_testing_wal_last_purge_through(store);
     BS_TEST_REQUIRE("purged-after-first", after_first + 2 >= epoch);
 
     const auto t1 = std::chrono::steady_clock::now();
     bs_adapter_attach_persist_store_testing_purge_wal(store);
-    const int64_t second_ms = steady_ms_since(t1);
+    const int64_t  second_ms = steady_ms_since(t1);
     const uint64_t after_second =
         bs_adapter_attach_persist_store_testing_wal_last_purge_through(store);
 
@@ -146,7 +149,7 @@ static int test_wal_purge_coalesced_on_store(void)
 static int run_per_path_reload(BsTestAttachIoFixture* fix, const fs::path& manifest_path,
                                const char* uri, ReloadBatchController* reuse_ctrl)
 {
-    ReloadBatchController* ctrl = reuse_ctrl;
+    ReloadBatchController* ctrl  = reuse_ctrl;
     const int              owned = reuse_ctrl ? 0 : 1;
     if (!ctrl)
     {
@@ -187,11 +190,10 @@ static int test_stress_ctx_store_reload_budget(void)
     const fs::path cfg = tmp_guard.path / "reload.json";
     BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                            kBlessStarConfigV1GoldenLen));
-    const std::string    uri          = bs_test_path_to_file_uri(cfg);
-    const fs::path manifest_path = tmp_guard.path / "manifest.bs";
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest_path.string().c_str()) == 0);
+    const std::string uri           = bs_test_path_to_file_uri(cfg);
+    const fs::path    manifest_path = tmp_guard.path / "manifest.bs";
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest_path.string().c_str()) == 0);
     BsAttachStore* store = bs_adapter_attach_ctx_persist_store(fix.ctx);
     BS_TEST_REQUIRE("store", store != nullptr);
     bs_adapter_attach_persist_store_set_fsync_policy(store, BS_ATTACH_FSYNC_NEVER);
@@ -239,10 +241,9 @@ static int test_pool_warmup_reload_latency(void)
     const fs::path    cfg  = tmp_guard.path / "large.json";
     BS_TEST_REQUIRE("write-large", bs_test_write_binary_file(cfg, json.data(), json.size()));
     const std::string uri           = bs_test_path_to_file_uri(cfg);
-    const fs::path manifest_path = tmp_guard.path / "manifest.bs";
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest_path.string().c_str()) == 0);
+    const fs::path    manifest_path = tmp_guard.path / "manifest.bs";
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest_path.string().c_str()) == 0);
     BsAttachStore* store = bs_adapter_attach_ctx_persist_store(fix.ctx);
     BS_TEST_REQUIRE("store", store != nullptr);
     bs_adapter_attach_persist_store_set_fsync_policy(store, BS_ATTACH_FSYNC_NEVER);
@@ -294,11 +295,10 @@ static int test_rs_reset_no_leak(void)
     const fs::path cfg = tmp_guard.path / "cfg.json";
     BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                            kBlessStarConfigV1GoldenLen));
-    const std::string uri          = bs_test_path_to_file_uri(cfg);
+    const std::string uri           = bs_test_path_to_file_uri(cfg);
     const fs::path    manifest_path = tmp_guard.path / "manifest.bs";
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest_path.string().c_str()) == 0);
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest_path.string().c_str()) == 0);
 
     ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(4);
     BS_TEST_REQUIRE("ctrl", ctrl != nullptr);
@@ -336,15 +336,13 @@ static int test_rs_ctx_store_single_open(void)
     const fs::path cfg = tmp_guard.path / "cfg.json";
     BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                            kBlessStarConfigV1GoldenLen));
-    const std::string uri          = bs_test_path_to_file_uri(cfg);
+    const std::string uri           = bs_test_path_to_file_uri(cfg);
     const fs::path    manifest_path = tmp_guard.path / "manifest.bs";
 
     bs_adapter_attach_persist_store_testing_reset_open_count();
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest_path.string().c_str()) == 0);
-    BS_TEST_REQUIRE("open-count-1",
-                    bs_adapter_attach_persist_store_testing_open_count() == 1);
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest_path.string().c_str()) == 0);
+    BS_TEST_REQUIRE("open-count-1", bs_adapter_attach_persist_store_testing_open_count() == 1);
 
     ReloadBatchController* ctrl = bs_adapter_attach_reload_batch_create(4);
     BS_TEST_REQUIRE("ctrl", ctrl != nullptr);
@@ -384,19 +382,17 @@ static int test_rs_one_shot_preserves_ctx_store(void)
     const fs::path cfg = tmp_guard.path / "cfg.json";
     BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                            kBlessStarConfigV1GoldenLen));
-    const std::string uri          = bs_test_path_to_file_uri(cfg);
+    const std::string uri           = bs_test_path_to_file_uri(cfg);
     const fs::path    manifest_path = tmp_guard.path / "manifest.bs";
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest_path.string().c_str()) == 0);
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest_path.string().c_str()) == 0);
 
     for (int i = 0; i < 5; ++i)
     {
         BS_TEST_REQUIRE("oneshot-reload",
                         run_per_path_reload(&fix, manifest_path, uri.c_str(), nullptr) == 0);
         BS_TEST_REQUIRE("ctx-store-alive", bs_adapter_attach_ctx_persist_store(fix.ctx) != nullptr);
-        BS_TEST_REQUIRE("open-count-1",
-                        bs_adapter_attach_persist_store_testing_open_count() == 1);
+        BS_TEST_REQUIRE("open-count-1", bs_adapter_attach_persist_store_testing_open_count() == 1);
     }
 
     bs_test_attach_teardown(&fix);

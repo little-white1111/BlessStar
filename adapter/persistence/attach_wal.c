@@ -412,7 +412,7 @@ int bs_adapter_attach_persist_wal_mark_committed(BsAttachWal* wal, uint64_t epoc
 
 int bs_adapter_attach_persist_wal_append_phase_mark(BsAttachWal* wal, uint64_t batch_epoch,
                                                     BsAttachWalRecoverPhase phase,
-                                                    uint32_t                  uri_set_hash)
+                                                    uint32_t                uri_set_hash)
 {
     if (!wal || !wal->path)
         return BS_ATTACH_OK;
@@ -427,8 +427,8 @@ int bs_adapter_attach_persist_wal_append_phase_mark(BsAttachWal* wal, uint64_t b
     write_u64_le(payload + 0, batch_epoch);
     write_u32_le(payload + 8, (uint32_t)phase);
     write_u32_le(payload + 12, uri_set_hash);
-    const int rc =
-        wal_write_record(f, (uint16_t)BS_ATTACH_WAL_REC_PHASE_MARK, payload, (uint32_t)sizeof(payload));
+    const int rc = wal_write_record(f, (uint16_t)BS_ATTACH_WAL_REC_PHASE_MARK, payload,
+                                    (uint32_t)sizeof(payload));
     if (rc != BS_ATTACH_OK)
     {
         fclose(f);
@@ -631,7 +631,7 @@ static uint64_t wal_max_committed_across_segments(const char* active_path, uint6
 }
 
 static int wal_purge_segment_epoch_range(const char* active_wal_path, uint64_t start_epoch,
-                                       uint64_t purge_through)
+                                         uint64_t purge_through)
 {
     for (uint64_t e = start_epoch; e <= purge_through; ++e)
     {
@@ -718,14 +718,14 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
     if (!f)
         return BS_ATTACH_OK;
 
-    uint64_t  current_batch_epoch = 0;
-    uint32_t  current_batch_count = 0;
-    uint32_t  current_entry_seen  = 0;
-    uint32_t* entry_crcs          = NULL;
-    char**    staging_paths       = NULL;
-    int       in_batch            = 0;
+    uint64_t      current_batch_epoch = 0;
+    uint32_t      current_batch_count = 0;
+    uint32_t      current_entry_seen  = 0;
+    uint32_t*     entry_crcs          = NULL;
+    char**        staging_paths       = NULL;
+    int           in_batch            = 0;
     WalPhaseTrack phase_tracks[BS_ATTACH_WAL_MAX_PHASE_TRACK];
-    size_t    phase_track_count   = 0;
+    size_t        phase_track_count = 0;
 
     uint64_t offset = 0;
     for (;;)
@@ -905,8 +905,8 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
                 if (orphan)
                 {
                     wal_delete_staging_paths(staging_paths, current_batch_count);
-                    const uint32_t max_phase =
-                        wal_max_phase_for_epoch(phase_tracks, phase_track_count, current_batch_epoch);
+                    const uint32_t max_phase = wal_max_phase_for_epoch(
+                        phase_tracks, phase_track_count, current_batch_epoch);
                     if (max_phase >= (uint32_t)BS_ATTACH_WAL_PHASE_EXEC)
                     {
                         wal->exec_rollback_detected = 1;
@@ -943,8 +943,8 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
 
     if (in_batch && !corrupted)
     {
-        const int orphan = (current_batch_epoch > last_committed) ||
-                           (current_batch_epoch > manifest_epoch);
+        const int orphan =
+            (current_batch_epoch > last_committed) || (current_batch_epoch > manifest_epoch);
         if (orphan)
         {
             wal_delete_staging_paths(staging_paths, current_batch_count);

@@ -321,7 +321,8 @@ int bs_adapter_attach_kernel_reset_all_pipelines(AttachContext* ctx)
     int rc = 0;
     if (ctx->default_pipeline && bs_pipeline_reset(ctx->default_pipeline) != 0)
         rc = -1;
-    if (ctx->kernel_pool && bs_kernel_pool_reset_all_pipelines(ctx->kernel_pool) != BS_KERNEL_POOL_OK)
+    if (ctx->kernel_pool &&
+        bs_kernel_pool_reset_all_pipelines(ctx->kernel_pool) != BS_KERNEL_POOL_OK)
         rc = -1;
     return rc;
 }

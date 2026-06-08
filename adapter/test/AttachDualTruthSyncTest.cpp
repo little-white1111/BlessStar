@@ -58,10 +58,10 @@ static int run_reload_with_sync_failure(BsTestAttachIoFixture* fix, const fs::pa
     bs_adapter_attach_config_testing_set_sync_fail_path(uri.c_str());
     const int rc = bs_adapter_attach_reload_batch_run(ctrl);
     bs_adapter_attach_config_testing_clear_sync_fail_path();
-    const int ok = (rc == 0 && bs_adapter_attach_reload_batch_outcome(ctrl) ==
-                                 BATCH_COMPLETED_WITH_FAILURES)
-                       ? 0
-                       : -1;
+    const int ok =
+        (rc == 0 && bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_COMPLETED_WITH_FAILURES)
+            ? 0
+            : -1;
     bs_adapter_attach_reload_batch_destroy(ctrl);
     return ok;
 }
@@ -86,55 +86,49 @@ static int test_manifest_revision_authority(const fs::path& work)
     const fs::path manifest = work / "dual_truth.manifest";
     BS_TEST_REQUIRE("write", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                        kBlessStarConfigV1GoldenLen));
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest.string().c_str()) == 0);
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest.string().c_str()) == 0);
 
     const std::string uri = bs_test_path_to_file_uri(cfg);
     BS_TEST_REQUIRE("reload-1", run_reload(&fix, manifest, uri) == 0);
 
-    BsAttachStore* store = bs_adapter_attach_ctx_persist_store(fix.ctx);
+    BsAttachStore* store        = bs_adapter_attach_ctx_persist_store(fix.ctx);
     uint64_t       manifest_rev = 0;
-    BS_TEST_REQUIRE("manifest-rev",
-                    bs_adapter_attach_persist_store_get_revision(store, uri.c_str(),
-                                                                 &manifest_rev) == BS_ATTACH_OK);
+    BS_TEST_REQUIRE("manifest-rev", bs_adapter_attach_persist_store_get_revision(
+                                        store, uri.c_str(), &manifest_rev) == BS_ATTACH_OK);
     BsAttachSnapshotMeta meta{};
-    BS_TEST_REQUIRE("meta", bs_adapter_attach_config_get_snapshot_meta(fix.ctx, uri.c_str(),
-                                                                       &meta) == 0);
+    BS_TEST_REQUIRE("meta",
+                    bs_adapter_attach_config_get_snapshot_meta(fix.ctx, uri.c_str(), &meta) == 0);
     BS_TEST_REQUIRE("rev-aligned", meta.revision == manifest_rev);
     BS_TEST_REQUIRE("kernel-reset",
                     bs_adapter_attach_kernel_testing_count_non_idle_stages(fix.ctx) == 0u);
 
-    int      handle = -1;
+    int      handle     = -1;
     uint64_t handle_rev = 0;
-    BS_TEST_REQUIRE("open-handle",
-                    bs_adapter_attach_config_open_snapshot_read(fix.ctx, uri.c_str(), &handle,
-                                                               &handle_rev) == 0);
+    BS_TEST_REQUIRE("open-handle", bs_adapter_attach_config_open_snapshot_read(
+                                       fix.ctx, uri.c_str(), &handle, &handle_rev) == 0);
 
     BsAttachStore* external = bs_adapter_attach_persist_store_open(manifest.string().c_str());
     BS_TEST_REQUIRE("external-store", external != nullptr);
     BS_TEST_REQUIRE("external-commit",
                     bs_adapter_attach_persist_store_commit_per_path(
-                        external, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen,
-                        manifest_rev) == BS_ATTACH_OK);
+                        external, uri.c_str(), kBlessStarConfigV1Golden,
+                        kBlessStarConfigV1GoldenLen, manifest_rev) == BS_ATTACH_OK);
     bs_adapter_attach_persist_store_close(external);
 
-    BS_TEST_REQUIRE("stale-meta",
-                    bs_adapter_attach_config_get_snapshot_meta(fix.ctx, uri.c_str(), &meta) ==
-                        BS_ATTACH_ERR_REVISION_STALE);
+    BS_TEST_REQUIRE("stale-meta", bs_adapter_attach_config_get_snapshot_meta(
+                                      fix.ctx, uri.c_str(), &meta) == BS_ATTACH_ERR_REVISION_STALE);
 
     unsigned char chunk[64];
     size_t        out_len = 0;
-    BS_TEST_REQUIRE("stale-chunk",
-                    bs_adapter_attach_config_read_snapshot_chunk(fix.ctx, handle, 0, chunk,
-                                                                sizeof(chunk), &out_len) ==
-                        BS_ATTACH_ERR_REVISION_STALE);
+    BS_TEST_REQUIRE("stale-chunk", bs_adapter_attach_config_read_snapshot_chunk(
+                                       fix.ctx, handle, 0, chunk, sizeof(chunk), &out_len) ==
+                                       BS_ATTACH_ERR_REVISION_STALE);
 
     BS_TEST_REQUIRE("reload-2", run_reload(&fix, manifest, uri) == 0);
-    BS_TEST_REQUIRE("old-handle-invalid",
-                    bs_adapter_attach_config_read_snapshot_chunk(fix.ctx, handle, 0, chunk,
-                                                                sizeof(chunk), &out_len) ==
-                        BS_ATTACH_CONC_ERR_REVISION_CHANGED);
+    BS_TEST_REQUIRE("old-handle-invalid", bs_adapter_attach_config_read_snapshot_chunk(
+                                              fix.ctx, handle, 0, chunk, sizeof(chunk), &out_len) ==
+                                              BS_ATTACH_CONC_ERR_REVISION_CHANGED);
     bs_adapter_attach_config_close_snapshot_read(fix.ctx, handle);
 
     BS_TEST_REQUIRE("meta-after-reload",
@@ -156,9 +150,8 @@ static int test_sync_failure_rejects_batch(const fs::path& work)
     const fs::path manifest = work / "skip_sync.manifest";
     BS_TEST_REQUIRE("write-fail", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                             kBlessStarConfigV1GoldenLen));
-    BS_TEST_REQUIRE("ctx-store-fail",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest.string().c_str()) == 0);
+    BS_TEST_REQUIRE("ctx-store-fail", bs_adapter_attach_ctx_open_persist_store(
+                                          fix.ctx, manifest.string().c_str()) == 0);
     const std::string uri = bs_test_path_to_file_uri(cfg);
     BS_TEST_REQUIRE("sync-fail", run_reload_with_sync_failure(&fix, manifest, uri) == 0);
     bs_test_attach_teardown(&fix);

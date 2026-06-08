@@ -32,13 +32,12 @@ static int fail_read_fn(void*, const char*, IoReadResult* out)
 static int prime_manifest(const fs::path& config_path, const fs::path& manifest_path,
                           std::string* uri_out, uint64_t expected_rev = 0)
 {
-    const std::string uri = bs_test_path_to_file_uri(config_path);
+    const std::string uri   = bs_test_path_to_file_uri(config_path);
     BsAttachStore*    store = bs_adapter_attach_persist_store_open(manifest_path.string().c_str());
     BS_TEST_REQUIRE("prime-store", store != nullptr);
-    BS_TEST_REQUIRE("prime-commit",
-                    bs_adapter_attach_persist_store_commit_per_path(
-                        store, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen,
-                        expected_rev) == BS_ATTACH_OK);
+    BS_TEST_REQUIRE("prime-commit", bs_adapter_attach_persist_store_commit_per_path(
+                                        store, uri.c_str(), kBlessStarConfigV1Golden,
+                                        kBlessStarConfigV1GoldenLen, expected_rev) == BS_ATTACH_OK);
     bs_adapter_attach_persist_store_close(store);
     *uri_out = uri;
     return 0;
@@ -49,9 +48,8 @@ static int assert_snapshot_equals(AttachContext* ctx, const std::string& uri)
     unsigned char buf[4096];
     size_t        out_size = 0;
     uint64_t      rev      = 0;
-    BS_TEST_REQUIRE("snapshot-copy",
-                    bs_adapter_attach_config_get_snapshot_copy(ctx, uri.c_str(), buf, sizeof(buf),
-                                                               &out_size, &rev) == 0);
+    BS_TEST_REQUIRE("snapshot-copy", bs_adapter_attach_config_get_snapshot_copy(
+                                         ctx, uri.c_str(), buf, sizeof(buf), &out_size, &rev) == 0);
     BS_TEST_REQUIRE("snapshot-size", out_size == kBlessStarConfigV1GoldenLen);
     BS_TEST_REQUIRE("snapshot-bytes",
                     std::memcmp(buf, kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen) == 0);
@@ -61,8 +59,7 @@ static int assert_snapshot_equals(AttachContext* ctx, const std::string& uri)
 static int recover_with_read_fn(const fs::path& manifest, const std::string& uri,
                                 ReloadPathReadFn read_fn, void* read_ctx)
 {
-    AttachContext* ctx =
-        bs_adapter_attach_recover_from_store(manifest.string().c_str(), nullptr);
+    AttachContext* ctx = bs_adapter_attach_recover_from_store(manifest.string().c_str(), nullptr);
     BS_TEST_REQUIRE("step1", ctx != nullptr);
 
     BsTestAttachIoFixture fix{};
@@ -74,7 +71,7 @@ static int recover_with_read_fn(const fs::path& manifest, const std::string& uri
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
     BsAttachRecoverColdReloadOptions opts{};
-    opts.struct_size = sizeof(opts);
+    opts.struct_size               = sizeof(opts);
     const std::string manifest_str = manifest.string();
     opts.manifest_path             = manifest_str.c_str();
     opts.read_fn                   = read_fn;
@@ -101,12 +98,12 @@ static int test_fast_hydrate_skips_io_read(const fs::path& cfg, const fs::path& 
                                            const std::string& uri)
 {
     bs_adapter_attach_recover_sidecar_testing_set_enabled(1);
-    BS_TEST_REQUIRE("write-ready",
-                    bs_adapter_attach_recover_sidecar_write_ready(nullptr, manifest.string().c_str()) ==
-                        BS_ATTACH_OK);
-    BS_TEST_REQUIRE("can-fast",
-                    bs_adapter_attach_recover_sidecar_can_fast_hydrate(manifest.string().c_str()) == 1);
-    BS_TEST_REQUIRE("fast-recover", recover_with_read_fn(manifest, uri, fail_read_fn, nullptr) == 0);
+    BS_TEST_REQUIRE("write-ready", bs_adapter_attach_recover_sidecar_write_ready(
+                                       nullptr, manifest.string().c_str()) == BS_ATTACH_OK);
+    BS_TEST_REQUIRE("can-fast", bs_adapter_attach_recover_sidecar_can_fast_hydrate(
+                                    manifest.string().c_str()) == 1);
+    BS_TEST_REQUIRE("fast-recover",
+                    recover_with_read_fn(manifest, uri, fail_read_fn, nullptr) == 0);
     bs_adapter_attach_recover_sidecar_testing_set_enabled(-1);
     return 0;
 }
@@ -115,9 +112,8 @@ static int test_corrupt_sidecar_falls_back_to_cold(const fs::path& cfg, const fs
                                                    const std::string& uri)
 {
     bs_adapter_attach_recover_sidecar_testing_set_enabled(1);
-    BS_TEST_REQUIRE("write-ready",
-                    bs_adapter_attach_recover_sidecar_write_ready(nullptr, manifest.string().c_str()) ==
-                        BS_ATTACH_OK);
+    BS_TEST_REQUIRE("write-ready", bs_adapter_attach_recover_sidecar_write_ready(
+                                       nullptr, manifest.string().c_str()) == BS_ATTACH_OK);
 
     {
         const std::string sidecar_path = manifest.string() + ".runtime.ckpt";
@@ -126,11 +122,10 @@ static int test_corrupt_sidecar_falls_back_to_cold(const fs::path& cfg, const fs
         f.seekp(16);
         f.put(static_cast<char>(0xFF));
     }
-    BS_TEST_REQUIRE("cannot-fast",
-                    bs_adapter_attach_recover_sidecar_can_fast_hydrate(manifest.string().c_str()) == 0);
+    BS_TEST_REQUIRE("cannot-fast", bs_adapter_attach_recover_sidecar_can_fast_hydrate(
+                                       manifest.string().c_str()) == 0);
 
-    AttachContext* ctx =
-        bs_adapter_attach_recover_from_store(manifest.string().c_str(), nullptr);
+    AttachContext* ctx = bs_adapter_attach_recover_from_store(manifest.string().c_str(), nullptr);
     BS_TEST_REQUIRE("step1", ctx != nullptr);
     BsTestAttachIoFixture fix{};
     fix.ctx = ctx;
@@ -140,7 +135,7 @@ static int test_corrupt_sidecar_falls_back_to_cold(const fs::path& cfg, const fs
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
     BsAttachRecoverColdReloadOptions opts{};
-    opts.struct_size = sizeof(opts);
+    opts.struct_size               = sizeof(opts);
     const std::string manifest_str = manifest.string();
     opts.manifest_path             = manifest_str.c_str();
     opts.io_facade                 = fix.io;
@@ -157,11 +152,10 @@ static int test_corrupt_sidecar_falls_back_to_cold(const fs::path& cfg, const fs
 static int test_sidecar_disabled_uses_cold(const fs::path& manifest, const std::string& uri)
 {
     bs_adapter_attach_recover_sidecar_testing_set_enabled(0);
-    BS_TEST_REQUIRE("write-ready",
-                    bs_adapter_attach_recover_sidecar_write_ready(nullptr, manifest.string().c_str()) ==
-                        BS_ATTACH_OK);
-    BS_TEST_REQUIRE("cannot-fast",
-                    bs_adapter_attach_recover_sidecar_can_fast_hydrate(manifest.string().c_str()) == 0);
+    BS_TEST_REQUIRE("write-ready", bs_adapter_attach_recover_sidecar_write_ready(
+                                       nullptr, manifest.string().c_str()) == BS_ATTACH_OK);
+    BS_TEST_REQUIRE("cannot-fast", bs_adapter_attach_recover_sidecar_can_fast_hydrate(
+                                       manifest.string().c_str()) == 0);
     BS_TEST_REQUIRE("cold-fail", recover_with_read_fn(manifest, uri, fail_read_fn, nullptr) != 0);
     bs_adapter_attach_recover_sidecar_testing_set_enabled(-1);
     return 0;
@@ -175,7 +169,7 @@ int main()
     const fs::path           manifest = work / "manifest_sidecar.bs";
 
     BS_TEST_REQUIRE("write", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
-                                                     kBlessStarConfigV1GoldenLen));
+                                                       kBlessStarConfigV1GoldenLen));
 
     std::string uri;
     BS_TEST_REQUIRE("prime", prime_manifest(cfg, manifest, &uri) == 0);

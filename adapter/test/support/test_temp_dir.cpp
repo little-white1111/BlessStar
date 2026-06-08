@@ -16,14 +16,15 @@
 fs::path bs_test_unique_temp_dir(const char* prefix)
 {
     static std::atomic<uint32_t> counter{0};
-    const auto now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch()).count();
+    const auto                   now_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                              std::chrono::steady_clock::now().time_since_epoch())
+                                              .count();
 #ifdef _WIN32
     const uint32_t pid = static_cast<uint32_t>(GetCurrentProcessId());
 #else
     const uint32_t pid = static_cast<uint32_t>(getpid());
 #endif
-    const uint32_t salt = counter.fetch_add(1, std::memory_order_relaxed);
+    const uint32_t     salt = counter.fetch_add(1, std::memory_order_relaxed);
     std::ostringstream dir_name;
     dir_name << prefix << '_' << pid << '_' << now_ns << '_' << salt;
     const fs::path  tmp = fs::temp_directory_path() / dir_name.str();

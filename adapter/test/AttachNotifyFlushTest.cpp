@@ -69,26 +69,23 @@ int main()
     const fs::path manifest = work / "notify.manifest";
     BS_TEST_REQUIRE("write", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                        kBlessStarConfigV1GoldenLen));
-    BS_TEST_REQUIRE("ctx-store",
-                    bs_adapter_attach_ctx_open_persist_store(fix.ctx,
-                                                             manifest.string().c_str()) == 0);
+    BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
+                                     fix.ctx, manifest.string().c_str()) == 0);
     const std::string uri = bs_test_path_to_file_uri(cfg);
 
-    int event_hits = 0;
-    int watch_hits = 0;
-    EventBus* bus = bs_adapter_attach_config_event_bus(fix.ctx);
+    int       event_hits = 0;
+    int       watch_hits = 0;
+    EventBus* bus        = bs_adapter_attach_config_event_bus(fix.ctx);
     BS_TEST_REQUIRE("bus", bus != nullptr);
-    BS_TEST_REQUIRE("event-sub", bs_event_bus_subscribe(bus, uri.c_str(), event_listener,
-                                                        &event_hits) == 0);
-    BS_TEST_REQUIRE("watch-sub",
-                    bs_adapter_attach_config_subscribe_state_watch(
-                        fix.ctx, uri.c_str(), watch_listener, &watch_hits) == 0);
+    BS_TEST_REQUIRE("event-sub",
+                    bs_event_bus_subscribe(bus, uri.c_str(), event_listener, &event_hits) == 0);
+    BS_TEST_REQUIRE("watch-sub", bs_adapter_attach_config_subscribe_state_watch(
+                                     fix.ctx, uri.c_str(), watch_listener, &watch_hits) == 0);
 
     bs_adapter_attach_session_begin_write_window(fix.ctx);
-    BS_TEST_REQUIRE("sync-window",
-                    bs_adapter_attach_config_sync_path(fix.ctx, uri.c_str(),
-                                                       kBlessStarConfigV1Golden,
-                                                       kBlessStarConfigV1GoldenLen) == 0);
+    BS_TEST_REQUIRE("sync-window", bs_adapter_attach_config_sync_path(
+                                       fix.ctx, uri.c_str(), kBlessStarConfigV1Golden,
+                                       kBlessStarConfigV1GoldenLen) == 0);
     BS_TEST_REQUIRE("event-deferred", event_hits == 0);
     bs_adapter_attach_session_end_write_window(fix.ctx);
     BS_TEST_REQUIRE("event-flushed", event_hits > 0);

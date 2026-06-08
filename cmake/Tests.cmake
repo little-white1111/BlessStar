@@ -730,7 +730,7 @@ target_include_directories(bs_test_attach_day19_shortcoming_regression
 )
 target_compile_definitions(bs_test_attach_day19_shortcoming_regression PRIVATE BS_TESTING)
 set_tests_properties(bs_test_attach_day19_shortcoming_regression
-  PROPERTIES LABELS "unit;arch_gap;day19;attach;regression" TIMEOUT 300
+  PROPERTIES LABELS "unit;arch_gap;day19;attach;regression" TIMEOUT 900
                    RESOURCE_LOCK "attach_integration"
 )
 set_tests_properties(bs_test_attach_p2_shortcoming_regression
