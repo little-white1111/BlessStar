@@ -57,6 +57,7 @@ static int test_exec_rollback_manifest_epoch_unchanged(const fs::path&    cfg,
                                                        const fs::path&    manifest,
                                                        const std::string& uri)
 {
+    (void)cfg;
     BsTestAttachIoFixture fix{};
     fix.ctx = bs_adapter_attach_ctx_create();
     BS_TEST_REQUIRE("ctx", fix.ctx != nullptr);
@@ -142,6 +143,7 @@ static int test_exec_rollback_manifest_epoch_unchanged(const fs::path&    cfg,
 static int test_per_path_has_no_phase_mark_wal(const fs::path& cfg, const fs::path& manifest,
                                                const std::string& uri)
 {
+    (void)cfg;
     BsTestAttachIoFixture fix{};
     fix.ctx = bs_adapter_attach_ctx_create();
     BS_TEST_REQUIRE("ctx", fix.ctx != nullptr);
