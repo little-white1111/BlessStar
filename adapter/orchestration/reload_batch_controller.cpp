@@ -22,10 +22,7 @@
 #include <cstring>
 
 #include <algorithm>
-#include <atomic>
-#include <mutex>
 #include <string>
-#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -717,25 +714,14 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             /* P1: pool exec must not run under session write-window (session_mu exclusive). */
             end_write_window_if_open();
 
-            std::vector<std::thread> workers;
-            std::mutex               fail_mu;
-            bool                     exec_failed = false;
+            bool exec_failed = false;
             for (auto& w : ctrl->paths)
             {
                 if (w.state != BS_ORCH_STAGED)
                     continue;
-                workers.emplace_back(
-                    [&w, actx, ctrl, &fail_mu, &exec_failed]()
-                    {
-                        if (exec_path_ir(actx, &w, ctrl) != 0)
-                        {
-                            std::lock_guard<std::mutex> lock(fail_mu);
-                            exec_failed = true;
-                        }
-                    });
+                if (exec_path_ir(actx, &w, ctrl) != 0)
+                    exec_failed = true;
             }
-            for (auto& worker : workers)
-                worker.join();
             if (exec_failed)
             {
                 batch_had_failure = true;

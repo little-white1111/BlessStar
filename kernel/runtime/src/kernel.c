@@ -142,6 +142,7 @@ struct Kernel
     BsCond           exec_cv;
     BsThread         exec_thread;
     int              exec_thread_started;
+    int              exec_thread_ready;
     int              exec_stop_requested;
     KernelExecJob*   exec_head;
     KernelExecJob*   exec_tail;
@@ -246,6 +247,11 @@ static void* kernel_executor_worker_main(void* arg)
 #endif
 {
     Kernel* kernel = (Kernel*)arg;
+    bs_mutex_lock(&kernel->exec_mu);
+    kernel->exec_thread_ready = 1;
+    bs_cond_broadcast(&kernel->exec_cv);
+    bs_mutex_unlock(&kernel->exec_mu);
+
     for (;;)
     {
         bs_mutex_lock(&kernel->exec_mu);
@@ -279,7 +285,11 @@ static int kernel_start_executor(Kernel* kernel)
 {
     if (!kernel || kernel->exec_thread_started)
         return 0;
-    kernel->exec_stop_requested = 0;
+    bs_mutex_lock(&kernel->exec_mu);
+    kernel->exec_thread_ready    = 0;
+    kernel->exec_stop_requested  = 0;
+    kernel->exec_thread_started  = 0;
+    bs_mutex_unlock(&kernel->exec_mu);
 #ifdef _WIN32
     kernel->exec_thread = CreateThread(NULL, 0, kernel_executor_worker_main, kernel, 0, NULL);
     if (!kernel->exec_thread)
@@ -288,7 +298,11 @@ static int kernel_start_executor(Kernel* kernel)
     if (pthread_create(&kernel->exec_thread, NULL, kernel_executor_worker_main, kernel) != 0)
         return -1;
 #endif
+    bs_mutex_lock(&kernel->exec_mu);
     kernel->exec_thread_started = 1;
+    while (!kernel->exec_thread_ready)
+        bs_cond_wait(&kernel->exec_cv, &kernel->exec_mu);
+    bs_mutex_unlock(&kernel->exec_mu);
     return 0;
 }
 
@@ -307,6 +321,7 @@ static void kernel_stop_executor(Kernel* kernel)
 #else
     (void)pthread_join(kernel->exec_thread, NULL);
 #endif
+    kernel->exec_thread_ready   = 0;
     kernel->exec_thread_started = 0;
 }
 
@@ -369,6 +384,7 @@ Kernel* bs_kernel_create(const KernelConfig* config)
     bs_mutex_init(&kernel->exec_mu);
     bs_cond_init(&kernel->exec_cv);
     kernel->exec_thread_started = 0;
+    kernel->exec_thread_ready   = 0;
     kernel->exec_stop_requested = 0;
     kernel->exec_head           = NULL;
     kernel->exec_tail           = NULL;
