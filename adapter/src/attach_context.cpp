@@ -312,6 +312,14 @@ int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx)
     return ctx && ctx->kernel_pool_warmed;
 }
 
+#if defined(BS_TESTING)
+void bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(AttachContext* ctx)
+{
+    if (ctx)
+        ctx->kernel_pool_warmed = 0;
+}
+#endif
+
 int bs_adapter_attach_ctx_rebuild_kernel_pool(AttachContext* ctx)
 {
     if (!ctx)

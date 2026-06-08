@@ -64,6 +64,11 @@ extern "C"
     /** 1 if KernelPool warmup completed on ctx (day21 A''' reload exec gate). */
     int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx);
 
+#if defined(BS_TESTING)
+    /** Day19 smoke/full: inline Kernel exec for 100KB fixtures (pool path too slow for GHA). */
+    void bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(AttachContext* ctx);
+#endif
+
     /** REC-A'-14: destroy any old KernelPool, recreate it, and warm it before cold recover. */
     int bs_adapter_attach_ctx_rebuild_kernel_pool(AttachContext* ctx);
 

@@ -59,6 +59,12 @@ static uint64_t dir_size_bytes(const fs::path& root)
     return total;
 }
 
+static bool day19_profile_prefers_inline_kernel_exec(const BsDay19Profile& profile)
+{
+    return std::strcmp(profile.name, "smoke") == 0 || std::strcmp(profile.name, "smoke_fail") == 0 ||
+           std::strcmp(profile.name, "full") == 0 || std::strcmp(profile.name, "gha_6h") == 0;
+}
+
 static void tally_failure_kind(BsDay19PathKind kind, int* fail_parse, int* fail_gate,
                                int* fail_read)
 {
@@ -96,6 +102,8 @@ int main(int argc, char** argv)
     BS_TEST_REQUIRE("setup", fix.ctx != nullptr);
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
     BS_TEST_REQUIRE("freeze", bs_test_attach_bootstrap_freeze_ctx(&fix) == 0);
+    if (day19_profile_prefers_inline_kernel_exec(profile))
+        bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(fix.ctx);
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
@@ -198,9 +206,11 @@ int main(int argc, char** argv)
             maybe_sample("day", static_cast<uint64_t>(day_total), ok);
             if (day_total % 50 == 0)
                 bs_day19_rss_sample_push(samples, "day_tick", static_cast<uint64_t>(day_total), ok);
-            if ((std::strcmp(profile.name, "gha_6h") == 0 ||
+            if ((std::strcmp(profile.name, "smoke") == 0 ||
+                 std::strcmp(profile.name, "smoke_fail") == 0 ||
+                 std::strcmp(profile.name, "gha_6h") == 0 ||
                  std::strcmp(profile.name, "full") == 0) &&
-                day_total % 1000 == 0)
+                day_total % 500 == 0)
             {
                 std::fprintf(stderr, "[day19] progress elapsed=%ds day=%d/%d night=%d/%d\n",
                              elapsed, day_total, profile.min_day_reloads, night_total,

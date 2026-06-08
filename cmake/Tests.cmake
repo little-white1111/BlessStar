@@ -656,6 +656,7 @@ blessstar_add_unit_test(bs_test_day19_stress_reload_loop
 target_include_directories(bs_test_day19_stress_reload_loop
   PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
 )
+target_compile_definitions(bs_test_day19_stress_reload_loop PRIVATE BS_TESTING)
 set_tests_properties(bs_test_day19_stress_reload_loop
   PROPERTIES LABELS "unit;day19;stress;regression" TIMEOUT 600
                    RESOURCE_LOCK "attach_integration"
