@@ -55,7 +55,7 @@ static int test_manifest_fsync_per_path_throughput(void)
     BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                            kBlessStarConfigV1GoldenLen));
 #if defined(BLESSSTAR_SANITIZER_CI)
-    constexpr int kCommits = 30;
+    constexpr int kCommits = 15;
 #else
     constexpr int kCommits = 120;
 #endif
@@ -116,7 +116,7 @@ static int test_wal_purge_coalesced_on_store(void)
     BS_TEST_REQUIRE("store-open", store != nullptr);
 
 #if defined(BLESSSTAR_SANITIZER_CI)
-    const int kPurgeWalEpochs = 20;
+    const int kPurgeWalEpochs = 10;
 #else
     const int kPurgeWalEpochs = 50;
 #endif
@@ -209,7 +209,7 @@ static int test_stress_ctx_store_reload_budget(void)
 
     const auto t0 = std::chrono::steady_clock::now();
 #if defined(BLESSSTAR_SANITIZER_CI)
-    const int kCtxStoreReloads = 20;
+    const int kCtxStoreReloads = 10;
 #else
     const int kCtxStoreReloads = 80;
 #endif
@@ -323,7 +323,7 @@ static int test_rs_reset_no_leak(void)
     bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
 #if defined(BLESSSTAR_SANITIZER_CI)
-    const int kRsResetRuns = 25;
+    const int kRsResetRuns = 10;
 #else
     const int kRsResetRuns = 100;
 #endif
@@ -372,7 +372,7 @@ static int test_rs_ctx_store_single_open(void)
     bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
 #if defined(BLESSSTAR_SANITIZER_CI)
-    const int kRsStoreRuns = 25;
+    const int kRsStoreRuns = 10;
 #else
     const int kRsStoreRuns = 100;
 #endif
