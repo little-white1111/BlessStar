@@ -859,6 +859,10 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
     }
 
     end_write_window_if_open();
+    /* PER_PATH pool exec closes write window before persist; sync enqueues watch jobs
+     * outside the window, so drain pending notifications before returning. */
+    if (actx)
+        bs_adapter_attach_session_drain_pending_notifications(actx);
     return 0;
 }
 
