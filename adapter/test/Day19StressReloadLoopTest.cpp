@@ -63,8 +63,9 @@ static uint64_t dir_size_bytes(const fs::path& root)
 static bool day19_profile_prefers_inline_kernel_exec(const BsDay19Profile& profile)
 {
     return std::strcmp(profile.name, "smoke") == 0 ||
-           std::strcmp(profile.name, "smoke_fail") == 0 || std::strcmp(profile.name, "full") == 0 ||
-           std::strcmp(profile.name, "gha_6h") == 0;
+           std::strcmp(profile.name, "smoke_fail") == 0 ||
+           std::strcmp(profile.name, "smoke_fail_ci") == 0 ||
+           std::strcmp(profile.name, "full") == 0 || std::strcmp(profile.name, "gha_6h") == 0;
 }
 
 static void tally_failure_kind(BsDay19PathKind kind, int* fail_parse, int* fail_gate,
