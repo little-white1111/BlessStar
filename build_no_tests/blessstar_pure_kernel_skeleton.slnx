@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+	<Configurations>
+		<BuildType Name="Debug"/>
+		<BuildType Name="Release"/>
+		<BuildType Name="MinSizeRel"/>
+		<BuildType Name="RelWithDebInfo"/>
+		<Platform Name="x64"/>
+	</Configurations>
+	<Project Path="ALL_BUILD.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="6bed9cd8-80b1-3ef0-94b1-e8b8b687ac6e" DefaultStartup="true">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_cli.vcxproj"/>
+		<BuildDependency Project="bs_adapter_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_log.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_loader.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_log_domains.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_orch.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_registry.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_app_sdk.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_attach_watch.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_ir.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_report.vcxproj"/>
+		<BuildDependency Project="bs_benchmark_state.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+		<BuildDependency Project="bs_kernel_test_support.vcxproj"/>
+		<BuildDependency Project="_deps/spdlog-build/spdlog.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="ZERO_CHECK.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="c457ef2f-8f21-3d37-afb0-d9c8bc3583b3"/>
+	<Project Path="bs_adapter_attach.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="15f5ed96-7c2d-3679-8000-603a58ca00f9">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_cli.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="6c7e6d14-7590-36a6-aa50-db2a6f58905f">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_io.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="2d4c623e-d3be-3c5e-9ea6-5cbcd25b4abb">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_log.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f9874bd2-5d42-335b-8c5c-18cd15c1846a">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+		<BuildDependency Project="_deps/spdlog-build/spdlog.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_orchestration.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="4cda13cf-820d-3290-8a07-813120d7045d">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_parser.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="4ac51497-575c-38bd-be2b-6b59b1075291">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_persistence.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="83976b00-694c-3653-be8b-f417a1782f06">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_plugin_io.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="79bdb30f-f165-3eef-a35c-91cca406b99e">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_plugin_loader.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ccae0cb3-954e-38cb-86ff-b2859cdc9acb">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_log_domains.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_orch.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_plugin_log_domains.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="384b4745-05ad-34a0-9aae-c062d6f2cb5c">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_plugin_orch.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="666006b3-daee-3aac-ab64-b4c3bbdaf4fd">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_plugin_support.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ece1a2b7-4af9-3dec-a011-432959a35f40">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_registry.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="26f85420-759d-383f-a9d9-09d0460fa685">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_log.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_loader.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_log_domains.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_orch.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+		<BuildDependency Project="_deps/spdlog-build/spdlog.vcxproj"/>
+	</Project>
+	<Project Path="bs_adapter_requirement.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="f906f6bd-5662-3457-ae02-557ca108fdaf">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_app_sdk.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a747edfd-0f9c-3aa2-955c-5783fc3c3e32">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_attach_watch.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ce05f297-683f-392d-8d28-40307edb8e79">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_ir.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3fc528ad-9b27-3b0c-93c0-c91825baee7c">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_pipeline.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="eee4ff17-bce4-38a3-af4f-62b27922d87f">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_report.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="a64793eb-b51f-3a6a-a3e1-db2d161da066">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+	</Project>
+	<Project Path="bs_benchmark_state.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="da04cd97-1096-35e4-9cdf-664b9c63d7b0">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_common.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="7f0d700d-298f-3f2d-bc40-e204416a317d">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_common_format.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="d44d936e-dd74-38cb-81b7-cd9392fc7b2d">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_io.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="4e308c7f-5e99-3a67-a626-77e7db76052e">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_ir.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="49644e11-27b1-31df-b055-b0a737007fdf">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_pipeline.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="494b16e9-148f-3f93-9975-3cceb54a0f64">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_registry.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="cfd4d085-8784-3d45-86f9-bd0aeeafb90e">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_report_core.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="c985fb95-347d-39cc-97ad-8bd842577773">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_runtime.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="6077f000-ac4a-33fe-874c-e5a5f086c0cc">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_state.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="712b3b2f-9364-3ce2-ab89-eb6bc1be3d9f">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="bs_kernel_test_support.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="47c3d3ac-57ac-3b28-8148-cd4863d3619c">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+	</Project>
+	<Project Path="_deps/spdlog-build/spdlog.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="978c14c3-6d8d-381a-adbd-3efd906e8244">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+</Solution>

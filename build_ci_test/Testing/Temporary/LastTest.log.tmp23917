@@ -1,0 +1,20 @@
+Start testing: Jun 08 19:40 中国标准时间
+----------------------------------------------------------
+79/112 Testing: bs_test_day19_stress_reload_loop
+79/112 Test: bs_test_day19_stress_reload_loop
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_day19_stress_reload_loop.exe" "--profile=ci"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_day19_stress_reload_loop" start time: Jun 08 19:40 中国标准时间
+Output:
+----------------------------------------------------------
+Day19Stress profile=ci duration_max=25 day_reload_min=30 night_batch_min=5
+stress,profile=ci,day=30/30(1.0000),night=5/5(1.0000),fail_parse=0,fail_gate=0,fail_read=0,night_abort=0,rss_slope_reg=0.000,rss_slope_reg_full=3.516,rss_delta_win=0.137,rss_slope_endpoint_ws=21.938,rss_delta_ws_win=0.137,samples=7,warmup_skip=2,win=5,slope_win_min=10,disk_mb=0
+Day19StressReloadLoopTest OK
+<end of output>
+Test time =  25.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_day19_stress_reload_loop" end time: Jun 08 19:41 中国标准时间
+"bs_test_day19_stress_reload_loop" time elapsed: 00:00:25
+----------------------------------------------------------
+

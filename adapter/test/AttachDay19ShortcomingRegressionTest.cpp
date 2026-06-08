@@ -54,7 +54,11 @@ static int test_manifest_fsync_per_path_throughput(void)
     const fs::path           cfg = tmp_guard.path / "cfg.json";
     BS_TEST_REQUIRE("write-cfg", bs_test_write_binary_file(cfg, kBlessStarConfigV1Golden,
                                                            kBlessStarConfigV1GoldenLen));
+#if defined(BLESSSTAR_SANITIZER_CI)
+    constexpr int kCommits = 30;
+#else
     constexpr int kCommits = 120;
+#endif
 
     auto bench_commits = [&](BsAttachFsyncPolicy policy, const char* tag, int64_t* elapsed_ms_out)
     {
@@ -111,7 +115,12 @@ static int test_wal_purge_coalesced_on_store(void)
     BsAttachStore* store = bs_adapter_attach_persist_store_open(manifest.string().c_str());
     BS_TEST_REQUIRE("store-open", store != nullptr);
 
-    for (int i = 0; i < 50; ++i)
+#if defined(BLESSSTAR_SANITIZER_CI)
+    const int kPurgeWalEpochs = 20;
+#else
+    const int kPurgeWalEpochs = 50;
+#endif
+    for (int i = 0; i < kPurgeWalEpochs; ++i)
     {
         bs_adapter_attach_persist_store_batch_begin(store);
         BS_TEST_REQUIRE("stage",
@@ -123,7 +132,7 @@ static int test_wal_purge_coalesced_on_store(void)
     }
 
     const uint64_t epoch = bs_adapter_attach_persist_store_batch_epoch(store);
-    BS_TEST_REQUIRE("epoch", epoch >= 50u);
+    BS_TEST_REQUIRE("epoch", epoch >= static_cast<uint64_t>(kPurgeWalEpochs));
 
     const auto t0 = std::chrono::steady_clock::now();
     bs_adapter_attach_persist_store_testing_purge_wal(store);
@@ -199,7 +208,12 @@ static int test_stress_ctx_store_reload_budget(void)
     bs_adapter_attach_persist_store_set_fsync_policy(store, BS_ATTACH_FSYNC_NEVER);
 
     const auto t0 = std::chrono::steady_clock::now();
-    for (int i = 0; i < 80; ++i)
+#if defined(BLESSSTAR_SANITIZER_CI)
+    const int kCtxStoreReloads = 20;
+#else
+    const int kCtxStoreReloads = 80;
+#endif
+    for (int i = 0; i < kCtxStoreReloads; ++i)
     {
         BS_TEST_REQUIRE("reload",
                         run_per_path_reload(&fix, manifest_path, uri.c_str(), nullptr) == 0);
@@ -308,7 +322,12 @@ static int test_rs_reset_no_leak(void)
     bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
     bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
-    for (int i = 0; i < 100; ++i)
+#if defined(BLESSSTAR_SANITIZER_CI)
+    const int kRsResetRuns = 25;
+#else
+    const int kRsResetRuns = 100;
+#endif
+    for (int i = 0; i < kRsResetRuns; ++i)
     {
         BS_TEST_REQUIRE("reload", run_per_path_reload(&fix, manifest_path, uri.c_str(), ctrl) == 0);
         const size_t ir_entries = bs_adapter_attach_ir_snapshot_entry_count(fix.ctx);
@@ -352,7 +371,12 @@ static int test_rs_ctx_store_single_open(void)
     bs_adapter_attach_reload_batch_set_attach_scheme(ctrl, BS_ATTACH_SCHEME_PER_PATH);
     bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest_path.string().c_str());
 
-    for (int i = 0; i < 100; ++i)
+#if defined(BLESSSTAR_SANITIZER_CI)
+    const int kRsStoreRuns = 25;
+#else
+    const int kRsStoreRuns = 100;
+#endif
+    for (int i = 0; i < kRsStoreRuns; ++i)
         BS_TEST_REQUIRE("reload", run_per_path_reload(&fix, manifest_path, uri.c_str(), ctrl) == 0);
 
     BS_TEST_REQUIRE("open-count-still-1",

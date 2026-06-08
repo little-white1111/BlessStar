@@ -1,0 +1,803 @@
+Start testing: Jun 07 10:50 中国标准时间
+----------------------------------------------------------
+7/104 Testing: bs_test_requirements
+7/104 Test: bs_test_requirements
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_requirements.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_requirements" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_requirements" end time: Jun 07 10:50 中国标准时间
+"bs_test_requirements" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/104 Testing: bs_test_requirement_filter
+9/104 Test: bs_test_requirement_filter
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_requirement_filter.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_requirement_filter" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_requirement_filter" end time: Jun 07 10:50 中国标准时间
+"bs_test_requirement_filter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/104 Testing: bs_test_config_parse
+12/104 Test: bs_test_config_parse
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_config_parse.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_config_parse" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_config_parse" end time: Jun 07 10:50 中国标准时间
+"bs_test_config_parse" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/104 Testing: bs_test_config_parse_boundary
+13/104 Test: bs_test_config_parse_boundary
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_config_parse_boundary.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_config_parse_boundary" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_config_parse_boundary" end time: Jun 07 10:50 中国标准时间
+"bs_test_config_parse_boundary" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/104 Testing: bs_test_config_parse_security
+14/104 Test: bs_test_config_parse_security
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_config_parse_security.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_config_parse_security" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_config_parse_security" end time: Jun 07 10:50 中国标准时间
+"bs_test_config_parse_security" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/104 Testing: bs_test_config_parse_security_audit
+15/104 Test: bs_test_config_parse_security_audit
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_config_parse_security_audit.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_config_parse_security_audit" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_config_parse_security_audit" end time: Jun 07 10:50 中国标准时间
+"bs_test_config_parse_security_audit" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/104 Testing: bs_test_attach_resilience
+16/104 Test: bs_test_attach_resilience
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_resilience.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_resilience" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_resilience" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_resilience" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/104 Testing: bs_test_attach_atomicity
+17/104 Test: bs_test_attach_atomicity
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_atomicity.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_atomicity" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_atomicity" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_atomicity" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/104 Testing: bs_test_attach_fsync_spot
+18/104 Test: bs_test_attach_fsync_spot
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_fsync_spot.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_fsync_spot" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_fsync_spot" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_fsync_spot" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/104 Testing: bs_test_attach_watch
+19/104 Test: bs_test_attach_watch
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_watch.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_watch" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_watch" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_watch" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/104 Testing: bs_test_reload_config_json_integration
+23/104 Test: bs_test_reload_config_json_integration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_reload_config_json_integration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_reload_config_json_integration" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_reload_config_json_integration" end time: Jun 07 10:50 中国标准时间
+"bs_test_reload_config_json_integration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/104 Testing: bs_test_path_registry
+24/104 Test: bs_test_path_registry
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_path_registry.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_path_registry" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_path_registry" end time: Jun 07 10:50 中国标准时间
+"bs_test_path_registry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/104 Testing: bs_test_registry_hub
+25/104 Test: bs_test_registry_hub
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_registry_hub.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_registry_hub" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_registry_hub" end time: Jun 07 10:50 中国标准时间
+"bs_test_registry_hub" time elapsed: 00:00:00
+----------------------------------------------------------
+
+26/104 Testing: bs_test_registry_facade
+26/104 Test: bs_test_registry_facade
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_registry_facade.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_registry_facade" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_registry_facade" end time: Jun 07 10:50 中国标准时间
+"bs_test_registry_facade" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/104 Testing: bs_test_registry_guard
+27/104 Test: bs_test_registry_guard
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_registry_guard.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_registry_guard" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_registry_guard" end time: Jun 07 10:50 中国标准时间
+"bs_test_registry_guard" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/104 Testing: bs_test_registry_integration
+28/104 Test: bs_test_registry_integration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_registry_integration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_registry_integration" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_registry_integration" end time: Jun 07 10:50 中国标准时间
+"bs_test_registry_integration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+29/104 Testing: bs_test_attach_pipeline_registry
+29/104 Test: bs_test_attach_pipeline_registry
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_pipeline_registry.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_pipeline_registry" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_pipeline_registry" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_pipeline_registry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/104 Testing: bs_test_registry_attach_contract
+30/104 Test: bs_test_registry_attach_contract
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_registry_attach_contract.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_registry_attach_contract" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_registry_attach_contract" end time: Jun 07 10:50 中国标准时间
+"bs_test_registry_attach_contract" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/104 Testing: bs_test_io_facade
+31/104 Test: bs_test_io_facade
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_facade.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_facade" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_facade" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_facade" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/104 Testing: bs_test_io_local_provider
+32/104 Test: bs_test_io_local_provider
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_local_provider.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_local_provider" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_local_provider" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_local_provider" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/104 Testing: bs_test_io_registry_phase
+33/104 Test: bs_test_io_registry_phase
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_registry_phase.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_registry_phase" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_registry_phase" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_registry_phase" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/104 Testing: bs_test_io_facade_boundary
+34/104 Test: bs_test_io_facade_boundary
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_facade_boundary.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_facade_boundary" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_facade_boundary" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_facade_boundary" time elapsed: 00:00:00
+----------------------------------------------------------
+
+35/104 Testing: bs_test_io_local_provider_boundary
+35/104 Test: bs_test_io_local_provider_boundary
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_local_provider_boundary.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_local_provider_boundary" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_local_provider_boundary" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_local_provider_boundary" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/104 Testing: bs_test_io_provider_stub
+36/104 Test: bs_test_io_provider_stub
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_provider_stub.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_provider_stub" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_provider_stub" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_provider_stub" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/104 Testing: bs_test_io_reload_batch
+37/104 Test: bs_test_io_reload_batch
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_reload_batch.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_reload_batch" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_reload_batch" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_reload_batch" time elapsed: 00:00:00
+----------------------------------------------------------
+
+40/104 Testing: bs_test_reload_per_batch_parallel_exec
+40/104 Test: bs_test_reload_per_batch_parallel_exec
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_reload_per_batch_parallel_exec.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_reload_per_batch_parallel_exec" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_reload_per_batch_parallel_exec" end time: Jun 07 10:50 中国标准时间
+"bs_test_reload_per_batch_parallel_exec" time elapsed: 00:00:00
+----------------------------------------------------------
+
+41/104 Testing: bs_test_io_facade_max_read
+41/104 Test: bs_test_io_facade_max_read
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_facade_max_read.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_facade_max_read" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_facade_max_read" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_facade_max_read" time elapsed: 00:00:00
+----------------------------------------------------------
+
+42/104 Testing: bs_test_io_local_provider_timeout
+42/104 Test: bs_test_io_local_provider_timeout
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_local_provider_timeout.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_local_provider_timeout" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_local_provider_timeout" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_local_provider_timeout" time elapsed: 00:00:00
+----------------------------------------------------------
+
+43/104 Testing: bs_test_io_attach_pipeline
+43/104 Test: bs_test_io_attach_pipeline
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_attach_pipeline.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_attach_pipeline" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_attach_pipeline" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_attach_pipeline" time elapsed: 00:00:00
+----------------------------------------------------------
+
+44/104 Testing: bs_test_registry_bootstrap_io
+44/104 Test: bs_test_registry_bootstrap_io
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_registry_bootstrap_io.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_registry_bootstrap_io" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_registry_bootstrap_io" end time: Jun 07 10:50 中国标准时间
+"bs_test_registry_bootstrap_io" time elapsed: 00:00:00
+----------------------------------------------------------
+
+45/104 Testing: bs_test_attach_context_bootstrap
+45/104 Test: bs_test_attach_context_bootstrap
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_context_bootstrap.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_context_bootstrap" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_context_bootstrap" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_context_bootstrap" time elapsed: 00:00:00
+----------------------------------------------------------
+
+46/104 Testing: bs_test_attach_freeze_eventbus_integration
+46/104 Test: bs_test_attach_freeze_eventbus_integration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_freeze_eventbus_integration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_freeze_eventbus_integration" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_freeze_eventbus_integration" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_freeze_eventbus_integration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+48/104 Testing: bs_test_plugin_loader_attach
+48/104 Test: bs_test_plugin_loader_attach
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_plugin_loader_attach.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_plugin_loader_attach" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_plugin_loader_attach" end time: Jun 07 10:50 中国标准时间
+"bs_test_plugin_loader_attach" time elapsed: 00:00:00
+----------------------------------------------------------
+
+49/104 Testing: bs_test_plugin_orch_reload_registry
+49/104 Test: bs_test_plugin_orch_reload_registry
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_plugin_orch_reload_registry.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_plugin_orch_reload_registry" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_plugin_orch_reload_registry" end time: Jun 07 10:50 中国标准时间
+"bs_test_plugin_orch_reload_registry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+50/104 Testing: bs_test_plugin_ir_requirements
+50/104 Test: bs_test_plugin_ir_requirements
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_plugin_ir_requirements.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_plugin_ir_requirements" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_plugin_ir_requirements" end time: Jun 07 10:50 中国标准时间
+"bs_test_plugin_ir_requirements" time elapsed: 00:00:00
+----------------------------------------------------------
+
+51/104 Testing: bs_test_attach_manifest_yaml
+51/104 Test: bs_test_attach_manifest_yaml
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_manifest_yaml.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_manifest_yaml" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_manifest_yaml" end time: Jun 07 10:50 中国标准时间
+"bs_test_attach_manifest_yaml" time elapsed: 00:00:00
+----------------------------------------------------------
+
+52/104 Testing: bs_test_plugin_log_domains_attach_integration
+52/104 Test: bs_test_plugin_log_domains_attach_integration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_plugin_log_domains_attach_integration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_plugin_log_domains_attach_integration" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_plugin_log_domains_attach_integration" end time: Jun 07 10:50 中国标准时间
+"bs_test_plugin_log_domains_attach_integration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+53/104 Testing: bs_test_day8_attach_full_integration
+53/104 Test: bs_test_day8_attach_full_integration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_day8_attach_full_integration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_day8_attach_full_integration" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_day8_attach_full_integration" end time: Jun 07 10:50 中国标准时间
+"bs_test_day8_attach_full_integration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+57/104 Testing: bs_test_kernel_executor
+57/104 Test: bs_test_kernel_executor
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_kernel_executor.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_kernel_executor" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+KernelExecutorTest: PASS
+<end of output>
+Test time =   0.15 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_kernel_executor" end time: Jun 07 10:50 中国标准时间
+"bs_test_kernel_executor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+58/104 Testing: bs_test_kernel_pool
+58/104 Test: bs_test_kernel_pool
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_kernel_pool.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_kernel_pool" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+KernelPoolTest: PASS
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_kernel_pool" end time: Jun 07 10:50 中国标准时间
+"bs_test_kernel_pool" time elapsed: 00:00:00
+----------------------------------------------------------
+
+66/104 Testing: bs_test_status
+66/104 Test: bs_test_status
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_status.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_status" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_status" end time: Jun 07 10:50 中国标准时间
+"bs_test_status" time elapsed: 00:00:00
+----------------------------------------------------------
+
+67/104 Testing: bs_test_log
+67/104 Test: bs_test_log
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_log.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_log" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_log" end time: Jun 07 10:50 中国标准时间
+"bs_test_log" time elapsed: 00:00:00
+----------------------------------------------------------
+
+68/104 Testing: bs_test_registry_status_domain
+68/104 Test: bs_test_registry_status_domain
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_registry_status_domain.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_registry_status_domain" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_registry_status_domain" end time: Jun 07 10:50 中国标准时间
+"bs_test_registry_status_domain" time elapsed: 00:00:00
+----------------------------------------------------------
+
+69/104 Testing: bs_test_reload_report
+69/104 Test: bs_test_reload_report
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_reload_report.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_reload_report" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_reload_report" end time: Jun 07 10:50 中国标准时间
+"bs_test_reload_report" time elapsed: 00:00:00
+----------------------------------------------------------
+
+70/104 Testing: bs_test_reload_attach_guard
+70/104 Test: bs_test_reload_attach_guard
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_reload_attach_guard.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_reload_attach_guard" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_reload_attach_guard" end time: Jun 07 10:50 中国标准时间
+"bs_test_reload_attach_guard" time elapsed: 00:00:00
+----------------------------------------------------------
+
+71/104 Testing: bs_test_reload_gate_default
+71/104 Test: bs_test_reload_gate_default
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_reload_gate_default.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_reload_gate_default" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_reload_gate_default" end time: Jun 07 10:50 中国标准时间
+"bs_test_reload_gate_default" time elapsed: 00:00:00
+----------------------------------------------------------
+
+72/104 Testing: bs_test_log_domain_registration
+72/104 Test: bs_test_log_domain_registration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_log_domain_registration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_log_domain_registration" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_log_domain_registration" end time: Jun 07 10:50 中国标准时间
+"bs_test_log_domain_registration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+73/104 Testing: bs_test_log_audit
+73/104 Test: bs_test_log_audit
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_log_audit.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_log_audit" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_log_audit" end time: Jun 07 10:50 中国标准时间
+"bs_test_log_audit" time elapsed: 00:00:00
+----------------------------------------------------------
+
+74/104 Testing: bs_test_reentrancy_io
+74/104 Test: bs_test_reentrancy_io
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_reentrancy_io.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_reentrancy_io" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_reentrancy_io" end time: Jun 07 10:50 中国标准时间
+"bs_test_reentrancy_io" time elapsed: 00:00:00
+----------------------------------------------------------
+
+75/104 Testing: bs_test_result_status_map
+75/104 Test: bs_test_result_status_map
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_result_status_map.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_result_status_map" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_result_status_map" end time: Jun 07 10:50 中国标准时间
+"bs_test_result_status_map" time elapsed: 00:00:00
+----------------------------------------------------------
+
+76/104 Testing: bs_test_io_status_table
+76/104 Test: bs_test_io_status_table
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_io_status_table.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_io_status_table" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_io_status_table" end time: Jun 07 10:50 中国标准时间
+"bs_test_io_status_table" time elapsed: 00:00:00
+----------------------------------------------------------
+
+77/104 Testing: bs_test_reload_default_gate_report_eventbus_reentry_integration
+77/104 Test: bs_test_reload_default_gate_report_eventbus_reentry_integration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_reload_default_gate_report_eventbus_reentry_integration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_reload_default_gate_report_eventbus_reentry_integration" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_reload_default_gate_report_eventbus_reentry_integration" end time: Jun 07 10:50 中国标准时间
+"bs_test_reload_default_gate_report_eventbus_reentry_integration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+78/104 Testing: bs_test_day19_memory_baseline
+78/104 Test: bs_test_day19_memory_baseline
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_day19_memory_baseline.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_day19_memory_baseline" start time: Jun 07 10:50 中国标准时间
+Output:
+----------------------------------------------------------
+baseline,1kb,cold_mb=4.910,hot_mb=4.926
+baseline,100kb,cold_mb=5.211,hot_mb=5.242
+baseline,10mb,skipped (set BS_DAY19_BASELINE_10MB=1 to enable)
+Day19MemoryBaselineTest OK (4 samples)
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_day19_memory_baseline" end time: Jun 07 10:50 中国标准时间
+"bs_test_day19_memory_baseline" time elapsed: 00:00:00
+----------------------------------------------------------
+

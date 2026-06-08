@@ -1,0 +1,18 @@
+Start testing: Jun 08 22:39 中国标准时间
+----------------------------------------------------------
+89/112 Testing: bs_test_attach_wire_full_chain_integration
+89/112 Test: bs_test_attach_wire_full_chain_integration
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_wire_full_chain_integration.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_wire_full_chain_integration" start time: Jun 08 22:39 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time = 210.05 sec
+----------------------------------------------------------
+Test Failed.
+"bs_test_attach_wire_full_chain_integration" end time: Jun 08 22:42 中国标准时间
+"bs_test_attach_wire_full_chain_integration" time elapsed: 00:03:30
+----------------------------------------------------------
+
+End testing: Jun 08 22:42 中国标准时间

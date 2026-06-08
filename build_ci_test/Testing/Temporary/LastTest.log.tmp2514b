@@ -1,0 +1,18 @@
+Start testing: Jun 08 20:02 中国标准时间
+----------------------------------------------------------
+90/112 Testing: bs_test_attach_notify_flush
+90/112 Test: bs_test_attach_notify_flush
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_notify_flush.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_notify_flush" start time: Jun 08 20:02 中国标准时间
+Output:
+----------------------------------------------------------
+AttachNotifyFlushTest: PASS
+<end of output>
+Test time =   1.26 sec
+----------------------------------------------------------
+Test Passed.
+"bs_test_attach_notify_flush" end time: Jun 08 20:02 中国标准时间
+"bs_test_attach_notify_flush" time elapsed: 00:00:01
+----------------------------------------------------------
+

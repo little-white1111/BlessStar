@@ -1,0 +1,214 @@
+{
+  "generated_at": "2026-06-08T11:40:29.739157+00:00",
+  "policy": {
+    "fail_fast": true,
+    "draft_policy": "warn",
+    "report_dir": "docs/reports"
+  },
+  "lock_plan": "docs/reports/contract_plan.lock.json",
+  "result": "FAIL",
+  "results": [
+    {
+      "gate_id": "GATE-META-CONTRACT-FILES",
+      "stage": "preflight",
+      "result": "PASS",
+      "exit_code": 0,
+      "contracts": [
+        "C-IX-6-prime",
+        "C-IX-5",
+        "C-IX-8"
+      ],
+      "active_contracts": [
+        "C-IX-6-prime",
+        "C-IX-5",
+        "C-IX-8"
+      ],
+      "draft_contracts": [],
+      "command": "python tools/scripts/gates/check_day16_contract_files.py docs/contracts/architecture.contracts.json docs/contracts/integration.contracts.json docs/contracts/style.contracts.json docs/contracts/testing.contracts.json",
+      "verify_entries": [
+        {
+          "contract_id": "C-IX-6-prime",
+          "entry": "tools/scripts/gates/check_day16_contract_files.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_day16_contract_files.py docs/contracts/architecture.contracts.json docs/contracts/integration.contracts.json docs/contracts/style.contracts.json docs/contracts/testing.contracts.json"
+        },
+        {
+          "contract_id": "C-IX-5",
+          "entry": "tools/scripts/gates/check_day16_contract_files.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_day16_contract_files.py docs/contracts/architecture.contracts.json docs/contracts/integration.contracts.json docs/contracts/style.contracts.json docs/contracts/testing.contracts.json"
+        },
+        {
+          "contract_id": "C-IX-8",
+          "entry": "tools/scripts/gates/check_day16_contract_files.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_day16_contract_files.py docs/contracts/architecture.contracts.json docs/contracts/integration.contracts.json docs/contracts/style.contracts.json docs/contracts/testing.contracts.json"
+        }
+      ],
+      "output": "[OK] structured contract files check passed\n"
+    },
+    {
+      "gate_id": "GATE-META-REGISTRY",
+      "stage": "preflight",
+      "result": "PASS",
+      "exit_code": 0,
+      "contracts": [
+        "C-IX-6-prime",
+        "C-IX-5"
+      ],
+      "active_contracts": [
+        "C-IX-6-prime",
+        "C-IX-5"
+      ],
+      "draft_contracts": [],
+      "command": "python tools/scripts/gates/check_day16_contract_registry.py docs/DAY16_CONTRACT_REGISTRY_TEMPLATE.md",
+      "verify_entries": [
+        {
+          "contract_id": "C-IX-6-prime",
+          "entry": "tools/scripts/gates/check_day16_contract_registry.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_day16_contract_registry.py docs/DAY16_CONTRACT_REGISTRY_TEMPLATE.md"
+        },
+        {
+          "contract_id": "C-IX-5",
+          "entry": "tools/scripts/gates/check_day16_contract_registry.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_day16_contract_registry.py docs/DAY16_CONTRACT_REGISTRY_TEMPLATE.md"
+        }
+      ],
+      "output": "[OK] day16 contract registry check passed\n"
+    },
+    {
+      "gate_id": "GATE-TEST-HERM",
+      "stage": "preflight",
+      "result": "PASS",
+      "exit_code": 0,
+      "contracts": [
+        "C-TST-HERM-1"
+      ],
+      "active_contracts": [
+        "C-TST-HERM-1"
+      ],
+      "draft_contracts": [],
+      "command": "python tools/scripts/gates/check_test_tempdir_unique.py",
+      "verify_entries": [
+        {
+          "contract_id": "C-TST-HERM-1",
+          "entry": "tools/scripts/gates/check_test_tempdir_unique.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_test_tempdir_unique.py"
+        }
+      ],
+      "output": "[OK] C-ST-10 test tempdir uniqueness check passed\n"
+    },
+    {
+      "gate_id": "GATE-TEST-L1-GATE-SCOPE",
+      "stage": "preflight",
+      "result": "PASS",
+      "exit_code": 0,
+      "contracts": [
+        "C-TST-GATE-SCOPE-1",
+        "C-TST-L1-1"
+      ],
+      "active_contracts": [
+        "C-TST-GATE-SCOPE-1",
+        "C-TST-L1-1"
+      ],
+      "draft_contracts": [],
+      "command": "python tools/scripts/gates/check_contract_gate_runner_l1_scope.py",
+      "verify_entries": [
+        {
+          "contract_id": "C-TST-GATE-SCOPE-1",
+          "entry": "tools/scripts/gates/check_contract_gate_runner_l1_scope.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_contract_gate_runner_l1_scope.py"
+        },
+        {
+          "contract_id": "C-TST-L1-1",
+          "entry": "tools/scripts/gates/check_contract_gate_runner_l1_scope.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_contract_gate_runner_l1_scope.py"
+        }
+      ],
+      "output": "[OK] C-TST-GATE-SCOPE-1 L1 gate scope check passed\n"
+    },
+    {
+      "gate_id": "GATE-TEST-TIER-ASSIGNMENT",
+      "stage": "preflight",
+      "result": "PASS",
+      "exit_code": 0,
+      "contracts": [
+        "C-TST-POL-1"
+      ],
+      "active_contracts": [
+        "C-TST-POL-1"
+      ],
+      "draft_contracts": [],
+      "command": "python tools/scripts/gates/check_test_environment_tiers.py",
+      "verify_entries": [
+        {
+          "contract_id": "C-TST-POL-1",
+          "entry": "tools/scripts/gates/check_test_environment_tiers.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_test_environment_tiers.py"
+        }
+      ],
+      "output": "[INFO] 18 CTest case(s) are non-L1 (allowed). Examples:\n  - bs_test_attach_concurrency\n  - bs_test_attach_day19_shortcoming_regression\n  - bs_test_attach_dual_truth_sync\n  - bs_test_attach_notify_flush\n  - bs_test_attach_p2_shortcoming_regression\n  - bs_test_attach_recover_cold\n  - bs_test_attach_recover_concurrency\n  - bs_test_attach_recover_fsm\n  - bs_test_attach_recover_sidecar\n  - bs_test_attach_sync_prod_paths_check\n[OK] L1 tier assignment covers 94 ctest name(s)\n"
+    },
+    {
+      "gate_id": "GATE-ARCH-INCLUDE-BOUNDARY",
+      "stage": "bootstrap",
+      "result": "FAIL",
+      "exit_code": 1,
+      "contracts": [
+        "C-IX-1",
+        "C-IX-2",
+        "C-IX-3",
+        "C-IX-7",
+        "C-FN-2"
+      ],
+      "active_contracts": [
+        "C-IX-1",
+        "C-IX-2",
+        "C-IX-3",
+        "C-IX-7",
+        "C-FN-2"
+      ],
+      "draft_contracts": [],
+      "command": "python tools/purity/check_includes.py --repo-root .",
+      "verify_entries": [
+        {
+          "contract_id": "C-IX-1",
+          "entry": "tools/purity/check_includes.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/purity/check_includes.py --repo-root ."
+        },
+        {
+          "contract_id": "C-IX-2",
+          "entry": "tools/purity/check_includes.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/purity/check_includes.py --repo-root ."
+        },
+        {
+          "contract_id": "C-IX-3",
+          "entry": "tools/purity/check_includes.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/purity/check_includes.py --repo-root ."
+        },
+        {
+          "contract_id": "C-IX-7",
+          "entry": "tools/purity/check_includes.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/purity/check_includes.py --repo-root ."
+        },
+        {
+          "contract_id": "C-FN-2",
+          "entry": "tools/purity/check_includes.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/purity/check_includes.py --repo-root ."
+        }
+      ],
+      "output": "Include gate FAILED:\n  adapter/test/AttachNotifyFlushTest.cpp:5: INC-VIII-2 direct ConfigManager.h include not allowed\n"
+    }
+  ]
+}

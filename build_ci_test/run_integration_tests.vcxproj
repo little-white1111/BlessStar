@@ -1,0 +1,624 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{EF0C1C5E-1ACD-32D4-B493-DE5AE98A118B}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>run_integration_tests</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\1d71ed5c8a63cea7c8c0fdfbab74e299\run_integration_tests.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Run CTest targets labeled integration (multi-config: add -C Debug)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+cd C:\Users\LJHlj\BlessStar\build_ci_test
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\ctest.exe" --test-dir C:/Users/LJHlj/BlessStar/build_ci_test --output-on-failure -L integration
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\run_integration_tests</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Run CTest targets labeled integration (multi-config: add -C Debug)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+cd C:\Users\LJHlj\BlessStar\build_ci_test
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\ctest.exe" --test-dir C:/Users/LJHlj/BlessStar/build_ci_test --output-on-failure -L integration
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\run_integration_tests</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Run CTest targets labeled integration (multi-config: add -C Debug)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+cd C:\Users\LJHlj\BlessStar\build_ci_test
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\ctest.exe" --test-dir C:/Users/LJHlj/BlessStar/build_ci_test --output-on-failure -L integration
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\run_integration_tests</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</VerifyInputsAndOutputsExist>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Run CTest targets labeled integration (multi-config: add -C Debug)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+cd C:\Users\LJHlj\BlessStar\build_ci_test
+if %errorlevel% neq 0 goto :cmEnd
+C:
+if %errorlevel% neq 0 goto :cmEnd
+"C:\Program Files\CMake\bin\ctest.exe" --test-dir C:/Users/LJHlj/BlessStar/build_ci_test --output-on-failure -L integration
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\run_integration_tests</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+      <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</VerifyInputsAndOutputsExist>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\LJHlj\BlessStar\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule C:/Users/LJHlj/BlessStar/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/LJHlj/BlessStar -BC:/Users/LJHlj/BlessStar/build_ci_test --check-stamp-file C:/Users/LJHlj/BlessStar/build_ci_test/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\ExternalProject\shared_internal_commands.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent\CMakeLists.cmake.in;C:\Program Files\CMake\share\cmake-4.3\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;C:\Users\LJHlj\BlessStar\adapter\manifest\manifest_config.h.in;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCXXCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeRCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeSystem.cmake;C:\Users\LJHlj\BlessStar\cmake\Tests.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule C:/Users/LJHlj/BlessStar/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/LJHlj/BlessStar -BC:/Users/LJHlj/BlessStar/build_ci_test --check-stamp-file C:/Users/LJHlj/BlessStar/build_ci_test/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\ExternalProject\shared_internal_commands.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent\CMakeLists.cmake.in;C:\Program Files\CMake\share\cmake-4.3\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;C:\Users\LJHlj\BlessStar\adapter\manifest\manifest_config.h.in;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCXXCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeRCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeSystem.cmake;C:\Users\LJHlj\BlessStar\cmake\Tests.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule C:/Users/LJHlj/BlessStar/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/LJHlj/BlessStar -BC:/Users/LJHlj/BlessStar/build_ci_test --check-stamp-file C:/Users/LJHlj/BlessStar/build_ci_test/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\ExternalProject\shared_internal_commands.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent\CMakeLists.cmake.in;C:\Program Files\CMake\share\cmake-4.3\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;C:\Users\LJHlj\BlessStar\adapter\manifest\manifest_config.h.in;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCXXCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeRCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeSystem.cmake;C:\Users\LJHlj\BlessStar\cmake\Tests.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule C:/Users/LJHlj/BlessStar/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/LJHlj/BlessStar -BC:/Users/LJHlj/BlessStar/build_ci_test --check-stamp-file C:/Users/LJHlj/BlessStar/build_ci_test/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeInitializeConfigs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckCSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckIncludeFile.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\CheckLibraryExists.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Compiler\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\ExternalProject\shared_internal_commands.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FetchContent\CMakeLists.cmake.in;C:\Program Files\CMake\share\cmake-4.3\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython\Support.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindPython3.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\FindThreads.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Internal\CheckSourceCompiles.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Linker\MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Linker\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-Initialize.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-4.3\Modules\Platform\WindowsPaths.cmake;C:\Users\LJHlj\BlessStar\adapter\manifest\manifest_config.h.in;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeCXXCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeRCCompiler.cmake;C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\4.3.2\CMakeSystem.cmake;C:\Users\LJHlj\BlessStar\cmake\Tests.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\LJHlj\BlessStar\build_ci_test\CMakeFiles\run_integration_tests">
+    </None>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\ZERO_CHECK.vcxproj">
+      <Project>{FF7CCA47-8948-33BF-AAC0-6DF058104D91}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_app_sdk_contract.vcxproj">
+      <Project>{FA7609F8-C062-37ED-B3C8-686DDB9BC2BD}</Project>
+      <Name>bs_test_app_sdk_contract</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_app_vendor_reload_integration.vcxproj">
+      <Project>{E9E7AA75-C89A-3240-80FE-3D664D73F046}</Project>
+      <Name>bs_test_app_vendor_reload_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_atomicity.vcxproj">
+      <Project>{C370E1AD-B5A5-3E92-A43F-8F9C9714A4C4}</Project>
+      <Name>bs_test_attach_atomicity</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_concurrency.vcxproj">
+      <Project>{E09DCA2A-DDE4-3EF7-9235-1DD047C04715}</Project>
+      <Name>bs_test_attach_concurrency</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_context_bootstrap.vcxproj">
+      <Project>{F5E43290-B890-3884-86CC-4B558AACE952}</Project>
+      <Name>bs_test_attach_context_bootstrap</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_day19_shortcoming_regression.vcxproj">
+      <Project>{90C91C76-5A98-3F6D-BBDB-9A2D61157030}</Project>
+      <Name>bs_test_attach_day19_shortcoming_regression</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_dual_truth_sync.vcxproj">
+      <Project>{B9CC22BC-8EAE-3161-AD0A-06F2791BABEB}</Project>
+      <Name>bs_test_attach_dual_truth_sync</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_facade_freeze_delegate.vcxproj">
+      <Project>{EF69A88A-242B-3FC5-9443-7A45E569B07A}</Project>
+      <Name>bs_test_attach_facade_freeze_delegate</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_freeze_eventbus_integration.vcxproj">
+      <Project>{58C8B1B9-71A2-3F0C-84D6-08AE39C997B4}</Project>
+      <Name>bs_test_attach_freeze_eventbus_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_fsync_spot.vcxproj">
+      <Project>{739ABD30-96D7-3AC7-9DBD-40958FDE96AF}</Project>
+      <Name>bs_test_attach_fsync_spot</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_manifest_yaml.vcxproj">
+      <Project>{E7CBD241-A3CA-3DB2-B277-2B432ACE42DD}</Project>
+      <Name>bs_test_attach_manifest_yaml</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_notify_flush.vcxproj">
+      <Project>{330F6350-0DD6-3556-92A5-7CE992686ABF}</Project>
+      <Name>bs_test_attach_notify_flush</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_p2_shortcoming_regression.vcxproj">
+      <Project>{E38700B0-5B1A-3499-BA88-173DDD208441}</Project>
+      <Name>bs_test_attach_p2_shortcoming_regression</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_pipeline_registry.vcxproj">
+      <Project>{C4FBDEA5-3132-390B-B86A-E98DED05A336}</Project>
+      <Name>bs_test_attach_pipeline_registry</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_recover_cold.vcxproj">
+      <Project>{309A9AE9-FD0F-398F-832B-2825581B617C}</Project>
+      <Name>bs_test_attach_recover_cold</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_recover_concurrency.vcxproj">
+      <Project>{0DF59034-2D08-3A9A-AC3E-FF158665E5F9}</Project>
+      <Name>bs_test_attach_recover_concurrency</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_recover_fsm.vcxproj">
+      <Project>{938A0C30-3317-3B98-9E95-8B7FB05EAC76}</Project>
+      <Name>bs_test_attach_recover_fsm</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_recover_sidecar.vcxproj">
+      <Project>{E43C61DD-F591-3F2D-AAE8-3C4D926C3587}</Project>
+      <Name>bs_test_attach_recover_sidecar</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_resilience.vcxproj">
+      <Project>{779D2022-0531-3AA0-AAB2-12E87789188B}</Project>
+      <Name>bs_test_attach_resilience</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_watch.vcxproj">
+      <Project>{FDCC3B15-9EC9-37CB-9997-A9281AAD5D7B}</Project>
+      <Name>bs_test_attach_watch</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_watch_benchmark.vcxproj">
+      <Project>{F6A37FC2-4313-3DD6-9B4A-6F536F4A5E31}</Project>
+      <Name>bs_test_attach_watch_benchmark</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_attach_wire_full_chain_integration.vcxproj">
+      <Project>{D832D210-073D-303C-8593-A7C566DA47FE}</Project>
+      <Name>bs_test_attach_wire_full_chain_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_config_manager.vcxproj">
+      <Project>{90373F0A-497E-3394-987D-EABCD48A4E3B}</Project>
+      <Name>bs_test_config_manager</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_config_parse.vcxproj">
+      <Project>{E3AEAE3B-66B0-3042-85BD-9930099B8700}</Project>
+      <Name>bs_test_config_parse</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_config_parse_boundary.vcxproj">
+      <Project>{2314AF85-02D4-387D-A702-3B2656FCAD78}</Project>
+      <Name>bs_test_config_parse_boundary</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_config_parse_security.vcxproj">
+      <Project>{84263FDA-97A2-3386-988D-156B44C1E994}</Project>
+      <Name>bs_test_config_parse_security</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_config_parse_security_audit.vcxproj">
+      <Project>{24649839-5AAF-3C07-A915-F384184DD70F}</Project>
+      <Name>bs_test_config_parse_security_audit</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_day19_memory_baseline.vcxproj">
+      <Project>{41B706DE-5858-352E-BE53-4A025C9AA3D3}</Project>
+      <Name>bs_test_day19_memory_baseline</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_day19_stress_reload_loop.vcxproj">
+      <Project>{905A9622-944E-32D7-B992-CCA469A3B6B1}</Project>
+      <Name>bs_test_day19_stress_reload_loop</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_day8_attach_full_integration.vcxproj">
+      <Project>{50B3D335-66F9-3AE0-A6C6-464C44F38D75}</Project>
+      <Name>bs_test_day8_attach_full_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_attach_pipeline.vcxproj">
+      <Project>{EFE3A313-2FE7-3115-9455-F0135E7EACD4}</Project>
+      <Name>bs_test_io_attach_pipeline</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_facade.vcxproj">
+      <Project>{AE216DD8-CA08-3CFC-9270-EB735EC4DE5C}</Project>
+      <Name>bs_test_io_facade</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_facade_boundary.vcxproj">
+      <Project>{CCB85E71-702D-37E6-AC42-2DD81D8913D6}</Project>
+      <Name>bs_test_io_facade_boundary</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_facade_max_read.vcxproj">
+      <Project>{92C42BF8-8663-3657-AC16-B7B51569526F}</Project>
+      <Name>bs_test_io_facade_max_read</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_local_provider.vcxproj">
+      <Project>{D58EA11B-A71E-31E0-9B0D-C1EEFDFCA97A}</Project>
+      <Name>bs_test_io_local_provider</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_local_provider_boundary.vcxproj">
+      <Project>{66C72C5B-9943-3C91-9B90-23FF65E96DE8}</Project>
+      <Name>bs_test_io_local_provider_boundary</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_local_provider_timeout.vcxproj">
+      <Project>{A7FE25F7-798A-33B8-B9E6-4E9A9FDE99C1}</Project>
+      <Name>bs_test_io_local_provider_timeout</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_provider_stub.vcxproj">
+      <Project>{66EBBA3E-66AE-3BE7-9800-420F0942880D}</Project>
+      <Name>bs_test_io_provider_stub</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_registry_phase.vcxproj">
+      <Project>{28167350-700E-301F-94E6-058716089CDF}</Project>
+      <Name>bs_test_io_registry_phase</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_reload_batch.vcxproj">
+      <Project>{FDB549B7-A46F-3453-A40E-72B7D418B494}</Project>
+      <Name>bs_test_io_reload_batch</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_io_status_table.vcxproj">
+      <Project>{CD3D8E0A-F4C3-35FC-9D34-8C98DC1CE86A}</Project>
+      <Name>bs_test_io_status_table</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_ir.vcxproj">
+      <Project>{1E125661-F6FA-3F39-A6DD-72D3450E61E5}</Project>
+      <Name>bs_test_ir</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_ir_boundary.vcxproj">
+      <Project>{7D8C39E5-A4A2-3FAD-98E0-13C291EB0A36}</Project>
+      <Name>bs_test_ir_boundary</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_json_lexer.vcxproj">
+      <Project>{15691DC9-D7C9-3C76-B228-B5EDF8057CE9}</Project>
+      <Name>bs_test_json_lexer</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_json_parser.vcxproj">
+      <Project>{1F449C69-BB1F-3561-856F-3CFDE9E8CB91}</Project>
+      <Name>bs_test_json_parser</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_kernel_executor.vcxproj">
+      <Project>{7779BCBC-7A72-39FE-9264-F9C528E0C462}</Project>
+      <Name>bs_test_kernel_executor</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_kernel_pool.vcxproj">
+      <Project>{637CD839-706C-33FA-BA7C-23EB97404A9A}</Project>
+      <Name>bs_test_kernel_pool</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_kernel_runtime.vcxproj">
+      <Project>{4C944972-55D8-37FD-A505-510DD3101767}</Project>
+      <Name>bs_test_kernel_runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_log.vcxproj">
+      <Project>{579A8709-2954-377A-B4E2-23841AFA50A7}</Project>
+      <Name>bs_test_log</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_log_audit.vcxproj">
+      <Project>{631CBB51-5ED2-3CB6-822E-A963EAC43D65}</Project>
+      <Name>bs_test_log_audit</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_log_domain_registration.vcxproj">
+      <Project>{6E013854-3AE3-3B41-B1B2-87F7776A8978}</Project>
+      <Name>bs_test_log_domain_registration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_memory_pool.vcxproj">
+      <Project>{F0AD74E0-D0C5-391D-892F-6C0AD8CC3FFC}</Project>
+      <Name>bs_test_memory_pool</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_memory_pool_comprehensive.vcxproj">
+      <Project>{0A77D3C6-4816-32FC-ABE4-6577DF4ECAC1}</Project>
+      <Name>bs_test_memory_pool_comprehensive</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_metrics.vcxproj">
+      <Project>{03A59480-FC35-3C9A-AEDE-76D382400A56}</Project>
+      <Name>bs_test_metrics</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_metrics_comprehensive.vcxproj">
+      <Project>{801DA36E-9EF1-3549-B3C1-14590260ADDA}</Project>
+      <Name>bs_test_metrics_comprehensive</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_path_registry.vcxproj">
+      <Project>{1E3975F7-CA00-31EF-AB70-BD5B0A299879}</Project>
+      <Name>bs_test_path_registry</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_pipeline.vcxproj">
+      <Project>{10CCA0A5-EE15-3969-B802-8C41ED5C47D0}</Project>
+      <Name>bs_test_pipeline</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_pipeline_boundary.vcxproj">
+      <Project>{0BD4EBBE-C03B-32F2-AF27-B418A5209EFC}</Project>
+      <Name>bs_test_pipeline_boundary</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_plugin.vcxproj">
+      <Project>{D881AF4D-0C04-31B4-B93D-10CF57A6C2C0}</Project>
+      <Name>bs_test_plugin</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_plugin_ir_requirements.vcxproj">
+      <Project>{391B7FDF-1DE5-31FB-A0B2-502003A317F1}</Project>
+      <Name>bs_test_plugin_ir_requirements</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_plugin_loader_attach.vcxproj">
+      <Project>{979E5DBE-6259-3841-9F86-6BF48D9BBEBF}</Project>
+      <Name>bs_test_plugin_loader_attach</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_plugin_log_domains_attach_integration.vcxproj">
+      <Project>{42BE2471-B20A-3206-8656-758583472B13}</Project>
+      <Name>bs_test_plugin_log_domains_attach_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_plugin_orch_reload_registry.vcxproj">
+      <Project>{19901CCC-823F-3A22-9BAE-9D0C932E39AD}</Project>
+      <Name>bs_test_plugin_orch_reload_registry</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reentrancy_io.vcxproj">
+      <Project>{571F749E-EB39-3047-BEA5-289244FEC6E7}</Project>
+      <Name>bs_test_reentrancy_io</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_registry_attach_contract.vcxproj">
+      <Project>{4D34DFDC-66C4-321B-B4BF-445D02E5D88E}</Project>
+      <Name>bs_test_registry_attach_contract</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_registry_bootstrap_io.vcxproj">
+      <Project>{A4CE5803-7412-347C-89F1-67CEA23098F2}</Project>
+      <Name>bs_test_registry_bootstrap_io</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_registry_facade.vcxproj">
+      <Project>{A8080957-5697-3303-B2F5-CAAC9A8AC6BD}</Project>
+      <Name>bs_test_registry_facade</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_registry_guard.vcxproj">
+      <Project>{73FD2C9F-58F9-38E3-A175-11B716C5ED7C}</Project>
+      <Name>bs_test_registry_guard</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_registry_hub.vcxproj">
+      <Project>{113C9C82-57FB-35D5-A265-28EC63117B0C}</Project>
+      <Name>bs_test_registry_hub</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_registry_integration.vcxproj">
+      <Project>{477E1F69-CF59-329C-8DD9-89AE93F1D62F}</Project>
+      <Name>bs_test_registry_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_registry_status_domain.vcxproj">
+      <Project>{1711F8D7-2272-3891-B29B-DBAF82B2704A}</Project>
+      <Name>bs_test_registry_status_domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_attach_guard.vcxproj">
+      <Project>{F3D08C56-CA14-3070-BD66-28F29EA43AC5}</Project>
+      <Name>bs_test_reload_attach_guard</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_config_json_integration.vcxproj">
+      <Project>{746CEF94-EDA1-3B22-B351-B7E8D42A22EB}</Project>
+      <Name>bs_test_reload_config_json_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_default_gate_report_eventbus_reentry_integration.vcxproj">
+      <Project>{AD8CC873-B147-334D-BE0C-39CE6472CA9E}</Project>
+      <Name>bs_test_reload_default_gate_report_eventbus_reentry_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_gate_default.vcxproj">
+      <Project>{28A2C59B-7E94-3E8E-BBFF-5E8178FA61A7}</Project>
+      <Name>bs_test_reload_gate_default</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_ir_execute_integration.vcxproj">
+      <Project>{4409787C-89F7-3C17-873D-B4D00753E8A7}</Project>
+      <Name>bs_test_reload_ir_execute_integration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_per_batch_config_manager.vcxproj">
+      <Project>{0FCB2A47-DC90-3468-BC8E-196B6BBBDF60}</Project>
+      <Name>bs_test_reload_per_batch_config_manager</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_per_batch_parallel_exec.vcxproj">
+      <Project>{A5764111-1FB4-312B-891D-6F10157D2CF1}</Project>
+      <Name>bs_test_reload_per_batch_parallel_exec</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reload_report.vcxproj">
+      <Project>{2426E16D-D249-327B-870F-5C67844F035E}</Project>
+      <Name>bs_test_reload_report</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_report.vcxproj">
+      <Project>{486688DC-51BE-3704-B07B-D5A8B5F6F44F}</Project>
+      <Name>bs_test_report</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_report_boundary.vcxproj">
+      <Project>{7FFF9679-4956-385B-9F2C-B16DD694D70F}</Project>
+      <Name>bs_test_report_boundary</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_requirement_filter.vcxproj">
+      <Project>{8210DEB1-0792-30B5-BE97-9FBDE143B5EE}</Project>
+      <Name>bs_test_requirement_filter</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_requirements.vcxproj">
+      <Project>{5074F578-FB33-3F2E-B474-1C3746893A04}</Project>
+      <Name>bs_test_requirements</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_resolver.vcxproj">
+      <Project>{B84B895D-EA75-3102-8035-79685F596A7F}</Project>
+      <Name>bs_test_resolver</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_result_status_map.vcxproj">
+      <Project>{768E4B04-E17A-3871-B410-284AC9A13321}</Project>
+      <Name>bs_test_result_status_map</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_sharded_state_bus.vcxproj">
+      <Project>{48F3E636-778F-31BB-81BF-082EC54C85A8}</Project>
+      <Name>bs_test_sharded_state_bus</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_state_all.vcxproj">
+      <Project>{451A2241-8227-3F4F-938A-C328A69F7455}</Project>
+      <Name>bs_test_state_all</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_state_boundary.vcxproj">
+      <Project>{EB1B21E1-E3AD-320D-B302-EB2E448630BD}</Project>
+      <Name>bs_test_state_boundary</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_state_bus.vcxproj">
+      <Project>{F58A140D-BAF7-32BE-9B74-53534DBB2A0D}</Project>
+      <Name>bs_test_state_bus</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_state_machine.vcxproj">
+      <Project>{EE25F6A7-5169-3C26-A978-432CB1901820}</Project>
+      <Name>bs_test_state_machine</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_status.vcxproj">
+      <Project>{43BE4C16-E22F-3171-AB1A-53D586A20A74}</Project>
+      <Name>bs_test_status</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_vendor_config_normalizer.vcxproj">
+      <Project>{AD5506DE-C8D4-3533-AF35-3A322EFA67ED}</Project>
+      <Name>bs_test_vendor_config_normalizer</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

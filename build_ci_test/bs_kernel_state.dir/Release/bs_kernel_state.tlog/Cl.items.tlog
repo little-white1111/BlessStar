@@ -1,0 +1,8 @@
+C:\Users\LJHlj\BlessStar\kernel\state\src\ConfigManager.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\ConfigManager.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\machine\StateMachine.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\StateMachine.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\bus\StateBus.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\StateBus.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\bus\ShardedStateBus.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\ShardedStateBus.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\event\ConfigEvent.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\ConfigEvent.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\event\EventBus.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\EventBus.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\event\WatchManager.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\WatchManager.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\temp\TemporaryState.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.dir\Release\TemporaryState.obj

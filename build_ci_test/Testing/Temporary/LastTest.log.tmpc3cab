@@ -1,0 +1,17 @@
+Start testing: Jun 08 19:01 中国标准时间
+----------------------------------------------------------
+83/112 Testing: bs_test_attach_day19_shortcoming_regression
+83/112 Test: bs_test_attach_day19_shortcoming_regression
+Command: "C:/Users/LJHlj/BlessStar/build_ci_test/Release/bs_test_attach_day19_shortcoming_regression.exe"
+Directory: C:/Users/LJHlj/BlessStar/build_ci_test
+"bs_test_attach_day19_shortcoming_regression" start time: Jun 08 19:01 中国标准时间
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =  93.71 sec
+----------------------------------------------------------
+Test Failed.
+"bs_test_attach_day19_shortcoming_regression" end time: Jun 08 19:03 中国标准时间
+"bs_test_attach_day19_shortcoming_regression" time elapsed: 00:01:33
+----------------------------------------------------------
+

@@ -1,0 +1,7 @@
+C:\Users\LJHlj\BlessStar\adapter\parser\src\json\json_lexer.c;C:\Users\LJHlj\BlessStar\build_debug\bs_adapter_parser.dir\Debug\json_lexer.obj
+C:\Users\LJHlj\BlessStar\adapter\parser\src\json\json_utf8.c;C:\Users\LJHlj\BlessStar\build_debug\bs_adapter_parser.dir\Debug\json_utf8.obj
+C:\Users\LJHlj\BlessStar\adapter\parser\src\json\json_parser.c;C:\Users\LJHlj\BlessStar\build_debug\bs_adapter_parser.dir\Debug\json_parser.obj
+C:\Users\LJHlj\BlessStar\adapter\parser\src\config\config_v1_ast.c;C:\Users\LJHlj\BlessStar\build_debug\bs_adapter_parser.dir\Debug\config_v1_ast.obj
+C:\Users\LJHlj\BlessStar\adapter\parser\src\config\config_v1_ir.c;C:\Users\LJHlj\BlessStar\build_debug\bs_adapter_parser.dir\Debug\config_v1_ir.obj
+C:\Users\LJHlj\BlessStar\adapter\parser\src\config\config_parse.c;C:\Users\LJHlj\BlessStar\build_debug\bs_adapter_parser.dir\Debug\config_parse.obj
+C:\Users\LJHlj\BlessStar\adapter\parser\src\config\config_parse_status.c;C:\Users\LJHlj\BlessStar\build_debug\bs_adapter_parser.dir\Debug\config_parse_status.obj

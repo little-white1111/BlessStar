@@ -1,0 +1,256 @@
+# Full repo regression (all CTest + purity + contract + sanitizer + meson).
+# Unified dispatch: workflow_dispatch.inputs.suite routes to reusable day21/day19 workflows.
+# Standalone triggers: day21.yml, day19-stress-*.yml (push/schedule/direct dispatch).
+name: full test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to checkout and test (empty = use dispatch ref)"
+        required: false
+        type: string
+        default: ""
+      suite:
+        description: "CI suite (full = default regression; others delegate to reusable workflows)"
+        required: false
+        type: choice
+        options:
+          - full
+          - day21
+          - day19-smoke
+          - day19-smoke-fail
+          - day19-gha-6h
+          - day19-full
+        default: full
+      day19_runner:
+        description: "suite=day19-full only: self-hosted (72h) or github-hosted (fail-fast guard)"
+        required: false
+        type: choice
+        options:
+          - self-hosted
+          - github-hosted
+        default: self-hosted
+
+jobs:
+  cmake:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
+    name: cmake (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Purity gate (manifest)
+        run: python tools/purity/verify_manifest.py verify --kernel factory --manifest factory/manifest.sha256
+
+      - name: Include gate (R8-03 + R8-13)
+        if: runner.os == 'Linux'
+        run: python tools/purity/check_includes.py --repo-root .
+
+      - name: Freeze order gate (R8-09)
+        if: runner.os == 'Linux'
+        run: python tools/purity/check_freeze_order.py --repo-root .
+
+      - name: BlessStar Config JSON v1 (M1 + day10 money normalize smoke)
+        shell: bash
+        run: |
+          python tools/normalize/examples/identity_normalize.py tools/normalize/examples/blessstar_config_v1.minimal.json blessstar_canonical_ci.json
+          python -c "import json; d=json.load(open('blessstar_canonical_ci.json',encoding='utf-8')); assert d['kernel_version']=='0.4.0'"
+          python tools/normalize/examples/money_normalize.py tools/normalize/examples/blessstar_config_v1.money_good.json blessstar_money_ci.json
+          set +e
+          python tools/normalize/examples/money_normalize.py tools/normalize/examples/blessstar_config_v1.money_bad_tax.json blessstar_money_bad_ci.json
+          rc=$?
+          set -e
+          if [ "$rc" -ne 1 ]; then
+            echo "money_normalize on bad input: expected exit 1, got $rc"
+            exit 1
+          fi
+
+      # AGENTS gate 3: clang-format (Linux only; use runner preinstall — avoid apt-get hang)
+      - name: clang-format
+        if: runner.os == 'Linux'
+        run: |
+          CLANG_FORMAT="$(command -v clang-format-18 || command -v clang-format-16 || command -v clang-format)"
+          echo "Using ${CLANG_FORMAT}"
+          "${CLANG_FORMAT}" --version
+          failed=0
+          while IFS= read -r f; do
+            if ! "${CLANG_FORMAT}" --dry-run --Werror "${f}"; then
+              echo "clang-format failed: ${f}"
+              failed=1
+            fi
+          done < <(git ls-files '*.cpp' '*.h' '*.hpp' '*.cc' '*.c' | grep -v '^Source/')
+          exit "${failed}"
+
+      # AGENTS gate 1: CTest (below). Gate 4: warnings as errors via CMake option.
+      - name: Configure (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cmake -S . -B build_ci_test \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build_ci_test -DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON
+
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
+        run: cmake --build build_ci_test
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --build build_ci_test --config Release
+
+      - name: Contract compile (D-scheme)
+        run: python tools/scripts/contracts/contract_compile.py
+
+      - name: Contract gate runner (D-scheme)
+        run: python tools/scripts/contracts/contract_gate_runner.py
+
+      - name: Test / CTest (Unix)
+        if: runner.os != 'Windows'
+        run: ctest --test-dir build_ci_test --output-on-failure -j 1
+
+      - name: Test / CTest (Windows)
+        if: runner.os == 'Windows'
+        run: ctest --test-dir build_ci_test --output-on-failure -C Release -j 1
+
+  sanitizer:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
+    name: sanitizer (Linux Clang ASan+UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
+
+      - name: Configure (Sanitizer)
+        run: |
+          cmake -S . -B build-san \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
+            -DBLESSSTAR_SANITIZER_CI=ON
+
+      - name: Build (Sanitizer)
+        run: cmake --build build-san -j 4
+
+      - name: Test / CTest (Sanitizer)
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/cmake/lsan_suppressions.txt
+        # day17 Python/contract gates assume build_ci_test; runtime ASan coverage skips them.
+        run: ctest --test-dir build-san -LE day17 --output-on-failure
+
+      - name: Day19 stress (ci profile, ASan build)
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --test-dir build-san -R bs_test_day19_stress_reload_loop --output-on-failure
+
+  tsan:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
+    name: tsan (Linux Clang day20)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
+
+      - name: Configure (ThreadSanitizer)
+        run: |
+          cmake -S . -B build-tsan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_C_FLAGS="-fsanitize=thread -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=thread -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread" \
+            -DBLESSSTAR_SANITIZER_CI=ON
+
+      - name: Build (TSan)
+        run: |
+          cmake --build build-tsan -j 4 --target bs_test_kernel_executor bs_test_kernel_pool \
+            bs_test_reload_per_batch_parallel_exec
+
+      - name: Test / kernel_pool (TSan · IMPL-21-CI-01)
+        run: ctest --test-dir build-tsan -L kernel_pool --output-on-failure
+
+  meson:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
+    name: meson (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Meson + Ninja
+        run: python -m pip install --upgrade pip meson ninja
+
+      - name: Configure
+        run: meson setup build-meson
+
+      - name: Build
+        run: meson compile -C build-meson
+
+      - name: Test
+        run: meson test -C build-meson --print-errorlogs
+
+  day21-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day21'
+    uses: ./.github/workflows/day21-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-smoke-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-smoke'
+    uses: ./.github/workflows/day19-smoke-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-smoke-fail-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-smoke-fail'
+    uses: ./.github/workflows/day19-smoke-fail-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-gha-6h-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-gha-6h'
+    uses: ./.github/workflows/day19-gha-6h-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-full-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-full'
+    uses: ./.github/workflows/day19-full-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+      runner: ${{ github.event.inputs.day19_runner }}

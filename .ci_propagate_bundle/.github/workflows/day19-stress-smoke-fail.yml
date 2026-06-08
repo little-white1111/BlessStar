@@ -1,0 +1,25 @@
+# T19 failure对照 (900s smoke_fail) — 与 day19-stress-smoke 并列；不阻塞 PR ci.yml。
+name: day19-stress-smoke-fail
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_dir:
+        description: CMake build directory
+        required: false
+        default: build_day19_stress_fail
+      profile:
+        description: BS_DAY19_PROFILE (smoke_fail = 900s negative对照)
+        required: false
+        default: smoke_fail
+
+concurrency:
+  group: day19-stress-smoke-fail
+  cancel-in-progress: false
+
+jobs:
+  smoke-fail:
+    uses: ./.github/workflows/day19-smoke-fail-reusable.yml
+    with:
+      build_dir: ${{ github.event.inputs.build_dir || 'build_day19_stress_fail' }}
+      profile: ${{ github.event.inputs.profile || 'smoke_fail' }}

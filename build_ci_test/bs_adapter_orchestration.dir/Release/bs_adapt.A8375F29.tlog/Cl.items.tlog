@@ -1,0 +1,6 @@
+C:\Users\LJHlj\BlessStar\adapter\src\attach_recover.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_orchestration.dir\Release\attach_recover.obj
+C:\Users\LJHlj\BlessStar\adapter\src\attach_recover_sidecar.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_orchestration.dir\Release\attach_recover_sidecar.obj
+C:\Users\LJHlj\BlessStar\adapter\orchestration\reload_batch_controller.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_orchestration.dir\Release\reload_batch_controller.obj
+C:\Users\LJHlj\BlessStar\adapter\orchestration\reload_batch_factory.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_orchestration.dir\Release\reload_batch_factory.obj
+C:\Users\LJHlj\BlessStar\adapter\orchestration\reload_gate_default.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_orchestration.dir\Release\reload_gate_default.obj
+C:\Users\LJHlj\BlessStar\adapter\orchestration\reload_with_report.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_orchestration.dir\Release\reload_with_report.obj

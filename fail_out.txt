@@ -1,0 +1,3 @@
+Day19Stress profile=smoke_fail_ci duration_max=25 day_reload_min=30 night_batch_min=5
+stress,profile=smoke_fail_ci,day=18/30(0.6000),night=2/5(0.4000),fail_parse=4,fail_gate=4,fail_read=4,night_abort=3,rss_slope_reg=0.000,rss_slope_reg_full=-67.781,rss_delta_win=0.641,rss_slope_endpoint_ws=-41.062,rss_delta_ws_win=0.641,samples=7,warmup_skip=4,win=3,slope_win_min=10,disk_mb=1
+Day19StressReloadLoopTest OK

@@ -1,0 +1,28 @@
+# T19 smoke (900s) — standalone; does not block PR ci.yml.
+# Triggers: manual dispatch, weekly schedule (Sunday 00:00 UTC).
+name: day19-stress-smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_dir:
+        description: CMake build directory
+        required: false
+        default: build_day19_stress
+      profile:
+        description: BS_DAY19_PROFILE (use smoke for 900s gate)
+        required: false
+        default: smoke
+  schedule:
+    - cron: "0 0 * * 0"
+
+concurrency:
+  group: day19-stress-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    uses: ./.github/workflows/day19-smoke-reusable.yml
+    with:
+      build_dir: ${{ github.event.inputs.build_dir || 'build_day19_stress' }}
+      profile: ${{ github.event.inputs.profile || 'smoke' }}

@@ -1,0 +1,1 @@
+Day19Stress profile=smoke duration_max=900 day_reload_min=1500 night_batch_min=30

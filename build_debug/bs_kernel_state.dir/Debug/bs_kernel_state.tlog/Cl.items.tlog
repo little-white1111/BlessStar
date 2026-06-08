@@ -1,0 +1,8 @@
+C:\Users\LJHlj\BlessStar\kernel\state\src\ConfigManager.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\ConfigManager.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\machine\StateMachine.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\StateMachine.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\bus\StateBus.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\StateBus.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\bus\ShardedStateBus.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\ShardedStateBus.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\event\ConfigEvent.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\ConfigEvent.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\event\EventBus.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\EventBus.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\event\WatchManager.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\WatchManager.obj
+C:\Users\LJHlj\BlessStar\kernel\state\src\temp\TemporaryState.cpp;C:\Users\LJHlj\BlessStar\build_debug\bs_kernel_state.dir\Debug\TemporaryState.obj

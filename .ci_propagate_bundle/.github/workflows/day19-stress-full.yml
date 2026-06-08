@@ -1,0 +1,38 @@
+# T19 full (72h-RP) — standalone; does not block PR ci.yml.
+#
+# GitHub-hosted runners enforce a 6-hour job timeout, so a true 72h wall-clock run
+# requires a self-hosted runner labeled `day19-full` (or run locally:
+#   bash tools/scripts/perf/run_day19_stress_full_linux.sh
+# ).
+name: day19-stress-full
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: github-hosted = fail-fast with guidance; self-hosted = 72h on label day19-full
+        type: choice
+        options:
+          - self-hosted
+          - github-hosted
+        default: self-hosted
+      build_dir:
+        description: CMake build directory
+        required: false
+        default: build_day19_full
+      profile:
+        description: BS_DAY19_PROFILE (full = 72h per day19_profile.json)
+        required: false
+        default: full
+
+concurrency:
+  group: day19-stress-full
+  cancel-in-progress: false
+
+jobs:
+  full:
+    uses: ./.github/workflows/day19-full-reusable.yml
+    with:
+      runner: ${{ github.event.inputs.runner || 'self-hosted' }}
+      build_dir: ${{ github.event.inputs.build_dir || 'build_day19_full' }}
+      profile: ${{ github.event.inputs.profile || 'full' }}
