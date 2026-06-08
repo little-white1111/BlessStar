@@ -30,22 +30,33 @@ $env:GITHUB_TOKEN = "ghp_xxx..."
 - Actions 必须允许 `workflow_dispatch`（本仓库已支持）
 - 你要跑的 ref（branch）必须已 push 到远端
 
-### 1.3 单 yml 切换任意分支 + suite（推荐）
+### 1.3 两个维度：分支 + workflow（推荐）
 
-`ci.yml` 统一 dispatch 入口，支持：
+CI 循环需要同时指定：
 
-| input | 作用 |
-|-------|------|
-| `branch` | 被测分支（空 = dispatch ref） |
-| `suite` | `full`（默认）\| `day21` \| `day19-smoke` \| `day19-smoke-fail` \| `day19-gha-6h` \| `day19-full` |
-| `day19_runner` | 仅 `suite=day19-full`：`self-hosted` / `github-hosted` |
+| 维度 | 参数 | 含义 |
+|------|------|------|
+| **测哪条分支的代码** | `-Ref` | 被测 git 分支（须已 push） |
+| **跑哪个 workflow** | `-Target` | `ci` \| `day21` \| `day19-smoke` \| …（见 `resolve_ci_target.py list`） |
+| **怎么 dispatch** | `-Route` | `via-ci`（默认）或 `direct` |
 
-- **模式 A（稳定 workflow）**：从 `main` dispatch，`inputs.branch` = 目标分支，`inputs.suite` = 套件  
-  → workflow 定义与路由逻辑均在 **main** 的 `ci.yml`；job 正文在 `*-reusable.yml`。
-- **模式 B（简单）**：`--ref` = 目标分支，可选 `inputs.suite`  
-  → 使用该分支上的 `ci.yml`（须已 push）。
+**`via-ci`（模式 A 友好）**：dispatch **`ci.yml`**，`inputs.branch` + `inputs.suite` 路由到对应 reusable。  
+**`direct`（模式 B / 侧栏直跑）**：dispatch **独立 yml**（如 `day21.yml`），`--ref` = 被测分支。
 
-独立 `day21.yml` / `day19-stress-*.yml` **保留** push/schedule/直 dispatch；与 `ci.yml` 共用同一套 `*-reusable.yml`。
+查看全部 target：
+
+```powershell
+python tools/ci/resolve_ci_target.py list
+```
+
+解析单次 dispatch 计划（调试）：
+
+```powershell
+python tools/ci/resolve_ci_target.py --target day21 --ref feat/foo --dispatch-ref main
+python tools/ci/resolve_ci_target.py --target day19-smoke --ref day19-stress-smoke --route direct
+```
+
+独立 `day21.yml` / `day19-stress-*.yml` **保留** push/schedule；与 `ci.yml` 共用 `*-reusable.yml`。
 
 ---
 
@@ -118,15 +129,20 @@ powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1
 # 模式 A：main 上 ci.yml + 全量回归
 powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref feat/my-branch -DispatchRef main -SaveLogs
 
-# 模式 A + day21 套件
-powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref feat/day21-foo -DispatchRef main -Suite day21
+# via-ci：main 上 ci.yml，测 feat 分支，跑 day21 套件
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 `
+  -Target day21 -Ref feat/day21-foo -DispatchRef main
 
-# 模式 A + day19 smoke（超时自动调至 1800s；gha-6h 调至 21600s）
-powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref feat/x -DispatchRef main -Suite day19-smoke
+# via-ci：day19 smoke（超时自动 1800s）
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 `
+  -Target day19-smoke -Ref day19-stress-smoke -DispatchRef main
 
-# 模式 B：dispatch ref = 目标分支
-powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref my-branch -SaveLogs
-powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref my-branch -Suite day21
+# direct：侧栏 day21 workflow，dispatch ref = 被测分支
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 `
+  -Target day21 -Ref feat/day21-foo -Route direct
+
+# 全量回归（默认 -Target ci -Route via-ci）
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref my-branch -DispatchRef main -SaveLogs
 ```
 
 ### 3.2 开新分支 / 删分支
@@ -185,4 +201,23 @@ powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -DeleteBranch 
 - `day21.yml`、`day19-stress-smoke.yml`、`day19-stress-smoke-fail.yml`、`day19-stress-gha-6h.yml`、`day19-stress-full.yml`
 
 失败后同样用 `fetch_ci_errors.py`（`--branch` = dispatch ref，模式 A 为 `main`）。
+
+---
+
+## 5. Day22 本地回归入口
+
+Day22 采用 R-A gate-first 链路，PR blocking 入口止于 `ci`：
+
+```powershell
+python tools/scripts/contracts/contract_gate_runner.py --through-stage ci
+ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure
+```
+
+覆盖率汇总是报告型，不阻断 PR：
+
+```powershell
+python tools/scripts/test/collect_coverage.py --json-out docs/reports/ctest-label-coverage.json
+```
+
+Day19 内存压测按 `C-TST-MEM-1` rule-only 保留 staging/Actions 证据链，禁止新增 blocking `GATE-TEST-DAY19-SMOKE`。
 
