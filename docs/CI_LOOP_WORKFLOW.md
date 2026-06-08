@@ -40,8 +40,8 @@ CI 循环需要同时指定：
 | **跑哪个 workflow** | `-Target` | `ci` \| `day21` \| `day19-smoke` \| …（见 `resolve_ci_target.py list`） |
 | **怎么 dispatch** | `-Route` | `via-ci`（默认）或 `direct` |
 
-**`via-ci`（模式 A 友好）**：dispatch **`ci.yml`**，`inputs.branch` + `inputs.suite` 路由到对应 reusable。  
-**`direct`（模式 B / 侧栏直跑）**：dispatch **独立 yml**（如 `day21.yml`），`--ref` = 被测分支。
+**`via-ci`（模式 A 友好）**：dispatch **`ci.yml`**，`inputs.branch` + `inputs.suite` 通过 `workflow_call` 调用 `day21.yml` / `day19-stress-*.yml`。  
+**`direct`（模式 B / 侧栏直跑）**：直接 dispatch 同名 yml，`--ref` = 被测分支。
 
 查看全部 target：
 
@@ -56,7 +56,7 @@ python tools/ci/resolve_ci_target.py --target day21 --ref feat/foo --dispatch-re
 python tools/ci/resolve_ci_target.py --target day19-smoke --ref day19-stress-smoke --route direct
 ```
 
-独立 `day21.yml` / `day19-stress-*.yml` **保留** push/schedule；与 `ci.yml` 共用 `*-reusable.yml`。
+独立 `day21.yml` / `day19-stress-*.yml` **同时**支持 push/schedule/直 dispatch 与 `workflow_call`（无单独 `*-reusable.yml`，侧栏只显示 6 个 workflow）。
 
 ---
 

@@ -1,16 +1,11 @@
-# T19 full (72h-RP) — standalone; does not block PR ci.yml.
-#
-# GitHub-hosted runners enforce a 6-hour job timeout, so a true 72h wall-clock run
-# requires a self-hosted runner labeled `day19-full` (or run locally:
-#   bash tools/scripts/perf/run_day19_stress_full_linux.sh
-# ).
+# T19 full (72h-RP) — dispatch + workflow_call from ci.yml (suite=day19-full).
 name: day19-stress-full
 
 on:
   workflow_dispatch:
     inputs:
       runner:
-        description: github-hosted = fail-fast with guidance; self-hosted = 72h on label day19-full
+        description: github-hosted = fail-fast; self-hosted = 72h on label day19-full
         type: choice
         options:
           - self-hosted
@@ -24,15 +19,71 @@ on:
         description: BS_DAY19_PROFILE (full = 72h per day19_profile.json)
         required: false
         default: full
+  workflow_call:
+    inputs:
+      checkout_ref:
+        required: false
+        type: string
+        default: ""
+      runner:
+        required: false
+        type: string
+        default: self-hosted
+      build_dir:
+        required: false
+        type: string
+        default: build_day19_full
+      profile:
+        required: false
+        type: string
+        default: full
 
 concurrency:
   group: day19-stress-full
   cancel-in-progress: false
 
 jobs:
-  full:
-    uses: ./.github/workflows/day19-full-reusable.yml
-    with:
-      runner: ${{ github.event.inputs.runner || 'self-hosted' }}
-      build_dir: ${{ github.event.inputs.build_dir || 'build_day19_full' }}
-      profile: ${{ github.event.inputs.profile || 'full' }}
+  guard-github-hosted:
+    name: Block 72h on GitHub-hosted (6h cap)
+    if: ${{ (github.event_name == 'workflow_call' && inputs.runner == 'github-hosted') || (github.event_name == 'workflow_dispatch' && github.event.inputs.runner == 'github-hosted') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          echo "::error::72h full stress cannot complete on GitHub-hosted runners (max job timeout 360 minutes)."
+          echo "Use workflow_dispatch runner=self-hosted with a runner labeled 'day19-full', or run locally:"
+          echo "  BS_DAY19_PROFILE=full bash tools/scripts/perf/run_day19_stress_full_linux.sh"
+          exit 1
+
+  full-72h:
+    name: Day19 stress full (72h-RP)
+    if: ${{ (github.event_name == 'workflow_call' && inputs.runner == 'self-hosted') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.runner == 'self-hosted' || github.event.inputs.runner == '')) }}
+    runs-on: [self-hosted, day19-full]
+    timeout-minutes: 4500
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_call' && inputs.checkout_ref != '' && inputs.checkout_ref || github.ref }}
+
+      - name: Configure
+        run: cmake -S . -B "${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_full') }}" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build stress target
+        run: cmake --build "${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_full') }}" -j 4 --target bs_test_day19_stress_reload_loop
+
+      - name: Run full profile
+        env:
+          BUILD_DIR: ${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_full') }}
+          BS_DAY19_PROFILE: ${{ github.event_name == 'workflow_call' && inputs.profile || (github.event.inputs.profile || 'full') }}
+          BS_DAY19_STRESS_OUT: docs/day19_stress_full_latest.csv
+        run: bash tools/scripts/perf/run_day19_stress_full_linux.sh
+
+      - name: Upload full run artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day19-stress-full-${{ github.run_id }}
+          path: |
+            docs/day19_stress_full_latest.csv
+            docs/day19_stress_full_latest.json
+          if-no-files-found: ignore

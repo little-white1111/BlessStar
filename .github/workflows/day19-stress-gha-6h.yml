@@ -1,6 +1,4 @@
-# T19 gha_6h (~5h50m stress + build) — GitHub-hosted ubuntu; fits 360min job cap. Linux 72h full deferred.
-#
-# Triggers: manual dispatch, optional weekly (Monday 02:00 UTC). Does not block PR ci.yml.
+# T19 gha_6h (~5h50m) — schedule/dispatch + workflow_call from ci.yml (suite=day19-gha-6h).
 name: day19-stress-gha-6h
 
 on:
@@ -16,6 +14,20 @@ on:
         default: gha_6h
   schedule:
     - cron: "0 2 * * 1"
+  workflow_call:
+    inputs:
+      checkout_ref:
+        required: false
+        type: string
+        default: ""
+      build_dir:
+        required: false
+        type: string
+        default: build_day19_gha_6h
+      profile:
+        required: false
+        type: string
+        default: gha_6h
 
 concurrency:
   group: day19-stress-gha-6h
@@ -23,7 +35,34 @@ concurrency:
 
 jobs:
   gha-6h:
-    uses: ./.github/workflows/day19-gha-6h-reusable.yml
-    with:
-      build_dir: ${{ github.event.inputs.build_dir || 'build_day19_gha_6h' }}
-      profile: ${{ github.event.inputs.profile || 'gha_6h' }}
+    name: Day19 stress gha_6h (ubuntu ~5h50m)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_call' && inputs.checkout_ref != '' && inputs.checkout_ref || github.ref }}
+
+      - name: Configure
+        run: cmake -S . -B "${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_gha_6h') }}" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build stress target
+        run: cmake --build "${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_gha_6h') }}" -j 2 --target bs_test_day19_stress_reload_loop
+
+      - name: Run gha_6h profile
+        env:
+          BUILD_DIR: ${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_gha_6h') }}
+          BS_DAY19_PROFILE: ${{ github.event_name == 'workflow_call' && inputs.profile || (github.event.inputs.profile || 'gha_6h') }}
+          BS_DAY19_STRESS_OUT: docs/day19_stress_gha_6h_latest.csv
+          BS_DAY19_STRESS_JSON: docs/day19_stress_gha_6h_latest.json
+        run: bash tools/scripts/perf/run_day19_stress_gha_6h_linux.sh
+
+      - name: Upload gha_6h artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day19-stress-gha-6h-${{ github.run_id }}
+          path: |
+            docs/day19_stress_gha_6h_latest.csv
+            docs/day19_stress_gha_6h_latest.json
+          if-no-files-found: ignore
