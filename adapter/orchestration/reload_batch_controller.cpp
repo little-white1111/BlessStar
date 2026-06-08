@@ -669,7 +669,7 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
                     gc_path_work(&w);
                     continue;
                 }
-                begin_write_window();
+                /* post_config_sync resets kernel pool pipelines; keep write-window closed. */
             }
             if (persist_per_path(ctrl, &w, &result) != BS_ATTACH_OK)
                 ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
