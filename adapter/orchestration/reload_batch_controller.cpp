@@ -791,6 +791,8 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
                 return BS_ATTACH_ERR_IO;
             }
             const int bc = bs_adapter_attach_persist_store_batch_commit(ctrl->attach_store);
+            /* Pool reset in post_config_sync must not run under write-window (matches PER_PATH). */
+            end_write_window_if_open();
             if (bc != BS_ATTACH_OK)
             {
                 ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
