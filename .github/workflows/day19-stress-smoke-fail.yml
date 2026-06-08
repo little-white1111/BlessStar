@@ -1,4 +1,4 @@
-# T19 failure对照 (900s smoke_fail) — 与 day19-stress-smoke 并列；不阻塞 PR ci.yml。
+# T19 smoke_fail (900s) — dispatch + workflow_call from ci.yml (suite=day19-smoke-fail).
 name: day19-stress-smoke-fail
 
 on:
@@ -12,14 +12,56 @@ on:
         description: BS_DAY19_PROFILE (smoke_fail = 900s negative对照)
         required: false
         default: smoke_fail
+  workflow_call:
+    inputs:
+      checkout_ref:
+        required: false
+        type: string
+        default: ""
+      build_dir:
+        required: false
+        type: string
+        default: build_day19_stress_fail
+      profile:
+        required: false
+        type: string
+        default: smoke_fail
 
 concurrency:
   group: day19-stress-smoke-fail
   cancel-in-progress: false
 
 jobs:
-  smoke-fail:
-    uses: ./.github/workflows/day19-smoke-fail-reusable.yml
-    with:
-      build_dir: ${{ github.event.inputs.build_dir || 'build_day19_stress_fail' }}
-      profile: ${{ github.event.inputs.profile || 'smoke_fail' }}
+  smoke-fail-900s:
+    name: Day19 stress smoke_fail (900s对照)
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_call' && inputs.checkout_ref != '' && inputs.checkout_ref || github.ref }}
+
+      - name: Configure
+        run: cmake -S . -B "${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_stress_fail') }}" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build stress target
+        run: cmake --build "${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_stress_fail') }}" --config Release --target bs_test_day19_stress_reload_loop
+
+      - name: Run smoke_fail profile
+        shell: pwsh
+        env:
+          BS_DAY19_PROFILE: ${{ github.event_name == 'workflow_call' && inputs.profile || (github.event.inputs.profile || 'smoke_fail') }}
+          BS_BUILD_DIR: ${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_stress_fail') }}
+        run: |
+          powershell -ExecutionPolicy Bypass -File tools/scripts/perf/run_day19_stress_smoke_fail.ps1 `
+            -BuildDir $env:BS_BUILD_DIR -Config Release -Profile $env:BS_DAY19_PROFILE
+
+      - name: Upload smoke_fail artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day19-stress-smoke-fail-${{ github.run_id }}
+          path: |
+            docs/day19_stress_smoke_fail_latest.json
+            docs/day19_stress_smoke_fail_latest.csv
+          if-no-files-found: ignore

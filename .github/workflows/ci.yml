@@ -1,6 +1,6 @@
 # Full repo regression (all CTest + purity + contract + sanitizer + meson).
-# Unified dispatch: workflow_dispatch.inputs.suite routes to reusable day21/day19 workflows.
-# Standalone triggers: day21.yml, day19-stress-*.yml (push/schedule/direct dispatch).
+# Unified dispatch: workflow_dispatch.inputs.suite calls day21/day19 workflows via workflow_call.
+# Same yml files also handle push/schedule/direct dispatch (no separate *-reusable.yml).
 name: full test
 
 on:
@@ -14,7 +14,7 @@ on:
         type: string
         default: ""
       suite:
-        description: "CI suite (full = default regression; others delegate to reusable workflows)"
+        description: "CI suite (full = default regression; others call day21/day19 workflows)"
         required: false
         type: choice
         options:
@@ -226,31 +226,31 @@ jobs:
 
   day21-suite:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day21'
-    uses: ./.github/workflows/day21-reusable.yml
+    uses: ./.github/workflows/day21.yml
     with:
       checkout_ref: ${{ github.event.inputs.branch }}
 
   day19-smoke-suite:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-smoke'
-    uses: ./.github/workflows/day19-smoke-reusable.yml
+    uses: ./.github/workflows/day19-stress-smoke.yml
     with:
       checkout_ref: ${{ github.event.inputs.branch }}
 
   day19-smoke-fail-suite:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-smoke-fail'
-    uses: ./.github/workflows/day19-smoke-fail-reusable.yml
+    uses: ./.github/workflows/day19-stress-smoke-fail.yml
     with:
       checkout_ref: ${{ github.event.inputs.branch }}
 
   day19-gha-6h-suite:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-gha-6h'
-    uses: ./.github/workflows/day19-gha-6h-reusable.yml
+    uses: ./.github/workflows/day19-stress-gha-6h.yml
     with:
       checkout_ref: ${{ github.event.inputs.branch }}
 
   day19-full-suite:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-full'
-    uses: ./.github/workflows/day19-full-reusable.yml
+    uses: ./.github/workflows/day19-stress-full.yml
     with:
       checkout_ref: ${{ github.event.inputs.branch }}
       runner: ${{ github.event.inputs.day19_runner }}
