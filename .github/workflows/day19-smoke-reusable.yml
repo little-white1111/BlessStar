@@ -1,4 +1,4 @@
-# Reusable Day19 smoke (900s) — called by day19-stress-smoke.yml and ci.yml suite=day19-smoke.
+# Reusable Day19 smoke (900s) ? called by day19-stress-smoke.yml and ci.yml suite=day19-smoke.
 on:
   workflow_call:
     inputs:
@@ -19,7 +19,7 @@ jobs:
   smoke-900s:
     name: Day19 stress smoke (900s)
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
