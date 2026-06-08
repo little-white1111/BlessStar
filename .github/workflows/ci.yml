@@ -1,14 +1,42 @@
 # Full repo regression (all CTest + purity + contract + sanitizer + meson).
-# Day21 scoped gate: .github/workflows/day21.yml
+# Unified dispatch: workflow_dispatch.inputs.suite routes to reusable day21/day19 workflows.
+# Standalone triggers: day21.yml, day19-stress-*.yml (push/schedule/direct dispatch).
 name: full test
 
 on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to checkout and test (empty = use dispatch ref)"
+        required: false
+        type: string
+        default: ""
+      suite:
+        description: "CI suite (full = default regression; others delegate to reusable workflows)"
+        required: false
+        type: choice
+        options:
+          - full
+          - day21
+          - day19-smoke
+          - day19-smoke-fail
+          - day19-gha-6h
+          - day19-full
+        default: full
+      day19_runner:
+        description: "suite=day19-full only: self-hosted (72h) or github-hosted (fail-fast guard)"
+        required: false
+        type: choice
+        options:
+          - self-hosted
+          - github-hosted
+        default: self-hosted
 
 jobs:
   cmake:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
     name: cmake (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -17,6 +45,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -101,10 +131,13 @@ jobs:
         run: ctest --test-dir build_ci_test --output-on-failure -C Release -j 1
 
   sanitizer:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
     name: sanitizer (Linux Clang ASan+UBSan)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
       - name: Configure (Sanitizer)
         run: |
@@ -135,10 +168,13 @@ jobs:
         run: ctest --test-dir build-san -R bs_test_day19_stress_reload_loop --output-on-failure
 
   tsan:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
     name: tsan (Linux Clang day20)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
       - name: Configure (ThreadSanitizer)
         run: |
@@ -160,6 +196,7 @@ jobs:
         run: ctest --test-dir build-tsan -L kernel_pool --output-on-failure
 
   meson:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
     name: meson (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -168,6 +205,8 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
       - uses: actions/setup-python@v5
         with:
@@ -184,3 +223,34 @@ jobs:
 
       - name: Test
         run: meson test -C build-meson --print-errorlogs
+
+  day21-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day21'
+    uses: ./.github/workflows/day21-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-smoke-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-smoke'
+    uses: ./.github/workflows/day19-smoke-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-smoke-fail-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-smoke-fail'
+    uses: ./.github/workflows/day19-smoke-fail-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-gha-6h-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-gha-6h'
+    uses: ./.github/workflows/day19-gha-6h-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+
+  day19-full-suite:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day19-full'
+    uses: ./.github/workflows/day19-full-reusable.yml
+    with:
+      checkout_ref: ${{ github.event.inputs.branch }}
+      runner: ${{ github.event.inputs.day19_runner }}

@@ -1,0 +1,66 @@
+# Reusable Day19 full (72h-RP) — called by day19-stress-full.yml and ci.yml suite=day19-full.
+on:
+  workflow_call:
+    inputs:
+      checkout_ref:
+        required: false
+        type: string
+        default: ""
+      runner:
+        required: false
+        type: string
+        default: self-hosted
+      build_dir:
+        required: false
+        type: string
+        default: build_day19_full
+      profile:
+        required: false
+        type: string
+        default: full
+
+jobs:
+  guard-github-hosted:
+    name: Block 72h on GitHub-hosted (6h cap)
+    if: inputs.runner == 'github-hosted'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          echo "::error::72h full stress cannot complete on GitHub-hosted runners (max job timeout 360 minutes)."
+          echo "Use workflow_dispatch runner=self-hosted with a runner labeled 'day19-full', or run locally:"
+          echo "  BS_DAY19_PROFILE=full bash tools/scripts/perf/run_day19_stress_full_linux.sh"
+          exit 1
+
+  full-72h:
+    name: Day19 stress full (72h-RP)
+    if: inputs.runner == 'self-hosted'
+    runs-on: [self-hosted, day19-full]
+    timeout-minutes: 4500
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checkout_ref != '' && inputs.checkout_ref || github.ref }}
+
+      - name: Configure
+        run: cmake -S . -B "${{ inputs.build_dir }}" -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build stress target
+        run: cmake --build "${{ inputs.build_dir }}" -j 4 --target bs_test_day19_stress_reload_loop
+
+      - name: Run full profile
+        env:
+          BUILD_DIR: ${{ inputs.build_dir }}
+          BS_DAY19_PROFILE: ${{ inputs.profile }}
+          BS_DAY19_STRESS_OUT: docs/day19_stress_full_latest.csv
+        run: bash tools/scripts/perf/run_day19_stress_full_linux.sh
+
+      - name: Upload full run artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: day19-stress-full-${{ github.run_id }}
+          path: |
+            docs/day19_stress_full_latest.csv
+            docs/day19_stress_full_latest.json
+          if-no-files-found: ignore

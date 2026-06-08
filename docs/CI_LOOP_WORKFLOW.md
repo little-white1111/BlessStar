@@ -30,6 +30,23 @@ $env:GITHUB_TOKEN = "ghp_xxx..."
 - Actions 必须允许 `workflow_dispatch`（本仓库已支持）
 - 你要跑的 ref（branch）必须已 push 到远端
 
+### 1.3 单 yml 切换任意分支 + suite（推荐）
+
+`ci.yml` 统一 dispatch 入口，支持：
+
+| input | 作用 |
+|-------|------|
+| `branch` | 被测分支（空 = dispatch ref） |
+| `suite` | `full`（默认）\| `day21` \| `day19-smoke` \| `day19-smoke-fail` \| `day19-gha-6h` \| `day19-full` |
+| `day19_runner` | 仅 `suite=day19-full`：`self-hosted` / `github-hosted` |
+
+- **模式 A（稳定 workflow）**：从 `main` dispatch，`inputs.branch` = 目标分支，`inputs.suite` = 套件  
+  → workflow 定义与路由逻辑均在 **main** 的 `ci.yml`；job 正文在 `*-reusable.yml`。
+- **模式 B（简单）**：`--ref` = 目标分支，可选 `inputs.suite`  
+  → 使用该分支上的 `ci.yml`（须已 push）。
+
+独立 `day21.yml` / `day19-stress-*.yml` **保留** push/schedule/直 dispatch；与 `ci.yml` 共用同一套 `*-reusable.yml`。
+
 ---
 
 ## 2. 手工流程（最朴素）
@@ -45,8 +62,22 @@ git push -u origin HEAD
 
 ### 2.2 触发 CI（不依赖 gh）
 
+**模式 A — 固定用 main 的 ci.yml，测任意分支：**
+
+```powershell
+# 全量回归（默认 suite=full）
+python tools/ci/trigger_workflow_dispatch.py --workflow ci.yml --ref main --inputs '{"branch":"<your-branch>"}'
+# day21 轻量门禁
+python tools/ci/trigger_workflow_dispatch.py --workflow ci.yml --ref main --inputs '{"branch":"<your-branch>","suite":"day21"}'
+python tools/ci/wait_workflow_run.py --branch main --workflow_name "full test" --timeout 3600
+```
+
+**模式 B — dispatch ref 即目标分支：**
+
 ```powershell
 python tools/ci/trigger_workflow_dispatch.py --workflow ci.yml --ref <your-branch>
+python tools/ci/trigger_workflow_dispatch.py --workflow ci.yml --ref <your-branch> --inputs '{"suite":"day19-smoke"}'
+python tools/ci/wait_workflow_run.py --branch <your-branch> --workflow_name "full test" --timeout 3600
 ```
 
 ### 2.3 等待 CI 结束并拿到 run id
@@ -84,10 +115,50 @@ powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1
 指定分支 / 保存完整日志：
 
 ```powershell
+# 模式 A：main 上 ci.yml + 全量回归
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref feat/my-branch -DispatchRef main -SaveLogs
+
+# 模式 A + day21 套件
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref feat/day21-foo -DispatchRef main -Suite day21
+
+# 模式 A + day19 smoke（超时自动调至 1800s；gha-6h 调至 21600s）
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref feat/x -DispatchRef main -Suite day19-smoke
+
+# 模式 B：dispatch ref = 目标分支
 powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref my-branch -SaveLogs
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref my-branch -Suite day21
 ```
 
-### 3.2 运行逻辑（与你要求的步骤一一对应）
+### 3.2 开新分支 / 删分支
+
+独立命令（`tools/ci/manage_branch.py`）：
+
+```powershell
+# 从 main 开分支并 push
+python tools/ci/manage_branch.py create feat/day23-foo --from main
+
+# 查看远端分支
+python tools/ci/manage_branch.py list --remote
+
+# 删除本地+远端（main/master 受保护）
+python tools/ci/manage_branch.py delete feat/day23-foo --local --remote
+```
+
+与 CI 循环一体：
+
+```powershell
+# 开分支 → 用 main 的 ci.yml 跑循环 → 全绿后自动删分支
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 `
+  -CreateBranch feat/day23-foo -FromBranch main -DispatchRef main -DeleteBranchOnSuccess -SaveLogs
+
+# 仅删分支（不跑 CI）
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -DeleteBranch feat/day23-foo
+```
+
+`-CreateBranch` 会自动：`fetch` → `checkout -b` → `push -u origin`。  
+循环开始前会检查远端是否存在该分支；不存在则提示先 `git push`。
+
+### 3.3 运行逻辑（与你要求的步骤一一对应）
 
 1. **提交 GitHub**：脚本会检查 `git status --porcelain`；若 dirty，会提示你先手工 commit+push（避免脚本擅自提交）。
 2. **提交 GitHub action**：调用 `trigger_workflow_dispatch.py` 触发 `workflow_dispatch`
@@ -97,13 +168,21 @@ powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref my-branch
 
 ---
 
-## 4. Day19 72h 场景（Linux only）
+## 4. Day19 / Day21 套件（统一走 ci.yml 或独立 yml）
 
-你本机无 Linux 时，建议走 Actions：
+| suite / 独立 yml | 场景 |
+|------------------|------|
+| `suite=day21` | KernelPool + TSan 轻量门禁 |
+| `suite=day19-smoke` | Windows 900s smoke |
+| `suite=day19-smoke-fail` | smoke_fail 对照 · **XIX-MEM-13** |
+| `suite=day19-gha-6h` | Ubuntu ~5h50m |
+| `suite=day19-full` | 72h · self-hosted `day19-full`（`day19_runner` 默认 `self-hosted`） |
 
-- smoke：`day19-stress-smoke.yml`（Windows 900s）
-- smoke_fail：`day19-stress-smoke-fail.yml`（Windows 900s · **XIX-MEM-13**）
-- full：`day19-stress-full.yml`（Linux 72h · self-hosted `day19-full` 或 fail-fast 说明）
+**统一循环**：上表 suite 均可通过 `run_ci_loop.ps1 -Suite <name>` + 模式 A/B 触发 **同一 `ci.yml`**。
 
-失败后同样可用 `fetch_ci_errors.py` 抓取日志（按分支/按 run）。
+**保留独立通道**（schedule / 直 dispatch / feat/day21* push）：
+
+- `day21.yml`、`day19-stress-smoke.yml`、`day19-stress-smoke-fail.yml`、`day19-stress-gha-6h.yml`、`day19-stress-full.yml`
+
+失败后同样用 `fetch_ci_errors.py`（`--branch` = dispatch ref，模式 A 为 `main`）。
 
