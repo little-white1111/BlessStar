@@ -286,7 +286,7 @@ static int kernel_start_executor(Kernel* kernel)
     if (!kernel || kernel->exec_thread_started)
         return 0;
     bs_mutex_lock(&kernel->exec_mu);
-    kernel->exec_thread_ready = 0;
+    kernel->exec_thread_ready   = 0;
     kernel->exec_stop_requested = 0;
     kernel->exec_thread_started = 0;
     bs_mutex_unlock(&kernel->exec_mu);
