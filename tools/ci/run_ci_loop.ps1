@@ -50,6 +50,9 @@ param(
 
     [int]$TimeoutPerRun = 0,
 
+    # Wait/fetch only this Actions job (e.g. "cmake (ubuntu-latest)"); omit = whole workflow
+    [string]$JobName = "",
+
     [switch]$SaveLogs
 
 )
@@ -251,8 +254,13 @@ if ($useBranchInput) {
 }
 
 Write-Host "[ci-loop] timeout_per_run=${TimeoutPerRun}s token: GITHUB_TOKEN or tools/ci/.github_token"
-
+if ($JobName) {
+    Write-Host "[ci-loop] job_mode=$JobName (wait/fetch single job; full workflow may still run)"
+} else {
+    Write-Host "[ci-loop] job_mode=whole workflow"
+}
 Write-Host "[ci-loop] list targets: python tools/ci/resolve_ci_target.py list"
+Write-Host "[ci-loop] list jobs:   python tools/ci/wait_workflow_job.py --run-id <run_id> --list-jobs"
 
 
 
@@ -316,23 +324,29 @@ for ($i = 1; $i -le $MaxIters; $i++) {
 
 
 
-    $waitOut = python tools/ci/wait_workflow_run.py --branch $watchBranch --workflow_name $WorkflowName --interval $PollInterval --timeout $TimeoutPerRun
+    if ($JobName) {
+        $waitOut = python tools/ci/wait_workflow_job.py --branch $watchBranch --workflow_name $WorkflowName `
+            --job-name $JobName --interval $PollInterval --timeout $TimeoutPerRun
+    } else {
+        $waitOut = python tools/ci/wait_workflow_run.py --branch $watchBranch --workflow_name $WorkflowName `
+            --interval $PollInterval --timeout $TimeoutPerRun
+    }
 
     $lines = $waitOut -split "`n"
-
     $runId = ($lines[-1]).Trim()
 
     if (-not $runId) { throw "failed to parse run id" }
 
     Write-Host "[ci-loop] run id = $runId"
 
-
-
     $exitCode = $LASTEXITCODE
 
     if ($exitCode -eq 0) {
-
-        Write-Host "[ci-loop] ✅ CI green. Stop."
+        if ($JobName) {
+            Write-Host "[ci-loop] ✅ job '$JobName' green. Stop."
+        } else {
+            Write-Host "[ci-loop] ✅ CI green. Stop."
+        }
 
         if ($DeleteBranchOnSuccess) {
 
@@ -351,12 +365,15 @@ for ($i = 1; $i -le $MaxIters; $i++) {
 
 
     $save = ""
-
     if ($SaveLogs) { $save = "--save-logs" }
 
-    Write-Host "[ci-loop] ❌ CI failed. Fetching errors..."
-
-    python tools/ci/fetch_ci_errors.py --branch $watchBranch --run $runId $save
+    if ($JobName) {
+        Write-Host "[ci-loop] ❌ job '$JobName' failed. Fetching errors..."
+        python tools/ci/fetch_ci_errors.py --branch $watchBranch --run $runId --job-name $JobName $save
+    } else {
+        Write-Host "[ci-loop] ❌ CI failed. Fetching errors..."
+        python tools/ci/fetch_ci_errors.py --branch $watchBranch --run $runId $save
+    }
 
 
 

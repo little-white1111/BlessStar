@@ -9,6 +9,9 @@ BlessStar CI 失败日志自动拉取与错误聚合工具。
     # 抓 main 分支最新 run 的失败日志
     python tools/ci/fetch_ci_errors.py
 
+    # 只抓指定 job（job 已通过则跳过）
+    python tools/ci/fetch_ci_errors.py --run 26497427250 --job-name "cmake (ubuntu-latest)" --save-logs
+
     # 抓指定 run
     python tools/ci/fetch_ci_errors.py --run 26497427250
 
@@ -26,6 +29,7 @@ BlessStar CI 失败日志自动拉取与错误聚合工具。
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import gzip
 import io
 import json
@@ -183,10 +187,30 @@ def get_run(token: str, run_id: int) -> dict:
     return fetch_json(url, token)
 
 
-def get_failed_jobs(token: str, run_id: int) -> list[dict]:
-    url = f"{BASE}/repos/{REPO}/actions/runs/{run_id}/jobs?per_page=30"
+def get_run_jobs(token: str, run_id: int) -> list[dict]:
+    url = f"{BASE}/repos/{REPO}/actions/runs/{run_id}/jobs?per_page=100"
     data = fetch_json(url, token)
-    return [j for j in data.get("jobs", []) if j.get("conclusion") == "failure"]
+    return data.get("jobs") or []
+
+
+def get_failed_jobs(token: str, run_id: int) -> list[dict]:
+    return [j for j in get_run_jobs(token, run_id) if j.get("conclusion") == "failure"]
+
+
+def resolve_job_by_name(jobs: list[dict], job_name: str) -> dict | None:
+    for job in jobs:
+        if job.get("name") == job_name:
+            return job
+    needle = job_name.lower()
+    for job in jobs:
+        name = (job.get("name") or "").lower()
+        if name == needle or fnmatch.fnmatch(name, needle):
+            return job
+    for job in jobs:
+        name = (job.get("name") or "").lower()
+        if needle in name:
+            return job
+    return None
 
 
 def download_job_log(token: str, job_id: int) -> str:
@@ -238,6 +262,11 @@ def main() -> int:
     )
     parser.add_argument("--run", type=int, default=None, help="指定 run id（默认取最新）")
     parser.add_argument("--branch", default=BRANCH, help=f"分支（默认 {BRANCH}）")
+    parser.add_argument(
+        "--job-name",
+        default="",
+        help='只处理指定 job（如 "cmake (ubuntu-latest)"）；成功则跳过抓日志；workflow 未结束也可用',
+    )
     parser.add_argument("--save-logs", action="store_true", help="把完整日志保存到本地 .log 文件")
     parser.add_argument(
         "--keywords",
@@ -290,15 +319,38 @@ def main() -> int:
         f"{'='*70}\n"
     )
 
-    if conclusion == "success":
-        print("CI 全部通过，无需修复。")
-        return 0
+    if args.job_name:
+        jobs = get_run_jobs(token, run_id)
+        job = resolve_job_by_name(jobs, args.job_name)
+        if not job:
+            print(f"未找到 job：{args.job_name!r}（run 可能仍在排队）。")
+            print("提示：python tools/ci/wait_workflow_job.py --run-id", run_id, "--list-jobs")
+            return 1
+        job_conclusion = job.get("conclusion")
+        job_status = job.get("status")
+        if job_status != "completed":
+            print(
+                f"Job {job['name']!r} 仍在运行（status={job_status}），请稍后再抓日志。"
+            )
+            return 1
+        if job_conclusion == "success":
+            print(f"Job {job['name']!r} 已通过，无需抓日志。")
+            return 0
+        if job_conclusion not in ("failure", "cancelled", "timed_out"):
+            print(f"Job {job['name']!r} conclusion={job_conclusion}，无失败日志可抓。")
+            return 1
+        failed_jobs = [job]
+        print(f"单 job 模式：{job['name']} (conclusion={job_conclusion})\n")
+    else:
+        if conclusion == "success":
+            print("CI 全部通过，无需修复。")
+            return 0
 
-    # ── 失败 job ──
-    failed_jobs = get_failed_jobs(token, run_id)
-    if not failed_jobs:
-        print("未找到失败 job（可能仍在运行中），请稍后再试。")
-        return 1
+        # ── 失败 job ──
+        failed_jobs = get_failed_jobs(token, run_id)
+        if not failed_jobs:
+            print("未找到失败 job（可能仍在运行中），请稍后再试。")
+            return 1
 
     print(f"发现 {len(failed_jobs)} 个失败 job：")
     for j in failed_jobs:

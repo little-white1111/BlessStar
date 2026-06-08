@@ -102,9 +102,28 @@ python tools/ci/wait_workflow_run.py --branch feat/day21-... --workflow_name day
 
 ### 2.4 失败时抓错误摘要 +（可选）完整日志
 
+**整 workflow（全部 job 结束后）：**
+
 ```powershell
 python tools/ci/fetch_ci_errors.py --branch <your-branch> --run 26497427250 --save-logs
 ```
+
+**单 job（推荐 · 该 job 完成即可，不必等其它 job）：**
+
+```powershell
+# 只等 cmake ubuntu
+python tools/ci/wait_workflow_job.py --branch main --workflow_name "full test" `
+  --job-name "cmake (ubuntu-latest)" --timeout 3600
+
+# 失败才抓；通过则跳过
+python tools/ci/fetch_ci_errors.py --branch main --run <run_id> `
+  --job-name "cmake (ubuntu-latest)" --save-logs
+
+# 列出 run 内全部 job 名
+python tools/ci/wait_workflow_job.py --run-id <run_id> --list-jobs
+```
+
+模式 B 将 `--branch main` 换成 `<your-branch>`（与 dispatch ref 一致）。
 
 日志会（可选）落在 `ci_logs/` 下。
 
@@ -132,6 +151,10 @@ powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref feat/my-b
 # via-ci：main 上 ci.yml，测 feat 分支，跑 day21 套件
 powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 `
   -Target day21 -Ref feat/day21-foo -DispatchRef main
+
+# 只盯 cmake ubuntu job（-JobName 不必等整 workflow）
+powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 `
+  -Ref day19-stress-smoke -DispatchRef main -JobName "cmake (ubuntu-latest)" -SaveLogs
 
 # via-ci：day19 smoke（超时自动 1800s）
 powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 `

@@ -27,6 +27,7 @@ static int facade_read_fn(void* user_ctx, const char* uri, IoReadResult* out)
 
 int main()
 {
+    std::fprintf(stderr, "trace: begin\n");
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_attach_wire_full"));
     const fs::path           work = tmp_guard.path;
 
@@ -38,6 +39,7 @@ int main()
     BS_TEST_REQUIRE("io", bs_test_attach_open_io(&fix) == 0);
     BS_TEST_REQUIRE("pool-warmed", bs_adapter_attach_ctx_is_kernel_pool_warmed(fix.ctx) == 1);
     bs_adapter_attach_ctx_set_active(fix.ctx);
+    std::fprintf(stderr, "trace: bootstrapped\n");
 
     const fs::path manifest = work / "wire.manifest";
     BS_TEST_REQUIRE("ctx-store", bs_adapter_attach_ctx_open_persist_store(
@@ -61,7 +63,9 @@ int main()
     bs_adapter_attach_reload_batch_set_manifest_path(ctrl, manifest.string().c_str());
     BS_TEST_REQUIRE("add-a", bs_adapter_attach_reload_batch_add_path(ctrl, uri_a.c_str()) == 0);
     BS_TEST_REQUIRE("add-b", bs_adapter_attach_reload_batch_add_path(ctrl, uri_b.c_str()) == 0);
+    std::fprintf(stderr, "trace: before run\n");
     BS_TEST_REQUIRE("run", bs_adapter_attach_reload_batch_run(ctrl) == 0);
+    std::fprintf(stderr, "trace: after run\n");
     BS_TEST_REQUIRE("outcome", bs_adapter_attach_reload_batch_outcome(ctrl) == BATCH_ALL_OK);
     BS_TEST_REQUIRE("ir-empty", bs_adapter_attach_ir_snapshot_entry_count(fix.ctx) == 0u);
 
@@ -77,8 +81,11 @@ int main()
         BS_TEST_REQUIRE("revision", meta.revision == manifest_rev);
     }
 
+    std::fprintf(stderr, "trace: before ctrl destroy\n");
     bs_adapter_attach_reload_batch_destroy(ctrl);
+    std::fprintf(stderr, "trace: before fixture teardown\n");
     bs_test_attach_teardown(&fix);
+    std::fprintf(stderr, "trace: after fixture teardown\n");
     std::fprintf(stderr, "AttachWireFullChainIntegrationTest: PASS\n");
     return 0;
 }

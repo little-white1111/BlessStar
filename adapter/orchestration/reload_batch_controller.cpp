@@ -711,7 +711,9 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
                         [](const PathWork& w) { return w.state == BS_ORCH_STAGED; });
         if (pool_parallel)
         {
-            /* P1: pool exec must not run under session write-window (session_mu exclusive). */
+            /* P1: pool exec must not run under session write-window (session_mu exclusive).
+             * Keep PER_BATCH execution on the caller thread: Windows CI exposed a wait-chain
+             * deadlock when temporary workers nested kernel-pool submit/executor waits. */
             end_write_window_if_open();
 
             bool exec_failed = false;
