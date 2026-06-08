@@ -9,6 +9,7 @@
 | `format/` | 代码格式（clang-format） |
 | `maintenance/` | 一次性/维护类脚本 |
 | `perf/` | 性能基线脚本 |
+| `test/` | 测试报告脚本（非 blocking，例如 CTest label coverage 汇总） |
 | `lib/` | 公共路径与扫描辅助（`repo_paths.py`） |
 
 ## 契约实例字段（D 方案）
@@ -30,4 +31,5 @@
 python tools/scripts/contracts/contract_validate_instances.py
 python tools/scripts/contracts/contract_compile.py
 python tools/scripts/contracts/contract_gate_runner.py
+python tools/scripts/test/collect_coverage.py --json-out docs/reports/ctest-label-coverage.json
 ```

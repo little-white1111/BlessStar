@@ -712,6 +712,63 @@ set_tests_properties(bs_test_attach_p2_shortcoming_regression
                    RESOURCE_LOCK "attach_integration"
 )
 
+blessstar_add_unit_test(bs_test_attach_recover_cold
+  SOURCES adapter/test/AttachRecoverColdTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_attach_recover_cold
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_recover_cold PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_recover_cold
+  PROPERTIES LABELS "unit;recover;arch_gap;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+
+blessstar_add_unit_test(bs_test_attach_recover_fsm
+  SOURCES adapter/test/AttachRecoverFsmTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_adapter_persistence
+    bs_kernel_io
+    bs_kernel_common
+)
+target_include_directories(bs_test_attach_recover_fsm
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_recover_fsm PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_recover_fsm
+  PROPERTIES LABELS "unit;recover;arch_gap;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+
+blessstar_add_unit_test(bs_test_attach_recover_sidecar
+  SOURCES adapter/test/AttachRecoverSidecarTest.cpp
+  LIBS
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_log
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_attach_recover_sidecar
+  PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test
+)
+target_compile_definitions(bs_test_attach_recover_sidecar PRIVATE BS_TESTING)
+set_tests_properties(bs_test_attach_recover_sidecar
+  PROPERTIES LABELS "unit;recover;arch_gap;regression" TIMEOUT 300
+                   RESOURCE_LOCK "attach_integration"
+)
+
 blessstar_add_unit_test(bs_test_attach_watch_benchmark
   SOURCES adapter/test/AttachWatchBenchmark.cpp
   LIBS bs_adapter_persistence

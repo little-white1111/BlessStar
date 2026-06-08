@@ -358,6 +358,7 @@ add_library(bs_adapter_persistence
   adapter/persistence/attach_watch.c
   adapter/persistence/attach_crc32.c
   adapter/persistence/attach_fsync.c
+  adapter/persistence/attach_runtime_sidecar.c
 )
 target_include_directories(bs_adapter_persistence
   PUBLIC
@@ -370,11 +371,14 @@ target_link_libraries(bs_adapter_persistence
     bs_kernel_common
     bs_kernel_report_core
 )
+target_compile_definitions(bs_adapter_persistence PRIVATE BS_TESTING)
 
 # ------------------------------
 # Adapter: reload orchestration (batch / gate / report)
 # ------------------------------
 add_library(bs_adapter_orchestration
+  adapter/src/attach_recover.cpp
+  adapter/src/attach_recover_sidecar.cpp
   adapter/orchestration/reload_batch_controller.cpp
   adapter/orchestration/reload_batch_factory.cpp
   adapter/orchestration/reload_gate_default.cpp
@@ -393,6 +397,7 @@ target_link_libraries(bs_adapter_orchestration
     bs_adapter_parser
     bs_adapter_persistence
 )
+target_compile_definitions(bs_adapter_orchestration PRIVATE BS_TESTING)
 
 # ------------------------------
 # Adapter: P2 plugins (IMPL-08-17 · static link)

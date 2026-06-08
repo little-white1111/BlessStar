@@ -58,6 +58,7 @@ void bs_adapter_attach_ctx_stop_kernel(AttachContext* ctx);
 BsKernelPool* bs_adapter_attach_ctx_kernel_pool(AttachContext* ctx);
 int           bs_adapter_attach_ctx_warmup_kernel_pool(AttachContext* ctx);
 int           bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx);
+int           bs_adapter_attach_ctx_rebuild_kernel_pool(AttachContext* ctx);
 
 typedef void (*BsAttachPhase2NotifyBridgeFn)(ConfigManager* cm, WatchManager* wm, const char* path,
                                              ConfigEventType type, const void* snapshot,

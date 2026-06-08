@@ -34,5 +34,15 @@
     "GATE-TEST-L1-GATE-SCOPE",
     "GATE-STAGING-ACCEPTANCE",
     "GATE-PROD-SMOKE"
+  ],
+  "contract_ids": [
+    "C-TST-POL-1",
+    "C-TST-GATE-SCOPE-1",
+    "C-TST-L1-1",
+    "C-TST-L2-1",
+    "C-TST-L3-1",
+    "C-TST-HERM-1",
+    "C-TST-ENV-1",
+    "C-TST-MEM-1"
   ]
 }

@@ -23,6 +23,7 @@
 | **C-TST-L3-1** | Prod 仅 smoke，禁止全量 regression |
 | **C-TST-HERM-1** | 文件型 adapter/app 测例须 `test_temp_dir.h`；`GATE-TEST-HERM` 禁止固定 `bs_*` 路径（P0-HERM-IO） |
 | **C-TST-ENV-1** | Staging 与 Prod 拓扑/路径策略同构 |
+| **C-TST-MEM-1** | Day19 内存压测阈值索引（T19.12-C rule-only；无 blocking smoke gate） |
 
 ## 门禁
 

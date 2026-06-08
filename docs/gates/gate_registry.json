@@ -119,6 +119,15 @@
       "timeout_s": 1800
     },
     {
+      "gate_id": "GATE-RECOVER",
+      "stage": "ci",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure",
+      "covers": ["C-FN-1"],
+      "default_blocking": true,
+      "timeout_s": 300
+    },
+    {
       "gate_id": "GATE-DEV-L1",
       "stage": "dev_ci",
       "runner": "ctest",

@@ -15,6 +15,8 @@
 #include "bs/adapter/parser/config_parse.h"
 #include "bs/adapter/persistence/attach_audit.h"
 #include "bs/adapter/persistence/attach_store.h"
+#include "bs/adapter/persistence/attach_wal.h"
+#include "bs/adapter/attach_recover_sidecar.h"
 
 #include <cstdio>
 #include <cstring>
@@ -57,6 +59,55 @@ struct ReloadBatchController
     BsAttachStore* attach_store       = nullptr;
     AttachContext* attach_ctx         = nullptr;
 };
+
+#if defined(BS_TESTING)
+static int g_testing_abort_after_exec = 0;
+#endif
+
+static int ensure_attach_store(ReloadBatchController* ctrl);
+static uint64_t session_batch_epoch(const ReloadBatchController* ctrl);
+
+static uint32_t uri_set_hash_for_ctrl(const ReloadBatchController* ctrl)
+{
+    if (!ctrl)
+        return 0;
+    std::vector<std::string> uris;
+    uris.reserve(ctrl->paths.size());
+    for (const auto& w : ctrl->paths)
+        uris.push_back(w.uri);
+    std::sort(uris.begin(), uris.end());
+    std::string blob;
+    for (const auto& u : uris)
+    {
+        blob.append(u);
+        blob.push_back('\0');
+    }
+    if (blob.empty())
+        return 0;
+    uint32_t h = 2166136261u;
+    for (unsigned char c : blob)
+    {
+        h ^= (uint32_t)c;
+        h *= 16777619u;
+    }
+    return h;
+}
+
+static uint64_t pending_batch_epoch(const ReloadBatchController* ctrl)
+{
+    return session_batch_epoch(ctrl) + 1;
+}
+
+static int write_phase_mark(ReloadBatchController* ctrl, BsAttachWalRecoverPhase phase)
+{
+    if (!ctrl || ctrl->scheme != BS_ATTACH_SCHEME_PER_BATCH)
+        return BS_ATTACH_OK;
+    if (ensure_attach_store(ctrl) != 0)
+        return BS_ATTACH_ERR_IO;
+    return bs_adapter_attach_persist_store_append_phase_mark(
+        ctrl->attach_store, pending_batch_epoch(ctrl), (uint32_t)phase,
+        uri_set_hash_for_ctrl(ctrl));
+}
 
 static AttachContext* resolve_attach_ctx(ReloadBatchController* ctrl)
 {
@@ -441,11 +492,21 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         return -1;
     }
 
+    if (!ctrl->manifest_path.empty())
+        (void)bs_adapter_attach_recover_sidecar_invalidate(ctrl->manifest_path.c_str());
+
     ctrl->outcome            = BATCH_ALL_OK;
     ctrl->session_bytes_used = 0;
 
     if (ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH)
+    {
         bs_adapter_attach_persist_store_batch_begin(ctrl->attach_store);
+        if (write_phase_mark(ctrl, BS_ATTACH_WAL_PHASE_STAGE) != BS_ATTACH_OK)
+        {
+            end_write_window_if_open();
+            return BS_ATTACH_ERR_IO;
+        }
+    }
 
     if (ctrl->report)
     {
@@ -559,6 +620,18 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
 
     if (ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH && !batch_had_failure)
     {
+        const bool has_staged = std::any_of(
+            ctrl->paths.begin(), ctrl->paths.end(),
+            [](const PathWork& w) { return w.state == BS_ORCH_STAGED; });
+        if (has_staged && write_phase_mark(ctrl, BS_ATTACH_WAL_PHASE_GATE) != BS_ATTACH_OK)
+        {
+            end_write_window_if_open();
+            return BS_ATTACH_ERR_IO;
+        }
+    }
+
+    if (ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH && !batch_had_failure)
+    {
         const bool pool_parallel =
             actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx) &&
             std::any_of(ctrl->paths.begin(), ctrl->paths.end(),
@@ -591,6 +664,26 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             {
                 batch_had_failure = true;
                 ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
+                bs_adapter_attach_ir_snapshot_clear_all(actx);
+            }
+            else
+            {
+                if (write_phase_mark(ctrl, BS_ATTACH_WAL_PHASE_EXEC) != BS_ATTACH_OK)
+                {
+                    batch_had_failure = true;
+                    ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
+                }
+#if defined(BS_TESTING)
+                else if (g_testing_abort_after_exec)
+                {
+                    batch_had_failure = true;
+                    ctrl->outcome     = BATCH_COMPLETED_WITH_FAILURES;
+                    bs_adapter_attach_ir_snapshot_clear_all(actx);
+                    bs_adapter_attach_persist_store_batch_abort(ctrl->attach_store);
+                    end_write_window_if_open();
+                    return BS_ATTACH_ERR_IO;
+                }
+#endif
             }
         }
     }
@@ -614,6 +707,13 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         else if (!ctrl->paths.empty())
         {
             begin_write_window();
+            if (write_phase_mark(ctrl, BS_ATTACH_WAL_PHASE_PERSIST) != BS_ATTACH_OK)
+            {
+                ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
+                bs_adapter_attach_persist_store_batch_abort(ctrl->attach_store);
+                end_write_window_if_open();
+                return BS_ATTACH_ERR_IO;
+            }
             const int bc = bs_adapter_attach_persist_store_batch_commit(ctrl->attach_store);
             if (bc != BS_ATTACH_OK)
             {
@@ -689,3 +789,10 @@ PathOrchestrationState bs_adapter_attach_reload_batch_path_state(const ReloadBat
         return BS_ORCH_PENDING;
     return ctrl->paths[it->second].state;
 }
+
+#if defined(BS_TESTING)
+void bs_adapter_attach_reload_batch_testing_set_abort_after_exec(int enabled)
+{
+    g_testing_abort_after_exec = enabled ? 1 : 0;
+}
+#endif

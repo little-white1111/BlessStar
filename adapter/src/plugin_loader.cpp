@@ -4,6 +4,8 @@
 #include "bs/adapter/plugin/plugin_loader.h"
 #include "bs/adapter/plugin/plugin_manifest_paths.h"
 
+#include "bs/kernel/registry/registry_facade.h"
+
 #include <cstdlib>
 #include <cstring>
 
@@ -167,6 +169,29 @@ static int deps_satisfied_idx(int idx)
     return 1;
 }
 
+/** Per-facade binding check (process-wide g_loaded_* skips re-init only). */
+static int plugin_registered_on_facade(RegistryFacade* facade, const char* manifest_id)
+{
+    if (!facade || !manifest_id)
+        return 0;
+    if (std::strcmp(manifest_id, "io-standard") == 0)
+    {
+        Binding b{};
+        return bs_registry_facade_resolve(facade, "/adapter/io/local", &b) == BS_REGISTRY_OK &&
+               b.impl != nullptr;
+    }
+    if (std::strcmp(manifest_id, "log-domains") == 0)
+        return bs_registry_facade_log_domain_id_by_qname(facade, "io") != 0;
+    if (std::strcmp(manifest_id, "orch-reload") == 0)
+    {
+        Binding b{};
+        return bs_registry_facade_resolve(facade, "/adapter/orchestration/reload_batch", &b) ==
+                   BS_REGISTRY_OK &&
+               b.impl != nullptr;
+    }
+    return 0;
+}
+
 static int ensure_phase_p2(RegistryFacade* facade)
 {
     const RegistrationPhase phase = bs_registry_facade_current_phase(facade);
@@ -190,7 +215,8 @@ static int invoke_plugin(AttachContext* ctx, const PluginDesc* plugin, int idx)
         return -1;
     if (!is_enabled(idx))
         return 0;
-    if (is_loaded(plugin->manifest_id))
+    if (is_loaded(plugin->manifest_id) &&
+        plugin_registered_on_facade(facade, plugin->manifest_id))
         return 0;
     if (!deps_satisfied_idx(idx))
         return -1;
@@ -276,7 +302,10 @@ int bs_adapter_plugin_loader_load_all(AttachContext* ctx, const char* attach_man
         {
             const auto& plugin = k_builtin_plugins[i];
             const int   idx    = static_cast<int>(i);
-            if (!is_enabled(idx) || is_loaded(plugin.manifest_id))
+            if (!is_enabled(idx))
+                continue;
+            if (is_loaded(plugin.manifest_id) &&
+                plugin_registered_on_facade(facade, plugin.manifest_id))
                 continue;
             if (!deps_satisfied_idx(idx))
                 continue;
@@ -293,7 +322,7 @@ int bs_adapter_plugin_loader_load_all(AttachContext* ctx, const char* attach_man
         const int idx = static_cast<int>(i);
         if (!is_enabled(idx))
             continue;
-        if (!is_loaded(k_builtin_plugins[i].manifest_id))
+        if (!plugin_registered_on_facade(facade, k_builtin_plugins[i].manifest_id))
             return -1;
     }
 

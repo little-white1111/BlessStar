@@ -24,7 +24,9 @@
 
 struct BsAttachWal
 {
-    char* path;
+    char*    path;
+    int      exec_rollback_detected;
+    uint64_t exec_rollback_epoch;
 };
 
 enum
@@ -38,8 +40,60 @@ typedef enum BsAttachWalRecordType
     BS_ATTACH_WAL_REC_BATCH_BEGIN = 1,
     BS_ATTACH_WAL_REC_ENTRY       = 2,
     BS_ATTACH_WAL_REC_BATCH_END   = 3,
-    BS_ATTACH_WAL_REC_COMMITTED   = 4
+    BS_ATTACH_WAL_REC_COMMITTED   = 4,
+    BS_ATTACH_WAL_REC_PHASE_MARK  = 5
 } BsAttachWalRecordType;
+
+#define BS_ATTACH_WAL_MAX_PHASE_TRACK 32u
+
+typedef struct WalPhaseTrack
+{
+    uint64_t epoch;
+    uint32_t max_phase;
+} WalPhaseTrack;
+
+static void wal_phase_track_update(WalPhaseTrack* tracks, size_t* track_count, uint64_t epoch,
+                                   uint32_t phase)
+{
+    if (!tracks || !track_count || epoch == 0)
+        return;
+    for (size_t i = 0; i < *track_count; ++i)
+    {
+        if (tracks[i].epoch == epoch)
+        {
+            if (phase > tracks[i].max_phase)
+                tracks[i].max_phase = phase;
+            return;
+        }
+    }
+    if (*track_count >= BS_ATTACH_WAL_MAX_PHASE_TRACK)
+        return;
+    tracks[*track_count].epoch     = epoch;
+    tracks[*track_count].max_phase = phase;
+    ++(*track_count);
+}
+
+static uint32_t wal_max_phase_for_epoch(const WalPhaseTrack* tracks, size_t track_count,
+                                        uint64_t epoch)
+{
+    for (size_t i = 0; i < track_count; ++i)
+    {
+        if (tracks[i].epoch == epoch)
+            return tracks[i].max_phase;
+    }
+    return 0;
+}
+
+static void wal_delete_staging_paths(char** staging_paths, uint32_t count)
+{
+    if (!staging_paths)
+        return;
+    for (uint32_t i = 0; i < count; ++i)
+    {
+        if (staging_paths[i] && staging_paths[i][0] != '\0')
+            (void)remove(staging_paths[i]);
+    }
+}
 
 #ifndef BS_ATTACH_WAL_MAX_RECORD_BYTES
 #define BS_ATTACH_WAL_MAX_RECORD_BYTES (64u * 1024u)
@@ -153,6 +207,8 @@ BsAttachWal* bs_adapter_attach_persist_wal_open(const char* wal_path)
         return NULL;
     }
     memcpy(w->path, wal_path, n);
+    w->exec_rollback_detected = 0;
+    w->exec_rollback_epoch    = 0;
     return w;
 }
 
@@ -352,6 +408,48 @@ int bs_adapter_attach_persist_wal_mark_committed(BsAttachWal* wal, uint64_t epoc
 
     const int rot = wal_rotate_active_segment(wal->path, epoch);
     return rot == BS_ATTACH_OK ? BS_ATTACH_OK : BS_ATTACH_ERR_IO;
+}
+
+int bs_adapter_attach_persist_wal_append_phase_mark(BsAttachWal* wal, uint64_t batch_epoch,
+                                                    BsAttachWalRecoverPhase phase,
+                                                    uint32_t                  uri_set_hash)
+{
+    if (!wal || !wal->path)
+        return BS_ATTACH_OK;
+    if (batch_epoch == 0 || phase == 0)
+        return BS_ATTACH_ERR_INVALID_ARG;
+
+    FILE* f = fopen(wal->path, "ab");
+    if (!f)
+        return BS_ATTACH_ERR_IO;
+
+    uint8_t payload[8 + 4 + 4];
+    write_u64_le(payload + 0, batch_epoch);
+    write_u32_le(payload + 8, (uint32_t)phase);
+    write_u32_le(payload + 12, uri_set_hash);
+    const int rc =
+        wal_write_record(f, (uint16_t)BS_ATTACH_WAL_REC_PHASE_MARK, payload, (uint32_t)sizeof(payload));
+    if (rc != BS_ATTACH_OK)
+    {
+        fclose(f);
+        return rc;
+    }
+    if (bs_adapter_attach_persist_fsync_file(f) != 0)
+    {
+        fclose(f);
+        return BS_ATTACH_ERR_IO;
+    }
+    fclose(f);
+    return BS_ATTACH_OK;
+}
+
+int bs_adapter_attach_persist_wal_had_exec_rollback(const BsAttachWal* wal, uint64_t* epoch_out)
+{
+    if (!wal)
+        return 0;
+    if (epoch_out)
+        *epoch_out = wal->exec_rollback_epoch;
+    return wal->exec_rollback_detected ? 1 : 0;
 }
 
 static int wal_read_record_header(FILE* f, uint64_t* offset_io, uint16_t* type_out,
@@ -574,6 +672,9 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
     if (!wal || !wal->path)
         return BS_ATTACH_OK;
 
+    wal->exec_rollback_detected = 0;
+    wal->exec_rollback_epoch    = 0;
+
     int            corrupted = 0;
     const uint64_t last_committed =
         wal_max_committed_across_segments(wal->path, manifest_epoch, &corrupted);
@@ -600,6 +701,8 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
     uint32_t* entry_crcs          = NULL;
     char**    staging_paths       = NULL;
     int       in_batch            = 0;
+    WalPhaseTrack phase_tracks[BS_ATTACH_WAL_MAX_PHASE_TRACK];
+    size_t    phase_track_count   = 0;
 
     uint64_t offset = 0;
     for (;;)
@@ -778,10 +881,13 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
                                    (current_batch_epoch > manifest_epoch);
                 if (orphan)
                 {
-                    for (uint32_t i = 0; i < current_batch_count; ++i)
+                    wal_delete_staging_paths(staging_paths, current_batch_count);
+                    const uint32_t max_phase =
+                        wal_max_phase_for_epoch(phase_tracks, phase_track_count, current_batch_epoch);
+                    if (max_phase >= (uint32_t)BS_ATTACH_WAL_PHASE_EXEC)
                     {
-                        if (staging_paths[i] && staging_paths[i][0] != '\0')
-                            (void)remove(staging_paths[i]);
+                        wal->exec_rollback_detected = 1;
+                        wal->exec_rollback_epoch    = current_batch_epoch;
                     }
                 }
             }
@@ -794,10 +900,39 @@ int bs_adapter_attach_persist_wal_recover_unfinished(BsAttachWal* wal, uint64_t 
             entry_crcs    = NULL;
             in_batch      = 0;
         }
+        else if (type == (uint16_t)BS_ATTACH_WAL_REC_PHASE_MARK && len == 16)
+        {
+            const uint64_t mark_epoch = read_u64_le(payload + 0);
+            const uint32_t mark_phase = read_u32_le(payload + 8);
+            wal_phase_track_update(phase_tracks, &phase_track_count, mark_epoch, mark_phase);
+            if (mark_epoch > last_committed && mark_epoch > manifest_epoch &&
+                mark_phase >= (uint32_t)BS_ATTACH_WAL_PHASE_EXEC)
+            {
+                wal->exec_rollback_detected = 1;
+                wal->exec_rollback_epoch    = mark_epoch;
+            }
+        }
 
         free(payload);
         if (corrupted)
             break;
+    }
+
+    if (in_batch && !corrupted)
+    {
+        const int orphan = (current_batch_epoch > last_committed) ||
+                           (current_batch_epoch > manifest_epoch);
+        if (orphan)
+        {
+            wal_delete_staging_paths(staging_paths, current_batch_count);
+            const uint32_t max_phase =
+                wal_max_phase_for_epoch(phase_tracks, phase_track_count, current_batch_epoch);
+            if (max_phase >= (uint32_t)BS_ATTACH_WAL_PHASE_EXEC)
+            {
+                wal->exec_rollback_detected = 1;
+                wal->exec_rollback_epoch    = current_batch_epoch;
+            }
+        }
     }
 
     if (entry_crcs || staging_paths)
@@ -899,6 +1034,40 @@ int bs_adapter_attach_persist_wal_dump(BsAttachWal* wal, uint64_t epoch_filter,
         free(payload);
     }
 
+    fclose(f);
+    return BS_ATTACH_OK;
+}
+
+int bs_adapter_attach_persist_wal_count_record_type(BsAttachWal* wal, uint16_t type,
+                                                    size_t* out_count)
+{
+    if (!wal || !wal->path || !out_count)
+        return BS_ATTACH_ERR_INVALID_ARG;
+    *out_count = 0;
+
+    FILE* f = fopen(wal->path, "rb");
+    if (!f)
+        return BS_ATTACH_OK;
+
+    uint64_t offset = 0;
+    for (;;)
+    {
+        uint16_t type_read = 0;
+        uint32_t len       = 0;
+        uint32_t crc       = 0;
+        uint8_t  hdr_no_crc[4 + 2 + 2 + 4];
+        if (wal_read_record_header(f, &offset, &type_read, &len, &crc, hdr_no_crc,
+                                   sizeof(hdr_no_crc)) != BS_ATTACH_OK)
+            break;
+        if (len > 0)
+        {
+            if (fseek(f, (long)len, SEEK_CUR) != 0)
+                break;
+            offset += (uint64_t)len;
+        }
+        if (type_read == type)
+            ++(*out_count);
+    }
     fclose(f);
     return BS_ATTACH_OK;
 }

@@ -107,3 +107,22 @@ powershell -ExecutionPolicy Bypass -File tools/ci/run_ci_loop.ps1 -Ref my-branch
 
 失败后同样可用 `fetch_ci_errors.py` 抓取日志（按分支/按 run）。
 
+---
+
+## 5. Day22 本地回归入口
+
+Day22 采用 R-A gate-first 链路，PR blocking 入口止于 `ci`：
+
+```powershell
+python tools/scripts/contracts/contract_gate_runner.py --through-stage ci
+ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure
+```
+
+覆盖率汇总是报告型，不阻断 PR：
+
+```powershell
+python tools/scripts/test/collect_coverage.py --json-out docs/reports/ctest-label-coverage.json
+```
+
+Day19 内存压测按 `C-TST-MEM-1` rule-only 保留 staging/Actions 证据链，禁止新增 blocking `GATE-TEST-DAY19-SMOKE`。
+

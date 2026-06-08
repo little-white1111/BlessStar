@@ -8,6 +8,7 @@
  * Platform notes: IR-SNAPSHOT-1/2/4A latest+pin; exec must not re-parse gated bytes.
  */
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct AttachContext;
@@ -38,6 +39,12 @@ extern "C"
 
     IRInstructionList* bs_adapter_attach_ir_snapshot_instructions(AttachContext*           ctx,
                                                                   BsAttachIrSnapshotHandle handle);
+
+    /** Clear all unpinned snapshots (REC-A'-7 exec rollback). */
+    void bs_adapter_attach_ir_snapshot_clear_all(AttachContext* ctx);
+
+    /** Entry count for recover/arch_gap tests. */
+    size_t bs_adapter_attach_ir_snapshot_entry_count(AttachContext* ctx);
 
 #ifdef __cplusplus
 }

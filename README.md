@@ -93,3 +93,15 @@ meson compile -C build/meson
 ```bash
 python tools/purity/verify_manifest.py verify --kernel factory --manifest factory/manifest.sha256
 ```
+
+## 8. Day22 回归入口
+
+PR 前推荐入口：
+
+```bash
+python tools/scripts/contracts/contract_gate_runner.py --through-stage ci
+ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure
+python tools/scripts/test/collect_coverage.py
+```
+
+`collect_coverage.py` 仅汇总 `cmake/Tests.cmake` 的 CTest label 覆盖，不作为 blocking gate。Day19 内存压测按 `C-TST-MEM-1` rule-only 索引保留在 staging/Actions 证据链中。

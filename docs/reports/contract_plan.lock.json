@@ -600,7 +600,8 @@
       "blocking": true,
       "gate_refs": [
         "GATE-INTEGRATION",
-        "GATE-REGRESSION"
+        "GATE-REGRESSION",
+        "GATE-RECOVER"
       ],
       "implementations": [
         {
@@ -613,6 +614,12 @@
           "gate_id": "GATE-REGRESSION",
           "runner": "ctest",
           "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+          "entry_kind": "command"
+        },
+        {
+          "gate_id": "GATE-RECOVER",
+          "runner": "ctest",
+          "entry": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure",
           "entry_kind": "command"
         }
       ],
@@ -630,6 +637,13 @@
           "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
           "entry_kind": "command",
           "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
+        },
+        {
+          "gate_id": "GATE-RECOVER",
+          "runner": "ctest",
+          "entry": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure",
+          "entry_kind": "command",
+          "resolved_command": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure"
         }
       ],
       "path": "docs/contracts/functional/C-FN-1.v1.json"
@@ -1035,6 +1049,19 @@
       "path": "docs/contracts/testing/C-TST-L3-1.v1.json"
     },
     {
+      "id": "C-TST-MEM-1",
+      "type": "testing",
+      "version": "v1",
+      "status": "draft",
+      "priority": "testing",
+      "stage": "staging",
+      "blocking": false,
+      "gate_refs": [],
+      "implementations": [],
+      "resolved_implementations": [],
+      "path": "docs/contracts/testing/C-TST-MEM-1.v1.json"
+    },
+    {
       "id": "C-TST-POL-1",
       "type": "testing",
       "version": "v1",
@@ -1230,6 +1257,17 @@
       "timeout_s": 1800
     },
     {
+      "gate_id": "GATE-RECOVER",
+      "stage": "ci",
+      "runner": "ctest",
+      "command": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure",
+      "covers": [
+        "C-FN-1"
+      ],
+      "default_blocking": true,
+      "timeout_s": 300
+    },
+    {
       "gate_id": "GATE-DEV-L1",
       "stage": "dev_ci",
       "runner": "ctest",
@@ -1301,7 +1339,7 @@
   ],
   "hashes": {
     "index": "f4357ccb04b91057ae460b6b8191e8b0337fa7d5fc62075b01016643d6035acb",
-    "gate_registry": "790cbf98b6d79cb07d90533d630f1c9043999bed2735a412296b2ea983c41b18",
+    "gate_registry": "bc793d0f409d5e0918d4a866eed2ca1c1064efd37f9ae57fb3ac010e025f41d2",
     "contracts": {
       "docs/contracts/architecture/C-IX-1.v1.json": "9592b02e16d030ce614e87972830502601e7211b923af0dc1bd39a84b5456108",
       "docs/contracts/architecture/C-IX-2.v1.json": "993ddd431bbff3f18c399ed7356870236ebe0b4c6325a40914b1b416f7d68aac",
@@ -1317,7 +1355,7 @@
       "docs/contracts/style/C-ST-13.v1.json": "7712ef9bc736d9f320c49e4005a44bc5fb4e4c493eae8bc5efd63689d19f5925",
       "docs/contracts/style/C-ST-14.v1.json": "3ba88984a3a2fddeedeba7b8ac8db79a205a0b4f1e2813e88cde74dc117b7901",
       "docs/contracts/style/C-ST-9.v1.json": "c40d1256155832c76fa29e31e8f762ce0d1140dd5bdc020e1e065a4a5ca0fa0a",
-      "docs/contracts/functional/C-FN-1.v1.json": "1026c8d85cd00ca4b79497f8b11e23620b98f5f6a60adc9b3c9108d1b16226d7",
+      "docs/contracts/functional/C-FN-1.v1.json": "89b4b4d9111b28a1e052d3a0aca468d3a7cd532d594d732fc2acc91c7042ba4f",
       "docs/contracts/functional/C-FN-2.v1.json": "03a816a0922b6106120f0c7d537f6c7163b47116780730ee6470605321028417",
       "docs/contracts/functional/C-FN-3.v1.json": "e0d42e0b23c6c2fce0da2a49fef96adb3ddcc27085e56a38d518b7f3e97f7270",
       "docs/contracts/functional/C-FN-4.v1.json": "e350370378328d6e5a8c15465b135b86dba0efdce9848f3caaa043b8428eb888",
@@ -1329,6 +1367,7 @@
       "docs/contracts/testing/C-TST-L1-1.v1.json": "71de72d2bad44074a88ff28129c1c9a8d748d84cef0d447f3aada8a47b0487e9",
       "docs/contracts/testing/C-TST-L2-1.v1.json": "f1c5b98e31782bbb68f6759dc073f289a1a725f4bf6ad45876c52c4c440f4c46",
       "docs/contracts/testing/C-TST-L3-1.v1.json": "81ae0c546cfa2db465fa1d3efd1c41e3c3d0764a81501f86c9ae13c262480189",
+      "docs/contracts/testing/C-TST-MEM-1.v1.json": "dc33f70793d58d855302a74e70e3d0d0a107e403c40d980d71e3bc4c72939ea0",
       "docs/contracts/testing/C-TST-POL-1.v1.json": "f0ed288a044e7e1b3825c5d81eac0bb33ec61c42cd8a12adceb57b7a87e0f3c5"
     }
   }

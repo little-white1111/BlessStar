@@ -94,6 +94,11 @@ extern "C"
     PathOrchestrationState
     bs_adapter_attach_reload_batch_path_state(const ReloadBatchController* ctrl, const char* uri);
 
+#if defined(BS_TESTING)
+    /** Simulate crash after pool EXEC (per_batch): writes EXEC mark then aborts before persist. */
+    void bs_adapter_attach_reload_batch_testing_set_abort_after_exec(int enabled);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

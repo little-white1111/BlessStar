@@ -162,3 +162,31 @@ IRInstructionList* bs_adapter_attach_ir_snapshot_instructions(AttachContext*    
     IrSnapshotEntry*            entry = find_entry(store, handle);
     return entry ? entry->instructions : nullptr;
 }
+
+void bs_adapter_attach_ir_snapshot_clear_all(AttachContext* ctx)
+{
+    IrSnapshotStore* store = snapshot_store(ctx);
+    if (!store)
+        return;
+    std::lock_guard<std::mutex> lock(store->mu);
+    for (auto it = store->entries.begin(); it != store->entries.end();)
+    {
+        if (it->pin_count > 0)
+        {
+            ++it;
+            continue;
+        }
+        if (it->instructions)
+            bs_ir_instruction_list_destroy(it->instructions);
+        it = store->entries.erase(it);
+    }
+}
+
+size_t bs_adapter_attach_ir_snapshot_entry_count(AttachContext* ctx)
+{
+    IrSnapshotStore* store = snapshot_store(ctx);
+    if (!store)
+        return 0;
+    std::lock_guard<std::mutex> lock(store->mu);
+    return store->entries.size();
+}

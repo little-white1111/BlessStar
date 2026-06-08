@@ -61,6 +61,21 @@ extern "C"
                                                            const char* uri, char* out_path,
                                                            size_t out_cap);
 
+    typedef int (*BsAttachStoreUriVisitor)(const char* uri, uint64_t revision, void* user_ctx);
+
+    /** Enumerate manifest URI entries for explicit cold recovery. */
+    int bs_adapter_attach_persist_store_foreach_uri(const BsAttachStore*       store,
+                                                    BsAttachStoreUriVisitor   visitor,
+                                                    void*                     user_ctx);
+
+    /** PHASE_MARK writer for per_batch reload FSM (phase = BsAttachWalRecoverPhase). */
+    int bs_adapter_attach_persist_store_append_phase_mark(BsAttachStore* store, uint64_t batch_epoch,
+                                                          uint32_t phase, uint32_t uri_set_hash);
+
+    /** 1 if store_open WAL recover detected EXEC-or-later orphan rollback. */
+    int bs_adapter_attach_persist_store_had_exec_rollback(const BsAttachStore* store,
+                                                          uint64_t*              epoch_out);
+
     int bs_adapter_attach_persist_store_commit_per_path(BsAttachStore* store, const char* uri,
                                                         const void* data, size_t len,
                                                         uint64_t expected_rev);

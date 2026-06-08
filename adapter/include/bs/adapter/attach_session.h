@@ -47,6 +47,10 @@ extern "C"
     /** Non-zero when reload write window holds the session exclusive lock. */
     int bs_adapter_attach_session_in_write_window(AttachContext* ctx);
 
+    /** REC-A'-4: explicit crash recovery blocks read APIs until cold reload completes. */
+    void bs_adapter_attach_session_set_recovering(AttachContext* ctx, int recovering);
+    int  bs_adapter_attach_session_is_recovering(AttachContext* ctx);
+
     int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* config_path,
                                                    BsAttachSnapshotMeta* out);
 

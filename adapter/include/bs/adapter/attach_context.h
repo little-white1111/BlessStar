@@ -64,6 +64,9 @@ extern "C"
     /** 1 if KernelPool warmup completed on ctx (day21 A''' reload exec gate). */
     int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx);
 
+    /** REC-A'-14: destroy any old KernelPool, recreate it, and warm it before cold recover. */
+    int bs_adapter_attach_ctx_rebuild_kernel_pool(AttachContext* ctx);
+
     void bs_adapter_attach_ensure_active_ctx(void);
 
     /** Legacy shell for log shutdown only; does not own registry or ConfigManager (XVII-ATTACH). */

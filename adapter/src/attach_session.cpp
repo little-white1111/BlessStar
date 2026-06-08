@@ -39,6 +39,7 @@ struct AttachSessionState
     std::atomic<int>                          write_depth{0};
     std::atomic<bool>                         block_new_reads{false};
     std::atomic<bool>                         closing{false};
+    std::atomic<bool>                         recovering{false};
     std::unordered_map<std::string, uint64_t> path_revision;
     std::mutex                                rev_mu;
     std::condition_variable                   rev_cv;
@@ -138,6 +139,8 @@ int bs_adapter_attach_session_try_read_lock(AttachContext* ctx)
         return 0;
     if (st->closing.load())
         return BS_ATTACH_CONC_ERR_CLOSED;
+    if (st->recovering.load() && g_attach_read_lock_depth == 0)
+        return BS_ATTACH_ERR_RECOVERING;
     if (st->block_new_reads.load() && g_attach_read_lock_depth == 0)
         return BS_ATTACH_CONC_ERR_READ_BLOCKED;
     st->session_mu.lock_shared();
@@ -207,6 +210,20 @@ int bs_adapter_attach_session_in_write_window(AttachContext* ctx)
 {
     auto* st = session_of(ctx);
     return (st && st->write_depth.load() > 0) ? 1 : 0;
+}
+
+void bs_adapter_attach_session_set_recovering(AttachContext* ctx, int recovering)
+{
+    auto* st = session_of(ctx);
+    if (!st)
+        return;
+    st->recovering.store(recovering ? true : false);
+}
+
+int bs_adapter_attach_session_is_recovering(AttachContext* ctx)
+{
+    auto* st = session_of(ctx);
+    return (st && st->recovering.load()) ? 1 : 0;
 }
 
 static int snapshot_bytes(AttachContext* ctx, const char* config_path, size_t* total,

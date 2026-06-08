@@ -43,6 +43,16 @@ extern "C"
         uint32_t    payload_checksum;
     } BsAttachWalEntry;
 
+    /** REC-A'-7 / T-REC-6: per_batch reload FSM phase markers (WAL only). */
+    typedef enum BsAttachWalRecoverPhase
+    {
+        BS_ATTACH_WAL_PHASE_STAGE   = 1,
+        BS_ATTACH_WAL_PHASE_GATE    = 2,
+        BS_ATTACH_WAL_PHASE_EXEC    = 3,
+        BS_ATTACH_WAL_PHASE_PERSIST = 4,
+        BS_ATTACH_WAL_PHASE_COMMIT  = 5
+    } BsAttachWalRecoverPhase;
+
     BsAttachWal* bs_adapter_attach_persist_wal_open(const char* wal_path);
     void         bs_adapter_attach_persist_wal_close(BsAttachWal* wal);
 
@@ -52,6 +62,18 @@ extern "C"
 
     /** Record batch completion after manifest flip. */
     int bs_adapter_attach_persist_wal_mark_committed(BsAttachWal* wal, uint64_t epoch);
+
+    /**
+     * Append PHASE_MARK { batch_epoch, phase, uri_set_hash } for per_batch crash recovery.
+     * No-op when @p wal is NULL (in-memory store).
+     */
+    int bs_adapter_attach_persist_wal_append_phase_mark(BsAttachWal* wal, uint64_t batch_epoch,
+                                                        BsAttachWalRecoverPhase phase,
+                                                        uint32_t                  uri_set_hash);
+
+    /** 1 if the last recover_unfinished detected EXEC-or-later orphan rollback (REC-A'-7). */
+    int bs_adapter_attach_persist_wal_had_exec_rollback(const BsAttachWal* wal,
+                                                          uint64_t*          epoch_out);
 
     /**
      * Remove orphan staging files for batches with epoch > @p manifest_epoch that lack commit.
@@ -75,6 +97,10 @@ extern "C"
      */
     int bs_adapter_attach_persist_wal_dump(BsAttachWal* wal, uint64_t epoch_filter,
                                            uint64_t from_offset, size_t max_records, FILE* out);
+
+    /** Count records of @p type in the active WAL segment (testing / AG-REC-SCHEME-1). */
+    int bs_adapter_attach_persist_wal_count_record_type(BsAttachWal* wal, uint16_t type,
+                                                        size_t* out_count);
 #endif
 
 #ifdef __cplusplus

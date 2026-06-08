@@ -12,7 +12,8 @@
   "rule": "Reload orchestration must execute read -> gate -> persist without bypassing gate.",
   "gate_refs": [
     "GATE-INTEGRATION",
-    "GATE-REGRESSION"
+    "GATE-REGRESSION",
+    "GATE-RECOVER"
   ],
   "blocking": true,
   "owner": "subtask-b-eng",
@@ -31,6 +32,12 @@
       "gate_id": "GATE-REGRESSION",
       "runner": "ctest",
       "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
+      "entry_kind": "command"
+    },
+    {
+      "gate_id": "GATE-RECOVER",
+      "runner": "ctest",
+      "entry": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure",
       "entry_kind": "command"
     }
   ]

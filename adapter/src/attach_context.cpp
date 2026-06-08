@@ -312,6 +312,22 @@ int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx)
     return ctx && ctx->kernel_pool_warmed;
 }
 
+int bs_adapter_attach_ctx_rebuild_kernel_pool(AttachContext* ctx)
+{
+    if (!ctx)
+        return -1;
+    if (ctx->kernel_pool)
+    {
+        bs_kernel_pool_destroy(ctx->kernel_pool);
+        ctx->kernel_pool = nullptr;
+    }
+    ctx->kernel_pool_warmed = 0;
+    ctx->kernel_pool        = bs_kernel_pool_create(nullptr);
+    if (!ctx->kernel_pool)
+        return -1;
+    return bs_adapter_attach_ctx_warmup_kernel_pool(ctx);
+}
+
 RegistryFacade* bs_adapter_attach_ctx_registry(AttachContext* ctx)
 {
     return ctx ? ctx->registry : nullptr;

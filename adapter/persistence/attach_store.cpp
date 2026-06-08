@@ -35,6 +35,8 @@ struct BsAttachStore
     std::vector<StagedEntry>                     staged;
     bool                                         batch_open   = false;
     BsAttachWal*                                 wal          = nullptr;
+    int                                          wal_exec_rollback_detected = 0;
+    uint64_t                                     wal_exec_rollback_epoch    = 0;
     BsAttachFsyncPolicy                          fsync_policy = BS_ATTACH_FSYNC_BATCH_COMMIT;
 };
 
@@ -367,6 +369,8 @@ BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path)
     if (s->wal)
     {
         (void)bs_adapter_attach_persist_wal_recover_unfinished(s->wal, s->batch_epoch);
+        s->wal_exec_rollback_detected =
+            bs_adapter_attach_persist_wal_had_exec_rollback(s->wal, &s->wal_exec_rollback_epoch);
         (void)bs_adapter_attach_persist_wal_purge_old_segments(s->wal_path.c_str(), s->batch_epoch);
     }
     return s;
@@ -430,6 +434,43 @@ int bs_adapter_attach_persist_store_get_canonical_path(const BsAttachStore* stor
         return BS_ATTACH_ERR_INVALID_ARG;
     std::memcpy(out_path, it->second.c_str(), it->second.size() + 1);
     return BS_ATTACH_OK;
+}
+
+int bs_adapter_attach_persist_store_foreach_uri(const BsAttachStore*     store,
+                                                BsAttachStoreUriVisitor visitor,
+                                                void*                   user_ctx)
+{
+    if (!store || !visitor)
+        return BS_ATTACH_ERR_INVALID_ARG;
+    for (const auto& kv : store->revisions)
+    {
+        const int rc = visitor(kv.first.c_str(), kv.second, user_ctx);
+        if (rc != 0)
+            return rc;
+    }
+    return BS_ATTACH_OK;
+}
+
+int bs_adapter_attach_persist_store_append_phase_mark(BsAttachStore* store, uint64_t batch_epoch,
+                                                      uint32_t phase, uint32_t uri_set_hash)
+{
+    if (!store || store->memory_only)
+        return BS_ATTACH_OK;
+    open_wal(store);
+    if (!store->wal)
+        return BS_ATTACH_ERR_IO;
+    return bs_adapter_attach_persist_wal_append_phase_mark(
+        store->wal, batch_epoch, (BsAttachWalRecoverPhase)phase, uri_set_hash);
+}
+
+int bs_adapter_attach_persist_store_had_exec_rollback(const BsAttachStore* store,
+                                                      uint64_t*              epoch_out)
+{
+    if (!store)
+        return 0;
+    if (epoch_out)
+        *epoch_out = store->wal_exec_rollback_epoch;
+    return store->wal_exec_rollback_detected ? 1 : 0;
 }
 
 int bs_adapter_attach_persist_store_commit_per_path(BsAttachStore* store, const char* uri,
@@ -563,6 +604,13 @@ int bs_adapter_attach_persist_store_batch_commit(BsAttachStore* store)
 
     store->batch_epoch = next_epoch;
     store->batch_open  = false;
+
+    if (!store->memory_only && store->wal)
+    {
+        (void)bs_adapter_attach_persist_wal_append_phase_mark(
+            store->wal, next_epoch, BS_ATTACH_WAL_PHASE_COMMIT, 0);
+    }
+
     store->staged.clear();
 
     const int man = save_manifest_file(store);
