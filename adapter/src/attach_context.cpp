@@ -331,8 +331,12 @@ int bs_adapter_attach_kernel_reset_all_pipelines(AttachContext* ctx)
 #if defined(BS_TESTING)
 void bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(AttachContext* ctx)
 {
-    if (ctx)
-        ctx->kernel_pool_warmed = 0;
+    if (!ctx)
+        return;
+    if (ctx->kernel_pool)
+        bs_kernel_pool_destroy(ctx->kernel_pool);
+    ctx->kernel_pool_warmed = 0;
+    ctx->kernel_pool        = bs_kernel_pool_create(nullptr);
 }
 
 unsigned bs_adapter_attach_kernel_testing_count_non_idle_stages(AttachContext* ctx)
