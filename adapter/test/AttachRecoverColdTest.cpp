@@ -30,12 +30,6 @@
 
 namespace fs = std::filesystem;
 
-static int facade_read_fn(void* user_ctx, const char* uri, IoReadResult* out)
-{
-    auto* fix = static_cast<BsTestAttachIoFixture*>(user_ctx);
-    return bs_io_facade_read(fix->io, uri, out);
-}
-
 static int fail_read_fn(void*, const char*, IoReadResult* out)
 {
     bs_io_read_result_init(out);
