@@ -66,7 +66,7 @@ extern "C"
     /** 1 if KernelPool warmup completed on ctx (day21 A''' reload exec gate). */
     int bs_adapter_attach_ctx_is_kernel_pool_warmed(const AttachContext* ctx);
 
-    /** REC-G03-3a: reset default Kernel and all KernelPool slot pipelines after config_sync. */
+    /** REC-G03-3a: reset default Kernel and warmed KernelPool slot pipelines after config_sync. */
     int bs_adapter_attach_kernel_reset_all_pipelines(AttachContext* ctx);
 
 #if defined(BS_TESTING)
