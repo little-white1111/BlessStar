@@ -97,6 +97,7 @@ static int recover_with_read_fn(const fs::path& manifest, const std::string& uri
 static int test_fast_hydrate_skips_io_read(const fs::path& cfg, const fs::path& manifest,
                                            const std::string& uri)
 {
+    (void)cfg;
     bs_adapter_attach_recover_sidecar_testing_set_enabled(1);
     BS_TEST_REQUIRE("write-ready", bs_adapter_attach_recover_sidecar_write_ready(
                                        nullptr, manifest.string().c_str()) == BS_ATTACH_OK);
@@ -111,6 +112,7 @@ static int test_fast_hydrate_skips_io_read(const fs::path& cfg, const fs::path& 
 static int test_corrupt_sidecar_falls_back_to_cold(const fs::path& cfg, const fs::path& manifest,
                                                    const std::string& uri)
 {
+    (void)cfg;
     bs_adapter_attach_recover_sidecar_testing_set_enabled(1);
     BS_TEST_REQUIRE("write-ready", bs_adapter_attach_recover_sidecar_write_ready(
                                        nullptr, manifest.string().c_str()) == BS_ATTACH_OK);
