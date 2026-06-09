@@ -39,7 +39,8 @@ static uint64_t reload_trace_now_ms()
     return static_cast<uint64_t>(GetTickCount64());
 #else
     struct timespec ts
-    {};
+    {
+    };
     (void)clock_gettime(CLOCK_MONOTONIC, &ts);
     return static_cast<uint64_t>(ts.tv_sec) * 1000u + static_cast<uint64_t>(ts.tv_nsec / 1000000u);
 #endif
