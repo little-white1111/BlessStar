@@ -95,8 +95,7 @@ static void emit_frames(const char* site, unsigned long long ctx, int has_ctx,
 
     if (has_ctx)
     {
-        fprintf(stderr,
-                "[BS_WAIT_TRACE] site=%s tid=%lu ctx=%llu waited_ms=%llu frames=%d\n", site,
+        fprintf(stderr, "[BS_WAIT_TRACE] site=%s tid=%lu ctx=%llu waited_ms=%llu frames=%d\n", site,
                 current_thread_id(), ctx, waited_ms, count);
     }
     else

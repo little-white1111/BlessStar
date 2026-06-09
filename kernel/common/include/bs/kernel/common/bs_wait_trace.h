@@ -2,6 +2,11 @@
 #define BS_KERNEL_COMMON_BS_WAIT_TRACE_H
 
 /*
+ * C-ST-7 contract block:
+ * Thread safety: env-mode cache read once; stderr logging only; no shared mutable state.
+ * Error semantics: never throws; no-op when BS_WAIT_TRACE unset or off.
+ * Platform notes: hang timing via GetTickCount64 (Windows) or clock_gettime (POSIX).
+ *
  * Optional wait-chain tracing for pool / executor hang diagnosis.
  *
  * BS_WAIT_TRACE=1       - log every instrumented wait site (verbose).

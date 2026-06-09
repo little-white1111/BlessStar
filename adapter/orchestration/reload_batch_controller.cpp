@@ -28,9 +28,9 @@
 #include <vector>
 
 #if defined(_WIN32)
-#    include <windows.h>
+#include <windows.h>
 #else
-#    include <time.h>
+#include <time.h>
 #endif
 
 static uint64_t reload_trace_now_ms()
@@ -38,8 +38,7 @@ static uint64_t reload_trace_now_ms()
 #if defined(_WIN32)
     return static_cast<uint64_t>(GetTickCount64());
 #else
-    struct timespec ts
-    {};
+    struct timespec ts{};
     (void)clock_gettime(CLOCK_MONOTONIC, &ts);
     return static_cast<uint64_t>(ts.tv_sec) * 1000u + static_cast<uint64_t>(ts.tv_nsec / 1000000u);
 #endif
@@ -60,7 +59,7 @@ static void reload_trace(const char* phase, const char* detail = nullptr)
 {
     if (!reload_trace_enabled())
         return;
-    static const uint64_t t0 = reload_trace_now_ms();
+    static const uint64_t t0      = reload_trace_now_ms();
     const uint64_t        elapsed = reload_trace_now_ms() - t0;
     if (detail && detail[0])
         std::fprintf(stderr, "[reload_trace] +%llums %s %s\n",

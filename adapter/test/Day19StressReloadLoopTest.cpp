@@ -100,7 +100,7 @@ int main(int argc, char** argv)
 
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_day19_stress"));
     std::fprintf(stderr, "[day19-stress] temp dir ok\n");
-    const fs::path&          work = tmp_guard.path;
+    const fs::path& work = tmp_guard.path;
 
     BsTestAttachIoFixture fix{};
     fix.ctx = bs_adapter_attach_ctx_create();

@@ -1,9 +1,9 @@
+#include "bs/kernel/common/bs_wait_trace.h"
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/pipeline/Stage.h"
 #include "bs/kernel/pipeline/pipeline.h"
 #include "bs/kernel/report/report.h"
 #include "bs/kernel/runtime/Kernel.h"
-#include "bs/kernel/common/bs_wait_trace.h"
 #include "bs/kernel/runtime/kernel_pool.h"
 
 #include <stdlib.h>

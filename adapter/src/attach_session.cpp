@@ -105,8 +105,8 @@ void bs_adapter_attach_session_begin_write_window(AttachContext* ctx)
     {
         bs_wait_trace_hang_tick_u64("attach_session:wait_active_readers_zero", hang_t0,
                                     static_cast<unsigned long long>(st->active_readers.load()));
-        st->wait_cv.wait_for(w, std::chrono::milliseconds(500), [&]
-                             { return st->active_readers.load() == 0; });
+        st->wait_cv.wait_for(w, std::chrono::milliseconds(500),
+                             [&] { return st->active_readers.load() == 0; });
     }
     st->session_mu.lock();
     st->write_depth.fetch_add(1);

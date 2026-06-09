@@ -188,9 +188,9 @@ int main()
     std::fprintf(stderr, "[recover_cold] begin\n");
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_attach_recover_cold"));
     std::fprintf(stderr, "[recover_cold] temp dir ok\n");
-    const fs::path           work     = tmp_guard.path;
-    const fs::path           cfg      = work / "recover.json";
-    const fs::path           manifest = work / "manifest.bs";
+    const fs::path work     = tmp_guard.path;
+    const fs::path cfg      = work / "recover.json";
+    const fs::path manifest = work / "manifest.bs";
 
     BS_TEST_REQUIRE("write", write_config(cfg) == 0);
     std::fprintf(stderr, "[recover_cold] after write\n");
