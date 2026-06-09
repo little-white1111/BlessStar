@@ -96,8 +96,10 @@ int main(int argc, char** argv)
     std::printf("Day19Stress profile=%s duration_max=%d day_reload_min=%d night_batch_min=%d\n",
                 profile.name, profile.duration_sec_max, profile.min_day_reloads,
                 profile.min_night_batches);
+    std::fprintf(stderr, "[day19-stress] after profile\n");
 
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_day19_stress"));
+    std::fprintf(stderr, "[day19-stress] temp dir ok\n");
     const fs::path&          work = tmp_guard.path;
 
     BsTestAttachIoFixture fix{};
@@ -105,10 +107,13 @@ int main(int argc, char** argv)
     BS_TEST_REQUIRE("setup", fix.ctx != nullptr);
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
     BS_TEST_REQUIRE("freeze", bs_test_attach_bootstrap_freeze_ctx(&fix) == 0);
+    std::fprintf(stderr, "[day19-stress] freeze ok\n");
     if (day19_profile_prefers_inline_kernel_exec(profile))
         bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(fix.ctx);
+    std::fprintf(stderr, "[day19-stress] pool policy applied\n");
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
     bs_adapter_attach_ctx_set_active(fix.ctx);
+    std::fprintf(stderr, "[day19-stress] io open ok\n");
 
     const bool                    failure_stress = bs_day19_profile_is_failure_stress(profile);
     std::vector<std::string>      uris;
@@ -153,6 +158,7 @@ int main(int argc, char** argv)
 
     const auto t0          = std::chrono::steady_clock::now();
     auto       last_sample = t0;
+    std::fprintf(stderr, "[day19-stress] entering reload loop\n");
 
     int  day_ok              = 0;
     int  day_total           = 0;
@@ -221,6 +227,8 @@ int main(int argc, char** argv)
                 failure_stress ? path_entries[idx].kind : BS_DAY19_PATH_GOOD;
             path_i++;
             ++day_total;
+            if (day_total == 1 || day_total % 10 == 0)
+                std::fprintf(stderr, "[day19-stress] day reload %d\n", day_total);
             const int add_rc = bs_adapter_attach_reload_batch_add_path(ctrl, uri.c_str());
             const int run_rc = (add_rc == 0) ? bs_adapter_attach_reload_batch_run(ctrl) : -1;
             const int ok =

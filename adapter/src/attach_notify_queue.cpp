@@ -8,6 +8,8 @@
 #include <thread>
 #include <vector>
 
+#include "bs/kernel/common/bs_wait_trace.h"
+
 #include "attach_notify_queue_internal.h"
 
 namespace
@@ -116,7 +118,18 @@ void bs_adapter_attach_notify_queue_flush(AttachContext* ctx)
         return;
 
     std::unique_lock<std::mutex> lock(q->mu);
-    q->cv.wait(lock, [&] { return q->jobs.empty() && q->in_flight.load() == 0; });
+    const int hang_t0 = bs_wait_trace_hang_begin("notify_queue_flush:wait");
+    while (!(q->jobs.empty() && q->in_flight.load() == 0))
+    {
+        if (!q->jobs.empty())
+            bs_wait_trace_hang_tick_u64("notify_queue_flush:wait_jobs", hang_t0,
+                                        (unsigned long long)q->jobs.size());
+        else
+            bs_wait_trace_hang_tick_u64("notify_queue_flush:wait_in_flight", hang_t0,
+                                        (unsigned long long)q->in_flight.load());
+        q->cv.wait_for(lock, std::chrono::milliseconds(500), [&]
+                       { return q->jobs.empty() && q->in_flight.load() == 0; });
+    }
 }
 
 void bs_adapter_attach_notify_queue_shutdown(AttachContext* ctx)

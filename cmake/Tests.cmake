@@ -733,6 +733,31 @@ set_tests_properties(bs_test_attach_day19_shortcoming_regression
   PROPERTIES LABELS "unit;arch_gap;day19;attach;regression" TIMEOUT 900
                    RESOURCE_LOCK "attach_integration"
 )
+# Day19 shortcoming sub-stages (same binary; isolate flaky hangs via ctest -R).
+set(_bs_day19_shortcoming_stages
+  manifest-fsync:120
+  wal-purge:120
+  ctx-store-budget:300
+  pool-warmup:300
+  rs-reset:120
+  rs-store:120
+  rs-oneshot:120
+)
+foreach(_bs_stage_spec IN LISTS _bs_day19_shortcoming_stages)
+  string(REPLACE ":" ";" _bs_stage_parts "${_bs_stage_spec}")
+  list(GET _bs_stage_parts 0 _bs_stage_id)
+  list(GET _bs_stage_parts 1 _bs_stage_timeout)
+  set(_bs_stage_test "bs_test_attach_day19_shortcoming_${_bs_stage_id}")
+  add_test(NAME ${_bs_stage_test}
+           COMMAND "$<TARGET_FILE:bs_test_attach_day19_shortcoming_regression>")
+  set_tests_properties(${_bs_stage_test}
+    PROPERTIES
+      LABELS "unit;arch_gap;day19;attach;regression;shortcoming_stage"
+      TIMEOUT ${_bs_stage_timeout}
+      RESOURCE_LOCK "attach_integration"
+      ENVIRONMENT "BS_DAY19_SHORTCOMING_STAGE=${_bs_stage_id}"
+  )
+endforeach()
 set_tests_properties(bs_test_attach_p2_shortcoming_regression
   PROPERTIES DEPENDS bs_test_attach_day19_shortcoming_regression
 )

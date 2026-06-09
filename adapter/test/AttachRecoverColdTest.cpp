@@ -81,8 +81,10 @@ static int assert_snapshot_equals(AttachContext* ctx, const std::string& uri)
 
 static int recover_with_io(const fs::path& manifest_path, const std::string& uri)
 {
+    std::fprintf(stderr, "[recover_cold] recover_with_io begin\n");
     AttachContext* ctx =
         bs_adapter_attach_recover_from_store(manifest_path.string().c_str(), nullptr);
+    std::fprintf(stderr, "[recover_cold] recover_from_store done\n");
     BS_TEST_REQUIRE("recover-step1", ctx != nullptr);
     BS_TEST_REQUIRE("recovering-flag", bs_adapter_attach_session_is_recovering(ctx) == 1);
 
@@ -109,7 +111,9 @@ static int recover_with_io(const fs::path& manifest_path, const std::string& uri
     opts.max_inflight              = 4;
     opts.report                    = report;
 
+    std::fprintf(stderr, "[recover_cold] before cold_reload\n");
     const int recover_rc = bs_adapter_attach_recover_cold_reload(ctx, &opts);
+    std::fprintf(stderr, "[recover_cold] after cold_reload rc=%d\n", recover_rc);
     if (recover_rc != 0)
     {
         char* json = bs_report_to_json(report);
@@ -179,17 +183,25 @@ static int prime_manifest_via_crashed_child(const fs::path& config_path,
 
 int main()
 {
+    (void)std::setvbuf(stdout, nullptr, _IONBF, 0);
+    (void)std::setvbuf(stderr, nullptr, _IONBF, 0);
+    std::fprintf(stderr, "[recover_cold] begin\n");
     const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_attach_recover_cold"));
+    std::fprintf(stderr, "[recover_cold] temp dir ok\n");
     const fs::path           work     = tmp_guard.path;
     const fs::path           cfg      = work / "recover.json";
     const fs::path           manifest = work / "manifest.bs";
 
     BS_TEST_REQUIRE("write", write_config(cfg) == 0);
+    std::fprintf(stderr, "[recover_cold] after write\n");
 
     std::string uri;
     BS_TEST_REQUIRE("prime-crash", prime_manifest_via_crashed_child(cfg, manifest, &uri) == 0);
+    std::fprintf(stderr, "[recover_cold] after prime\n");
     BS_TEST_REQUIRE("recover-success", recover_with_io(manifest, uri) == 0);
+    std::fprintf(stderr, "[recover_cold] after recover-success\n");
     BS_TEST_REQUIRE("recover-fail", test_failed_cold_reload_keeps_recovering(manifest, uri) == 0);
+    std::fprintf(stderr, "[recover_cold] after recover-fail\n");
 
     std::fprintf(stderr, "AttachRecoverColdTest: PASS\n");
     return 0;

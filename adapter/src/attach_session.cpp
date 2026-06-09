@@ -1,4 +1,5 @@
 #include "bs/kernel/common/bs_reentrancy.h"
+#include "bs/kernel/common/bs_wait_trace.h"
 
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_errors.h"
@@ -99,7 +100,14 @@ void bs_adapter_attach_session_begin_write_window(AttachContext* ctx)
         bs_adapter_attach_session_read_unlock(ctx);
     st->block_new_reads.store(true);
     std::unique_lock<std::mutex> w(st->wait_mu);
-    st->wait_cv.wait(w, [&] { return st->active_readers.load() == 0; });
+    const int hang_t0 = bs_wait_trace_hang_begin("attach_session:wait_active_readers_zero");
+    while (st->active_readers.load() != 0)
+    {
+        bs_wait_trace_hang_tick_u64("attach_session:wait_active_readers_zero", hang_t0,
+                                    static_cast<unsigned long long>(st->active_readers.load()));
+        st->wait_cv.wait_for(w, std::chrono::milliseconds(500), [&]
+                             { return st->active_readers.load() == 0; });
+    }
     st->session_mu.lock();
     st->write_depth.fetch_add(1);
     bs_reentrancy_enter_attach_write();

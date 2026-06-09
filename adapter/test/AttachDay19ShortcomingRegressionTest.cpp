@@ -21,6 +21,7 @@
 
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include <filesystem>
@@ -28,6 +29,25 @@
 
 #include "support/attach_test_fixture.h"
 #include "support/config_v1_golden.h"
+
+static bool shortcoming_verbose_enabled()
+{
+    static int cached = -1;
+    if (cached < 0)
+    {
+        const char* env = std::getenv("BS_SHORTCOMING_VERBOSE");
+        cached          = (env && env[0] == '1') ? 1 : 0;
+    }
+    return cached != 0;
+}
+
+static void shortcoming_progress(const char* msg)
+{
+    if (!shortcoming_verbose_enabled())
+        return;
+    std::fprintf(stderr, "[shortcoming] %s\n", msg);
+    (void)std::fflush(stderr);
+}
 #include "support/day12_attach_fixture.h"
 #include "support/day19_fixture_gen.h"
 #include "support/test_temp_dir.h"
@@ -76,6 +96,8 @@ static int test_manifest_fsync_per_path_throughput(void)
         const auto t0 = std::chrono::steady_clock::now();
         for (int i = 0; i < kCommits; ++i)
         {
+            if (i == 0 || (i % 20) == 0)
+                shortcoming_progress((std::string(tag) + " commit " + std::to_string(i)).c_str());
             const int rc = bs_adapter_attach_persist_store_commit_per_path(
                 store, uri.c_str(), kBlessStarConfigV1Golden, kBlessStarConfigV1GoldenLen,
                 static_cast<uint64_t>(i));
@@ -215,6 +237,8 @@ static int test_stress_ctx_store_reload_budget(void)
 #endif
     for (int i = 0; i < kCtxStoreReloads; ++i)
     {
+        if (i == 0 || (i % 10) == 0)
+            shortcoming_progress(("ctx-store reload " + std::to_string(i)).c_str());
         BS_TEST_REQUIRE("reload",
                         run_per_path_reload(&fix, manifest_path, uri.c_str(), nullptr) == 0);
         if (steady_ms_since(t0) > 120000)
@@ -265,6 +289,7 @@ static int test_pool_warmup_reload_latency(void)
     int64_t warmed_sum = 0;
     for (int i = 0; i < 5; ++i)
     {
+        shortcoming_progress(("pool-warmup warmed-reload " + std::to_string(i)).c_str());
         int64_t ms = 0;
         BS_TEST_REQUIRE("warmed-reload",
                         reload_once_ms(&fix, manifest_path, uri.c_str(), &ms) == 0);
@@ -277,6 +302,7 @@ static int test_pool_warmup_reload_latency(void)
     int64_t cleared_sum = 0;
     for (int i = 0; i < 5; ++i)
     {
+        shortcoming_progress(("pool-warmup cleared-reload " + std::to_string(i)).c_str());
         int64_t ms = 0;
         BS_TEST_REQUIRE("cleared-reload",
                         reload_once_ms(&fix, manifest_path, uri.c_str(), &ms) == 0);
@@ -329,6 +355,8 @@ static int test_rs_reset_no_leak(void)
 #endif
     for (int i = 0; i < kRsResetRuns; ++i)
     {
+        if (i == 0 || (i % 10) == 0)
+            shortcoming_progress(("rs-reset reload " + std::to_string(i)).c_str());
         BS_TEST_REQUIRE("reload", run_per_path_reload(&fix, manifest_path, uri.c_str(), ctrl) == 0);
         const size_t ir_entries = bs_adapter_attach_ir_snapshot_entry_count(fix.ctx);
         BS_TEST_REQUIRE("ir-bounded", ir_entries <= 2u);
@@ -423,16 +451,76 @@ static int test_rs_one_shot_preserves_ctx_store(void)
     return 0;
 }
 
+static const char* shortcoming_stage_env()
+{
+    const char* stage = std::getenv("BS_DAY19_SHORTCOMING_STAGE");
+    return (stage && stage[0]) ? stage : "all";
+}
+
+static bool shortcoming_run_stage(const char* stage_id)
+{
+    const char* wanted = shortcoming_stage_env();
+    if (std::strcmp(wanted, "all") == 0)
+        return true;
+    return std::strcmp(wanted, stage_id) == 0;
+}
+
 int main()
 {
+    (void)std::setvbuf(stdout, nullptr, _IONBF, 0);
+    (void)std::setvbuf(stderr, nullptr, _IONBF, 0);
     bs_adapter_attach_persist_store_testing_reset_open_count();
-    BS_TEST_REQUIRE("manifest-fsync", test_manifest_fsync_per_path_throughput() == 0);
-    BS_TEST_REQUIRE("wal-purge", test_wal_purge_coalesced_on_store() == 0);
-    BS_TEST_REQUIRE("ctx-store-budget", test_stress_ctx_store_reload_budget() == 0);
-    BS_TEST_REQUIRE("pool-warmup", test_pool_warmup_reload_latency() == 0);
-    BS_TEST_REQUIRE("rs-reset", test_rs_reset_no_leak() == 0);
-    BS_TEST_REQUIRE("rs-store", test_rs_ctx_store_single_open() == 0);
-    BS_TEST_REQUIRE("rs-oneshot", test_rs_one_shot_preserves_ctx_store() == 0);
+    const char* stage = shortcoming_stage_env();
+    std::fprintf(stderr, "[shortcoming] begin stage=%s\n", stage);
+    if (shortcoming_run_stage("manifest-fsync"))
+    {
+        BS_TEST_REQUIRE("manifest-fsync", test_manifest_fsync_per_path_throughput() == 0);
+        std::fprintf(stderr, "[shortcoming] after manifest-fsync\n");
+        if (std::strcmp(stage, "all") != 0)
+            return 0;
+    }
+    if (shortcoming_run_stage("wal-purge"))
+    {
+        BS_TEST_REQUIRE("wal-purge", test_wal_purge_coalesced_on_store() == 0);
+        std::fprintf(stderr, "[shortcoming] after wal-purge\n");
+        if (std::strcmp(stage, "all") != 0)
+            return 0;
+    }
+    if (shortcoming_run_stage("ctx-store-budget"))
+    {
+        BS_TEST_REQUIRE("ctx-store-budget", test_stress_ctx_store_reload_budget() == 0);
+        std::fprintf(stderr, "[shortcoming] after ctx-store-budget\n");
+        if (std::strcmp(stage, "all") != 0)
+            return 0;
+    }
+    if (shortcoming_run_stage("pool-warmup"))
+    {
+        BS_TEST_REQUIRE("pool-warmup", test_pool_warmup_reload_latency() == 0);
+        std::fprintf(stderr, "[shortcoming] after pool-warmup\n");
+        if (std::strcmp(stage, "all") != 0)
+            return 0;
+    }
+    if (shortcoming_run_stage("rs-reset"))
+    {
+        BS_TEST_REQUIRE("rs-reset", test_rs_reset_no_leak() == 0);
+        std::fprintf(stderr, "[shortcoming] after rs-reset\n");
+        if (std::strcmp(stage, "all") != 0)
+            return 0;
+    }
+    if (shortcoming_run_stage("rs-store"))
+    {
+        BS_TEST_REQUIRE("rs-store", test_rs_ctx_store_single_open() == 0);
+        std::fprintf(stderr, "[shortcoming] after rs-store\n");
+        if (std::strcmp(stage, "all") != 0)
+            return 0;
+    }
+    if (shortcoming_run_stage("rs-oneshot"))
+    {
+        BS_TEST_REQUIRE("rs-oneshot", test_rs_one_shot_preserves_ctx_store() == 0);
+        std::fprintf(stderr, "[shortcoming] after rs-oneshot\n");
+        if (std::strcmp(stage, "all") != 0)
+            return 0;
+    }
     std::fprintf(stderr, "AttachDay19ShortcomingRegressionTest: PASS\n");
     return 0;
 }

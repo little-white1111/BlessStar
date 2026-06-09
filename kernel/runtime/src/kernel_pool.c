@@ -3,6 +3,7 @@
 #include "bs/kernel/pipeline/pipeline.h"
 #include "bs/kernel/report/report.h"
 #include "bs/kernel/runtime/Kernel.h"
+#include "bs/kernel/common/bs_wait_trace.h"
 #include "bs/kernel/runtime/kernel_pool.h"
 
 #include <stdlib.h>
@@ -367,10 +368,15 @@ int bs_kernel_pool_submit(BsKernelPool* pool, const IRInstruction* ir, Report** 
             has_ticket = 1;
             pool->waiters++;
         }
-        while (!pool->draining &&
-               (my_ticket != pool->serving_ticket || kernel_pool_select_idle_slot(pool) < 0))
         {
-            bs_pool_cond_wait(&pool->cv, &pool->mu);
+            const int hang_t0 = bs_wait_trace_hang_begin("kernel_pool_submit:wait_pool_cv");
+            while (!pool->draining &&
+                   (my_ticket != pool->serving_ticket || kernel_pool_select_idle_slot(pool) < 0))
+            {
+                bs_wait_trace_hang_tick_u64("kernel_pool_submit:wait_pool_cv", hang_t0,
+                                            (unsigned long long)pool->stats.busy_slots);
+                bs_pool_cond_wait(&pool->cv, &pool->mu);
+            }
         }
         if (pool->draining)
         {
@@ -446,8 +452,15 @@ int bs_kernel_pool_reset_all_pipelines(BsKernelPool* pool)
         return BS_KERNEL_POOL_ERR_INVALID_ARG;
 
     bs_pool_mutex_lock(&pool->mu);
-    while (pool->stats.busy_slots > 0u)
-        bs_pool_cond_wait(&pool->cv, &pool->mu);
+    {
+        const int hang_t0 = bs_wait_trace_hang_begin("kernel_pool_reset:wait_busy_slots");
+        while (pool->stats.busy_slots > 0u)
+        {
+            bs_wait_trace_hang_tick_u64("kernel_pool_reset:wait_busy_slots", hang_t0,
+                                        (unsigned long long)pool->stats.busy_slots);
+            bs_pool_cond_wait(&pool->cv, &pool->mu);
+        }
+    }
 
     int rc = BS_KERNEL_POOL_OK;
     for (uint32_t i = 0; i < pool->slot_count; i++)

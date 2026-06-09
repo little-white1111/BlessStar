@@ -51,6 +51,7 @@ add_library(bs_kernel_common
   kernel/common/src/bs_log.c
   kernel/common/src/bs_reentrancy.c
   kernel/common/src/bs_safe_format.c
+  kernel/common/src/bs_wait_trace.c
 )
 target_include_directories(bs_kernel_common
   PUBLIC
