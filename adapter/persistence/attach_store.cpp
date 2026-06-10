@@ -2,6 +2,8 @@
 #include "bs/adapter/persistence/attach_wal.h"
 #include "bs/adapter/persistence/attach_watch.h"
 
+#include "bs/kernel/common/bs_wait_trace.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -159,12 +161,22 @@ static int write_file_atomic(const char* path, const void* data, size_t len, boo
 
 static int copy_file_sync(const std::string& src, const std::string& dst)
 {
+    bs_wait_trace_path("persist_io:copy_file_sync", src.c_str());
+    const int io_t0 = bs_wait_trace_hang_begin("persist_io:copy_file_sync");
     std::ifstream in(src, std::ios::binary);
     if (!in)
+    {
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:copy_file_sync", io_t0);
         return BS_ATTACH_ERR_IO;
+    }
     FILE* out = fopen(dst.c_str(), "wb");
     if (!out)
+    {
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:copy_file_sync", io_t0);
         return BS_ATTACH_ERR_IO;
+    }
     char buf[4096];
     while (in.good())
     {
@@ -173,6 +185,8 @@ static int copy_file_sync(const std::string& src, const std::string& dst)
         if (n > 0 && fwrite(buf, 1, (size_t)n, out) != (size_t)n)
         {
             fclose(out);
+            if (io_t0 >= 0)
+                bs_wait_trace_hang_end("persist_io:copy_file_sync", io_t0);
             return BS_ATTACH_ERR_IO;
         }
         if (!in)
@@ -181,9 +195,13 @@ static int copy_file_sync(const std::string& src, const std::string& dst)
     if (bs_adapter_attach_persist_fsync_file(out) != 0)
     {
         fclose(out);
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:copy_file_sync", io_t0);
         return BS_ATTACH_ERR_IO;
     }
     fclose(out);
+    if (io_t0 >= 0)
+        bs_wait_trace_hang_end("persist_io:copy_file_sync", io_t0);
     return BS_ATTACH_OK;
 }
 
@@ -261,22 +279,35 @@ static int load_manifest_file(BsAttachStore* store)
     if (!store || store->memory_only)
         return BS_ATTACH_OK;
 
+    bs_wait_trace_path("persist_io:load_manifest_begin", store->manifest_path.c_str());
+    const int io_t0 = bs_wait_trace_hang_begin("persist_io:load_manifest");
+
     if (!std::ifstream(store->manifest_path).good())
     {
         store->revisions.clear();
         store->canonical_paths.clear();
         store->batch_epoch = 0;
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:load_manifest", io_t0);
         return BS_ATTACH_OK;
     }
 
     const int rc = load_manifest_from_path(store, store->manifest_path, true);
     if (rc == BS_ATTACH_OK)
+    {
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:load_manifest", io_t0);
         return BS_ATTACH_OK;
+    }
 
     // If the manifest exists but violates hard limits, fail open() to satisfy AUD-IX
     // expectations (invalid persisted state must not be silently accepted).
     if (rc == BS_ATTACH_ERR_LIMIT)
+    {
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:load_manifest", io_t0);
         return rc;
+    }
 
     const std::string prev = store->manifest_path + ".prev";
     if (load_manifest_from_path(store, prev, false) != BS_ATTACH_OK)
@@ -284,16 +315,36 @@ static int load_manifest_file(BsAttachStore* store)
         store->revisions.clear();
         store->canonical_paths.clear();
         store->batch_epoch = 0;
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:load_manifest", io_t0);
         return rc;
     }
     (void)copy_file_sync(prev, store->manifest_path);
+    if (io_t0 >= 0)
+        bs_wait_trace_hang_end("persist_io:load_manifest", io_t0);
     return BS_ATTACH_OK;
 }
+
+struct PersistIoHangGuard
+{
+    int         t0   = -1;
+    const char* site = nullptr;
+    PersistIoHangGuard(int t, const char* s) : t0(t), site(s) {}
+    ~PersistIoHangGuard()
+    {
+        if (t0 >= 0 && site)
+            bs_wait_trace_hang_end(site, t0);
+    }
+};
 
 static int save_manifest_file(BsAttachStore* store)
 {
     if (!store || store->memory_only)
         return BS_ATTACH_OK;
+
+    bs_wait_trace_path("persist_io:save_manifest_begin", store->manifest_path.c_str());
+    const int            io_t0 = bs_wait_trace_hang_begin("persist_io:save_manifest");
+    PersistIoHangGuard   io_guard(io_t0, "persist_io:save_manifest");
 
     std::ostringstream body;
     body << "batch_epoch=" << store->batch_epoch << "\n";
@@ -365,6 +416,10 @@ static void purge_wal_for_store(BsAttachStore* store)
 
 BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path)
 {
+    bs_wait_trace_path("persist_io:store_open", manifest_path ? manifest_path : "<memory>");
+    const int          io_t0 = bs_wait_trace_hang_begin("persist_io:store_open");
+    PersistIoHangGuard io_guard(io_t0, "persist_io:store_open");
+
     auto* s = static_cast<BsAttachStore*>(attach_malloc(sizeof(BsAttachStore)));
     if (!s)
         return nullptr;
@@ -427,6 +482,10 @@ int bs_adapter_attach_persist_store_reload_manifest(BsAttachStore* store)
 {
     if (!store)
         return BS_ATTACH_ERR_INVALID_ARG;
+    bs_wait_trace_path("persist_io:reload_manifest", store->memory_only ? "<memory>"
+                                                                        : store->manifest_path.c_str());
+    const int          io_t0 = bs_wait_trace_hang_begin("persist_io:reload_manifest");
+    PersistIoHangGuard io_guard(io_t0, "persist_io:reload_manifest");
     return load_manifest_file(store);
 }
 

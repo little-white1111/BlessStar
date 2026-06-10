@@ -19,6 +19,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <thread>
+
 #include "attach_context_internal.h"
 #include "attach_notify_queue_internal.h"
 
@@ -61,6 +63,43 @@ uint32_t default_chunk_cap(void)
     return cap > 0xFFFFFFFFu ? 0xFFFFFFFFu : static_cast<uint32_t>(cap);
 }
 
+static void session_mu_exclusive_lock_traced(std::shared_mutex* mu)
+{
+    const int t0 = bs_wait_trace_hang_begin("attach_session:session_mu_exclusive");
+    while (!mu->try_lock())
+    {
+        if (t0 >= 0)
+            bs_wait_trace_hang_tick("attach_session:session_mu_exclusive", t0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+}
+
+static void session_mu_shared_lock_traced(std::shared_mutex* mu)
+{
+    const int t0 = bs_wait_trace_hang_begin("attach_session:session_mu_shared");
+    while (!mu->try_lock_shared())
+    {
+        if (t0 >= 0)
+            bs_wait_trace_hang_tick("attach_session:session_mu_shared", t0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+}
+
+static void session_wait_active_readers_zero_traced(AttachSessionState* st, std::unique_lock<std::mutex>& w,
+                                                    const char* site)
+{
+    const int hang_t0 = bs_wait_trace_hang_begin(site);
+    while (st->active_readers.load() != 0)
+    {
+        bs_wait_trace_hang_tick_u64(site, hang_t0,
+                                    static_cast<unsigned long long>(st->active_readers.load()));
+        st->wait_cv.wait_for(w, std::chrono::milliseconds(500),
+                             [&] { return st->active_readers.load() == 0; });
+    }
+    if (hang_t0 >= 0)
+        bs_wait_trace_hang_end(site, hang_t0);
+}
+
 } // namespace
 
 void bs_adapter_attach_session_init(AttachContext* ctx)
@@ -81,7 +120,7 @@ void bs_adapter_attach_session_destroy(AttachContext* ctx)
     st->block_new_reads.store(true);
     {
         std::unique_lock<std::mutex> w(st->wait_mu);
-        st->wait_cv.wait(w, [&] { return st->active_readers.load() == 0; });
+        session_wait_active_readers_zero_traced(st, w, "attach_session:destroy_wait_active_readers");
     }
     bs_adapter_attach_config_clear_phase2_notify(ctx);
     bs_adapter_attach_notify_queue_flush(ctx);
@@ -100,15 +139,8 @@ void bs_adapter_attach_session_begin_write_window(AttachContext* ctx)
         bs_adapter_attach_session_read_unlock(ctx);
     st->block_new_reads.store(true);
     std::unique_lock<std::mutex> w(st->wait_mu);
-    const int hang_t0 = bs_wait_trace_hang_begin("attach_session:wait_active_readers_zero");
-    while (st->active_readers.load() != 0)
-    {
-        bs_wait_trace_hang_tick_u64("attach_session:wait_active_readers_zero", hang_t0,
-                                    static_cast<unsigned long long>(st->active_readers.load()));
-        st->wait_cv.wait_for(w, std::chrono::milliseconds(500),
-                             [&] { return st->active_readers.load() == 0; });
-    }
-    st->session_mu.lock();
+    session_wait_active_readers_zero_traced(st, w, "attach_session:wait_active_readers_zero");
+    session_mu_exclusive_lock_traced(&st->session_mu);
     st->write_depth.fetch_add(1);
     bs_reentrancy_enter_attach_write();
     bs_reentrancy_enter_attach_write_window();
@@ -152,7 +184,7 @@ int bs_adapter_attach_session_try_read_lock(AttachContext* ctx)
         return BS_ATTACH_ERR_RECOVERING;
     if (st->block_new_reads.load() && g_attach_read_lock_depth == 0)
         return BS_ATTACH_CONC_ERR_READ_BLOCKED;
-    st->session_mu.lock_shared();
+    session_mu_shared_lock_traced(&st->session_mu);
     ++g_attach_read_lock_depth;
     st->active_readers.fetch_add(1);
     return 0;
@@ -179,7 +211,7 @@ int bs_adapter_attach_session_try_write_lock(AttachContext* ctx)
         return 0;
     if (st->closing.load())
         return BS_ATTACH_CONC_ERR_CLOSED;
-    st->session_mu.lock();
+    session_mu_exclusive_lock_traced(&st->session_mu);
     st->write_depth.fetch_add(1);
     bs_reentrancy_enter_attach_write();
     return 0;

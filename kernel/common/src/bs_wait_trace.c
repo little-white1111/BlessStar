@@ -135,6 +135,16 @@ void bs_wait_trace_u64(const char* site, unsigned long long ctx)
     emit_if_enabled(site, ctx, 1, 0);
 }
 
+void bs_wait_trace_path(const char* site, const char* path)
+{
+    const int mode = wait_trace_mode();
+    if (mode == BS_WAIT_TRACE_OFF || !site)
+        return;
+    fprintf(stderr, "[BS_WAIT_TRACE] site=%s tid=%lu path=%s\n", site, current_thread_id(),
+            path && path[0] ? path : "<null>");
+    fflush(stderr);
+}
+
 int bs_wait_trace_hang_begin(const char* site)
 {
     const int mode = wait_trace_mode();
@@ -157,4 +167,12 @@ void bs_wait_trace_hang_tick_u64(const char* site, int token, unsigned long long
         return;
     const unsigned long long waited = now_ms() - (unsigned long long)token;
     emit_if_enabled(site, ctx, 1, waited);
+}
+
+void bs_wait_trace_hang_end(const char* site, int token)
+{
+    if (token < 0 || !site)
+        return;
+    const unsigned long long waited = now_ms() - (unsigned long long)token;
+    emit_if_enabled(site, 0, 0, waited);
 }

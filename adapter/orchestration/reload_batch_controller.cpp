@@ -18,59 +18,12 @@
 #include "bs/adapter/persistence/attach_store.h"
 #include "bs/adapter/persistence/attach_wal.h"
 
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
 
 #include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#if defined(_WIN32)
-#include <windows.h>
-#else
-#include <time.h>
-#endif
-
-static uint64_t reload_trace_now_ms()
-{
-#if defined(_WIN32)
-    return static_cast<uint64_t>(GetTickCount64());
-#else
-    struct timespec ts
-    {
-    };
-    (void)clock_gettime(CLOCK_MONOTONIC, &ts);
-    return static_cast<uint64_t>(ts.tv_sec) * 1000u + static_cast<uint64_t>(ts.tv_nsec / 1000000u);
-#endif
-}
-
-static int reload_trace_enabled()
-{
-    static int cached = -1;
-    if (cached < 0)
-    {
-        const char* env = std::getenv("BS_ATTACH_RELOAD_TRACE");
-        cached          = (env && env[0] == '1') ? 1 : 0;
-    }
-    return cached;
-}
-
-static void reload_trace(const char* phase, const char* detail = nullptr)
-{
-    if (!reload_trace_enabled())
-        return;
-    static const uint64_t t0      = reload_trace_now_ms();
-    const uint64_t        elapsed = reload_trace_now_ms() - t0;
-    if (detail && detail[0])
-        std::fprintf(stderr, "[reload_trace] +%llums %s %s\n",
-                     static_cast<unsigned long long>(elapsed), phase, detail);
-    else
-        std::fprintf(stderr, "[reload_trace] +%llums %s\n",
-                     static_cast<unsigned long long>(elapsed), phase);
-    (void)std::fflush(stderr);
-}
 
 struct PathWork
 {
@@ -582,9 +535,6 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
     if (!actx || !bs_adapter_attach_ctx_is_log_bus_bound(actx))
         return -2;
 
-    reload_trace("run_start",
-                 ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH ? "PER_BATCH" : "PER_PATH");
-
     int  write_window_open        = 0;
     auto end_write_window_if_open = [&]()
     {
@@ -603,9 +553,7 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         }
     };
 
-    reload_trace("begin_write_window");
     begin_write_window();
-    reload_trace("begin_write_window_done");
 
     if (!ctrl->gate_fn)
         bs_adapter_attach_reload_batch_set_default_gate(ctrl);
@@ -615,13 +563,10 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
         end_write_window_if_open();
         return -1;
     }
-    reload_trace("load_session_revisions");
 
     if (!ctrl->manifest_path.empty())
     {
-        reload_trace("recover_sidecar_begin");
         (void)bs_adapter_attach_recover_sidecar_invalidate(ctrl->manifest_path.c_str());
-        reload_trace("recover_sidecar_done");
     }
 
     ctrl->outcome            = BATCH_ALL_OK;
@@ -639,23 +584,19 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
 
     if (ctrl->report)
     {
-        reload_trace("report_session_begin");
         const uint64_t epoch = session_batch_epoch(ctrl);
         for (const auto& w : ctrl->paths)
         {
             bs_adapter_attach_persist_report_session_begin(ctrl->report, ctrl->scheme, epoch,
                                                            w.uri.c_str(), w.base_revision);
         }
-        reload_trace("report_session_done");
     }
 
-    reload_trace("path_loop_begin");
     bool batch_had_failure = false;
 
     for (auto& w : ctrl->paths)
     {
         w.state = BS_ORCH_READING;
-        reload_trace("path_read_begin", w.uri.c_str());
 
         IoReadResult result{};
         const int    read_rc = run_read_with_retry(ctrl, w.uri.c_str(), &result);
@@ -683,11 +624,9 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             continue;
         }
 
-        reload_trace("path_read_done", w.uri.c_str());
         w.state = BS_ORCH_GATING;
         BsReloadGateDetail gate_detail{};
         const int          gate_rc = gate_path_work(ctrl, &w, &result, &gate_detail);
-        reload_trace("path_gate_done", w.uri.c_str());
         if (gate_rc != BS_RELOAD_GATE_OK)
         {
             w.state            = BS_ORCH_GATE_REJECTED;
@@ -721,7 +660,6 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             {
                 /* P1: pool exec must not run under session write-window (matches PER_BATCH). */
                 end_write_window_if_open();
-                reload_trace("path_exec_begin", w.uri.c_str());
                 if (exec_path_ir(actx, &w, ctrl) != 0)
                 {
                     batch_had_failure = true;
@@ -729,10 +667,8 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
                     gc_path_work(&w);
                     continue;
                 }
-                reload_trace("path_exec_done", w.uri.c_str());
                 /* post_config_sync resets kernel pool pipelines; keep write-window closed. */
             }
-            reload_trace("path_persist_begin", w.uri.c_str());
             if (persist_per_path(ctrl, &w, &result) != BS_ATTACH_OK)
                 ctrl->outcome = BATCH_COMPLETED_WITH_FAILURES;
             bs_io_read_result_free(&result);
@@ -780,19 +716,15 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
              * Keep PER_BATCH execution on the caller thread: Windows CI exposed a wait-chain
              * deadlock when temporary workers nested kernel-pool submit/executor waits. */
             end_write_window_if_open();
-            reload_trace("batch_pool_exec_begin");
 
             bool exec_failed = false;
             for (auto& w : ctrl->paths)
             {
                 if (w.state != BS_ORCH_STAGED)
                     continue;
-                reload_trace("path_exec_begin", w.uri.c_str());
                 if (exec_path_ir(actx, &w, ctrl) != 0)
                     exec_failed = true;
-                reload_trace("path_exec_done", w.uri.c_str());
             }
-            reload_trace("batch_pool_exec_done");
             if (exec_failed)
             {
                 batch_had_failure = true;
@@ -922,11 +854,8 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
      * outside the window, so drain pending notifications before returning. */
     if (actx)
     {
-        reload_trace("drain_notifications_begin");
         bs_adapter_attach_session_drain_pending_notifications(actx);
-        reload_trace("drain_notifications_done");
     }
-    reload_trace("run_end");
     return 0;
 }
 

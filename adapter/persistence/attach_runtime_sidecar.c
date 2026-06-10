@@ -1,5 +1,7 @@
 #include "bs/adapter/persistence/attach_runtime_sidecar.h"
 
+#include "bs/kernel/common/bs_wait_trace.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -127,10 +129,18 @@ int bs_adapter_attach_persist_sidecar_invalidate(const char* manifest_path)
 {
     if (!manifest_path)
         return BS_ATTACH_ERR_INVALID_ARG;
-    char path[4096];
+    bs_wait_trace_path("persist_io:sidecar_invalidate", manifest_path);
+    const int io_t0 = bs_wait_trace_hang_begin("persist_io:sidecar_invalidate");
+    char      path[4096];
     if (sidecar_path_for_manifest(manifest_path, path, sizeof(path)) != BS_ATTACH_OK)
+    {
+        if (io_t0 >= 0)
+            bs_wait_trace_hang_end("persist_io:sidecar_invalidate", io_t0);
         return BS_ATTACH_ERR_IO;
+    }
     (void)remove(path);
+    if (io_t0 >= 0)
+        bs_wait_trace_hang_end("persist_io:sidecar_invalidate", io_t0);
     return BS_ATTACH_OK;
 }
 

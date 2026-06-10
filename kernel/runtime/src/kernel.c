@@ -1,5 +1,4 @@
 #include "bs/kernel/common/bs_reentrancy.h"
-#include "bs/kernel/common/bs_wait_trace.h"
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/pipeline/pipeline.h"
 #include "bs/kernel/report/report.h"
@@ -551,14 +550,8 @@ Report* bs_kernel_execute(Kernel* kernel, const IRInstruction* ir)
         return NULL;
     }
     kernel_exec_enqueue(kernel, &job);
-    {
-        const int hang_t0 = bs_wait_trace_hang_begin("bs_kernel_execute:wait_done_cv");
-        while (!job.done)
-        {
-            bs_wait_trace_hang_tick("bs_kernel_execute:wait_done_cv", hang_t0);
-            bs_cond_wait(&job.done_cv, &kernel->exec_mu);
-        }
-    }
+    while (!job.done)
+        bs_cond_wait(&job.done_cv, &kernel->exec_mu);
     bs_mutex_unlock(&kernel->exec_mu);
 
     bs_cond_destroy(&job.done_cv);

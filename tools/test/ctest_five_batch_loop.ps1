@@ -13,7 +13,6 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
 Set-Location $repoRoot
 
 if ($Trace) {
-    $env:BS_ATTACH_RELOAD_TRACE = "1"
     $env:BS_WAIT_TRACE = "hang"
     $env:BS_WAIT_TRACE_HANG_MS = "500"
     $env:BS_SHORTCOMING_VERBOSE = "1"

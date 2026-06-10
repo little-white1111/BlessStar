@@ -368,16 +368,9 @@ int bs_kernel_pool_submit(BsKernelPool* pool, const IRInstruction* ir, Report** 
             has_ticket = 1;
             pool->waiters++;
         }
-        {
-            const int hang_t0 = bs_wait_trace_hang_begin("kernel_pool_submit:wait_pool_cv");
-            while (!pool->draining &&
-                   (my_ticket != pool->serving_ticket || kernel_pool_select_idle_slot(pool) < 0))
-            {
-                bs_wait_trace_hang_tick_u64("kernel_pool_submit:wait_pool_cv", hang_t0,
-                                            (unsigned long long)pool->stats.busy_slots);
-                bs_pool_cond_wait(&pool->cv, &pool->mu);
-            }
-        }
+        while (!pool->draining &&
+               (my_ticket != pool->serving_ticket || kernel_pool_select_idle_slot(pool) < 0))
+            bs_pool_cond_wait(&pool->cv, &pool->mu);
         if (pool->draining)
         {
             if (pool->waiters > 0u)
@@ -460,6 +453,8 @@ int bs_kernel_pool_reset_all_pipelines(BsKernelPool* pool)
                                         (unsigned long long)pool->stats.busy_slots);
             bs_pool_cond_wait(&pool->cv, &pool->mu);
         }
+        if (hang_t0 >= 0)
+            bs_wait_trace_hang_end("kernel_pool_reset:wait_busy_slots", hang_t0);
     }
 
     int rc = BS_KERNEL_POOL_OK;
@@ -504,8 +499,17 @@ void bs_kernel_pool_destroy(BsKernelPool* pool)
     bs_pool_mutex_lock(&pool->mu);
     pool->draining = 1;
     bs_pool_cond_broadcast(&pool->cv);
-    while (pool->stats.busy_slots > 0u)
-        bs_pool_cond_wait(&pool->cv, &pool->mu);
+    {
+        const int hang_t0 = bs_wait_trace_hang_begin("kernel_pool_destroy:wait_busy_slots");
+        while (pool->stats.busy_slots > 0u)
+        {
+            bs_wait_trace_hang_tick_u64("kernel_pool_destroy:wait_busy_slots", hang_t0,
+                                        (unsigned long long)pool->stats.busy_slots);
+            bs_pool_cond_wait(&pool->cv, &pool->mu);
+        }
+        if (hang_t0 >= 0)
+            bs_wait_trace_hang_end("kernel_pool_destroy:wait_busy_slots", hang_t0);
+    }
     BsKernelPoolSlot** slots = pool->slots;
     uint32_t           count = pool->slot_count;
     pool->slots              = NULL;
