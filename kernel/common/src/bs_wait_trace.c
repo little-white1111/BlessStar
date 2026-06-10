@@ -40,7 +40,7 @@ static BOOL CALLBACK init_wait_trace_once(PINIT_ONCE once, PVOID param, PVOID* c
         g_wait_trace_mode = BS_WAIT_TRACE_FULL;
     else if (env && strcmp(env, "hang") == 0)
         g_wait_trace_mode = BS_WAIT_TRACE_HANG;
-    env = getenv("BS_WAIT_TRACE_HANG_MS");
+    env                 = getenv("BS_WAIT_TRACE_HANG_MS");
     g_hang_threshold_ms = (env && env[0]) ? atoi(env) : 3000;
     if (g_hang_threshold_ms < 100)
         g_hang_threshold_ms = 100;
@@ -56,7 +56,7 @@ static void init_wait_trace_once(void)
         g_wait_trace_mode = BS_WAIT_TRACE_FULL;
     else if (env && strcmp(env, "hang") == 0)
         g_wait_trace_mode = BS_WAIT_TRACE_HANG;
-    env = getenv("BS_WAIT_TRACE_HANG_MS");
+    env                 = getenv("BS_WAIT_TRACE_HANG_MS");
     g_hang_threshold_ms = (env && env[0]) ? atoi(env) : 3000;
     if (g_hang_threshold_ms < 100)
         g_hang_threshold_ms = 100;

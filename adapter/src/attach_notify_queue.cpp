@@ -219,7 +219,7 @@ void bs_adapter_attach_notify_queue_shutdown(AttachContext* ctx)
     if (!ctx || !ctx->notify_queue)
         return;
 
-    auto* q = static_cast<AttachNotifyQueue*>(ctx->notify_queue);
+    auto* q           = static_cast<AttachNotifyQueue*>(ctx->notify_queue);
     ctx->notify_queue = nullptr;
 
     {
