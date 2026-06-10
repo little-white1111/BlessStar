@@ -106,11 +106,16 @@ void run_worker(AttachNotifyQueue* q)
         WatchNotifyJob job{};
         {
             std::unique_lock<std::mutex> lock(q->mu);
-            q->cv.wait(lock, [&]
-                       { return q->stop.load() || (!q->drain_mode.load() && !q->jobs.empty()); });
+            q->cv.wait(lock,
+                       [&]
+                       {
+                           if (q->stop.load())
+                               return true;
+                           return !q->drain_mode.load() && !q->jobs.empty();
+                       });
             if (q->stop.load() && q->jobs.empty())
                 return;
-            if (q->drain_mode.load())
+            if (q->drain_mode.load() || q->jobs.empty())
                 continue;
             job = std::move(q->jobs.front());
             q->jobs.pop_front();
@@ -222,13 +227,28 @@ void bs_adapter_attach_notify_queue_shutdown(AttachContext* ctx)
     auto* q           = static_cast<AttachNotifyQueue*>(ctx->notify_queue);
     ctx->notify_queue = nullptr;
 
+    q->drain_mode.store(false);
     {
         std::lock_guard<std::mutex> lock(q->mu);
         q->stop.store(true);
         q->jobs.clear();
     }
     q->cv.notify_all();
-    /* Join (not detach): discard queued jobs but wait for in-flight dispatch to finish. */
+
+    const int hang_t0 = bs_wait_trace_hang_begin("notify_queue:shutdown_wait");
+    {
+        std::unique_lock<std::mutex> lock(q->mu);
+        while (q->in_flight.load() > 0)
+        {
+            bs_wait_trace_hang_tick_u64("notify_queue:shutdown_wait_in_flight", hang_t0,
+                                        (unsigned long long)q->in_flight.load());
+            q->cv.wait_for(lock, std::chrono::milliseconds(500),
+                           [&] { return q->in_flight.load() == 0; });
+        }
+    }
+    if (hang_t0 >= 0)
+        bs_wait_trace_hang_end("notify_queue:shutdown_wait", hang_t0);
+
     if (q->worker.joinable())
         q->worker.join();
     delete q;

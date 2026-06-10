@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef _WIN32
+#include <stdatomic.h>
+#endif
+
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -24,42 +28,47 @@ enum BsWaitTraceMode
     BS_WAIT_TRACE_HANG = 2
 };
 
-static int g_wait_trace_mode   = BS_WAIT_TRACE_OFF;
-static int g_hang_threshold_ms = 3000;
-
 #ifdef _WIN32
-static INIT_ONCE g_wait_trace_once = INIT_ONCE_STATIC_INIT;
+static volatile LONG g_wait_trace_mode   = BS_WAIT_TRACE_OFF;
+static volatile LONG g_hang_threshold_ms = 3000;
+static INIT_ONCE     g_wait_trace_once   = INIT_ONCE_STATIC_INIT;
 
 static BOOL CALLBACK init_wait_trace_once(PINIT_ONCE once, PVOID param, PVOID* ctx)
 {
     (void)once;
     (void)param;
     (void)ctx;
-    const char* env = getenv("BS_WAIT_TRACE");
+    const char* env  = getenv("BS_WAIT_TRACE");
+    LONG        mode = BS_WAIT_TRACE_OFF;
     if (env && env[0] == '1' && env[1] == '\0')
-        g_wait_trace_mode = BS_WAIT_TRACE_FULL;
+        mode = BS_WAIT_TRACE_FULL;
     else if (env && strcmp(env, "hang") == 0)
-        g_wait_trace_mode = BS_WAIT_TRACE_HANG;
-    env                 = getenv("BS_WAIT_TRACE_HANG_MS");
-    g_hang_threshold_ms = (env && env[0]) ? atoi(env) : 3000;
-    if (g_hang_threshold_ms < 100)
-        g_hang_threshold_ms = 100;
+        mode = BS_WAIT_TRACE_HANG;
+    InterlockedExchange(&g_wait_trace_mode, mode);
+    env     = getenv("BS_WAIT_TRACE_HANG_MS");
+    LONG ms = (env && env[0]) ? (LONG)atoi(env) : 3000;
+    if (ms < 100)
+        ms = 100;
+    InterlockedExchange(&g_hang_threshold_ms, ms);
     return TRUE;
 }
 #else
-static pthread_once_t g_wait_trace_once = PTHREAD_ONCE_INIT;
+static _Atomic int    g_wait_trace_mode   = BS_WAIT_TRACE_OFF;
+static _Atomic int    g_hang_threshold_ms = 3000;
+static pthread_once_t g_wait_trace_once   = PTHREAD_ONCE_INIT;
 
 static void init_wait_trace_once(void)
 {
     const char* env = getenv("BS_WAIT_TRACE");
     if (env && env[0] == '1' && env[1] == '\0')
-        g_wait_trace_mode = BS_WAIT_TRACE_FULL;
+        atomic_store_explicit(&g_wait_trace_mode, BS_WAIT_TRACE_FULL, memory_order_release);
     else if (env && strcmp(env, "hang") == 0)
-        g_wait_trace_mode = BS_WAIT_TRACE_HANG;
-    env                 = getenv("BS_WAIT_TRACE_HANG_MS");
-    g_hang_threshold_ms = (env && env[0]) ? atoi(env) : 3000;
-    if (g_hang_threshold_ms < 100)
-        g_hang_threshold_ms = 100;
+        atomic_store_explicit(&g_wait_trace_mode, BS_WAIT_TRACE_HANG, memory_order_release);
+    env    = getenv("BS_WAIT_TRACE_HANG_MS");
+    int ms = (env && env[0]) ? atoi(env) : 3000;
+    if (ms < 100)
+        ms = 100;
+    atomic_store_explicit(&g_hang_threshold_ms, ms, memory_order_release);
 }
 #endif
 
@@ -67,16 +76,21 @@ static int wait_trace_mode(void)
 {
 #ifdef _WIN32
     (void)InitOnceExecuteOnce(&g_wait_trace_once, init_wait_trace_once, NULL, NULL);
+    return (int)InterlockedCompareExchange(&g_wait_trace_mode, 0, 0);
 #else
     (void)pthread_once(&g_wait_trace_once, init_wait_trace_once);
+    return atomic_load_explicit(&g_wait_trace_mode, memory_order_acquire);
 #endif
-    return g_wait_trace_mode;
 }
 
 static int hang_threshold_ms(void)
 {
     (void)wait_trace_mode();
-    return g_hang_threshold_ms;
+#ifdef _WIN32
+    return (int)InterlockedCompareExchange(&g_hang_threshold_ms, 0, 0);
+#else
+    return atomic_load_explicit(&g_hang_threshold_ms, memory_order_acquire);
+#endif
 }
 
 static unsigned long current_thread_id(void)
