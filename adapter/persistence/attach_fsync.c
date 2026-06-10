@@ -1,6 +1,6 @@
-#include <stdio.h>
-
 #include "bs/kernel/common/bs_wait_trace.h"
+
+#include <stdio.h>
 
 #include "attach_fsync.h"
 

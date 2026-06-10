@@ -1,6 +1,6 @@
-#include "bs/adapter/persistence/attach_runtime_sidecar.h"
-
 #include "bs/kernel/common/bs_wait_trace.h"
+
+#include "bs/adapter/persistence/attach_runtime_sidecar.h"
 
 #include <stdio.h>
 #include <stdlib.h>

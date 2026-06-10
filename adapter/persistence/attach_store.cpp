@@ -1,8 +1,8 @@
+#include "bs/kernel/common/bs_wait_trace.h"
+
 #include "bs/adapter/persistence/attach_store.h"
 #include "bs/adapter/persistence/attach_wal.h"
 #include "bs/adapter/persistence/attach_watch.h"
-
-#include "bs/kernel/common/bs_wait_trace.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -162,7 +162,7 @@ static int write_file_atomic(const char* path, const void* data, size_t len, boo
 static int copy_file_sync(const std::string& src, const std::string& dst)
 {
     bs_wait_trace_path("persist_io:copy_file_sync", src.c_str());
-    const int io_t0 = bs_wait_trace_hang_begin("persist_io:copy_file_sync");
+    const int     io_t0 = bs_wait_trace_hang_begin("persist_io:copy_file_sync");
     std::ifstream in(src, std::ios::binary);
     if (!in)
     {
@@ -329,7 +329,11 @@ struct PersistIoHangGuard
 {
     int         t0   = -1;
     const char* site = nullptr;
-    PersistIoHangGuard(int t, const char* s) : t0(t), site(s) {}
+    PersistIoHangGuard(int t, const char* s)
+        : t0(t)
+        , site(s)
+    {
+    }
     ~PersistIoHangGuard()
     {
         if (t0 >= 0 && site)
@@ -343,8 +347,8 @@ static int save_manifest_file(BsAttachStore* store)
         return BS_ATTACH_OK;
 
     bs_wait_trace_path("persist_io:save_manifest_begin", store->manifest_path.c_str());
-    const int            io_t0 = bs_wait_trace_hang_begin("persist_io:save_manifest");
-    PersistIoHangGuard   io_guard(io_t0, "persist_io:save_manifest");
+    const int          io_t0 = bs_wait_trace_hang_begin("persist_io:save_manifest");
+    PersistIoHangGuard io_guard(io_t0, "persist_io:save_manifest");
 
     std::ostringstream body;
     body << "batch_epoch=" << store->batch_epoch << "\n";
@@ -482,8 +486,8 @@ int bs_adapter_attach_persist_store_reload_manifest(BsAttachStore* store)
 {
     if (!store)
         return BS_ATTACH_ERR_INVALID_ARG;
-    bs_wait_trace_path("persist_io:reload_manifest", store->memory_only ? "<memory>"
-                                                                        : store->manifest_path.c_str());
+    bs_wait_trace_path("persist_io:reload_manifest",
+                       store->memory_only ? "<memory>" : store->manifest_path.c_str());
     const int          io_t0 = bs_wait_trace_hang_begin("persist_io:reload_manifest");
     PersistIoHangGuard io_guard(io_t0, "persist_io:reload_manifest");
     return load_manifest_file(store);

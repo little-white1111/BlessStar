@@ -55,8 +55,7 @@ void run_worker(AttachNotifyQueue* q)
         if (job.wm && !job.path.empty())
         {
             const void* snap = job.snapshot_bytes.empty() ? nullptr : job.snapshot_bytes.data();
-            const int   notify_t0 =
-                bs_wait_trace_hang_begin("notify_queue:watch_notify");
+            const int   notify_t0 = bs_wait_trace_hang_begin("notify_queue:watch_notify");
             (void)bs_watch_manager_notify(job.wm, job.path.c_str(), job.type, snap);
             if (notify_t0 >= 0)
                 bs_wait_trace_hang_end("notify_queue:watch_notify", notify_t0);

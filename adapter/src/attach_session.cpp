@@ -16,10 +16,9 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
-
-#include <thread>
 
 #include "attach_context_internal.h"
 #include "attach_notify_queue_internal.h"
@@ -85,8 +84,9 @@ static void session_mu_shared_lock_traced(std::shared_mutex* mu)
     }
 }
 
-static void session_wait_active_readers_zero_traced(AttachSessionState* st, std::unique_lock<std::mutex>& w,
-                                                    const char* site)
+static void session_wait_active_readers_zero_traced(AttachSessionState*           st,
+                                                    std::unique_lock<std::mutex>& w,
+                                                    const char*                   site)
 {
     const int hang_t0 = bs_wait_trace_hang_begin(site);
     while (st->active_readers.load() != 0)
@@ -120,7 +120,8 @@ void bs_adapter_attach_session_destroy(AttachContext* ctx)
     st->block_new_reads.store(true);
     {
         std::unique_lock<std::mutex> w(st->wait_mu);
-        session_wait_active_readers_zero_traced(st, w, "attach_session:destroy_wait_active_readers");
+        session_wait_active_readers_zero_traced(st, w,
+                                                "attach_session:destroy_wait_active_readers");
     }
     bs_adapter_attach_config_clear_phase2_notify(ctx);
     bs_adapter_attach_notify_queue_flush(ctx);
