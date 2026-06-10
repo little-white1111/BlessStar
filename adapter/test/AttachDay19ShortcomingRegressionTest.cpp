@@ -67,6 +67,13 @@ static int64_t steady_ms_since(const std::chrono::steady_clock::time_point& t0)
         .count();
 }
 
+static int64_t steady_us_since(const std::chrono::steady_clock::time_point& t0)
+{
+    return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() -
+                                                                 t0)
+        .count();
+}
+
 /** AG-DAY19-MANIFEST-1: manifest fsync policy affects PER_PATH commit throughput. */
 static int test_manifest_fsync_per_path_throughput(void)
 {
@@ -262,6 +269,16 @@ static int reload_once_ms(BsTestAttachIoFixture* fix, const fs::path& manifest_p
     return 0;
 }
 
+static int reload_once_us(BsTestAttachIoFixture* fix, const fs::path& manifest_path,
+                          const char* uri, int64_t* elapsed_us_out)
+{
+    const auto t0 = std::chrono::steady_clock::now();
+    if (run_per_path_reload(fix, manifest_path, uri, nullptr) != 0)
+        return -1;
+    *elapsed_us_out = steady_us_since(t0);
+    return 0;
+}
+
 /** AG-DAY19-POOL-1: clear_kernel_pool_warmed skips pool exec on PER_PATH reload. */
 static int test_pool_warmup_reload_latency(void)
 {
@@ -286,35 +303,37 @@ static int test_pool_warmup_reload_latency(void)
     BS_TEST_REQUIRE("store", store != nullptr);
     bs_adapter_attach_persist_store_set_fsync_policy(store, BS_ATTACH_FSYNC_NEVER);
 
-    int64_t warmed_sum = 0;
-    for (int i = 0; i < 5; ++i)
+    constexpr int kPoolReloadIters = 10;
+    int64_t       warmed_sum_us    = 0;
+    for (int i = 0; i < kPoolReloadIters; ++i)
     {
         shortcoming_progress(("pool-warmup warmed-reload " + std::to_string(i)).c_str());
-        int64_t ms = 0;
+        int64_t us = 0;
         BS_TEST_REQUIRE("warmed-reload",
-                        reload_once_ms(&fix, manifest_path, uri.c_str(), &ms) == 0);
-        warmed_sum += ms;
+                        reload_once_us(&fix, manifest_path, uri.c_str(), &us) == 0);
+        warmed_sum_us += us;
     }
 
     bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(fix.ctx);
     BS_TEST_REQUIRE("pool-cleared", bs_adapter_attach_ctx_is_kernel_pool_warmed(fix.ctx) == 0);
 
-    int64_t cleared_sum = 0;
-    for (int i = 0; i < 5; ++i)
+    int64_t cleared_sum_us = 0;
+    for (int i = 0; i < kPoolReloadIters; ++i)
     {
         shortcoming_progress(("pool-warmup cleared-reload " + std::to_string(i)).c_str());
-        int64_t ms = 0;
+        int64_t us = 0;
         BS_TEST_REQUIRE("cleared-reload",
-                        reload_once_ms(&fix, manifest_path, uri.c_str(), &ms) == 0);
-        cleared_sum += ms;
+                        reload_once_us(&fix, manifest_path, uri.c_str(), &us) == 0);
+        cleared_sum_us += us;
     }
 
     bs_test_attach_teardown(&fix);
 
-    BS_TEST_REQUIRE("warmed-sum-nonzero", warmed_sum > 0);
-    BS_TEST_REQUIRE("cleared-sum-nonzero", cleared_sum > 0);
+    BS_TEST_REQUIRE("warmed-sum-nonzero", warmed_sum_us > 0);
+    BS_TEST_REQUIRE("cleared-sum-nonzero", cleared_sum_us > 0);
 #ifndef _WIN32
-    BS_TEST_REQUIRE("warmed-slower-aggregate", warmed_sum > cleared_sum);
+    /* Linux CI: ms rounding ties in stage=all; compare microsecond aggregates. */
+    BS_TEST_REQUIRE("warmed-slower-aggregate", warmed_sum_us > cleared_sum_us);
 #endif
     return 0;
 }
