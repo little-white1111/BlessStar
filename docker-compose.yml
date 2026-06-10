@@ -27,6 +27,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: builder
       args:
         CC: clang-15
         CXX: clang++-15
