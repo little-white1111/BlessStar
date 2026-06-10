@@ -49,9 +49,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /src /src
 COPY tools/docker/entrypoint-ctest-meson.sh /usr/local/bin/docker-test-entrypoint.sh
+COPY tools/docker/entrypoint-ctest-meson-arm64.sh /usr/local/bin/docker-test-entrypoint-arm64.sh
+COPY tools/docker/patch_ctest_timeout_arm64.py /src/tools/docker/patch_ctest_timeout_arm64.py
 RUN sed -i 's/\r$//' /usr/local/bin/docker-test-entrypoint.sh \
-    && chmod +x /usr/local/bin/docker-test-entrypoint.sh
+    && sed -i 's/\r$//' /usr/local/bin/docker-test-entrypoint-arm64.sh \
+    && chmod +x /usr/local/bin/docker-test-entrypoint.sh \
+    && chmod +x /usr/local/bin/docker-test-entrypoint-arm64.sh
 
 WORKDIR /src
-ENTRYPOINT ["/usr/local/bin/docker-test-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-test-entrypoint-arm64.sh"]
 CMD ["-j", "1"]
