@@ -454,13 +454,13 @@ int bs_kernel_pool_reset_all_pipelines(BsKernelPool* pool)
             bs_kernel_request_exec_cancel(slot->kernel);
     }
 
-    pool->slots             = NULL;
-    pool->slot_count        = 0u;
-    pool->slot_capacity     = 0u;
-    pool->stats.total_slots = 0u;
+    pool->slots               = NULL;
+    pool->slot_count          = 0u;
+    pool->slot_capacity       = 0u;
+    pool->stats.total_slots   = 0u;
     pool->stats.dynamic_slots = 0u;
-    pool->stats.busy_slots  = 0u;
-    pool->draining          = 0;
+    pool->stats.busy_slots    = 0u;
+    pool->draining            = 0;
     bs_pool_mutex_unlock(&pool->mu);
 
     for (uint32_t i = 0; i < orphan_count; i++)

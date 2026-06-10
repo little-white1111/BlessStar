@@ -1,11 +1,11 @@
 #include "bs/kernel/state/StateBus.h"
 #include "bs/kernel/state/StateSnapshotRcu.h"
 
-#include <atomic>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -17,7 +17,7 @@ namespace
 {
 struct PathSeqlock
 {
-    std::atomic<uint64_t> seq{0};
+    std::atomic<uint64_t>                         seq{0};
     std::shared_ptr<const BsStateSnapshotPayload> ptr;
 
     void publish(std::shared_ptr<const BsStateSnapshotPayload> next)
@@ -48,10 +48,10 @@ struct StateEntryImpl
     PathSeqlock rcu;
 };
 
-static std::shared_ptr<const BsStateSnapshotPayload> make_payload(ConfigState state, uint64_t version,
-                                                                  const void* data, size_t dataSize)
+static std::shared_ptr<const BsStateSnapshotPayload>
+make_payload(ConfigState state, uint64_t version, const void* data, size_t dataSize)
 {
-    auto payload = std::make_shared<BsStateSnapshotPayload>();
+    auto payload     = std::make_shared<BsStateSnapshotPayload>();
     payload->state   = state;
     payload->version = version;
     if (data && dataSize > 0)
@@ -107,13 +107,13 @@ int bs_state_bus_set_state(StateBus* bus, const char* path, ConfigState state, c
 
     std::unique_lock<std::shared_mutex> lock(bus->mutex);
 
-    auto        it   = bus->entries.find(path);
+    auto            it   = bus->entries.find(path);
     StateEntryImpl* impl = nullptr;
 
     if (it == bus->entries.end())
     {
-        impl            = new StateEntryImpl();
-        impl->pub.path  = strdup(path);
+        impl                   = new StateEntryImpl();
+        impl->pub.path         = strdup(path);
         impl->pub.dataSnapshot = nullptr;
         impl->pub.dataSize     = 0;
         impl->pub.version      = 0;
@@ -145,7 +145,8 @@ int bs_state_bus_set_state(StateBus* bus, const char* path, ConfigState state, c
         }
     }
 
-    publish_entry_snapshot(impl, entry->state, entry->version, entry->dataSnapshot, entry->dataSize);
+    publish_entry_snapshot(impl, entry->state, entry->version, entry->dataSnapshot,
+                           entry->dataSize);
     return 0;
 }
 
@@ -243,7 +244,7 @@ void bs_state_bus_free_entries(StateEntry* entries, size_t count)
     free(entries);
 }
 
-std::shared_ptr<const BsStateSnapshotPayload> bs_state_bus_pin_snapshot(StateBus* bus,
+std::shared_ptr<const BsStateSnapshotPayload> bs_state_bus_pin_snapshot(StateBus*   bus,
                                                                         const char* path)
 {
     if (!bus || !path)

@@ -76,6 +76,6 @@ void bs_adapter_attach_config_clear_phase2_notify(AttachContext* ctx);
 
 /** Caller must hold attach session read lock. */
 int bs_adapter_attach_config_snapshot_pin(AttachContext* ctx, const char* config_path,
-                                            std::shared_ptr<const BsStateSnapshotPayload>* out);
+                                          std::shared_ptr<const BsStateSnapshotPayload>* out);
 
 #endif

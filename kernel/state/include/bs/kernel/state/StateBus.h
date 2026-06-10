@@ -5,7 +5,8 @@
  * C-ST-7 contract block:
  * Thread safety: Internally synchronized (shared_mutex); safe for concurrent readers.
  * Error semantics: 0 ok; -1 invalid; -2 missing path; -3 alloc failure on snapshot copy.
- * Platform notes: Owns path-keyed StateEntry map; snapshot reads use seqlock RCU pin (StateSnapshotRcu.h).
+ * Platform notes: Owns path-keyed StateEntry map; snapshot reads use seqlock RCU pin
+ * (StateSnapshotRcu.h).
  */
 
 #include "ConfigState.h"

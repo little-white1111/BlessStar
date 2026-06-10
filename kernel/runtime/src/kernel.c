@@ -386,8 +386,8 @@ Kernel* bs_kernel_create(const KernelConfig* config)
     bs_cond_init(&kernel->registry_cv);
     bs_mutex_init(&kernel->exec_mu);
     bs_cond_init(&kernel->exec_cv);
-    kernel->exec_thread_started = 0;
-    kernel->exec_thread_ready   = 0;
+    kernel->exec_thread_started   = 0;
+    kernel->exec_thread_ready     = 0;
     kernel->exec_stop_requested   = 0;
     kernel->exec_cancel_requested = 0;
     kernel->exec_head             = NULL;

@@ -4,13 +4,13 @@
 #include "bs/adapter/persistence/attach_wal.h"
 #include "bs/adapter/persistence/attach_watch.h"
 
+#include <chrono>
+#include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
 #include <atomic>
-#include <chrono>
-#include <condition_variable>
 #include <deque>
 #include <fstream>
 #include <functional>
@@ -25,11 +25,11 @@
 static std::atomic<int> g_attach_store_open_count{0};
 #endif
 
+#include "bs/adapter/attach_errors.h"
+
 #include "attach_crc32.h"
 #include "attach_fsync.h"
 #include "attach_uri_path.h"
-
-#include "bs/adapter/attach_errors.h"
 
 namespace
 {
@@ -124,8 +124,7 @@ static bool should_fsync_canonical(const BsAttachStore* store)
 
 static bool should_fsync_manifest(const BsAttachStore* store)
 {
-    return store && !persist_env_fsync_disabled() &&
-           store->fsync_policy != BS_ATTACH_FSYNC_NEVER;
+    return store && !persist_env_fsync_disabled() && store->fsync_policy != BS_ATTACH_FSYNC_NEVER;
 }
 
 static int persist_io_default_timeout_ms(void)
@@ -179,12 +178,10 @@ static int persist_io_wait_idle(BsAttachStore* store, int timeout_ms)
     PersistIoWorkerState* ws = &store->io_worker;
     const auto            deadline =
         timeout_ms >= 0 ? std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms)
-                        : std::chrono::steady_clock::time_point::max();
+                                   : std::chrono::steady_clock::time_point::max();
 
     std::unique_lock<std::mutex> lock(ws->mu);
-    auto                         idle = [&]() -> bool {
-        return ws->jobs.empty() && ws->active.load() == 0;
-    };
+    auto idle = [&]() -> bool { return ws->jobs.empty() && ws->active.load() == 0; };
 
     while (!idle())
     {
@@ -230,7 +227,7 @@ static int persist_io_dispatch(BsAttachStore* store, int timeout_ms, std::functi
     if (!store->io_worker.running.load())
         return fn();
 
-    auto             job = std::make_unique<PersistIoJob>();
+    auto job             = std::make_unique<PersistIoJob>();
     job->fn              = std::move(fn);
     std::future<int> fut = job->result.get_future();
 
@@ -319,8 +316,8 @@ static int write_file_atomic_disk(const char* path, const void* data, size_t len
 static int write_file_atomic(BsAttachStore* store, const char* path, const void* data, size_t len,
                              bool fsync_tmp)
 {
-    return persist_io_dispatch(store, -1,
-                               [=]() { return write_file_atomic_disk(path, data, len, fsync_tmp); });
+    return persist_io_dispatch(store, -1, [=]()
+                               { return write_file_atomic_disk(path, data, len, fsync_tmp); });
 }
 
 static int copy_file_sync_disk(const std::string& src, const std::string& dst)
@@ -369,7 +366,8 @@ static int copy_file_sync_disk(const std::string& src, const std::string& dst)
     return BS_ATTACH_OK;
 }
 
-[[maybe_unused]] static int copy_file_sync(BsAttachStore* store, const std::string& src, const std::string& dst)
+[[maybe_unused]] static int copy_file_sync(BsAttachStore* store, const std::string& src,
+                                           const std::string& dst)
 {
     return persist_io_dispatch(store, -1, [=]() { return copy_file_sync_disk(src, dst); });
 }
@@ -494,8 +492,7 @@ static int load_manifest_file_sync(BsAttachStore* store)
 
 static int load_manifest_file(BsAttachStore* store)
 {
-    return persist_io_dispatch(store, -1,
-                               [store]() { return load_manifest_file_sync(store); });
+    return persist_io_dispatch(store, -1, [store]() { return load_manifest_file_sync(store); });
 }
 
 struct PersistIoHangGuard
@@ -576,8 +573,7 @@ static int save_manifest_file_sync(BsAttachStore* store)
 
 static int save_manifest_file(BsAttachStore* store)
 {
-    return persist_io_dispatch(store, -1,
-                               [store]() { return save_manifest_file_sync(store); });
+    return persist_io_dispatch(store, -1, [store]() { return save_manifest_file_sync(store); });
 }
 
 static void open_wal(BsAttachStore* store)
@@ -693,8 +689,7 @@ static int commit_one(BsAttachStore* store, const char* uri, const char* path, c
 
     if (!store->memory_only)
     {
-        const int wr =
-            write_file_atomic(store, path, data, len, should_fsync_canonical(store));
+        const int wr = write_file_atomic(store, path, data, len, should_fsync_canonical(store));
         if (wr != BS_ATTACH_OK)
             return wr;
     }
@@ -861,9 +856,9 @@ int bs_adapter_attach_persist_store_batch_commit(BsAttachStore* store)
 
         for (size_t i = 0; i < store->staged.size(); ++i)
         {
-            const auto& e = store->staged[i];
-            const int wr = write_file_atomic(store, staging_paths[i].c_str(), e.data.data(),
-                                             e.data.size(), should_fsync_canonical(store));
+            const auto& e  = store->staged[i];
+            const int   wr = write_file_atomic(store, staging_paths[i].c_str(), e.data.data(),
+                                               e.data.size(), should_fsync_canonical(store));
             if (wr != BS_ATTACH_OK)
             {
                 publish_watch_event(next_epoch, e.uri.c_str(),

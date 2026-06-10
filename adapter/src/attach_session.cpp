@@ -1,13 +1,12 @@
 #include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/common/bs_wait_trace.h"
+#include "bs/kernel/state/StateSnapshotRcu.h"
 
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_errors.h"
 #include "bs/adapter/attach_session.h"
 #include "bs/adapter/parser/json_lexer.h"
 #include "bs/adapter/persistence/attach_store.h"
-
-#include "bs/kernel/state/StateSnapshotRcu.h"
 
 #include <chrono>
 #include <condition_variable>
@@ -347,14 +346,14 @@ int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* c
     if (guard.status() != 0)
         return guard.status();
 
-    size_t total = 0;
+    size_t                                        total = 0;
     std::shared_ptr<const BsStateSnapshotPayload> payload;
-    const int rc = snapshot_pin(ctx, config_path, &payload);
+    const int                                     rc = snapshot_pin(ctx, config_path, &payload);
     if (rc == 0)
     {
         if (!payload)
             return -1;
-        total = payload->bytes.size();
+        total                 = payload->bytes.size();
         uint64_t  session_rev = 0;
         const int fresh_rc    = check_reader_revision_fresh(ctx, config_path, &session_rev);
         if (fresh_rc != 0)
@@ -377,14 +376,14 @@ int bs_adapter_attach_config_get_snapshot_copy(AttachContext* ctx, const char* c
         return guard.status();
 
     std::shared_ptr<const BsStateSnapshotPayload> payload;
-    int rc = snapshot_pin(ctx, config_path, &payload);
+    int                                           rc = snapshot_pin(ctx, config_path, &payload);
     if (rc == 0)
     {
         if (!payload)
             return -1;
-        const size_t total = payload->bytes.size();
-        uint64_t  session_rev = 0;
-        const int fresh_rc    = check_reader_revision_fresh(ctx, config_path, &session_rev);
+        const size_t total       = payload->bytes.size();
+        uint64_t     session_rev = 0;
+        const int    fresh_rc    = check_reader_revision_fresh(ctx, config_path, &session_rev);
         if (fresh_rc != 0)
             return fresh_rc;
         *revision_out = session_rev;
@@ -409,7 +408,7 @@ int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* 
         return -1;
 
     std::shared_ptr<const BsStateSnapshotPayload> payload;
-    uint64_t                                    rev = 0;
+    uint64_t                                      rev = 0;
 
     {
         AttachReadGuard guard(ctx);
