@@ -259,6 +259,45 @@ jobs:
       - name: Test
         run: meson test -C build-meson --print-errorlogs
 
+  docker:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
+    name: docker (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - blessstar-cmake-gcc
+          - blessstar-cmake-clang
+          - blessstar-san
+          - blessstar-arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (${{ matrix.service }})
+        run: |
+          if [ "${{ matrix.service }}" = "blessstar-arm64" ]; then
+            docker compose --profile arm64 build ${{ matrix.service }}
+          else
+            docker compose build ${{ matrix.service }}
+          fi
+
+      - name: Run tests (${{ matrix.service }})
+        run: |
+          if [ "${{ matrix.service }}" = "blessstar-arm64" ]; then
+            docker compose --profile arm64 up --abort-on-container-exit --exit-code-from ${{ matrix.service }} ${{ matrix.service }}
+          else
+            docker compose up --abort-on-container-exit --exit-code-from ${{ matrix.service }} ${{ matrix.service }}
+          fi
+
   day21-suite:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.suite == 'day21'
     uses: ./.github/workflows/day21.yml

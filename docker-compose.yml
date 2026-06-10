@@ -1,0 +1,64 @@
+services:
+  blessstar-cmake-gcc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CC: gcc-12
+        CXX: g++-12
+        BUILD_TYPE: Release
+    image: blessstar-cmake-gcc:latest
+    shm_size: 256m
+    command: ["-j", "2"]
+
+  blessstar-cmake-clang:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CC: clang-15
+        CXX: clang++-15
+        BUILD_TYPE: Release
+    image: blessstar-cmake-clang:latest
+    shm_size: 256m
+    command: ["-j", "2"]
+
+  blessstar-san:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CC: clang-15
+        CXX: clang++-15
+        BUILD_TYPE: Debug
+    image: blessstar-san:latest
+    shm_size: 256m
+    environment:
+      ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+      UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+      LSAN_OPTIONS: suppressions=/src/cmake/lsan_suppressions.txt
+    entrypoint:
+      - sh
+      - -c
+      - |
+        cmake -S . -B build_san \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DCMAKE_C_COMPILER=clang-15 \
+          -DCMAKE_CXX_COMPILER=clang++-15 \
+          -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+          -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
+          -DBLESSSTAR_SANITIZER_CI=ON \
+          && cmake --build build_san -j 2 \
+          && ctest --test-dir build_san -LE day17 --output-on-failure
+
+  blessstar-arm64:
+    build:
+      context: .
+      dockerfile: Dockerfile.arm64
+    image: blessstar-arm64:latest
+    platform: linux/arm64
+    shm_size: 256m
+    command: ["-j", "1"]
+    profiles:
+      - arm64
