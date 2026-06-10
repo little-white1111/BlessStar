@@ -346,7 +346,14 @@ static int wal_build_segment_path(const char* active_path, uint64_t epoch, char*
     const size_t need = strlen(active_path) + 2 + strlen(num) + 1;
     if (need > cap)
         return BS_ATTACH_ERR_LIMIT;
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
     snprintf(out, cap, "%s.e%s", active_path, num);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
     return BS_ATTACH_OK;
 }
 

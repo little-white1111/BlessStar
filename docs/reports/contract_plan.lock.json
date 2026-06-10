@@ -772,6 +772,36 @@
       "path": "docs/contracts/style/C-ST-9.v1.json"
     },
     {
+      "id": "C-ATTACH-WATCH-CB-1",
+      "type": "functional",
+      "version": "v1",
+      "status": "active",
+      "priority": "functional",
+      "stage": "watch",
+      "blocking": true,
+      "gate_refs": [
+        "GATE-ATTACH-WATCH-CB"
+      ],
+      "implementations": [
+        {
+          "gate_id": "GATE-ATTACH-WATCH-CB",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_watch_callback_contract.py",
+          "entry_kind": "script"
+        }
+      ],
+      "resolved_implementations": [
+        {
+          "gate_id": "GATE-ATTACH-WATCH-CB",
+          "runner": "python",
+          "entry": "tools/scripts/gates/check_attach_watch_callback_contract.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_watch_callback_contract.py"
+        }
+      ],
+      "path": "docs/contracts/functional/C-ATTACH-WATCH-CB-1.v1.json"
+    },
+    {
       "id": "C-FN-1",
       "type": "functional",
       "version": "v1",
@@ -1322,6 +1352,17 @@
       "timeout_s": 120
     },
     {
+      "gate_id": "GATE-ATTACH-WATCH-CB",
+      "stage": "watch",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_attach_watch_callback_contract.py",
+      "covers": [
+        "C-ATTACH-WATCH-CB-1"
+      ],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
       "gate_id": "GATE-ARCH-INCLUDE-BOUNDARY",
       "stage": "bootstrap",
       "runner": "python",
@@ -1536,15 +1577,15 @@
   ],
   "hashes": {
     "index": "61d74298f2228a2a12043a40d65884ad203c24c63dce881fcfdf11b3f47c00a5",
-    "gate_registry": "3b0c63a8722bf802c33dd8c3bcfaf3bcca95a0e17a3d27e365d2273cdf765e31",
+    "gate_registry": "7c1acf6bccc67b0f827f9532aa6a30bff7a33d9c3836f3dd570dd6fc0c5a60a0",
     "contracts": {
       "docs/contracts/architecture/C-IX-1.v1.json": "9592b02e16d030ce614e87972830502601e7211b923af0dc1bd39a84b5456108",
-      "docs/contracts/architecture/C-IX-2.v1.json": "993ddd431bbff3f18c399ed7356870236ebe0b4c6325a40914b1b416f7d68aac",
+      "docs/contracts/architecture/C-IX-2.v1.json": "768329e7acc9274d93e98c5d2aed15214fc9e31e539a222ea8aa4076a5f93024",
       "docs/contracts/architecture/C-IX-3.v1.json": "224a98cb2409a965bc2acd2ecb71d7ba5f716cfee8f74cedf5820d5bc8529267",
       "docs/contracts/architecture/C-IX-6-prime.v1.json": "745a74d4f481508d2920041b58ea060a75939089345179b82b0dd1b9653b0f74",
-      "docs/contracts/architecture/C-IX-7.v1.json": "9899d22867a337f9f8745e7df95d6e9d56137580f5e3f4547f5b850b91c2882d",
-      "docs/contracts/kernel/kernel_pool.v1.json": "2117e9079d168db135a95ada10db81900ff0d764037ed811d896dc0923352a87",
-      "docs/contracts/integration/C-IX-4.v1.json": "67cb907d53bb522831843b484908a77b2c9777ee052ab7a237f7a88534b7cfbc",
+      "docs/contracts/architecture/C-IX-7.v1.json": "05f8f0c22164547e266569adc96f158c4a528942c292a5bef6a1212da4a493f1",
+      "docs/contracts/kernel/kernel_pool.v1.json": "7d7491e135dd126e3bc47906bdbc5761a3b1d7c4769f126ea570705a4c345a80",
+      "docs/contracts/integration/C-IX-4.v1.json": "dd81ebfce836629f469251f481016d118a7fdf7fa9887b403e3afb87e2189fbd",
       "docs/contracts/integration/C-IX-5.v1.json": "a281c85e45f9f35b1992c56eec6b29cd02134e03735f65f1ef00bcadf6387b6f",
       "docs/contracts/integration/C-IX-8.v1.json": "8b035d9005ffa8623e7ff79d5ec055fd9f6aead8f7bc0bd0487f2989d09d3fe2",
       "docs/contracts/attach/C-ATTACH-SYNC-1.v1.json": "1b055fc26a76e283f72a7ba1b44b8375398dcefe6b194f398e8bb3e2964a1fd8",
@@ -1555,23 +1596,24 @@
       "docs/contracts/attach/C-ATTACH-SYNC-6.v1.json": "37b762f89df41fed36d6a1a06c53f00252907cf6c20b76c80ad57b290e4eb1b3",
       "docs/contracts/style/C-ST-1.v1.json": "82495b17d1e16f381ebfd064e54f6f05b4ae1bf62174cf3a8fb4fdafc4bf3bd1",
       "docs/contracts/style/C-ST-11.v1.json": "dbf50e67f5fc53bb3fd189780b6eeff975731f0b3909b744e8acfce7f40889e0",
-      "docs/contracts/style/C-ST-13.v1.json": "7712ef9bc736d9f320c49e4005a44bc5fb4e4c493eae8bc5efd63689d19f5925",
+      "docs/contracts/style/C-ST-13.v1.json": "32c25ace86fb99a389803d5a141a0a9ee617479b851f1a05e472e9a55181c742",
       "docs/contracts/style/C-ST-14.v1.json": "3ba88984a3a2fddeedeba7b8ac8db79a205a0b4f1e2813e88cde74dc117b7901",
       "docs/contracts/style/C-ST-9.v1.json": "c40d1256155832c76fa29e31e8f762ce0d1140dd5bdc020e1e065a4a5ca0fa0a",
-      "docs/contracts/functional/C-FN-1.v1.json": "89b4b4d9111b28a1e052d3a0aca468d3a7cd532d594d732fc2acc91c7042ba4f",
-      "docs/contracts/functional/C-FN-2.v1.json": "03a816a0922b6106120f0c7d537f6c7163b47116780730ee6470605321028417",
-      "docs/contracts/functional/C-FN-3.v1.json": "e0d42e0b23c6c2fce0da2a49fef96adb3ddcc27085e56a38d518b7f3e97f7270",
-      "docs/contracts/functional/C-FN-4.v1.json": "e350370378328d6e5a8c15465b135b86dba0efdce9848f3caaa043b8428eb888",
-      "docs/contracts/configuration/C-CF-1.v1.json": "50dcd96954f1cb9688386a9e3ee80e9e1b221b029e57c5d3ccd0b4da7a329ee3",
-      "docs/contracts/configuration/C-CF-2.v1.json": "149a399509c7853ae3467580f41eff32410f1928457af6ef2ec6d7b6ee1276da",
-      "docs/contracts/testing/C-TST-ENV-1.v1.json": "0cf5abb60346e584242e2f97d994448a39cb0c582cca8de2ae5e918799f5f3cb",
-      "docs/contracts/testing/C-TST-GATE-SCOPE-1.v1.json": "29d249b6cc7a41099715724292bf99b60915fc7ee2738eff9d68a182b24f0ba3",
-      "docs/contracts/testing/C-TST-HERM-1.v1.json": "13f0d7d0fdc2ba0d15bbbc6253078b91765d5c815c713647d3ea3b379595c1eb",
-      "docs/contracts/testing/C-TST-L1-1.v1.json": "71de72d2bad44074a88ff28129c1c9a8d748d84cef0d447f3aada8a47b0487e9",
-      "docs/contracts/testing/C-TST-L2-1.v1.json": "f1c5b98e31782bbb68f6759dc073f289a1a725f4bf6ad45876c52c4c440f4c46",
-      "docs/contracts/testing/C-TST-L3-1.v1.json": "81ae0c546cfa2db465fa1d3efd1c41e3c3d0764a81501f86c9ae13c262480189",
-      "docs/contracts/testing/C-TST-MEM-1.v1.json": "dc33f70793d58d855302a74e70e3d0d0a107e403c40d980d71e3bc4c72939ea0",
-      "docs/contracts/testing/C-TST-POL-1.v1.json": "f0ed288a044e7e1b3825c5d81eac0bb33ec61c42cd8a12adceb57b7a87e0f3c5"
+      "docs/contracts/functional/C-ATTACH-WATCH-CB-1.v1.json": "a5cfaeb8f2b07b1e7e472be0e6cffd90236d61b03fec6eca41a67e84bc060c1a",
+      "docs/contracts/functional/C-FN-1.v1.json": "6e311b5de7576a566afcfef8d30eeba5d77b1554870a54eeef16481b20a8028f",
+      "docs/contracts/functional/C-FN-2.v1.json": "69405da0c603c10a31c6b4979ed1e0138cd220136b9fc9ffbd7678c264335de4",
+      "docs/contracts/functional/C-FN-3.v1.json": "e73483d49886e8cea315550afa939cf9bf12a4214531abd69812b56847061124",
+      "docs/contracts/functional/C-FN-4.v1.json": "9c7f49d03b55abe4b1da2c5699115db7b0d8be869ed181eb03eee05c63adcca8",
+      "docs/contracts/configuration/C-CF-1.v1.json": "5ca90b85a7403638b80a594014ed17b3018833f5984d1b1fdc01812ff5360130",
+      "docs/contracts/configuration/C-CF-2.v1.json": "5b95d53c19abff011ccfc6dc2ec98fd46b850008a6fc935d49c61fa00d5263ce",
+      "docs/contracts/testing/C-TST-ENV-1.v1.json": "934a728862cc6d9428a1502ee7e8bcf67a6552f9f7e8d7ef6fc91469a33a99b7",
+      "docs/contracts/testing/C-TST-GATE-SCOPE-1.v1.json": "29ee1822e5733b01b1ebcdb9613532c2562f16b0b395f62cfaed4a11c8a28c13",
+      "docs/contracts/testing/C-TST-HERM-1.v1.json": "2044bcfdda31b8ac8f310345aa1e1dcb8179e26dae543294d07d1400a03cd047",
+      "docs/contracts/testing/C-TST-L1-1.v1.json": "c8da715e2255a635299dfc7e4b4606013ec9b53f10a93e4c57d507c1c46738eb",
+      "docs/contracts/testing/C-TST-L2-1.v1.json": "93f47c18fd429d07be0a3ba8e5b1ee3bcd6f86b2678ed9c6e74a1bcadb044dba",
+      "docs/contracts/testing/C-TST-L3-1.v1.json": "5cbd6e5e6eca7461c645650ab4100e450626424094a90712dd2fcd383bd3ee98",
+      "docs/contracts/testing/C-TST-MEM-1.v1.json": "a4186af2ef83e8521360a12e3190ffb31640511942158c3da32f906e008735dc",
+      "docs/contracts/testing/C-TST-POL-1.v1.json": "411872d0295102c7291b03c5950f06b76af71552c33a449ccc68f9ec05f4cd08"
     }
   }
 }

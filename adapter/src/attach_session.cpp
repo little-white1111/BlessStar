@@ -7,6 +7,8 @@
 #include "bs/adapter/parser/json_lexer.h"
 #include "bs/adapter/persistence/attach_store.h"
 
+#include "bs/kernel/state/StateSnapshotRcu.h"
+
 #include <chrono>
 #include <condition_variable>
 #include <cstring>
@@ -14,11 +16,14 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
-#include <shared_mutex>
 #include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
+
+#if defined(BS_TESTING)
+#include <assert.h>
+#endif
 
 #include "attach_context_internal.h"
 #include "attach_notify_queue_internal.h"
@@ -27,17 +32,17 @@ namespace
 {
 struct SnapshotReadHandle
 {
-    int                                         used = 0;
-    std::string                                 path;
-    uint64_t                                    revision = 0;
-    std::shared_ptr<std::vector<unsigned char>> blob;
+    int                                           used = 0;
+    std::string                                   path;
+    uint64_t                                      revision = 0;
+    std::shared_ptr<const BsStateSnapshotPayload> payload;
 };
 
 struct AttachSessionState
 {
-    std::shared_mutex                         session_mu;
     std::mutex                                wait_mu;
     std::condition_variable                   wait_cv;
+    std::atomic<uint64_t>                     read_epoch{0};
     std::atomic<int>                          active_readers{0};
     std::atomic<int>                          write_depth{0};
     std::atomic<bool>                         block_new_reads{false};
@@ -62,28 +67,6 @@ uint32_t default_chunk_cap(void)
     return cap > 0xFFFFFFFFu ? 0xFFFFFFFFu : static_cast<uint32_t>(cap);
 }
 
-static void session_mu_exclusive_lock_traced(std::shared_mutex* mu)
-{
-    const int t0 = bs_wait_trace_hang_begin("attach_session:session_mu_exclusive");
-    while (!mu->try_lock())
-    {
-        if (t0 >= 0)
-            bs_wait_trace_hang_tick("attach_session:session_mu_exclusive", t0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-}
-
-static void session_mu_shared_lock_traced(std::shared_mutex* mu)
-{
-    const int t0 = bs_wait_trace_hang_begin("attach_session:session_mu_shared");
-    while (!mu->try_lock_shared())
-    {
-        if (t0 >= 0)
-            bs_wait_trace_hang_tick("attach_session:session_mu_shared", t0);
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
-}
-
 static void session_wait_active_readers_zero_traced(AttachSessionState*           st,
                                                     std::unique_lock<std::mutex>& w,
                                                     const char*                   site)
@@ -98,6 +81,19 @@ static void session_wait_active_readers_zero_traced(AttachSessionState*         
     }
     if (hang_t0 >= 0)
         bs_wait_trace_hang_end(site, hang_t0);
+}
+
+static void cancel_all_snapshot_handles(AttachSessionState* st)
+{
+    if (!st)
+        return;
+    for (auto& h : st->handles)
+    {
+        h.used     = 0;
+        h.revision = 0;
+        h.path.clear();
+        h.payload.reset();
+    }
 }
 
 } // namespace
@@ -118,14 +114,18 @@ void bs_adapter_attach_session_destroy(AttachContext* ctx)
     auto* st = session_of(ctx);
     st->closing.store(true);
     st->block_new_reads.store(true);
+    cancel_all_snapshot_handles(st);
+    bs_adapter_attach_config_clear_phase2_notify(ctx);
+    bs_adapter_attach_notify_queue_shutdown(ctx);
     {
         std::unique_lock<std::mutex> w(st->wait_mu);
         session_wait_active_readers_zero_traced(st, w,
                                                 "attach_session:destroy_wait_active_readers");
     }
-    bs_adapter_attach_config_clear_phase2_notify(ctx);
-    bs_adapter_attach_notify_queue_flush(ctx);
-    bs_adapter_attach_notify_queue_shutdown(ctx);
+#if defined(BS_TESTING)
+    assert(st->active_readers.load() == 0);
+    assert(g_attach_read_lock_depth == 0);
+#endif
     delete st;
     ctx->session_state = nullptr;
 }
@@ -135,13 +135,15 @@ void bs_adapter_attach_session_begin_write_window(AttachContext* ctx)
     auto* st = session_of(ctx);
     if (!st)
         return;
-    /* Same-thread read guard imbalance must not block write-window open (smoke_fail_ci). */
-    while (g_attach_read_lock_depth > 0)
-        bs_adapter_attach_session_read_unlock(ctx);
-    st->block_new_reads.store(true);
-    std::unique_lock<std::mutex> w(st->wait_mu);
-    session_wait_active_readers_zero_traced(st, w, "attach_session:wait_active_readers_zero");
-    session_mu_exclusive_lock_traced(&st->session_mu);
+    const bool nested = st->write_depth.load() > 0;
+    if (!nested)
+    {
+        /* Same-thread read guard imbalance must not block write-window open (smoke_fail_ci). */
+        while (g_attach_read_lock_depth > 0)
+            bs_adapter_attach_session_read_unlock(ctx);
+        st->block_new_reads.store(true);
+        st->read_epoch.fetch_add(1);
+    }
     st->write_depth.fetch_add(1);
     bs_reentrancy_enter_attach_write();
     bs_reentrancy_enter_attach_write_window();
@@ -157,9 +159,9 @@ void bs_adapter_attach_session_end_write_window(AttachContext* ctx)
 
     bs_reentrancy_leave_attach_write();
     bs_reentrancy_leave_attach_write_window();
-    st->session_mu.unlock();
-    if (st->write_depth.fetch_sub(1) == 1)
+    if (closing_outer_window)
         st->block_new_reads.store(false);
+    st->write_depth.fetch_sub(1);
     st->wait_cv.notify_all();
 
     if (closing_outer_window)
@@ -185,7 +187,6 @@ int bs_adapter_attach_session_try_read_lock(AttachContext* ctx)
         return BS_ATTACH_ERR_RECOVERING;
     if (st->block_new_reads.load() && g_attach_read_lock_depth == 0)
         return BS_ATTACH_CONC_ERR_READ_BLOCKED;
-    session_mu_shared_lock_traced(&st->session_mu);
     ++g_attach_read_lock_depth;
     st->active_readers.fetch_add(1);
     return 0;
@@ -197,7 +198,6 @@ void bs_adapter_attach_session_read_unlock(AttachContext* ctx)
     if (!st || g_attach_read_lock_depth == 0)
         return;
     --g_attach_read_lock_depth;
-    st->session_mu.unlock_shared();
     if (st->active_readers.fetch_sub(1) == 1)
     {
         std::lock_guard<std::mutex> w(st->wait_mu);
@@ -212,8 +212,19 @@ int bs_adapter_attach_session_try_write_lock(AttachContext* ctx)
         return 0;
     if (st->closing.load())
         return BS_ATTACH_CONC_ERR_CLOSED;
-    session_mu_exclusive_lock_traced(&st->session_mu);
-    st->write_depth.fetch_add(1);
+    if (st->write_depth.load() > 0)
+    {
+        st->write_depth.fetch_add(1);
+        bs_reentrancy_enter_attach_write();
+        return 0;
+    }
+    st->block_new_reads.store(true);
+    int expected = 0;
+    if (!st->write_depth.compare_exchange_strong(expected, 1))
+    {
+        st->block_new_reads.store(false);
+        return BS_ATTACH_CONC_ERR_READ_BLOCKED;
+    }
     bs_reentrancy_enter_attach_write();
     return 0;
 }
@@ -224,8 +235,8 @@ void bs_adapter_attach_session_write_unlock(AttachContext* ctx)
     if (!st || st->write_depth.load() == 0)
         return;
     bs_reentrancy_leave_attach_write();
-    st->session_mu.unlock();
-    st->write_depth.fetch_sub(1);
+    if (st->write_depth.fetch_sub(1) == 1)
+        st->block_new_reads.store(false);
 }
 
 uint64_t bs_adapter_attach_session_path_revision(AttachContext* ctx, const char* path)
@@ -279,22 +290,13 @@ int bs_adapter_attach_session_is_recovering(AttachContext* ctx)
     return (st && st->recovering.load()) ? 1 : 0;
 }
 
-static int snapshot_bytes(AttachContext* ctx, const char* config_path, size_t* total,
-                          std::shared_ptr<std::vector<unsigned char>>* blob_out)
+static int snapshot_pin(AttachContext* ctx, const char* config_path,
+                        std::shared_ptr<const BsStateSnapshotPayload>* payload_out)
 {
-    void*     snap = nullptr;
-    size_t    sz   = 0;
-    const int rc =
-        bs_adapter_attach_config_snapshot_bytes_locked(ctx, config_path, &sz, &snap, &sz);
-    if (rc != 0)
-        return rc;
-    auto blob = std::make_shared<std::vector<unsigned char>>(sz);
-    if (sz > 0 && snap)
-        std::memcpy(blob->data(), snap, sz);
-    std::free(snap);
-    *total    = sz;
-    *blob_out = blob;
-    return 0;
+    if (!payload_out)
+        return -1;
+    payload_out->reset();
+    return bs_adapter_attach_config_snapshot_pin(ctx, config_path, payload_out);
 }
 
 static int manifest_revision_for_read(AttachContext* ctx, const char* config_path,
@@ -341,26 +343,25 @@ int bs_adapter_attach_config_get_snapshot_meta(AttachContext* ctx, const char* c
     out->total_size = 0;
     out->chunk_cap  = default_chunk_cap();
 
-    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
-    if (lk != 0)
-        return lk;
+    AttachReadGuard guard(ctx);
+    if (guard.status() != 0)
+        return guard.status();
 
-    size_t                                      total = 0;
-    std::shared_ptr<std::vector<unsigned char>> blob;
-    const int rc = snapshot_bytes(ctx, config_path, &total, &blob);
+    size_t total = 0;
+    std::shared_ptr<const BsStateSnapshotPayload> payload;
+    const int rc = snapshot_pin(ctx, config_path, &payload);
     if (rc == 0)
     {
+        if (!payload)
+            return -1;
+        total = payload->bytes.size();
         uint64_t  session_rev = 0;
         const int fresh_rc    = check_reader_revision_fresh(ctx, config_path, &session_rev);
         if (fresh_rc != 0)
-        {
-            bs_adapter_attach_session_read_unlock(ctx);
             return fresh_rc;
-        }
         out->total_size = total;
         out->revision   = session_rev;
     }
-    bs_adapter_attach_session_read_unlock(ctx);
     return rc;
 }
 
@@ -371,22 +372,21 @@ int bs_adapter_attach_config_get_snapshot_copy(AttachContext* ctx, const char* c
     if (!buf || !out_size || !revision_out)
         return -1;
 
-    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
-    if (lk != 0)
-        return lk;
+    AttachReadGuard guard(ctx);
+    if (guard.status() != 0)
+        return guard.status();
 
-    size_t                                      total = 0;
-    std::shared_ptr<std::vector<unsigned char>> blob;
-    int rc = snapshot_bytes(ctx, config_path, &total, &blob);
+    std::shared_ptr<const BsStateSnapshotPayload> payload;
+    int rc = snapshot_pin(ctx, config_path, &payload);
     if (rc == 0)
     {
+        if (!payload)
+            return -1;
+        const size_t total = payload->bytes.size();
         uint64_t  session_rev = 0;
         const int fresh_rc    = check_reader_revision_fresh(ctx, config_path, &session_rev);
         if (fresh_rc != 0)
-        {
-            bs_adapter_attach_session_read_unlock(ctx);
             return fresh_rc;
-        }
         *revision_out = session_rev;
         if (total > BS_JSON_MAX_INPUT_BYTES)
             rc = BS_ATTACH_CONC_ERR_TOO_LARGE;
@@ -395,11 +395,10 @@ int bs_adapter_attach_config_get_snapshot_copy(AttachContext* ctx, const char* c
         else
         {
             if (total > 0)
-                std::memcpy(buf, blob->data(), total);
+                std::memcpy(buf, payload->bytes.data(), total);
             *out_size = total;
         }
     }
-    bs_adapter_attach_session_read_unlock(ctx);
     return rc;
 }
 
@@ -409,28 +408,24 @@ int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* 
     if (!handle_out || !revision_out)
         return -1;
 
-    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
-    if (lk != 0)
-        return lk;
+    std::shared_ptr<const BsStateSnapshotPayload> payload;
+    uint64_t                                    rev = 0;
 
-    size_t                                      total = 0;
-    std::shared_ptr<std::vector<unsigned char>> blob;
-    int rc = snapshot_bytes(ctx, config_path, &total, &blob);
-    if (rc != 0)
     {
-        bs_adapter_attach_session_read_unlock(ctx);
-        return rc;
-    }
+        AttachReadGuard guard(ctx);
+        if (guard.status() != 0)
+            return guard.status();
 
-    uint64_t  rev      = 0;
-    const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &rev);
-    if (fresh_rc != 0)
-    {
-        bs_adapter_attach_session_read_unlock(ctx);
-        return fresh_rc;
-    }
+        const int rc = snapshot_pin(ctx, config_path, &payload);
+        if (rc != 0)
+            return rc;
+        if (!payload)
+            return -1;
 
-    bs_adapter_attach_session_read_unlock(ctx);
+        const int fresh_rc = check_reader_revision_fresh(ctx, config_path, &rev);
+        if (fresh_rc != 0)
+            return fresh_rc;
+    }
 
     auto* st = session_of(ctx);
     if (!st)
@@ -443,7 +438,7 @@ int bs_adapter_attach_config_open_snapshot_read(AttachContext* ctx, const char* 
             h.used        = 1;
             h.path        = config_path ? config_path : "";
             h.revision    = rev;
-            h.blob        = blob;
+            h.payload     = payload;
             *handle_out   = static_cast<int>(&h - st->handles);
             *revision_out = rev;
             return 0;
@@ -459,46 +454,34 @@ int bs_adapter_attach_config_read_snapshot_chunk(AttachContext* ctx, int handle,
         return -1;
     *out_len = 0;
 
-    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
-    if (lk != 0)
-        return lk;
-
     auto* st = session_of(ctx);
     if (!st || handle < 0 || handle >= 16 || !st->handles[handle].used)
-    {
-        bs_adapter_attach_session_read_unlock(ctx);
         return BS_ATTACH_CONC_ERR_INVALID_HANDLE;
-    }
 
-    const SnapshotReadHandle& h        = st->handles[handle];
-    uint64_t                  cur      = 0;
-    const int                 fresh_rc = check_reader_revision_fresh(ctx, h.path.c_str(), &cur);
+    const SnapshotReadHandle& h = st->handles[handle];
+
+    AttachReadGuard guard(ctx);
+    if (guard.status() != 0)
+        return guard.status();
+
+    uint64_t  cur      = 0;
+    const int fresh_rc = check_reader_revision_fresh(ctx, h.path.c_str(), &cur);
     if (fresh_rc != 0)
-    {
-        bs_adapter_attach_session_read_unlock(ctx);
         return fresh_rc;
-    }
     if (cur != h.revision)
-    {
-        bs_adapter_attach_session_read_unlock(ctx);
         return BS_ATTACH_CONC_ERR_REVISION_CHANGED;
-    }
 
-    const size_t total = h.blob ? h.blob->size() : 0;
+    const size_t total = h.payload ? h.payload->bytes.size() : 0;
     if (offset >= total)
-    {
-        bs_adapter_attach_session_read_unlock(ctx);
         return 0;
-    }
 
     const size_t chunk_cap =
         static_cast<size_t>(default_chunk_cap() < buf_cap ? default_chunk_cap() : buf_cap);
     const size_t n      = total - offset;
     const size_t copy_n = n < chunk_cap ? n : chunk_cap;
-    if (copy_n > 0 && h.blob)
-        std::memcpy(buf, h.blob->data() + offset, copy_n);
+    if (copy_n > 0 && h.payload)
+        std::memcpy(buf, h.payload->bytes.data() + offset, copy_n);
     *out_len = copy_n;
-    bs_adapter_attach_session_read_unlock(ctx);
     return 0;
 }
 
@@ -508,7 +491,7 @@ void bs_adapter_attach_config_close_snapshot_read(AttachContext* ctx, int handle
     if (!st || handle < 0 || handle >= 16)
         return;
     st->handles[handle].used = 0;
-    st->handles[handle].blob.reset();
+    st->handles[handle].payload.reset();
     st->handles[handle].path.clear();
 }
 

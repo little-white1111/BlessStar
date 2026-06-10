@@ -980,6 +980,14 @@ if(Python3_FOUND)
   )
 
   add_test(
+    NAME bs_test_day17_attach_watch_callback_contract
+    COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_attach_watch_callback_contract.py"
+  )
+  set_tests_properties(bs_test_day17_attach_watch_callback_contract
+    PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 60
+  )
+
+  add_test(
     NAME bs_test_attach_sync_prod_paths_check
     COMMAND ${Python3_EXECUTABLE} "${_bs_gates_dir}/check_attach_sync_prod_paths.py"
   )

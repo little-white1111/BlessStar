@@ -16,6 +16,9 @@ extern "C"
     /** Flush and fsync an open FILE* (ATOM-XIV-4). Returns 0 on success. */
     int bs_adapter_attach_persist_fsync_file(void* file_handle);
 
+    /** Platform OS handle flush (Windows: thread-pool FlushFileBuffers; POSIX: fsync fd). */
+    int bs_adapter_attach_persist_fsync_os_handle(void* os_file_handle);
+
 #ifdef __cplusplus
 }
 #endif

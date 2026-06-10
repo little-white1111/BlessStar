@@ -17,9 +17,12 @@
 #include "bs/kernel/runtime/Kernel.h"
 #include "bs/kernel/runtime/kernel_pool.h"
 #include "bs/kernel/state/ConfigEvent.h"
+#include "bs/kernel/state/StateSnapshotRcu.h"
 #include "bs/kernel/state/WatchManager.h"
 
 #include "bs/adapter/attach_context.h"
+
+#include <memory>
 
 struct Pipeline;
 struct BsAttachStore;
@@ -72,8 +75,7 @@ void bs_adapter_attach_config_register_phase2_notify(AttachContext*             
 void bs_adapter_attach_config_clear_phase2_notify(AttachContext* ctx);
 
 /** Caller must hold attach session read lock. */
-int bs_adapter_attach_config_snapshot_bytes_locked(AttachContext* ctx, const char* config_path,
-                                                   size_t* total_out, void** bytes_out,
-                                                   size_t* bytes_len_out);
+int bs_adapter_attach_config_snapshot_pin(AttachContext* ctx, const char* config_path,
+                                            std::shared_ptr<const BsStateSnapshotPayload>* out);
 
 #endif

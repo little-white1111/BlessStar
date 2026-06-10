@@ -48,6 +48,8 @@ extern "C"
     KernelState bs_kernel_get_state(const Kernel* kernel);
 
     Report* bs_kernel_execute(Kernel* kernel, const IRInstruction* ir);
+    void    bs_kernel_request_exec_cancel(Kernel* kernel);
+    void    bs_kernel_clear_exec_cancel(Kernel* kernel);
     int     bs_kernel_execute_async(Kernel* kernel, const IRInstruction* ir);
     /** Drain queued async IR; returns count processed or -1 on execute failure. */
     int bs_kernel_drain_async_queue(Kernel* kernel);

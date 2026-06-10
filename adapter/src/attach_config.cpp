@@ -1,6 +1,8 @@
 #include "bs/kernel/common/bs_reentrancy.h"
 #include "bs/kernel/state/ConfigManager.h"
 #include "bs/kernel/state/ConfigState.h"
+#include "bs/kernel/state/StateBus.h"
+#include "bs/kernel/state/StateSnapshotRcu.h"
 
 #include "bs/adapter/attach_config.h"
 #include "bs/adapter/attach_errors.h"
@@ -9,6 +11,8 @@
 
 #include <cstdlib>
 #include <cstring>
+
+#include <memory>
 
 #include "attach_context_internal.h"
 
@@ -36,12 +40,17 @@ int bs_adapter_attach_config_get_state(AttachContext* ctx, const char* config_pa
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     if (!cm || !config_path || !state)
         return -1;
-    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
-    if (lk != 0)
-        return lk;
-    const int rc = bs_config_manager_get_config_state(cm, config_path, state);
-    bs_adapter_attach_session_read_unlock(ctx);
-    return rc;
+    AttachReadGuard guard(ctx);
+    if (guard.status() != 0)
+        return guard.status();
+    StateBus* bus = bs_config_manager_get_state_bus(cm);
+    if (!bus)
+        return -1;
+    const auto pinned = bs_state_bus_pin_snapshot(bus, config_path);
+    if (!pinned)
+        return -2;
+    *state = pinned->state;
+    return 0;
 }
 
 int bs_adapter_attach_config_get_snapshot(AttachContext* ctx, const char* config_path, void** data,
@@ -50,12 +59,21 @@ int bs_adapter_attach_config_get_snapshot(AttachContext* ctx, const char* config
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     if (!cm || !config_path || !data || !size)
         return -1;
-    const int lk = bs_adapter_attach_session_try_read_lock(ctx);
-    if (lk != 0)
-        return lk;
-    const int rc = bs_config_manager_get_config_snapshot(cm, config_path, data, size);
-    bs_adapter_attach_session_read_unlock(ctx);
-    return rc;
+    AttachReadGuard guard(ctx);
+    if (guard.status() != 0)
+        return guard.status();
+    StateBus* bus = bs_config_manager_get_state_bus(cm);
+    if (!bus)
+        return -1;
+    const auto pinned = bs_state_bus_pin_snapshot(bus, config_path);
+    if (!pinned || pinned->bytes.empty())
+        return -2;
+    *size = pinned->bytes.size();
+    *data = std::malloc(*size);
+    if (!*data)
+        return -3;
+    std::memcpy(*data, pinned->bytes.data(), *size);
+    return 0;
 }
 
 int bs_adapter_attach_config_has_manager(AttachContext* ctx)
@@ -295,28 +313,25 @@ void bs_adapter_attach_config_clear_phase2_notify(AttachContext* ctx)
     bs_config_manager_set_phase2_notify_hook(cm, nullptr, nullptr);
 }
 
-int bs_adapter_attach_config_snapshot_bytes_locked(AttachContext* ctx, const char* config_path,
-                                                   size_t* total_out, void** bytes_out,
-                                                   size_t* bytes_len_out)
+int bs_adapter_attach_config_snapshot_pin(AttachContext* ctx, const char* config_path,
+                                          std::shared_ptr<const BsStateSnapshotPayload>* out)
 {
-    if (!total_out || !bytes_out || !bytes_len_out)
+    if (!out)
         return -1;
-    *total_out     = 0;
-    *bytes_out     = nullptr;
-    *bytes_len_out = 0;
+    out->reset();
 
     ConfigManager* cm = bs_adapter_attach_ctx_config_manager(ctx);
     if (!cm || !config_path)
         return -1;
 
-    void*     snap = nullptr;
-    size_t    sz   = 0;
-    const int rc   = bs_config_manager_get_config_snapshot(cm, config_path, &snap, &sz);
-    if (rc != 0)
-        return rc;
-    *total_out     = sz;
-    *bytes_out     = snap;
-    *bytes_len_out = sz;
+    StateBus* bus = bs_config_manager_get_state_bus(cm);
+    if (!bus)
+        return -1;
+
+    const auto pinned = bs_state_bus_pin_snapshot(bus, config_path);
+    if (!pinned)
+        return -2;
+    *out = pinned;
     return 0;
 }
 

@@ -13,11 +13,9 @@ $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location $root
 
 if ($Trace) {
-    $env:BS_ATTACH_RELOAD_TRACE = "1"
     $env:BS_WAIT_TRACE = "hang"
     $env:BS_WAIT_TRACE_HANG_MS = "500"
 } else {
-    Remove-Item Env:BS_ATTACH_RELOAD_TRACE -ErrorAction SilentlyContinue
     Remove-Item Env:BS_WAIT_TRACE -ErrorAction SilentlyContinue
 }
 

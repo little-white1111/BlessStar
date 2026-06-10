@@ -1,4 +1,3 @@
-#include "bs/kernel/common/bs_wait_trace.h"
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/pipeline/Stage.h"
 #include "bs/kernel/pipeline/pipeline.h"
@@ -445,28 +444,37 @@ int bs_kernel_pool_reset_all_pipelines(BsKernelPool* pool)
         return BS_KERNEL_POOL_ERR_INVALID_ARG;
 
     bs_pool_mutex_lock(&pool->mu);
+    BsKernelPoolSlot** orphan_slots = pool->slots;
+    const uint32_t     orphan_count = pool->slot_count;
+
+    for (uint32_t i = 0; i < orphan_count; i++)
     {
-        const int hang_t0 = bs_wait_trace_hang_begin("kernel_pool_reset:wait_busy_slots");
-        while (pool->stats.busy_slots > 0u)
-        {
-            bs_wait_trace_hang_tick_u64("kernel_pool_reset:wait_busy_slots", hang_t0,
-                                        (unsigned long long)pool->stats.busy_slots);
-            bs_pool_cond_wait(&pool->cv, &pool->mu);
-        }
-        if (hang_t0 >= 0)
-            bs_wait_trace_hang_end("kernel_pool_reset:wait_busy_slots", hang_t0);
+        BsKernelPoolSlot* slot = orphan_slots[i];
+        if (slot && slot->busy && slot->kernel)
+            bs_kernel_request_exec_cancel(slot->kernel);
     }
 
-    int rc = BS_KERNEL_POOL_OK;
-    for (uint32_t i = 0; i < pool->slot_count; i++)
-    {
-        BsKernelPoolSlot* slot = pool->slots[i];
-        if (slot && slot->pipeline && bs_pipeline_reset(slot->pipeline) != 0)
-            rc = BS_KERNEL_POOL_ERR_EXEC_FAILED;
-    }
-
+    pool->slots             = NULL;
+    pool->slot_count        = 0u;
+    pool->slot_capacity     = 0u;
+    pool->stats.total_slots = 0u;
+    pool->stats.dynamic_slots = 0u;
+    pool->stats.busy_slots  = 0u;
+    pool->draining          = 0;
     bs_pool_mutex_unlock(&pool->mu);
-    return rc;
+
+    for (uint32_t i = 0; i < orphan_count; i++)
+    {
+        BsKernelPoolSlot* slot = orphan_slots[i];
+        if (!slot)
+            continue;
+        if (slot->busy)
+            continue;
+        kernel_pool_destroy_slot(slot);
+    }
+    free(orphan_slots);
+
+    return bs_kernel_pool_warmup(pool);
 }
 
 #if defined(BS_TESTING)
@@ -499,26 +507,24 @@ void bs_kernel_pool_destroy(BsKernelPool* pool)
     bs_pool_mutex_lock(&pool->mu);
     pool->draining = 1;
     bs_pool_cond_broadcast(&pool->cv);
-    {
-        const int hang_t0 = bs_wait_trace_hang_begin("kernel_pool_destroy:wait_busy_slots");
-        while (pool->stats.busy_slots > 0u)
-        {
-            bs_wait_trace_hang_tick_u64("kernel_pool_destroy:wait_busy_slots", hang_t0,
-                                        (unsigned long long)pool->stats.busy_slots);
-            bs_pool_cond_wait(&pool->cv, &pool->mu);
-        }
-        if (hang_t0 >= 0)
-            bs_wait_trace_hang_end("kernel_pool_destroy:wait_busy_slots", hang_t0);
-    }
     BsKernelPoolSlot** slots = pool->slots;
-    uint32_t           count = pool->slot_count;
+    const uint32_t     count = pool->slot_count;
     pool->slots              = NULL;
     pool->slot_count         = 0u;
     pool->slot_capacity      = 0u;
     bs_pool_mutex_unlock(&pool->mu);
 
     for (uint32_t i = 0; i < count; i++)
-        kernel_pool_destroy_slot(slots[i]);
+    {
+        BsKernelPoolSlot* slot = slots[i];
+        if (!slot)
+            continue;
+        if (slot->busy && slot->kernel)
+            bs_kernel_request_exec_cancel(slot->kernel);
+        if (slot->busy)
+            continue;
+        kernel_pool_destroy_slot(slot);
+    }
     free(slots);
     bs_pool_cond_destroy(&pool->cv);
     bs_pool_mutex_destroy(&pool->mu);

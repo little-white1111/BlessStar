@@ -9,7 +9,7 @@
     "adapter/orchestration"
   ],
   "stage": "ci",
-  "rule": "KernelPool must use the day21 A''' parameters: steady=3, max=10, FIFO unbounded wait, no execute timeout, no slot quarantine on exec failure, per-batch parallel exec enabled, and IrSnapshot latest+pin retention.",
+  "rule": "KernelPool must use the day21 A''' parameters: steady=3, max=10, FIFO unbounded wait, no execute timeout, no slot quarantine on exec failure, per-batch parallel exec enabled, and IrSnapshot latest+pin retention. destroy must not wait on busy slots (cancel + leak busy); reset rebuilds by orphaning slots (cancel busy, destroy idle) then warmup with no cond_wait on busy.",
   "gate_refs": [
     "GATE-KERNEL-POOL-CONFIG"
   ],
@@ -31,7 +31,9 @@
     "per_batch_parallel_exec": true,
     "slot_quarantine_on_failure": false,
     "retain_latest_per_path": true,
-    "max_pinned_revisions_per_path": 8
+    "max_pinned_revisions_per_path": 8,
+    "destroy_no_wait": true,
+    "reset_rebuild_orphans_busy": true
   },
   "implementations": [
     {

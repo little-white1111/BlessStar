@@ -6,6 +6,7 @@
 #include "bs/adapter/persistence/attach_wal.h"
 
 #include <cassert>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 
@@ -137,7 +138,7 @@ int main()
         corrupt.close();
         BsAttachStore* rd = bs_adapter_attach_persist_store_open(man.string().c_str());
         assert(rd != nullptr);
-        assert(bs_adapter_attach_persist_store_batch_epoch(rd) >= 0);
+        assert(bs_adapter_attach_persist_store_batch_epoch(rd) != UINT64_MAX);
         bs_adapter_attach_persist_store_close(rd);
         assert(fs::exists(man));
     }

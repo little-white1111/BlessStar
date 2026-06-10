@@ -144,6 +144,7 @@ struct Kernel
     int              exec_thread_started;
     int              exec_thread_ready;
     int              exec_stop_requested;
+    int              exec_cancel_requested;
     KernelExecJob*   exec_head;
     KernelExecJob*   exec_tail;
 };
@@ -197,6 +198,8 @@ static PipelineEntry* kernel_acquire_pipeline_ref(Kernel* kernel)
 static Report* kernel_execute_with_ref(Kernel* kernel, PipelineEntry* ref, const IRInstruction* ir)
 {
     if (!kernel || !ref || !ref->pipeline || !ir)
+        return NULL;
+    if (kernel->exec_cancel_requested)
         return NULL;
 
     Report* pipe_report = NULL;
@@ -385,9 +388,10 @@ Kernel* bs_kernel_create(const KernelConfig* config)
     bs_cond_init(&kernel->exec_cv);
     kernel->exec_thread_started = 0;
     kernel->exec_thread_ready   = 0;
-    kernel->exec_stop_requested = 0;
-    kernel->exec_head           = NULL;
-    kernel->exec_tail           = NULL;
+    kernel->exec_stop_requested   = 0;
+    kernel->exec_cancel_requested = 0;
+    kernel->exec_head             = NULL;
+    kernel->exec_tail             = NULL;
 
     return kernel;
 }
@@ -484,10 +488,23 @@ int bs_kernel_start(Kernel* kernel)
         return -1;
     }
 
+    bs_kernel_clear_exec_cancel(kernel);
     kernel->start_time = (uint64_t)time(NULL);
     kernel->state      = KERNEL_STATE_RUNNING;
 
     return 0;
+}
+
+void bs_kernel_request_exec_cancel(Kernel* kernel)
+{
+    if (kernel)
+        kernel->exec_cancel_requested = 1;
+}
+
+void bs_kernel_clear_exec_cancel(Kernel* kernel)
+{
+    if (kernel)
+        kernel->exec_cancel_requested = 0;
 }
 
 int bs_kernel_stop(Kernel* kernel)

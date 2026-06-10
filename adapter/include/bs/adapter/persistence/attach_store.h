@@ -30,7 +30,8 @@ extern "C"
         BS_ATTACH_ERR_CONFLICT    = -2,
         BS_ATTACH_ERR_OOM         = -3,
         BS_ATTACH_ERR_IO          = -4,
-        BS_ATTACH_ERR_LIMIT       = -5
+        BS_ATTACH_ERR_LIMIT       = -5,
+        BS_ATTACH_ERR_IO_TIMEOUT  = -310
     } BsAttachStatus;
 
     /** ATOM-XIV-10: fsync policy for durable writes. */
@@ -96,6 +97,9 @@ extern "C"
                                                           BsAttachFsyncPolicy policy);
     BsAttachFsyncPolicy
     bs_adapter_attach_persist_store_get_fsync_policy(const BsAttachStore* store);
+
+    /** Wait until queued persist I/O completes (production attach thread drain). */
+    int bs_adapter_attach_persist_store_flush_io(BsAttachStore* store, int timeout_ms);
 
     typedef void* (*BsAttachMallocFn)(size_t size);
 

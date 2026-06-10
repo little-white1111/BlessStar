@@ -9,9 +9,15 @@
 #include <cstring>
 
 #include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <deque>
 #include <fstream>
+#include <functional>
+#include <future>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -22,6 +28,30 @@ static std::atomic<int> g_attach_store_open_count{0};
 #include "attach_crc32.h"
 #include "attach_fsync.h"
 #include "attach_uri_path.h"
+
+#include "bs/adapter/attach_errors.h"
+
+namespace
+{
+constexpr size_t kPersistIoQueueCap = 64;
+
+struct PersistIoJob
+{
+    std::function<int()> fn;
+    std::promise<int>    result;
+};
+
+struct PersistIoWorkerState
+{
+    std::mutex                                mu;
+    std::condition_variable                   cv;
+    std::deque<std::unique_ptr<PersistIoJob>> jobs;
+    std::thread                               worker;
+    std::atomic<bool>                         stop{false};
+    std::atomic<bool>                         running{false};
+    std::atomic<int>                          active{0};
+};
+} // namespace
 
 struct StagedEntry
 {
@@ -46,6 +76,7 @@ struct BsAttachStore
     uint64_t                                     wal_exec_rollback_epoch    = 0;
     BsAttachFsyncPolicy                          fsync_policy = BS_ATTACH_FSYNC_BATCH_COMMIT;
     uint64_t                                     wal_last_purge_through = 0;
+    PersistIoWorkerState                         io_worker{};
 };
 
 static BsAttachMallocFn g_malloc_hook = nullptr;
@@ -79,14 +110,145 @@ BsAttachFsyncPolicy bs_adapter_attach_persist_store_get_fsync_policy(const BsAtt
     return store ? store->fsync_policy : BS_ATTACH_FSYNC_BATCH_COMMIT;
 }
 
+static bool persist_env_fsync_disabled(void)
+{
+    const char* env = std::getenv("BS_ATTACH_FSYNC_NEVER");
+    return env && env[0] != '\0' && env[0] != '0';
+}
+
 static bool should_fsync_canonical(const BsAttachStore* store)
 {
-    return store && (store->fsync_policy == BS_ATTACH_FSYNC_ALWAYS);
+    return store && !persist_env_fsync_disabled() &&
+           (store->fsync_policy == BS_ATTACH_FSYNC_ALWAYS);
 }
 
 static bool should_fsync_manifest(const BsAttachStore* store)
 {
-    return store && store->fsync_policy != BS_ATTACH_FSYNC_NEVER;
+    return store && !persist_env_fsync_disabled() &&
+           store->fsync_policy != BS_ATTACH_FSYNC_NEVER;
+}
+
+static int persist_io_default_timeout_ms(void)
+{
+    const char* env = std::getenv("BS_ATTACH_PERSIST_IO_TIMEOUT_MS");
+    if (!env || env[0] == '\0')
+        return -1;
+    return std::atoi(env);
+}
+
+static void persist_io_worker_loop(BsAttachStore* store)
+{
+    PersistIoWorkerState* ws = &store->io_worker;
+    for (;;)
+    {
+        std::unique_ptr<PersistIoJob> job;
+        {
+            std::unique_lock<std::mutex> lock(ws->mu);
+            ws->cv.wait(lock, [&] { return ws->stop.load() || !ws->jobs.empty(); });
+            if (ws->stop.load() && ws->jobs.empty())
+                return;
+            job = std::move(ws->jobs.front());
+            ws->jobs.pop_front();
+        }
+
+        ws->active.store(1);
+        int rc = BS_ATTACH_OK;
+        if (job->fn)
+        {
+            try
+            {
+                rc = job->fn();
+            }
+            catch (...)
+            {
+                rc = BS_ATTACH_ERR_IO;
+            }
+        }
+        else
+        {
+            rc = BS_ATTACH_ERR_IO;
+        }
+        ws->active.store(0);
+        job->result.set_value(rc);
+        ws->cv.notify_all();
+    }
+}
+
+static int persist_io_wait_idle(BsAttachStore* store, int timeout_ms)
+{
+    PersistIoWorkerState* ws = &store->io_worker;
+    const auto            deadline =
+        timeout_ms >= 0 ? std::chrono::steady_clock::now() + std::chrono::milliseconds(timeout_ms)
+                        : std::chrono::steady_clock::time_point::max();
+
+    std::unique_lock<std::mutex> lock(ws->mu);
+    auto                         idle = [&]() -> bool {
+        return ws->jobs.empty() && ws->active.load() == 0;
+    };
+
+    while (!idle())
+    {
+        if (timeout_ms >= 0 && std::chrono::steady_clock::now() >= deadline)
+            return BS_ATTACH_ERR_IO_TIMEOUT;
+        if (timeout_ms < 0)
+            ws->cv.wait(lock, idle);
+        else if (!ws->cv.wait_until(lock, deadline, idle))
+            return BS_ATTACH_ERR_IO_TIMEOUT;
+    }
+    return BS_ATTACH_OK;
+}
+
+static void persist_io_worker_start(BsAttachStore* store)
+{
+    if (!store || store->memory_only || store->io_worker.running.load())
+        return;
+    store->io_worker.stop.store(false);
+    store->io_worker.worker = std::thread(persist_io_worker_loop, store);
+    store->io_worker.running.store(true);
+}
+
+static int persist_io_worker_shutdown(BsAttachStore* store, int timeout_ms)
+{
+    if (!store || store->memory_only || !store->io_worker.running.load())
+        return BS_ATTACH_OK;
+
+    const int drain_rc = persist_io_wait_idle(store, timeout_ms);
+    store->io_worker.stop.store(true);
+    store->io_worker.cv.notify_all();
+    if (store->io_worker.worker.joinable())
+        store->io_worker.worker.join();
+    store->io_worker.running.store(false);
+    return drain_rc;
+}
+
+static int persist_io_dispatch(BsAttachStore* store, int timeout_ms, std::function<int()> fn)
+{
+    if (!store || !fn)
+        return BS_ATTACH_ERR_INVALID_ARG;
+    if (store->memory_only)
+        return fn();
+    if (!store->io_worker.running.load())
+        return fn();
+
+    auto             job = std::make_unique<PersistIoJob>();
+    job->fn              = std::move(fn);
+    std::future<int> fut = job->result.get_future();
+
+    {
+        std::lock_guard<std::mutex> lock(store->io_worker.mu);
+        if (store->io_worker.jobs.size() >= kPersistIoQueueCap)
+            return BS_ATTACH_ERR_LIMIT;
+        store->io_worker.jobs.push_back(std::move(job));
+    }
+    store->io_worker.cv.notify_one();
+
+    if (timeout_ms < 0)
+        timeout_ms = persist_io_default_timeout_ms();
+    if (timeout_ms < 0)
+        return fut.get();
+    if (fut.wait_for(std::chrono::milliseconds(timeout_ms)) == std::future_status::timeout)
+        return BS_ATTACH_ERR_IO_TIMEOUT;
+    return fut.get();
 }
 
 static std::string derive_wal_path(const std::string& manifest_path)
@@ -121,7 +283,7 @@ static void publish_watch_event(uint64_t epoch, const char* uri, BsAttachWatchSt
         &ev); // WATCH-XV-4: publish failure never blocks commit.
 }
 
-static int write_file_atomic_ex(const char* path, const void* data, size_t len, bool fsync_tmp)
+static int write_file_atomic_disk(const char* path, const void* data, size_t len, bool fsync_tmp)
 {
     if (!path)
         return BS_ATTACH_ERR_INVALID_ARG;
@@ -154,12 +316,14 @@ static int write_file_atomic_ex(const char* path, const void* data, size_t len, 
     return BS_ATTACH_OK;
 }
 
-static int write_file_atomic(const char* path, const void* data, size_t len, bool fsync_tmp)
+static int write_file_atomic(BsAttachStore* store, const char* path, const void* data, size_t len,
+                             bool fsync_tmp)
 {
-    return write_file_atomic_ex(path, data, len, fsync_tmp);
+    return persist_io_dispatch(store, -1,
+                               [=]() { return write_file_atomic_disk(path, data, len, fsync_tmp); });
 }
 
-static int copy_file_sync(const std::string& src, const std::string& dst)
+static int copy_file_sync_disk(const std::string& src, const std::string& dst)
 {
     bs_wait_trace_path("persist_io:copy_file_sync", src.c_str());
     const int     io_t0 = bs_wait_trace_hang_begin("persist_io:copy_file_sync");
@@ -203,6 +367,11 @@ static int copy_file_sync(const std::string& src, const std::string& dst)
     if (io_t0 >= 0)
         bs_wait_trace_hang_end("persist_io:copy_file_sync", io_t0);
     return BS_ATTACH_OK;
+}
+
+[[maybe_unused]] static int copy_file_sync(BsAttachStore* store, const std::string& src, const std::string& dst)
+{
+    return persist_io_dispatch(store, -1, [=]() { return copy_file_sync_disk(src, dst); });
 }
 
 static int load_manifest_from_path(BsAttachStore* store, const std::string& path,
@@ -274,7 +443,7 @@ static int load_manifest_from_path(BsAttachStore* store, const std::string& path
     return BS_ATTACH_OK;
 }
 
-static int load_manifest_file(BsAttachStore* store)
+static int load_manifest_file_sync(BsAttachStore* store)
 {
     if (!store || store->memory_only)
         return BS_ATTACH_OK;
@@ -300,8 +469,6 @@ static int load_manifest_file(BsAttachStore* store)
         return BS_ATTACH_OK;
     }
 
-    // If the manifest exists but violates hard limits, fail open() to satisfy AUD-IX
-    // expectations (invalid persisted state must not be silently accepted).
     if (rc == BS_ATTACH_ERR_LIMIT)
     {
         if (io_t0 >= 0)
@@ -319,10 +486,16 @@ static int load_manifest_file(BsAttachStore* store)
             bs_wait_trace_hang_end("persist_io:load_manifest", io_t0);
         return rc;
     }
-    (void)copy_file_sync(prev, store->manifest_path);
+    (void)copy_file_sync_disk(prev, store->manifest_path);
     if (io_t0 >= 0)
         bs_wait_trace_hang_end("persist_io:load_manifest", io_t0);
     return BS_ATTACH_OK;
+}
+
+static int load_manifest_file(BsAttachStore* store)
+{
+    return persist_io_dispatch(store, -1,
+                               [store]() { return load_manifest_file_sync(store); });
 }
 
 struct PersistIoHangGuard
@@ -341,7 +514,7 @@ struct PersistIoHangGuard
     }
 };
 
-static int save_manifest_file(BsAttachStore* store)
+static int save_manifest_file_sync(BsAttachStore* store)
 {
     if (!store || store->memory_only)
         return BS_ATTACH_OK;
@@ -374,7 +547,7 @@ static int save_manifest_file(BsAttachStore* store)
 
     if (std::ifstream(store->manifest_path).good())
     {
-        if (copy_file_sync(store->manifest_path, prev) != BS_ATTACH_OK)
+        if (copy_file_sync_disk(store->manifest_path, prev) != BS_ATTACH_OK)
             return BS_ATTACH_ERR_IO;
     }
 
@@ -399,6 +572,12 @@ static int save_manifest_file(BsAttachStore* store)
     if (std::rename(tmp.c_str(), store->manifest_path.c_str()) != 0)
         return BS_ATTACH_ERR_IO;
     return BS_ATTACH_OK;
+}
+
+static int save_manifest_file(BsAttachStore* store)
+{
+    return persist_io_dispatch(store, -1,
+                               [store]() { return save_manifest_file_sync(store); });
 }
 
 static void open_wal(BsAttachStore* store)
@@ -434,7 +613,7 @@ BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path)
         return s;
     }
     s->manifest_path = manifest_path;
-    if (load_manifest_file(s) != BS_ATTACH_OK)
+    if (load_manifest_file_sync(s) != BS_ATTACH_OK)
     {
         bs_adapter_attach_persist_store_close(s);
         return nullptr;
@@ -447,6 +626,7 @@ BsAttachStore* bs_adapter_attach_persist_store_open(const char* manifest_path)
             bs_adapter_attach_persist_wal_had_exec_rollback(s->wal, &s->wal_exec_rollback_epoch);
         purge_wal_for_store(s);
     }
+    persist_io_worker_start(s);
 #if defined(BS_TESTING)
     g_attach_store_open_count.fetch_add(1, std::memory_order_relaxed);
 #endif
@@ -460,11 +640,21 @@ void bs_adapter_attach_persist_store_close(BsAttachStore* store)
 #if defined(BS_TESTING)
     g_attach_store_open_count.fetch_sub(1, std::memory_order_relaxed);
 #endif
+    (void)persist_io_worker_shutdown(store, 30000);
     if (store->wal)
         bs_adapter_attach_persist_wal_close(store->wal);
     store->wal = nullptr;
     store->~BsAttachStore();
     std::free(store);
+}
+
+int bs_adapter_attach_persist_store_flush_io(BsAttachStore* store, int timeout_ms)
+{
+    if (!store)
+        return BS_ATTACH_ERR_INVALID_ARG;
+    if (store->memory_only)
+        return BS_ATTACH_OK;
+    return persist_io_wait_idle(store, timeout_ms);
 }
 
 uint64_t bs_adapter_attach_persist_store_batch_epoch(const BsAttachStore* store)
@@ -503,7 +693,8 @@ static int commit_one(BsAttachStore* store, const char* uri, const char* path, c
 
     if (!store->memory_only)
     {
-        const int wr = write_file_atomic(path, data, len, should_fsync_canonical(store));
+        const int wr =
+            write_file_atomic(store, path, data, len, should_fsync_canonical(store));
         if (wr != BS_ATTACH_OK)
             return wr;
     }
@@ -671,8 +862,8 @@ int bs_adapter_attach_persist_store_batch_commit(BsAttachStore* store)
         for (size_t i = 0; i < store->staged.size(); ++i)
         {
             const auto& e = store->staged[i];
-            const int wr = write_file_atomic(staging_paths[i].c_str(), e.data.data(), e.data.size(),
-                                             should_fsync_canonical(store));
+            const int wr = write_file_atomic(store, staging_paths[i].c_str(), e.data.data(),
+                                             e.data.size(), should_fsync_canonical(store));
             if (wr != BS_ATTACH_OK)
             {
                 publish_watch_event(next_epoch, e.uri.c_str(),

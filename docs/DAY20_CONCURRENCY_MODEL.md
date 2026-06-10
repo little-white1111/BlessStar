@@ -2,18 +2,19 @@
 
 ## 裁定摘要
 
-- **方案**：AttachContext 会话级 `shared_mutex` + 写窗口（热更阻塞**新读**，已有读可完成）。
+- **方案**：AttachContext 会话级写窗口 + **AttachReadGuard**（热更阻塞**新读**，已有读可完成）；快照读经 **StateBus PathSeqlock / RCU pin**（IMPL-22-HANG · 第22天）。
 - **不变量**：`XX-CONC-1`～`8`（弱一致 + 单调 `revision`；staging 对读不可见；锁序；销毁序；listener 禁写等）。
 
 ## 锁与 API
 
 | 组件 | 机制 |
 |------|------|
-| `attach_session` | `try_read_lock` / 写窗口 `begin_write_window` |
+| `attach_session` | **AttachReadGuard** RAII（`block_new_reads` + `active_readers` + `read_epoch`）；写窗口 `begin_write_window`（递增 epoch，**不等**读者）；**无** `session_mu` try_lock 轮询 |
+| `StateBus` 快照 | `bs_state_bus_pin_snapshot`（seqlock + 不可变 `BsStateSnapshotPayload` COW）；读者不持 Bus 互斥锁 |
 | `reload_batch_run` | 全程写窗口包裹 CM `sync_path` |
 | `attach_watch.c` | 全局表 `mutex` |
 | `g_active_ctx` | `std::mutex` + **AttachActiveGuard**（debug 无 guard 则 assert） |
-| `attach_notify_queue` | ordered worker；`destroy` 前 **flush** |
+| `attach_notify_queue` | ordered worker；**reload 写窗口**内 `flush`（`drain_mode`）；**session destroy** 时 `shutdown`（**不** flush，丢弃未处理 job） |
 | `emit_transition` | 两阶段：StateBus 提交 → EventBus drain → **phase2 watch**（可入队） |
 
 ## 读路径
@@ -35,6 +36,20 @@
 - 最外层 `end_write_window` 负责完成边界：先 `drain_deferred_events`，再 `notify_queue_flush`；`reload_batch_run` 成功返回前必须清空写窗口内积压的 EventBus 事件和 phase-2 watch 队列。
 - `attach_watch` 属于 persist 侧单次 publish 同步完成，不纳入 ConfigManager 写窗口 flush 的统一完成点。
 - REC-G-03 不新增 notify QPS limiter，也不把 listener 业务副作用完成作为 MVP 闭合条件。
+- **flush ≠ shutdown**（IMPL-22-HANG）：`flush` 用 `drain_mode` 串行 drain 并等待 in_flight；`shutdown` 置 `stop`、清空队列、`worker.detach()`，**不等** in_flight。Watch 回调契约见 **C-ATTACH-WATCH-CB-1** / **GATE-ATTACH-WATCH-CB**（禁止 session 锁、禁止 reload）。
+
+## 销毁序（XX-CONC-5 · IMPL-22-HANG 演进）
+
+`bs_adapter_attach_session_destroy` 严格顺序（与 reload 写窗口 flush **分离**）：
+
+1. `closing` + `block_new_reads`（拒新 **AttachReadGuard**）
+2. `cancel_all_snapshot_handles`（取消进行中的 chunk handle）
+3. `clear_phase2_notify`（注销 phase2 hook）
+4. `notify_queue_shutdown`（**无** flush）
+5. 等待 `active_readers == 0`
+6. 释放 session（`BS_TESTING` 断言 `active_readers==0` 且本线程 `g_attach_read_lock_depth==0`）
+
+**刻意不做**：destroy 前 `notify_queue_flush`（避免 readers 已 block 后 callback 仍抢读锁导致 hang）。
 
 ## 废弃 API（T20.3）
 
@@ -64,3 +79,9 @@ Linux TSan（CI `tsan` job）：同上标签。
 ## 与第 19 天关系
 
 - **day19** 长稳 profile 仍为**单写者多读者**文档化假设；并发压测使用 **day20** 标签，不混入 day19 smoke 门槛。
+
+## 与第 22 天关系（IMPL-22-HANG）
+
+- attach **无超时等待链**根治：Session RCU、Pool destroy-no-wait、Notify shutdown/flush 分离、Persist I/O worker + `flush_io(timeout)`。
+- 详见 `架构方案选择记录.md` § 第22天 **hang 长时间挂起修复措施**；台账 `项目修改记录.md` **22.28～22.33**。
+- 诊断：`BS_WAIT_TRACE=hang` + `BS_WAIT_TRACE_HANG_MS` 锚定 session readers / pool busy / notify flush / persist I/O 四条 wait 链。

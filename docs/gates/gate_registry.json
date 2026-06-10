@@ -38,6 +38,15 @@
       "timeout_s": 120
     },
     {
+      "gate_id": "GATE-ATTACH-WATCH-CB",
+      "stage": "watch",
+      "runner": "python",
+      "command": "python tools/scripts/gates/check_attach_watch_callback_contract.py",
+      "covers": ["C-ATTACH-WATCH-CB-1"],
+      "default_blocking": true,
+      "timeout_s": 60
+    },
+    {
       "gate_id": "GATE-ARCH-INCLUDE-BOUNDARY",
       "stage": "bootstrap",
       "runner": "python",

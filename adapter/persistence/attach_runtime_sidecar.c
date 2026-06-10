@@ -369,7 +369,7 @@ int bs_adapter_attach_persist_sidecar_validate(const char*          manifest_pat
             return 0;
         }
         char uri[4096];
-        if (uri_len + 1 > sizeof(uri))
+        if ((size_t)(uri_len + 1) > sizeof(uri))
         {
             free(data);
             return 0;

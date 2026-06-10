@@ -1,0 +1,31 @@
+{
+  "id": "C-ATTACH-WATCH-CB-1",
+  "type": "functional",
+  "version": "v1",
+  "priority": "functional",
+  "status": "active",
+  "scope": [
+    "adapter",
+    "adapter/test"
+  ],
+  "stage": "watch",
+  "rule": "Watch callbacks registered under adapter must not acquire attach session read/write locks or invoke reload_batch orchestration (avoid deadlock and reentrancy on the notify worker thread).",
+  "gate_refs": [
+    "GATE-ATTACH-WATCH-CB"
+  ],
+  "blocking": true,
+  "owner": "subtask-b-eng",
+  "evidence": [
+    "adapter/src/attach_notify_queue.cpp",
+    "adapter/src/attach_session.cpp"
+  ],
+  "deprecate": null,
+  "implementations": [
+    {
+      "gate_id": "GATE-ATTACH-WATCH-CB",
+      "runner": "python",
+      "entry": "tools/scripts/gates/check_attach_watch_callback_contract.py",
+      "entry_kind": "script"
+    }
+  ]
+}

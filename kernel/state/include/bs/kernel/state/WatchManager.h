@@ -3,9 +3,11 @@
 
 /*
  * C-ST-7 contract block:
- * Thread safety: Internally synchronized; callbacks run on notify thread without reentrancy guard.
+ * Thread safety: Internally synchronized; callbacks run on notify worker without reentrancy guard.
  * Error semantics: 0 ok; -1 invalid; -2 remove miss; WATCH_MODE_ONCE auto-removes after fire.
  * Platform notes: Path-keyed watcher lists; pairs with ConfigManager state notifications.
+ * WatchCallback contract (GATE-ATTACH-WATCH-CB): MUST NOT call bs_adapter_attach_session_* lock
+ * APIs or reload_batch_run / attach write-window entry points (no session lock, no reload).
  */
 
 #include "ConfigEvent.h"
