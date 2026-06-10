@@ -36,7 +36,7 @@
 - 最外层 `end_write_window` 负责完成边界：先 `drain_deferred_events`，再 `notify_queue_flush`；`reload_batch_run` 成功返回前必须清空写窗口内积压的 EventBus 事件和 phase-2 watch 队列。
 - `attach_watch` 属于 persist 侧单次 publish 同步完成，不纳入 ConfigManager 写窗口 flush 的统一完成点。
 - REC-G-03 不新增 notify QPS limiter，也不把 listener 业务副作用完成作为 MVP 闭合条件。
-- **flush ≠ shutdown**（IMPL-22-HANG）：`flush` 用 `drain_mode` 串行 drain 并等待 in_flight；`shutdown` 置 `stop`、清空队列、`worker.detach()`，**不等** in_flight。Watch 回调契约见 **C-ATTACH-WATCH-CB-1** / **GATE-ATTACH-WATCH-CB**（禁止 session 锁、禁止 reload）。
+- **flush ≠ shutdown**（IMPL-22-HANG）：`flush` 用 `drain_mode` 串行 drain 并等待 in_flight；`shutdown` 置 `stop`、**丢弃**队列中未处理 job、`worker.join()` 仅等待已在跑的 dispatch（**不** flush 积压队列）。Watch 回调契约见 **C-ATTACH-WATCH-CB-1** / **GATE-ATTACH-WATCH-CB**（禁止 session 锁、禁止 reload）。
 
 ## 销毁序（XX-CONC-5 · IMPL-22-HANG 演进）
 

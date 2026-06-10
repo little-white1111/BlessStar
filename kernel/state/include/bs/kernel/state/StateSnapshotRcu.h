@@ -2,8 +2,11 @@
 #define BS_KERNEL_STATE_STATESNAPSHOTRCU_H
 
 /*
- * Seqlock + immutable payload (pointer RCU) for StateBus snapshot reads.
- * Writers publish new shared_ptr; readers pin without holding StateBus mutex.
+ * C-ST-7 contract block:
+ * Thread safety: Readers pin via seqlock without StateBus mutex; writers publish under bus lock.
+ * Error semantics: Returns null shared_ptr when path is missing; payload bytes are immutable.
+ * Platform notes: Seqlock + immutable BsStateSnapshotPayload COW; MSVC uses atomic_load/store on
+ * shared_ptr.
  */
 
 #include "bs/kernel/state/ConfigState.h"

@@ -220,14 +220,16 @@ void bs_adapter_attach_notify_queue_shutdown(AttachContext* ctx)
         return;
 
     auto* q = static_cast<AttachNotifyQueue*>(ctx->notify_queue);
+    ctx->notify_queue = nullptr;
+
     {
         std::lock_guard<std::mutex> lock(q->mu);
         q->stop.store(true);
         q->jobs.clear();
     }
     q->cv.notify_all();
+    /* Join (not detach): discard queued jobs but wait for in-flight dispatch to finish. */
     if (q->worker.joinable())
-        q->worker.detach();
+        q->worker.join();
     delete q;
-    ctx->notify_queue = nullptr;
 }

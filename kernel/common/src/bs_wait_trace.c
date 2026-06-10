@@ -24,33 +24,59 @@ enum BsWaitTraceMode
     BS_WAIT_TRACE_HANG = 2
 };
 
+static int g_wait_trace_mode   = BS_WAIT_TRACE_OFF;
+static int g_hang_threshold_ms = 3000;
+
+#ifdef _WIN32
+static INIT_ONCE g_wait_trace_once = INIT_ONCE_STATIC_INIT;
+
+static BOOL CALLBACK init_wait_trace_once(PINIT_ONCE once, PVOID param, PVOID* ctx)
+{
+    (void)once;
+    (void)param;
+    (void)ctx;
+    const char* env = getenv("BS_WAIT_TRACE");
+    if (env && env[0] == '1' && env[1] == '\0')
+        g_wait_trace_mode = BS_WAIT_TRACE_FULL;
+    else if (env && strcmp(env, "hang") == 0)
+        g_wait_trace_mode = BS_WAIT_TRACE_HANG;
+    env = getenv("BS_WAIT_TRACE_HANG_MS");
+    g_hang_threshold_ms = (env && env[0]) ? atoi(env) : 3000;
+    if (g_hang_threshold_ms < 100)
+        g_hang_threshold_ms = 100;
+    return TRUE;
+}
+#else
+static pthread_once_t g_wait_trace_once = PTHREAD_ONCE_INIT;
+
+static void init_wait_trace_once(void)
+{
+    const char* env = getenv("BS_WAIT_TRACE");
+    if (env && env[0] == '1' && env[1] == '\0')
+        g_wait_trace_mode = BS_WAIT_TRACE_FULL;
+    else if (env && strcmp(env, "hang") == 0)
+        g_wait_trace_mode = BS_WAIT_TRACE_HANG;
+    env = getenv("BS_WAIT_TRACE_HANG_MS");
+    g_hang_threshold_ms = (env && env[0]) ? atoi(env) : 3000;
+    if (g_hang_threshold_ms < 100)
+        g_hang_threshold_ms = 100;
+}
+#endif
+
 static int wait_trace_mode(void)
 {
-    static int cached = -1;
-    static int mode   = BS_WAIT_TRACE_OFF;
-    if (cached < 0)
-    {
-        const char* env = getenv("BS_WAIT_TRACE");
-        if (env && env[0] == '1' && env[1] == '\0')
-            mode = BS_WAIT_TRACE_FULL;
-        else if (env && strcmp(env, "hang") == 0)
-            mode = BS_WAIT_TRACE_HANG;
-        cached = 1;
-    }
-    return mode;
+#ifdef _WIN32
+    (void)InitOnceExecuteOnce(&g_wait_trace_once, init_wait_trace_once, NULL, NULL);
+#else
+    (void)pthread_once(&g_wait_trace_once, init_wait_trace_once);
+#endif
+    return g_wait_trace_mode;
 }
 
 static int hang_threshold_ms(void)
 {
-    static int cached_ms = -1;
-    if (cached_ms < 0)
-    {
-        const char* env = getenv("BS_WAIT_TRACE_HANG_MS");
-        cached_ms       = (env && env[0]) ? atoi(env) : 3000;
-        if (cached_ms < 100)
-            cached_ms = 100;
-    }
-    return cached_ms;
+    (void)wait_trace_mode();
+    return g_hang_threshold_ms;
 }
 
 static unsigned long current_thread_id(void)
