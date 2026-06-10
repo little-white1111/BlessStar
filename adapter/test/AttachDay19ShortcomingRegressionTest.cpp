@@ -278,7 +278,6 @@ static int test_pool_warmup_reload_latency(void)
     BS_TEST_REQUIRE("ctx", fix.ctx != nullptr);
     BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
     BS_TEST_REQUIRE("freeze", bs_test_attach_bootstrap_freeze_ctx(&fix) == 0);
-    BS_TEST_REQUIRE("pool-warmed", bs_adapter_attach_ctx_is_kernel_pool_warmed(fix.ctx) == 1);
     BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
     bs_adapter_attach_ctx_set_active(fix.ctx);
 
@@ -294,16 +293,8 @@ static int test_pool_warmup_reload_latency(void)
     bs_adapter_attach_persist_store_set_fsync_policy(store, BS_ATTACH_FSYNC_NEVER);
 
     constexpr int kPoolReloadIters = 10;
-    int64_t       warmed_sum_us    = 0;
-    for (int i = 0; i < kPoolReloadIters; ++i)
-    {
-        shortcoming_progress(("pool-warmup warmed-reload " + std::to_string(i)).c_str());
-        int64_t us = 0;
-        BS_TEST_REQUIRE("warmed-reload",
-                        reload_once_us(&fix, manifest_path, uri.c_str(), &us) == 0);
-        warmed_sum_us += us;
-    }
-
+    /* Measure inline (cleared pool) before warmed pool so stage=all does not let
+     * cleared reuse hot caches from prior warmed iterations. */
     bs_adapter_attach_ctx_testing_clear_kernel_pool_warmed(fix.ctx);
     BS_TEST_REQUIRE("pool-cleared", bs_adapter_attach_ctx_is_kernel_pool_warmed(fix.ctx) == 0);
 
@@ -317,12 +308,24 @@ static int test_pool_warmup_reload_latency(void)
         cleared_sum_us += us;
     }
 
+    BS_TEST_REQUIRE("pool-rebuild", bs_adapter_attach_ctx_rebuild_kernel_pool(fix.ctx) == 0);
+    BS_TEST_REQUIRE("pool-warmed", bs_adapter_attach_ctx_is_kernel_pool_warmed(fix.ctx) == 1);
+
+    int64_t warmed_sum_us = 0;
+    for (int i = 0; i < kPoolReloadIters; ++i)
+    {
+        shortcoming_progress(("pool-warmup warmed-reload " + std::to_string(i)).c_str());
+        int64_t us = 0;
+        BS_TEST_REQUIRE("warmed-reload",
+                        reload_once_us(&fix, manifest_path, uri.c_str(), &us) == 0);
+        warmed_sum_us += us;
+    }
+
     bs_test_attach_teardown(&fix);
 
     BS_TEST_REQUIRE("warmed-sum-nonzero", warmed_sum_us > 0);
     BS_TEST_REQUIRE("cleared-sum-nonzero", cleared_sum_us > 0);
 #ifndef _WIN32
-    /* Linux CI: ms rounding ties in stage=all; compare microsecond aggregates. */
     BS_TEST_REQUIRE("warmed-slower-aggregate", warmed_sum_us > cleared_sum_us);
 #endif
     return 0;
