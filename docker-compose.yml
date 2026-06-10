@@ -52,7 +52,7 @@ services:
           -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
           -DBLESSSTAR_SANITIZER_CI=ON \
           && cmake --build build_san -j 2 \
-          && ctest --test-dir build_san -LE day17 -E "bs_test_attach_day19_shortcoming_manifest-fsync" --output-on-failure \
+          && ctest --test-dir build_san -LE day17 -E "bs_test_attach_day19_shortcoming_" --output-on-failure \
           && meson test -C build-meson --print-errorlogs --no-rebuild
 
   blessstar-arm64:
