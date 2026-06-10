@@ -259,16 +259,6 @@ static int test_stress_ctx_store_reload_budget(void)
     return 0;
 }
 
-static int reload_once_ms(BsTestAttachIoFixture* fix, const fs::path& manifest_path,
-                          const char* uri, int64_t* elapsed_ms_out)
-{
-    const auto t0 = std::chrono::steady_clock::now();
-    if (run_per_path_reload(fix, manifest_path, uri, nullptr) != 0)
-        return -1;
-    *elapsed_ms_out = steady_ms_since(t0);
-    return 0;
-}
-
 static int reload_once_us(BsTestAttachIoFixture* fix, const fs::path& manifest_path,
                           const char* uri, int64_t* elapsed_us_out)
 {
