@@ -19,6 +19,18 @@
     <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\app_vendor_precheck.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\config_reload_session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\config_session_reader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\app_session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\mem_audit_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\LJHlj\BlessStar\CMakeLists.txt" />

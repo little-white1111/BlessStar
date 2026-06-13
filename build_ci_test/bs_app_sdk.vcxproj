@@ -78,7 +78,8 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <BufferSecurityCheck></BufferSecurityCheck>
@@ -106,10 +107,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -122,7 +123,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck></BufferSecurityCheck>
@@ -151,10 +153,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -167,7 +169,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck></BufferSecurityCheck>
@@ -196,10 +199,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -212,7 +215,8 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck></BufferSecurityCheck>
@@ -240,10 +244,10 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Midl>
-      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\LJHlj\BlessStar\app\sdk\include;C:\Users\LJHlj\BlessStar\kernel\common\include;C:\Users\LJHlj\BlessStar\kernel\report\include;C:\Users\LJHlj\BlessStar\kernel\registry\include;C:\Users\LJHlj\BlessStar\adapter\include;C:\Users\LJHlj\BlessStar\kernel\io\include;C:\Users\LJHlj\BlessStar\kernel\ir\include;C:\Users\LJHlj\BlessStar\kernel\state\include;C:\Users\LJHlj\BlessStar\kernel\runtime\include;C:\Users\LJHlj\BlessStar\kernel\pipeline\include;C:\Users\LJHlj\BlessStar\adapter\parser\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
       <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
@@ -318,6 +322,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\vendor_config_normalizer.cpp" />
     <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\vendor_reload_facade.cpp" />
     <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\app_vendor_precheck.cpp" />
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\config_reload_session.cpp" />
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\config_session_reader.cpp" />
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\app_session.cpp" />
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\app\sdk\src\mem_audit_log.cpp" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
@@ -327,9 +335,61 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_attach.vcxproj">
+      <Project>{7EE74F90-CDF5-3851-8E9E-4256B83BC711}</Project>
+      <Name>bs_adapter_attach</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_orchestration.vcxproj">
+      <Project>{A8375F29-F576-344F-816A-1A3679D5F240}</Project>
+      <Name>bs_adapter_orchestration</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_parser.vcxproj">
+      <Project>{EA12DEED-4DF6-30C3-9E9C-A4A92B4A94D6}</Project>
+      <Name>bs_adapter_parser</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_persistence.vcxproj">
+      <Project>{F9AEDBAD-43C3-35D8-A618-F53FDC2438A2}</Project>
+      <Name>bs_adapter_persistence</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_adapter_requirement.vcxproj">
+      <Project>{FD6D319C-6BD8-3E5A-9AA1-CC384DBD8B51}</Project>
+      <Name>bs_adapter_requirement</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_common.vcxproj">
       <Project>{F8D9871D-5618-3EAE-B917-745597ABF557}</Project>
       <Name>bs_kernel_common</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_common_format.vcxproj">
+      <Project>{BC3F7441-990A-38DC-A6A4-C081BBE7E2B5}</Project>
+      <Name>bs_kernel_common_format</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_io.vcxproj">
+      <Project>{5C115E11-78CC-3CCF-85E1-789D6A884A13}</Project>
+      <Name>bs_kernel_io</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_ir.vcxproj">
+      <Project>{06DB4E62-B354-35DD-9B0C-40081D292377}</Project>
+      <Name>bs_kernel_ir</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_pipeline.vcxproj">
+      <Project>{E3AFB5BB-2E81-3BBC-AFC7-E1D038D00FF2}</Project>
+      <Name>bs_kernel_pipeline</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_registry.vcxproj">
+      <Project>{59281E92-E3B2-3C1F-9D98-4C6D317B6BD4}</Project>
+      <Name>bs_kernel_registry</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_report_core.vcxproj">
+      <Project>{EBFCD1B9-95D5-3FC7-B568-1A309E89C9BF}</Project>
+      <Name>bs_kernel_report_core</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_runtime.vcxproj">
+      <Project>{B6CCA82C-7042-3474-84A9-0F5CE4C93BF3}</Project>
+      <Name>bs_kernel_runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_kernel_state.vcxproj">
+      <Project>{A7A99647-D405-3A9B-A40C-C28666D94158}</Project>
+      <Name>bs_kernel_state</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

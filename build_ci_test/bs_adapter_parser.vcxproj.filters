@@ -22,6 +22,9 @@
     <ClCompile Include="C:\Users\LJHlj\BlessStar\adapter\parser\src\config\config_parse_status.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\adapter\parser\src\meta_rule.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\LJHlj\BlessStar\CMakeLists.txt" />

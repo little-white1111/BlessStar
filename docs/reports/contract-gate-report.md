@@ -1,6 +1,6 @@
 # Contract Gate Report
 
-- Result: **PASS**
+- Result: **FAIL**
 - Fail-fast: `True`
 - Draft policy: `warn`
 
@@ -17,13 +17,10 @@
 | `GATE-STYLE-PREFIX` | `read` | `PASS` | C-ST-1 |
 | `GATE-APP-VENDOR-NORMALIZE` | `parse` | `PASS` | C-FN-4 |
 | `GATE-DAY14` | `persist` | `PASS` | C-IX-4, C-CF-2 |
+| `GATE-ATTACH-WATCH-CB` | `watch` | `PASS` | C-ATTACH-WATCH-CB-1 |
 | `GATE-DAY15` | `watch` | `PASS` | C-IX-4, C-ST-13 |
 | `GATE-ATTACH-SYNC-PROD` | `ci` | `PASS` | C-ATTACH-SYNC-1, C-ATTACH-SYNC-2, C-ATTACH-SYNC-3, C-ATTACH-SYNC-4, C-ATTACH-SYNC-5, C-ATTACH-SYNC-6 |
-| `GATE-INTEGRATION` | `ci` | `PASS` | C-IX-2, C-ST-13, C-FN-1, C-FN-3, C-CF-1 |
-| `GATE-KERNEL-POOL-CONFIG` | `ci` | `PASS` | C-KERNEL-POOL-1 |
-| `GATE-RECOVER` | `ci` | `PASS` | C-FN-1 |
-| `GATE-REGRESSION` | `ci` | `PASS` | C-IX-4, C-ST-13, C-FN-1, C-FN-2, C-FN-3, C-CF-1, C-CF-2 |
-| `GATE-STYLE-LABELS` | `ci` | `PASS` | C-ST-11, C-ST-9 |
+| `GATE-INTEGRATION` | `ci` | `FAIL` | C-IX-2, C-ST-13, C-FN-1, C-FN-3, C-CF-1 |
 | `(stage:dev_ci)` | `dev_ci` | `SKIP` |  |
 | `(stage:staging)` | `staging` | `SKIP` |  |
 | `(stage:prod_ops)` | `prod_ops` | `SKIP` |  |

@@ -10,6 +10,10 @@
 	<Project Path="ALL_BUILD.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="e8869cc7-095f-32be-9550-841887cdb920" DefaultStartup="true">
 		<BuildDependency Project="../../ZERO_CHECK.vcxproj"/>
 		<BuildDependency Project="spdlog.vcxproj"/>
+	</Project>
+	<Project Path="INSTALL.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="fae60ec6-66c7-3156-ba28-3ff35dede4d2">
+		<BuildDependency Project="ALL_BUILD.vcxproj"/>
+		<BuildDependency Project="../../ZERO_CHECK.vcxproj"/>
 		<Build Solution="Debug|*" Project="false"/>
 		<Build Solution="Release|*" Project="false"/>
 		<Build Solution="MinSizeRel|*" Project="false"/>

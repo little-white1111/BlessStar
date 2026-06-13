@@ -9,6 +9,9 @@
  */
 
 #include <string>
+#include <vector>
+
+#include "bs/app/sdk/app_meta_rule.h"
 
 namespace bs::app
 {
@@ -24,6 +27,9 @@ struct ScenarioPolicy
     std::string  tenant;
     bool         allow_hot_reload = true;
     int          max_batch        = 64;
+
+    /** Metadata rules for instruction-level policy gates (Day24 MR-02). */
+    std::vector<MetaRule> metadata_rules;
 };
 
 bool ValidateScenarioPolicy(const ScenarioPolicy& policy);

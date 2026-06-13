@@ -17,6 +17,8 @@
 #include <cstring>
 
 #include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "attach_context_internal.h"
@@ -121,6 +123,8 @@ AttachContext* bs_adapter_attach_ctx_create(void)
     bs_adapter_attach_session_init(ctx);
     ctx->kernel_pool        = bs_kernel_pool_create(nullptr);
     ctx->kernel_pool_warmed = 0;
+    ctx->gate_cache          = new std::unordered_map<std::string, IRInstructionList*>();
+    ctx->hot_update_version  = 0;
     bs_adapter_attach_ir_snapshot_init(ctx);
     if (!ctx->kernel_pool)
     {
@@ -156,6 +160,20 @@ void bs_adapter_attach_ctx_destroy(AttachContext* ctx)
     bs_adapter_attach_ctx_destroy_config_manager(ctx);
     bs_adapter_attach_ir_snapshot_destroy(ctx);
     bs_adapter_attach_ctx_close_persist_store(ctx);
+
+    /* MD-D-02: Destroy gate_cache (map now owns IRInstructionList* via deep copy). */
+    if (ctx->gate_cache)
+    {
+        auto* cache = static_cast<std::unordered_map<std::string, IRInstructionList*>*>(ctx->gate_cache);
+        for (auto& kv : *cache)
+        {
+            if (kv.second)
+                bs_ir_instruction_list_destroy(kv.second);
+        }
+        delete cache;
+        ctx->gate_cache = nullptr;
+    }
+
     if (ctx->kernel_pool)
     {
         bs_kernel_pool_destroy(ctx->kernel_pool);
@@ -546,4 +564,120 @@ void bs_adapter_attach_ctx_shutdown_all_logs(void)
         bs_log_shutdown_bus_ctx(&g_legacy_bootstrap_ctx.log_state);
         g_legacy_bootstrap_ctx.log_bus_bound = 0;
     }
+}
+
+/* ------------------------------------------------------------------ */
+/* MD-D-02: Gate 校验结果缓存 + hot_update_version                    */
+/* ------------------------------------------------------------------ */
+
+/** 深拷贝一个 IRInstructionList（含所有 instruction 及 metadata 链）。返回的新列表所有权归调用方。 */
+static IRInstructionList* clone_ir_instruction_list(const IRInstructionList* src)
+{
+    if (!src)
+        return nullptr;
+
+    IRInstructionList* dst = bs_ir_instruction_list_create();
+    if (!dst)
+        return nullptr;
+
+    const size_t n = bs_ir_instruction_list_size(src);
+    for (size_t i = 0; i < n; ++i)
+    {
+        const IRInstruction* src_instr = bs_ir_instruction_list_get(src, i);
+        if (!src_instr)
+            continue;
+
+        IRInstruction* dst_instr = bs_ir_instruction_create(src_instr->type, src_instr->name);
+        if (!dst_instr)
+        {
+            bs_ir_instruction_list_destroy(dst);
+            return nullptr;
+        }
+        dst_instr->version   = src_instr->version;
+        dst_instr->timestamp = src_instr->timestamp;
+
+        /* 深拷贝 metadata 链 */
+        IRMetadata* tail = nullptr;
+        for (const IRMetadata* sm = src_instr->metadata; sm; sm = sm->next)
+        {
+            IRMetadata* dm = bs_ir_metadata_create(sm->key, sm->value);
+            if (!dm)
+            {
+                bs_ir_instruction_destroy(dst_instr);
+                bs_ir_instruction_list_destroy(dst);
+                return nullptr;
+            }
+            if (!tail)
+                dst_instr->metadata = dm;
+            else
+                tail->next = dm;
+            tail = dm;
+        }
+
+        if (bs_ir_instruction_list_add(dst, dst_instr) != 0)
+        {
+            bs_ir_instruction_destroy(dst_instr);
+            bs_ir_instruction_list_destroy(dst);
+            return nullptr;
+        }
+    }
+
+    return dst;
+}
+
+const IRInstructionList* bs_adapter_attach_ctx_get_gate_result(AttachContext* ctx, const char* uri)
+{
+    if (!ctx || !ctx->gate_cache || !uri)
+        return nullptr;
+
+    auto* cache = static_cast<const std::unordered_map<std::string, IRInstructionList*>*>(ctx->gate_cache);
+    auto  it    = cache->find(std::string(uri));
+    return (it != cache->end()) ? it->second : nullptr;
+}
+
+void bs_adapter_attach_ctx_set_gate_result(AttachContext* ctx, const char* uri,
+                                            IRInstructionList* ir_list)
+{
+    if (!ctx || !ctx->gate_cache || !uri || !ir_list)
+        return;
+
+    auto* cache = static_cast<std::unordered_map<std::string, IRInstructionList*>*>(ctx->gate_cache);
+
+    /* 深拷贝 ir_list，使 gate_cache 拥有自己的副本（不依赖批控器生命周期） */
+    IRInstructionList* cloned = clone_ir_instruction_list(ir_list);
+    if (!cloned)
+        return;
+
+    /* 释放旧的副本（如有） */
+    auto it = cache->find(std::string(uri));
+    if (it != cache->end() && it->second)
+        bs_ir_instruction_list_destroy(it->second);
+
+    (*cache)[std::string(uri)] = cloned;
+}
+
+void bs_adapter_attach_ctx_clear_gate_result(AttachContext* ctx, const char* uri)
+{
+    if (!ctx || !ctx->gate_cache || !uri)
+        return;
+
+    auto* cache = static_cast<std::unordered_map<std::string, IRInstructionList*>*>(ctx->gate_cache);
+    auto  it    = cache->find(std::string(uri));
+    if (it != cache->end())
+    {
+        if (it->second)
+            bs_ir_instruction_list_destroy(it->second);
+        cache->erase(it);
+    }
+}
+
+uint64_t bs_adapter_attach_ctx_get_hot_update_version(const AttachContext* ctx)
+{
+    return ctx ? ctx->hot_update_version : 0;
+}
+
+void bs_adapter_attach_ctx_increment_hot_update_version(AttachContext* ctx)
+{
+    if (ctx)
+        ctx->hot_update_version++;
 }

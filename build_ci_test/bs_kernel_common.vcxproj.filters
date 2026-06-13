@@ -22,6 +22,9 @@
     <ClCompile Include="C:\Users\LJHlj\BlessStar\kernel\common\src\bs_safe_format.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\LJHlj\BlessStar\kernel\common\src\bs_wait_trace.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\Users\LJHlj\BlessStar\CMakeLists.txt" />

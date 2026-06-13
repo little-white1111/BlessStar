@@ -95,18 +95,19 @@ jobs:
           exit "${failed}"
 
       # AGENTS gate 1: CTest (below). Gate 4: warnings as errors via CMake option.
-      - name: Configure (Unix)
+      - name: Configure (Unix - via build.py)
         if: runner.os != 'Windows'
         run: |
-          cmake -S . -B build_ci_test \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON
+          eval "$(python tools/build/build.py --release --print-cmake-args --build-dir=build_ci_test)"
 
-      - name: Configure (Windows)
+      - name: Configure (Windows - via build.py)
         if: runner.os == 'Windows'
-        run: cmake -S . -B build_ci_test -DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON
+        shell: pwsh
+        run: |
+          $json = python tools/build/build.py --release --print-cmake-args --build-dir=build_ci_test --format=json | ConvertFrom-Json
+          $cmd = $json.args[0]
+          $cmdArgs = $json.args[1..($json.args.Count-1)]
+          & $cmd @cmdArgs
 
       - name: Build (Unix)
         if: runner.os != 'Windows'
@@ -155,16 +156,9 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
-      - name: Configure (Sanitizer)
+      - name: Configure (Sanitizer - via build.py)
         run: |
-          cmake -S . -B build-san \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
-            -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer" \
-            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
-            -DBLESSSTAR_SANITIZER_CI=ON
+          eval "$(python tools/build/build.py --sanitize --print-cmake-args --build-dir=build-san)"
 
       - name: Build (Sanitizer)
         run: cmake --build build-san -j 4
@@ -211,16 +205,9 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
-      - name: Configure (ThreadSanitizer)
+      - name: Configure (TSan - via build.py)
         run: |
-          cmake -S . -B build-tsan \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_C_FLAGS="-fsanitize=thread -fno-omit-frame-pointer" \
-            -DCMAKE_CXX_FLAGS="-fsanitize=thread -fno-omit-frame-pointer" \
-            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread" \
-            -DBLESSSTAR_SANITIZER_CI=ON
+          eval "$(python tools/build/build.py --tsan --print-cmake-args --build-dir=build-tsan)"
 
       - name: Build (TSan)
         run: |

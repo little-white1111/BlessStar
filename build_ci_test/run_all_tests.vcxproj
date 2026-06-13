@@ -249,9 +249,17 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_app_config_reload_integration.vcxproj">
+      <Project>{1E6BB39F-7A81-3404-BAC0-200AAB943378}</Project>
+      <Name>bs_test_app_config_reload_integration</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_app_sdk_contract.vcxproj">
       <Project>{FA7609F8-C062-37ED-B3C8-686DDB9BC2BD}</Project>
       <Name>bs_test_app_sdk_contract</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_app_vendor_precheck.vcxproj">
+      <Project>{4B3B20AD-9397-3440-97CE-4627424FF43A}</Project>
+      <Name>bs_test_app_vendor_precheck</Name>
     </ProjectReference>
     <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_app_vendor_reload_integration.vcxproj">
       <Project>{E9E7AA75-C89A-3240-80FE-3D664D73F046}</Project>
@@ -357,6 +365,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{24649839-5AAF-3C07-A915-F384184DD70F}</Project>
       <Name>bs_test_config_parse_security_audit</Name>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_config_reload_session.vcxproj">
+      <Project>{3F9D8625-3027-3371-B339-87B851972AB2}</Project>
+      <Name>bs_test_config_reload_session</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_day19_memory_baseline.vcxproj">
       <Project>{41B706DE-5858-352E-BE53-4A025C9AA3D3}</Project>
       <Name>bs_test_day19_memory_baseline</Name>
@@ -461,6 +473,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <Project>{0A77D3C6-4816-32FC-ABE4-6577DF4ECAC1}</Project>
       <Name>bs_test_memory_pool_comprehensive</Name>
     </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_meta_rule.vcxproj">
+      <Project>{D5BD298C-3D73-3D9D-AD44-EA80D94DCB68}</Project>
+      <Name>bs_test_meta_rule</Name>
+    </ProjectReference>
     <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_metrics.vcxproj">
       <Project>{03A59480-FC35-3C9A-AEDE-76D382400A56}</Project>
       <Name>bs_test_metrics</Name>
@@ -500,6 +516,10 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_plugin_orch_reload_registry.vcxproj">
       <Project>{19901CCC-823F-3A22-9BAE-9D0C932E39AD}</Project>
       <Name>bs_test_plugin_orch_reload_registry</Name>
+    </ProjectReference>
+    <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_real_biz_full_chain.vcxproj">
+      <Project>{0DA2931F-EC8C-39E1-B6D4-F6B8EF303550}</Project>
+      <Name>bs_test_real_biz_full_chain</Name>
     </ProjectReference>
     <ProjectReference Include="C:\Users\LJHlj\BlessStar\build_ci_test\bs_test_reentrancy_io.vcxproj">
       <Project>{571F749E-EB39-3047-BEA5-289244FEC6E7}</Project>

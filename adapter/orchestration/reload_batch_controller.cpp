@@ -152,6 +152,7 @@ void bs_adapter_attach_reload_batch_reset(ReloadBatchController* ctrl)
     if (ctrl->attach_store && ctrl->scheme == BS_ATTACH_SCHEME_PER_BATCH)
         bs_adapter_attach_persist_store_batch_abort(ctrl->attach_store);
 
+    /* MD-D-03: 清理 gate_cache 条目（不再需要，gate_cache 现在是深拷贝；保留注释备查）*/
     for (auto& w : ctrl->paths)
         release_path_work_ir(&w);
     ctrl->paths.clear();
@@ -288,7 +289,29 @@ static int gate_path_work(ReloadBatchController* ctrl, PathWork* w, IoReadResult
         if (!ctrl->gate_fn)
             return bs_adapter_attach_reload_default_path_gate(nullptr, w->uri.c_str(), result,
                                                               detail);
-        return ctrl->gate_fn(ctrl->gate_ctx, w->uri.c_str(), result, detail);
+        int gate_rc = ctrl->gate_fn(ctrl->gate_ctx, w->uri.c_str(), result, detail);
+        if (gate_rc != BS_RELOAD_GATE_OK)
+            return gate_rc;
+
+        /* MD-D-03: 即使池未热，也解析 bytes 以存入 gate_cache（不 publish）。
+         * 创建临时 parse result 获取 IRInstructionList 但立即转存 ownership。 */
+        BsConfigParseResult parsed{};
+        int parse_rc = bs_adapter_attach_reload_parse_and_verify_bytes(result, &parsed, detail);
+        if (parse_rc == BS_RELOAD_GATE_OK && parsed.instructions)
+        {
+            w->gated_ir         = parsed.instructions;
+            parsed.instructions = nullptr;
+        }
+        else if (parsed.instructions)
+        {
+            bs_adapter_parser_result_destroy(&parsed);
+        }
+        if (parsed.active_requirements)
+        {
+            bs_requirement_list_free(parsed.active_requirements);
+            parsed.active_requirements = nullptr;
+        }
+        return BS_RELOAD_GATE_OK;
     }
 
     BsConfigParseResult parsed{};
@@ -642,6 +665,10 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
             continue;
         }
 
+        /* MD-D-03: Inject gate result into AttachContext's gate_cache */
+        if (actx && w.gated_ir)
+            bs_adapter_attach_ctx_set_gate_result(actx, w.uri.c_str(), w.gated_ir);
+
         const int pool_ready = actx && bs_adapter_attach_ctx_is_kernel_pool_warmed(actx);
         if (pool_ready && publish_path_ir(actx, &w) != 0)
         {
@@ -855,6 +882,9 @@ int bs_adapter_attach_reload_batch_run(ReloadBatchController* ctrl)
     if (actx)
     {
         bs_adapter_attach_session_drain_pending_notifications(actx);
+        /* MD-D-07: 成功完成的 batch 递增 hot_update 版本号 */
+        if (ctrl->outcome == BATCH_ALL_OK)
+            bs_adapter_attach_ctx_increment_hot_update_version(actx);
     }
     return 0;
 }

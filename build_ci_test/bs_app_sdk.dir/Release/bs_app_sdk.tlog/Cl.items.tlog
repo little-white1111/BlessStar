@@ -4,3 +4,7 @@ C:\Users\LJHlj\BlessStar\app\sdk\src\app_scenario_policy.cpp;C:\Users\LJHlj\Bles
 C:\Users\LJHlj\BlessStar\app\sdk\src\vendor_config_normalizer.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_app_sdk.dir\Release\vendor_config_normalizer.obj
 C:\Users\LJHlj\BlessStar\app\sdk\src\vendor_reload_facade.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_app_sdk.dir\Release\vendor_reload_facade.obj
 C:\Users\LJHlj\BlessStar\app\sdk\src\app_vendor_precheck.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_app_sdk.dir\Release\app_vendor_precheck.obj
+C:\Users\LJHlj\BlessStar\app\sdk\src\config_reload_session.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_app_sdk.dir\Release\config_reload_session.obj
+C:\Users\LJHlj\BlessStar\app\sdk\src\config_session_reader.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_app_sdk.dir\Release\config_session_reader.obj
+C:\Users\LJHlj\BlessStar\app\sdk\src\app_session.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_app_sdk.dir\Release\app_session.obj
+C:\Users\LJHlj\BlessStar\app\sdk\src\mem_audit_log.cpp;C:\Users\LJHlj\BlessStar\build_ci_test\bs_app_sdk.dir\Release\mem_audit_log.obj

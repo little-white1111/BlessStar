@@ -44,6 +44,8 @@ struct AttachContext
     int             kernel_pool_warmed;
     void*           ir_snapshot_store; /* IrSnapshotStore (attach_ir_snapshot.cpp) */
     BsAttachStore*  persist_store;     /* RES-IX-17: L1 attach persistence (reload borrow) */
+    void*           gate_cache;        /* MD-D-02: Gate 校验结果缓存 (unordered_map<string,IRInstructionList*>*) */
+    uint64_t        hot_update_version; /* MD-D-07: hot_update 版本号 */
 };
 
 int  bs_adapter_attach_ctx_init_config_manager(AttachContext* ctx);

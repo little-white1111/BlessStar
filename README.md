@@ -1,107 +1,106 @@
-# BlessStar（MVP 第1天：纯净内核骨架）
+# BlessStar — 配置驱动应用运行时引擎
 
-本仓库面向“财务运维配置管理中间件 MVP”，当前交付为**第1天最小工程骨架**：以“多模块纯净内核 + 适配层”组织代码，并在构建/CI 层落地最小可执行的**污染即阻断**门禁。
+[![CI](https://github.com/little-white1111/BlessStar/actions/workflows/ci.yml/badge.svg)](https://github.com/little-white1111/BlessStar/actions/workflows/ci.yml)
 
-## 1. 目标与定位（纯净内核）
+BlessStar 是一个面向**财务运维配置管理**场景的配置驱动应用运行时引擎。它采用三层架构（**App → Adapter → Kernel**），将业务配置以标准化指令（IR）的形式注入内核，实现配置的全生命周期管理——从厂商格式归一化、门禁校验、原子持久化，到内核状态同步与热更新。
 
-- **内核 = CPU/模具**：对外接口与核心逻辑不可被外部直接修改；外部输入只能通过标准化指令（IR）进入。
-- **高内聚低耦合**：内核以模块方式拆分，但对外作为一个整体内核运作。
-- **污染即阻断**：任何模块被污染立即报错阻断；只修污染模块，不连坐其他模块。
+## 核心特性
 
-## 2. 模块化与单线流水线
+- **三层解耦架构**：App SDK（业务层）→ Adapter（编排层）→ Kernel（内核层），单向依赖，分层可测
+- **配置即指令**：业务配置经归一化后转为 IR（Intermediate Representation），由内核流水线执行
+- **三阶段门禁**：`default_gate`（格式校验）→ `policy_gates`（业务策略）→ `custom_gates`（自定义逻辑）
+- **原子持久化**：WAL + CAS 提交，支持 `PER_PATH`/`PER_BATCH` 两种持久化方案，掉电安全
+- **双路径提交**：`AddMemPath`（内存字节，快速热更新）和 `AddFilePath`（文件 URI，持久化基线）
+- **热更新**：配置变更后重新提交即可触发内核热更新，无需重启进程
+- **厂商格式归一化**：支持将异构源（如 JSON 业务文件）归一化为标准 Config v1 格式
+- **配置审计**：内存路径变更自动记录到审计日志（manifest + 快照队列，上限 5 个版本）
 
-本仓库采用“Spring Cloud 多模块思想”的工程拆分，但在内核内部以**单线流水线**组织依赖：
+## 快速上手
 
-- 下游模块仅依赖上游模块的**输出指令/IR**。
-- **严禁反向依赖**与横向共享状态。
-- `NextTarget/NextAction` 设计目标是能直接命中“当前下游/当前未完成模块”，用于快速隔离与修复。
+```cpp
+#include <bs/app/sdk/app_session.h>
+#include <bs/app/sdk/config_reload_session.h>
 
-目录（第1天最小骨架）：
+// 一行启动
+bs::app::AppSession session("/var/bless/manifest.json");
+if (!session.ok()) return;
 
-- `kernel/`：纯净内核（多模块）
-  - `kernel/ir/`：IR 输入抽象（唯一纯净输入）
-  - `kernel/pipeline/`：单线流水线编排（仅依赖上游 IR）
-  - `kernel/report/`：执行情况报告与 NextTarget/NextAction（唯一纯净输出）
-- `adapter/`：适配层（将外部世界翻译成 IR；执行内核 NextAction/Plan 并回填下一轮输入）
-- `factory/`：出厂包（只读消费区，主仓只同步指定版本，不做写回修改）
-- `tools/`：门禁脚本（manifest 校验、辅助生成）
+// 提交配置
+bs::app::ConfigReloadSession cs(session.ctx());
+cs.AddMemPath("approval/rules", json_data, json_len);
+cs.AddPolicyGate({.type = bs::app::ScenarioType::ExpenseReimburse});
 
-## 3. 唯一纯净 I/O（元数据组）
-
-- **唯一输入（IR）**：适配层生成规范的“内核输入配置文件/IR”，只包含与内核模块有关的抽象数据，作为内核唯一纯净输入。
-- **唯一输出**：内核输出
-  - 执行情况报告（Report）
-  - 最小 `NextTarget/NextAction`
-  - （可选）抽象 Plan（第1天占位：不实现）
-- 适配层解析输出后结合当前环境做二次翻译并执行；反馈进入下一轮输入必须严格白名单，避免环境噪声回流。
-
-## 4. 治理与修复（供应链式出厂纯度）
-
-- `Source/*`：上游源码包（独立仓库维护更新，**唯一可写、唯一标准源**）。本仓库第1天**不修改/不运行**其中内容。
-- `factory/`：出厂包（主仓只同步指定版本，**不做写回修改**）。
-- 纯度校验：通过版本锚点（tag/sha）+ manifest（文件清单 + hash）做一致性验证；不一致即视为污染并阻断。
-
-门禁脚本：
-
-- `tools/purity/verify_manifest.py`：校验 `factory/manifest.sha256` 与实际文件一致性（CI 中执行）
-- `tools/purity/generate_manifest.py`：生成 manifest（用于“源码包→出厂包同步”流程；第1天保留为工具占位）
-
-## 5. 构建与 CI
-
-第1天只提供**可 configure 通过**的最小脚手架，并可完成最小编译：
-
-- CMake：`CMakeLists.txt`
-- Meson：`meson.build`
-- GitHub Actions：**`full test`**（`.github/workflows/ci.yml` · 全仓回归）+ **`day21`**（`.github/workflows/day21.yml` · `feat/day21*` 分支 · `-L kernel_pool` + TSan）
-
-本地若要对齐 CI 的「警告即错误」：
-
-```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBLESSSTAR_TREAT_WARNINGS_AS_ERRORS=ON
-cmake --build build
+Report* r = cs.Commit();
+if (bs_report_get_status(r) != REPORT_STATUS_SUCCESS) {
+    char* j = bs_report_to_json(r);
+    fprintf(stderr, "FAIL: %s\n", j);
+    free(j);
+}
 ```
 
-### C/C++ 代码风格（clang-format）
+完整示例见 [`docs/QUICKSTART.md`](docs/QUICKSTART.md) 和 [`app/sdk/test/BsRealBizFullChainTest.cpp`](app/sdk/test/BsRealBizFullChainTest.cpp)。
 
-- **勿**对 `.py` / `.sh` 运行 `clang-format`（会破坏 shebang 与语法）。
-- Windows 推荐：`.\tools\dev\format_cpp_sources.ps1`（可选 `-ClangFormat` 指向本机 `clang-format.exe`）。
-- Linux/macOS：可用 `git ls-files` 白名单扩展名 + `clang-format --dry-run --Werror`（与 CI 一致），或对上述目录手动 `clang-format -i`。
+## 架构概览
 
-## 6. 规范
+```
+┌──────────────────────────────────────────────┐
+│              App Layer (SDK)                  │
+│   AppSession · ConfigReloadSession            │
+│   VendorConfigNormalizer · ScenarioPolicy      │
+│   MemAuditLog                                 │
+└──────────────────┬───────────────────────────┘
+                   │ 标准化 IR + Report
+                   ▼
+┌──────────────────────────────────────────────┐
+│            Adapter Layer (编排)                │
+│   ReloadBatchController · Gate Chain          │
+│   Parser · WAL · Persist Store · Watch        │
+└──────────────────┬───────────────────────────┘
+                   │ 纯净 IR
+                   ▼
+┌──────────────────────────────────────────────┐
+│            Kernel Layer (内核)                 │
+│   ConfigManager · Pipeline · Executor Pool    │
+│   StateBus · EventBus · Registry · IO         │
+└──────────────────────────────────────────────┘
+```
 
-- C++ 编码规范初稿：`docs/cpp-coding-standards.md`
-- Git 提交规范：`docs/git-commit-convention.md`
+## 文档导航
 
-## 7. 快速开始（本地）
+| 文档 | 说明 |
+|------|------|
+| [快速开始](docs/QUICKSTART.md) | 5 分钟上手 BlessStar |
+| [架构总览](docs/ARCHITECTURE_OVERVIEW.md) | 三层架构与核心概念详解 |
+| [API 参考](docs/API_REFERENCE.md) | 所有 public 类/函数/枚举的详细说明 |
+| [配置格式](docs/CONFIG_FORMAT.md) | BlessStar Config v1 JSON 格式规范 |
+| [厂商归一化](docs/VENDOR_NORMALIZE.md) | 使用 VendorConfigNormalizer 将异构配置归一化为标准格式 |
+| [场景策略](docs/SCENARIO_POLICY.md) | ScenarioPolicy 与自定义门禁 |
+| [Report 解读](docs/REPORT_GUIDE.md) | 理解 Commit 执行结果 |
+| [已知限制](docs/KNOWN_LIMITATIONS.md) | 当前版本限制与未来 Roadmap |
 
-### CMake
+## 构建
 
 ```bash
-cmake -S . -B build/cmake
+# CMake 构建
+cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Release
 cmake --build build/cmake
+
+# 运行全量测试
+ctest --test-dir build/cmake --output-on-failure
+
+# 或用构建脚本
+python tools/build/build.py --release
 ```
 
-### Meson
+## 项目状态
 
-```bash
-meson setup build/meson
-meson compile -C build/meson
-```
+BlessStar 目前处于 **MVP 阶段（核心稳定与商用加固）**，核心功能完成度约 85%：
 
-### 纯度门禁（manifest 校验）
+- ✅ Kernel 内核（IR/pipeline/report/registry/state/IO/Runtime）
+- ✅ Adapter 编排（parser/orchestration/persistence/watch/gates）
+- ✅ App SDK（10 个 public API 全部实现并通过全链路测试）
+- 🟡 文档正在持续补齐
+- 🟡 Docker 构建环境标准化
+- 🟡 CI sanitizer 全绿
 
-```bash
-python tools/purity/verify_manifest.py verify --kernel factory --manifest factory/manifest.sha256
-```
-
-## 8. Day22 回归入口
-
-PR 前推荐入口：
-
-```bash
-python tools/scripts/contracts/contract_gate_runner.py --through-stage ci
-ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure
-python tools/scripts/test/collect_coverage.py
-```
-
-`collect_coverage.py` 仅汇总 `cmake/Tests.cmake` 的 CTest label 覆盖，不作为 blocking gate。Day19 内存压测按 `C-TST-MEM-1` rule-only 索引保留在 staging/Actions 证据链中。
+更详细的实现进度见 [`架构方案选择记录.md`](架构方案选择记录.md) 跨日汇总索引。

@@ -123,6 +123,13 @@ blessstar_add_unit_test(bs_test_config_parse_boundary
 set_tests_properties(bs_test_config_parse_boundary
   PROPERTIES LABELS "unit;parser;day10;regression" TIMEOUT 120
 )
+blessstar_add_unit_test(bs_test_meta_rule
+  SOURCES adapter/test/MetaRuleTest.cpp
+  LIBS bs_adapter_parser
+)
+set_tests_properties(bs_test_meta_rule
+  PROPERTIES LABELS "unit;parser;day24;regression"
+)
 blessstar_add_unit_test(bs_test_config_parse_security
   SOURCES adapter/test/ConfigParseSecurityTest.cpp
   LIBS bs_adapter_parser bs_adapter_requirement
@@ -204,6 +211,24 @@ set_tests_properties(bs_test_vendor_config_normalizer
     TIMEOUT 120
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
+blessstar_add_unit_test(bs_test_app_vendor_precheck
+  SOURCES app/sdk/test/AppVendorPrecheckTest.cpp
+  LIBS
+    bs_app_sdk
+    bs_adapter_parser
+    bs_kernel_ir
+    bs_kernel_common
+)
+target_include_directories(bs_test_app_vendor_precheck
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+)
+set_tests_properties(bs_test_app_vendor_precheck
+  PROPERTIES
+    LABELS "unit;app;day24;regression"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
 blessstar_add_unit_test(bs_test_app_vendor_reload_integration
   SOURCES app/sdk/test/AppVendorReloadIntegrationTest.cpp
   LIBS
@@ -227,6 +252,78 @@ set_tests_properties(bs_test_app_vendor_reload_integration
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     RESOURCE_LOCK "attach_integration"
 )
+blessstar_add_unit_test(bs_test_config_reload_session
+  SOURCES app/sdk/test/ConfigReloadSessionTest.cpp
+  LIBS
+    bs_app_sdk
+    bs_adapter_registry
+    bs_adapter_parser
+    bs_kernel_ir
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_config_reload_session
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+    ${CMAKE_SOURCE_DIR}/adapter/test
+)
+set_tests_properties(bs_test_config_reload_session
+  PROPERTIES
+    LABELS "unit;app;day24;regression"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+blessstar_add_unit_test(bs_test_app_config_reload_integration
+  SOURCES app/sdk/test/AppConfigReloadIntegrationTest.cpp
+  LIBS
+    bs_app_sdk
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_parser
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_app_config_reload_integration
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+    ${CMAKE_SOURCE_DIR}/adapter/test
+)
+set_tests_properties(bs_test_app_config_reload_integration
+  PROPERTIES
+    LABELS "unit;integration;app;day24;regression"
+    TIMEOUT 180
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    RESOURCE_LOCK "attach_integration"
+)
+
+# ── 真实业务全链路测试（三层打通） ──────────────────────────────────
+blessstar_add_unit_test(bs_test_real_biz_full_chain
+  SOURCES app/sdk/test/BsRealBizFullChainTest.cpp
+  LIBS
+    bs_app_sdk
+    bs_adapter_registry
+    bs_adapter_orchestration
+    bs_adapter_parser
+    bs_adapter_persistence
+    bs_kernel_io
+    bs_kernel_report
+    bs_kernel_common
+)
+target_include_directories(bs_test_real_biz_full_chain
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+    ${CMAKE_SOURCE_DIR}/adapter/test
+)
+set_tests_properties(bs_test_real_biz_full_chain
+  PROPERTIES
+    LABELS "integration;app;adapter;kernel;day24;regression"
+    TIMEOUT 180
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    RESOURCE_LOCK "attach_integration"
+)
+
 blessstar_add_unit_test(bs_test_reload_config_json_integration
   SOURCES adapter/test/ReloadConfigJsonIntegrationTest.cpp
   LIBS

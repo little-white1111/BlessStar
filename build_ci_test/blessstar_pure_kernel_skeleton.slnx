@@ -38,7 +38,9 @@
 		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
 		<BuildDependency Project="bs_kernel_state.vcxproj"/>
 		<BuildDependency Project="bs_kernel_test_support.vcxproj"/>
+		<BuildDependency Project="bs_test_app_config_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_app_sdk_contract.vcxproj"/>
+		<BuildDependency Project="bs_test_app_vendor_precheck.vcxproj"/>
 		<BuildDependency Project="bs_test_app_vendor_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_atomicity.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_concurrency.vcxproj"/>
@@ -65,6 +67,7 @@
 		<BuildDependency Project="bs_test_config_parse_boundary.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security_audit.vcxproj"/>
+		<BuildDependency Project="bs_test_config_reload_session.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_memory_baseline.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_stress_reload_loop.vcxproj"/>
 		<BuildDependency Project="bs_test_day8_attach_full_integration.vcxproj"/>
@@ -91,6 +94,7 @@
 		<BuildDependency Project="bs_test_log_domain_registration.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool_comprehensive.vcxproj"/>
+		<BuildDependency Project="bs_test_meta_rule.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics_comprehensive.vcxproj"/>
 		<BuildDependency Project="bs_test_path_registry.vcxproj"/>
@@ -101,6 +105,7 @@
 		<BuildDependency Project="bs_test_plugin_loader_attach.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_log_domains_attach_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_orch_reload_registry.vcxproj"/>
+		<BuildDependency Project="bs_test_real_biz_full_chain.vcxproj"/>
 		<BuildDependency Project="bs_test_reentrancy_io.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_attach_contract.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_bootstrap_io.vcxproj"/>
@@ -131,6 +136,10 @@
 		<BuildDependency Project="bs_test_status.vcxproj"/>
 		<BuildDependency Project="bs_test_vendor_config_normalizer.vcxproj"/>
 		<BuildDependency Project="_deps/spdlog-build/spdlog.vcxproj"/>
+	</Project>
+	<Project Path="INSTALL.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="fae60ec6-66c7-3156-ba28-3ff35dede4d2">
+		<BuildDependency Project="ALL_BUILD.vcxproj"/>
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
 		<Build Solution="Debug|*" Project="false"/>
 		<Build Solution="Release|*" Project="false"/>
 		<Build Solution="MinSizeRel|*" Project="false"/>
@@ -313,7 +322,20 @@
 	</Project>
 	<Project Path="bs_app_sdk.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="13c59a0a-94d4-3925-ac88-8047c731db0d">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
 	</Project>
 	<Project Path="bs_benchmark_ir.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="da20d13f-9e31-3eff-890f-a33f1f0c55a8">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
@@ -393,10 +415,68 @@
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common.vcxproj"/>
 	</Project>
-	<Project Path="bs_test_app_sdk_contract.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="fa7609f8-c062-37ed-b3c8-686ddb9bc2bd">
+	<Project Path="bs_test_app_config_reload_integration.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="1e6bb39f-7a81-3404-bac0-200aab943378">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_log.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_loader.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_log_domains.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_orch.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_registry.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
 		<BuildDependency Project="bs_app_sdk.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+		<BuildDependency Project="_deps/spdlog-build/spdlog.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_app_sdk_contract.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="fa7609f8-c062-37ed-b3c8-686ddb9bc2bd">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_app_sdk.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_app_vendor_precheck.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="4b3b20ad-9397-3440-97ce-4627424ff43a">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_app_sdk.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
 	</Project>
 	<Project Path="bs_test_app_vendor_reload_integration.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="e9e7aa75-c89a-3240-80fe-3d664d73f046">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
@@ -902,6 +982,33 @@
 		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
 		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
 	</Project>
+	<Project Path="bs_test_config_reload_session.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3f9d8625-3027-3371-b339-87b851972ab2">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_log.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_loader.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_log_domains.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_orch.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_registry.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_app_sdk.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+		<BuildDependency Project="_deps/spdlog-build/spdlog.vcxproj"/>
+	</Project>
 	<Project Path="bs_test_day19_memory_baseline.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="41b706de-5858-352e-be53-4a025c9aa3d3">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
 		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
@@ -1161,6 +1268,13 @@
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common.vcxproj"/>
 	</Project>
+	<Project Path="bs_test_meta_rule.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="d5bd298c-3d73-3d9d-ad44-ea80d94dcb68">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+	</Project>
 	<Project Path="bs_test_metrics.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="03a59480-fc35-3c9a-aede-76d382400a56">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common.vcxproj"/>
@@ -1269,6 +1383,33 @@
 		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
 		<BuildDependency Project="bs_adapter_registry.vcxproj"/>
 		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
+		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
+		<BuildDependency Project="_deps/spdlog-build/spdlog.vcxproj"/>
+	</Project>
+	<Project Path="bs_test_real_biz_full_chain.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="0da2931f-ec8c-39e1-b6d4-f6b8ef303550">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_log.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
+		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_io.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_loader.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_log_domains.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_orch.vcxproj"/>
+		<BuildDependency Project="bs_adapter_plugin_support.vcxproj"/>
+		<BuildDependency Project="bs_adapter_registry.vcxproj"/>
+		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
+		<BuildDependency Project="bs_app_sdk.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
 		<BuildDependency Project="bs_kernel_io.vcxproj"/>
@@ -1664,15 +1805,27 @@
 	</Project>
 	<Project Path="bs_test_vendor_config_normalizer.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ad5506de-c8d4-3533-af35-3a322efa67ed">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_adapter_attach.vcxproj"/>
+		<BuildDependency Project="bs_adapter_orchestration.vcxproj"/>
 		<BuildDependency Project="bs_adapter_parser.vcxproj"/>
+		<BuildDependency Project="bs_adapter_persistence.vcxproj"/>
 		<BuildDependency Project="bs_adapter_requirement.vcxproj"/>
 		<BuildDependency Project="bs_app_sdk.vcxproj"/>
 		<BuildDependency Project="bs_kernel_common.vcxproj"/>
+		<BuildDependency Project="bs_kernel_common_format.vcxproj"/>
+		<BuildDependency Project="bs_kernel_io.vcxproj"/>
 		<BuildDependency Project="bs_kernel_ir.vcxproj"/>
+		<BuildDependency Project="bs_kernel_pipeline.vcxproj"/>
+		<BuildDependency Project="bs_kernel_registry.vcxproj"/>
+		<BuildDependency Project="bs_kernel_report_core.vcxproj"/>
+		<BuildDependency Project="bs_kernel_runtime.vcxproj"/>
+		<BuildDependency Project="bs_kernel_state.vcxproj"/>
 	</Project>
 	<Project Path="run_all_tests.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="205a866d-d44d-3869-aa91-82a5c518103e">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_test_app_config_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_app_sdk_contract.vcxproj"/>
+		<BuildDependency Project="bs_test_app_vendor_precheck.vcxproj"/>
 		<BuildDependency Project="bs_test_app_vendor_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_atomicity.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_concurrency.vcxproj"/>
@@ -1699,6 +1852,7 @@
 		<BuildDependency Project="bs_test_config_parse_boundary.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security_audit.vcxproj"/>
+		<BuildDependency Project="bs_test_config_reload_session.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_memory_baseline.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_stress_reload_loop.vcxproj"/>
 		<BuildDependency Project="bs_test_day8_attach_full_integration.vcxproj"/>
@@ -1725,6 +1879,7 @@
 		<BuildDependency Project="bs_test_log_domain_registration.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool_comprehensive.vcxproj"/>
+		<BuildDependency Project="bs_test_meta_rule.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics_comprehensive.vcxproj"/>
 		<BuildDependency Project="bs_test_path_registry.vcxproj"/>
@@ -1735,6 +1890,7 @@
 		<BuildDependency Project="bs_test_plugin_loader_attach.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_log_domains_attach_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_orch_reload_registry.vcxproj"/>
+		<BuildDependency Project="bs_test_real_biz_full_chain.vcxproj"/>
 		<BuildDependency Project="bs_test_reentrancy_io.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_attach_contract.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_bootstrap_io.vcxproj"/>
@@ -1771,7 +1927,9 @@
 	</Project>
 	<Project Path="run_integration_tests.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="ef0c1c5e-1acd-32d4-b493-de5ae98a118b">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_test_app_config_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_app_sdk_contract.vcxproj"/>
+		<BuildDependency Project="bs_test_app_vendor_precheck.vcxproj"/>
 		<BuildDependency Project="bs_test_app_vendor_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_atomicity.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_concurrency.vcxproj"/>
@@ -1798,6 +1956,7 @@
 		<BuildDependency Project="bs_test_config_parse_boundary.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security_audit.vcxproj"/>
+		<BuildDependency Project="bs_test_config_reload_session.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_memory_baseline.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_stress_reload_loop.vcxproj"/>
 		<BuildDependency Project="bs_test_day8_attach_full_integration.vcxproj"/>
@@ -1824,6 +1983,7 @@
 		<BuildDependency Project="bs_test_log_domain_registration.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool_comprehensive.vcxproj"/>
+		<BuildDependency Project="bs_test_meta_rule.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics_comprehensive.vcxproj"/>
 		<BuildDependency Project="bs_test_path_registry.vcxproj"/>
@@ -1834,6 +1994,7 @@
 		<BuildDependency Project="bs_test_plugin_loader_attach.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_log_domains_attach_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_orch_reload_registry.vcxproj"/>
+		<BuildDependency Project="bs_test_real_biz_full_chain.vcxproj"/>
 		<BuildDependency Project="bs_test_reentrancy_io.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_attach_contract.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_bootstrap_io.vcxproj"/>
@@ -1870,7 +2031,9 @@
 	</Project>
 	<Project Path="run_regression_tests.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="5d31edde-d4a5-3824-9a09-24773f045109">
 		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="bs_test_app_config_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_app_sdk_contract.vcxproj"/>
+		<BuildDependency Project="bs_test_app_vendor_precheck.vcxproj"/>
 		<BuildDependency Project="bs_test_app_vendor_reload_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_atomicity.vcxproj"/>
 		<BuildDependency Project="bs_test_attach_concurrency.vcxproj"/>
@@ -1897,6 +2060,7 @@
 		<BuildDependency Project="bs_test_config_parse_boundary.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security.vcxproj"/>
 		<BuildDependency Project="bs_test_config_parse_security_audit.vcxproj"/>
+		<BuildDependency Project="bs_test_config_reload_session.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_memory_baseline.vcxproj"/>
 		<BuildDependency Project="bs_test_day19_stress_reload_loop.vcxproj"/>
 		<BuildDependency Project="bs_test_day8_attach_full_integration.vcxproj"/>
@@ -1923,6 +2087,7 @@
 		<BuildDependency Project="bs_test_log_domain_registration.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool.vcxproj"/>
 		<BuildDependency Project="bs_test_memory_pool_comprehensive.vcxproj"/>
+		<BuildDependency Project="bs_test_meta_rule.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics.vcxproj"/>
 		<BuildDependency Project="bs_test_metrics_comprehensive.vcxproj"/>
 		<BuildDependency Project="bs_test_path_registry.vcxproj"/>
@@ -1933,6 +2098,7 @@
 		<BuildDependency Project="bs_test_plugin_loader_attach.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_log_domains_attach_integration.vcxproj"/>
 		<BuildDependency Project="bs_test_plugin_orch_reload_registry.vcxproj"/>
+		<BuildDependency Project="bs_test_real_biz_full_chain.vcxproj"/>
 		<BuildDependency Project="bs_test_reentrancy_io.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_attach_contract.vcxproj"/>
 		<BuildDependency Project="bs_test_registry_bootstrap_io.vcxproj"/>

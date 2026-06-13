@@ -48,7 +48,7 @@ static int watch_callback_timeout_ms(void)
 {
     const char* v = std::getenv("BS_ATTACH_WATCH_CALLBACK_TIMEOUT_MS");
     if (!v || !*v)
-        return 30000;
+        return 5000;
     return std::atoi(v);
 }
 

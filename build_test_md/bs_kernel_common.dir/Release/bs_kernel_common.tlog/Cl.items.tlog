@@ -1,0 +1,8 @@
+C:\Users\LJHlj\BlessStar\kernel\common\src\Metrics.cpp;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\Metrics.obj
+C:\Users\LJHlj\BlessStar\kernel\common\src\MemoryPool.cpp;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\MemoryPool.obj
+C:\Users\LJHlj\BlessStar\kernel\common\src\Plugin.cpp;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\Plugin.obj
+C:\Users\LJHlj\BlessStar\kernel\common\src\bs_status.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\bs_status.obj
+C:\Users\LJHlj\BlessStar\kernel\common\src\bs_log.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\bs_log.obj
+C:\Users\LJHlj\BlessStar\kernel\common\src\bs_reentrancy.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\bs_reentrancy.obj
+C:\Users\LJHlj\BlessStar\kernel\common\src\bs_safe_format.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\bs_safe_format.obj
+C:\Users\LJHlj\BlessStar\kernel\common\src\bs_wait_trace.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_kernel_common.dir\Release\bs_wait_trace.obj

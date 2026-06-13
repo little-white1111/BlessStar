@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-06-10T02:24:18.053310+00:00",
+  "generated_at": "2026-06-11T08:53:49.775259+00:00",
   "policy": {
     "fail_fast": true,
     "draft_policy": "warn",
     "report_dir": "docs/reports"
   },
   "lock_plan": "docs/reports/contract_plan.lock.json",
-  "result": "PASS",
+  "result": "FAIL",
   "results": [
     {
       "gate_id": "GATE-META-CONTRACT-FILES",
@@ -153,7 +153,7 @@
           "resolved_command": "python tools/scripts/gates/check_test_environment_tiers.py"
         }
       ],
-      "output": "[INFO] 18 CTest case(s) are non-L1 (allowed). Examples:\n  - bs_test_attach_concurrency\n  - bs_test_attach_day19_shortcoming_regression\n  - bs_test_attach_dual_truth_sync\n  - bs_test_attach_notify_flush\n  - bs_test_attach_p2_shortcoming_regression\n  - bs_test_attach_recover_cold\n  - bs_test_attach_recover_concurrency\n  - bs_test_attach_recover_fsm\n  - bs_test_attach_recover_sidecar\n  - bs_test_attach_sync_prod_paths_check\n[OK] L1 tier assignment covers 94 ctest name(s)\n"
+      "output": "[INFO] 21 CTest case(s) are non-L1 (allowed). Examples:\n  - bs_test_app_config_reload_integration\n  - bs_test_attach_concurrency\n  - bs_test_attach_day19_shortcoming_regression\n  - bs_test_attach_dual_truth_sync\n  - bs_test_attach_notify_flush\n  - bs_test_attach_p2_shortcoming_regression\n  - bs_test_attach_recover_cold\n  - bs_test_attach_recover_concurrency\n  - bs_test_attach_recover_fsm\n  - bs_test_attach_recover_sidecar\n[OK] L1 tier assignment covers 94 ctest name(s)\n"
     },
     {
       "gate_id": "GATE-ARCH-INCLUDE-BOUNDARY",
@@ -300,7 +300,7 @@
           "resolved_command": "ctest --test-dir build_ci_test -C Release -R bs_test_vendor_config_normalizer --output-on-failure"
         }
       ],
-      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n    Start 21: bs_test_vendor_config_normalizer\n1/1 Test #21: bs_test_vendor_config_normalizer ...   Passed    0.03 sec\n\n100% tests passed, 0 tests failed out of 1\n\nLabel Time Summary:\napp           =   0.03 sec*proc (1 test)\nday17         =   0.03 sec*proc (1 test)\nregression    =   0.03 sec*proc (1 test)\nunit          =   0.03 sec*proc (1 test)\n\nTotal Test time (real) =   0.04 sec\n"
+      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n    Start 21: bs_test_vendor_config_normalizer\n1/1 Test #21: bs_test_vendor_config_normalizer ...   Passed    0.04 sec\n\n100% tests passed, 0 tests failed out of 1\n\nLabel Time Summary:\napp           =   0.04 sec*proc (1 test)\nday17         =   0.04 sec*proc (1 test)\nregression    =   0.04 sec*proc (1 test)\nunit          =   0.04 sec*proc (1 test)\n\nTotal Test time (real) =   0.05 sec\n"
     },
     {
       "gate_id": "GATE-DAY14",
@@ -331,7 +331,30 @@
           "resolved_command": "ctest --test-dir build_ci_test -C Release -L day14 --output-on-failure"
         }
       ],
-      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n    Start 17: bs_test_attach_atomicity\n1/2 Test #17: bs_test_attach_atomicity .........   Passed    0.05 sec\n    Start 18: bs_test_attach_fsync_spot\n2/2 Test #18: bs_test_attach_fsync_spot ........   Passed    0.02 sec\n\n100% tests passed, 0 tests failed out of 2\n\nLabel Time Summary:\nattach        =   0.06 sec*proc (2 tests)\nday14         =   0.06 sec*proc (2 tests)\nregression    =   0.06 sec*proc (2 tests)\nunit          =   0.06 sec*proc (2 tests)\nwin_spot      =   0.02 sec*proc (1 test)\n\nTotal Test time (real) =   0.07 sec\n"
+      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n    Start 17: bs_test_attach_atomicity\n1/2 Test #17: bs_test_attach_atomicity .........   Passed    0.05 sec\n    Start 18: bs_test_attach_fsync_spot\n2/2 Test #18: bs_test_attach_fsync_spot ........   Passed    0.01 sec\n\n100% tests passed, 0 tests failed out of 2\n\nLabel Time Summary:\nattach        =   0.06 sec*proc (2 tests)\nday14         =   0.06 sec*proc (2 tests)\nregression    =   0.06 sec*proc (2 tests)\nunit          =   0.06 sec*proc (2 tests)\nwin_spot      =   0.01 sec*proc (1 test)\n\nTotal Test time (real) =   0.07 sec\n"
+    },
+    {
+      "gate_id": "GATE-ATTACH-WATCH-CB",
+      "stage": "watch",
+      "result": "PASS",
+      "exit_code": 0,
+      "contracts": [
+        "C-ATTACH-WATCH-CB-1"
+      ],
+      "active_contracts": [
+        "C-ATTACH-WATCH-CB-1"
+      ],
+      "draft_contracts": [],
+      "command": "python tools/scripts/gates/check_attach_watch_callback_contract.py",
+      "verify_entries": [
+        {
+          "contract_id": "C-ATTACH-WATCH-CB-1",
+          "entry": "tools/scripts/gates/check_attach_watch_callback_contract.py",
+          "entry_kind": "script",
+          "resolved_command": "python tools/scripts/gates/check_attach_watch_callback_contract.py"
+        }
+      ],
+      "output": "[OK] C-ATTACH-WATCH-CB-1 attach watch callback contract check passed\n"
     },
     {
       "gate_id": "GATE-DAY15",
@@ -362,7 +385,7 @@
           "resolved_command": "ctest --test-dir build_ci_test -C Release -L day15 --output-on-failure"
         }
       ],
-      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n    Start 19: bs_test_attach_watch\n1/1 Test #19: bs_test_attach_watch .............   Passed    0.07 sec\n\n100% tests passed, 0 tests failed out of 1\n\nLabel Time Summary:\nattach        =   0.07 sec*proc (1 test)\nday15         =   0.07 sec*proc (1 test)\nregression    =   0.07 sec*proc (1 test)\nunit          =   0.07 sec*proc (1 test)\n\nTotal Test time (real) =   0.08 sec\n"
+      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n    Start 19: bs_test_attach_watch\n1/1 Test #19: bs_test_attach_watch .............   Passed    0.04 sec\n\n100% tests passed, 0 tests failed out of 1\n\nLabel Time Summary:\nattach        =   0.04 sec*proc (1 test)\nday15         =   0.04 sec*proc (1 test)\nregression    =   0.04 sec*proc (1 test)\nunit          =   0.04 sec*proc (1 test)\n\nTotal Test time (real) =   0.05 sec\n"
     },
     {
       "gate_id": "GATE-ATTACH-SYNC-PROD",
@@ -430,8 +453,8 @@
     {
       "gate_id": "GATE-INTEGRATION",
       "stage": "ci",
-      "result": "PASS",
-      "exit_code": 0,
+      "result": "FAIL",
+      "exit_code": 8,
       "contracts": [
         "C-IX-2",
         "C-ST-13",
@@ -480,155 +503,7 @@
           "resolved_command": "ctest --test-dir build_ci_test -C Release -L integration -j 1 --output-on-failure"
         }
       ],
-      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n      Start 22: bs_test_app_vendor_reload_integration\n 1/13 Test #22: bs_test_app_vendor_reload_integration .............................   Passed    0.02 sec\n      Start 23: bs_test_reload_config_json_integration\n 2/13 Test #23: bs_test_reload_config_json_integration ............................   Passed    0.03 sec\n      Start 29: bs_test_attach_pipeline_registry\n 3/13 Test #29: bs_test_attach_pipeline_registry ..................................   Passed    0.02 sec\n      Start 38: bs_test_reload_per_batch_config_manager\n 4/13 Test #38: bs_test_reload_per_batch_config_manager ...........................   Passed    0.02 sec\n      Start 39: bs_test_reload_ir_execute_integration\n 5/13 Test #39: bs_test_reload_ir_execute_integration .............................   Passed    0.03 sec\n      Start 40: bs_test_reload_per_batch_parallel_exec\n 6/13 Test #40: bs_test_reload_per_batch_parallel_exec ............................   Passed    0.02 sec\n      Start 43: bs_test_io_attach_pipeline\n 7/13 Test #43: bs_test_io_attach_pipeline ........................................   Passed    0.02 sec\n      Start 46: bs_test_attach_freeze_eventbus_integration\n 8/13 Test #46: bs_test_attach_freeze_eventbus_integration ........................   Passed    0.02 sec\n      Start 47: bs_test_attach_facade_freeze_delegate\n 9/13 Test #47: bs_test_attach_facade_freeze_delegate .............................   Passed    0.02 sec\n      Start 52: bs_test_plugin_log_domains_attach_integration\n10/13 Test #52: bs_test_plugin_log_domains_attach_integration .....................   Passed    0.02 sec\n      Start 53: bs_test_day8_attach_full_integration\n11/13 Test #53: bs_test_day8_attach_full_integration ..............................   Passed    0.03 sec\n      Start 77: bs_test_reload_default_gate_report_eventbus_reentry_integration\n12/13 Test #77: bs_test_reload_default_gate_report_eventbus_reentry_integration ...   Passed    0.02 sec\n      Start 96: bs_test_attach_wire_full_chain_integration\n13/13 Test #96: bs_test_attach_wire_full_chain_integration ........................   Passed    0.03 sec\n\n100% tests passed, 0 tests failed out of 13\n\nLabel Time Summary:\napp            =   0.02 sec*proc (1 test)\narch_gap       =   0.03 sec*proc (1 test)\nattach         =   0.21 sec*proc (9 tests)\nday17          =   0.09 sec*proc (4 tests)\nday7           =   0.02 sec*proc (1 test)\nday8           =   0.07 sec*proc (3 tests)\nday9           =   0.03 sec*proc (1 test)\nintegration    =   0.30 sec*proc (13 tests)\nio             =   0.10 sec*proc (4 tests)\nkernel_pool    =   0.02 sec*proc (1 test)\nparser         =   0.03 sec*proc (1 test)\nregistry       =   0.12 sec*proc (6 tests)\nregression     =   0.30 sec*proc (13 tests)\nruntime        =   0.05 sec*proc (2 tests)\nstate          =   0.02 sec*proc (1 test)\nunit           =   0.30 sec*proc (13 tests)\nwire           =   0.03 sec*proc (1 test)\n\nTotal Test time (real) =   0.31 sec\n"
-    },
-    {
-      "gate_id": "GATE-KERNEL-POOL-CONFIG",
-      "stage": "ci",
-      "result": "PASS",
-      "exit_code": 0,
-      "contracts": [
-        "C-KERNEL-POOL-1"
-      ],
-      "active_contracts": [
-        "C-KERNEL-POOL-1"
-      ],
-      "draft_contracts": [],
-      "command": "python tools/scripts/gates/check_kernel_pool_config.py",
-      "verify_entries": [
-        {
-          "contract_id": "C-KERNEL-POOL-1",
-          "entry": "tools/scripts/gates/check_kernel_pool_config.py",
-          "entry_kind": "script",
-          "resolved_command": "python tools/scripts/gates/check_kernel_pool_config.py"
-        }
-      ],
-      "output": "[OK] C-KERNEL-POOL-1 config and runtime boundary check passed\n"
-    },
-    {
-      "gate_id": "GATE-RECOVER",
-      "stage": "ci",
-      "result": "PASS",
-      "exit_code": 0,
-      "contracts": [
-        "C-FN-1"
-      ],
-      "active_contracts": [
-        "C-FN-1"
-      ],
-      "draft_contracts": [],
-      "command": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure",
-      "verify_entries": [
-        {
-          "contract_id": "C-FN-1",
-          "entry": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L recover -j 1 --output-on-failure"
-        }
-      ],
-      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n    Start 91: bs_test_attach_recover_cold\n1/4 Test #91: bs_test_attach_recover_cold ..........   Passed    0.04 sec\n    Start 92: bs_test_attach_recover_fsm\n2/4 Test #92: bs_test_attach_recover_fsm ...........   Passed    0.06 sec\n    Start 93: bs_test_attach_recover_sidecar\n3/4 Test #93: bs_test_attach_recover_sidecar .......   Passed    0.06 sec\n    Start 94: bs_test_attach_recover_concurrency\n4/4 Test #94: bs_test_attach_recover_concurrency ...   Passed    0.08 sec\n\n100% tests passed, 0 tests failed out of 4\n\nLabel Time Summary:\narch_gap      =   0.24 sec*proc (4 tests)\nrecover       =   0.24 sec*proc (4 tests)\nregression    =   0.24 sec*proc (4 tests)\nunit          =   0.24 sec*proc (4 tests)\n\nTotal Test time (real) =   0.25 sec\n"
-    },
-    {
-      "gate_id": "GATE-REGRESSION",
-      "stage": "ci",
-      "result": "PASS",
-      "exit_code": 0,
-      "contracts": [
-        "C-IX-4",
-        "C-ST-13",
-        "C-FN-1",
-        "C-FN-2",
-        "C-FN-3",
-        "C-CF-1",
-        "C-CF-2"
-      ],
-      "active_contracts": [
-        "C-IX-4",
-        "C-ST-13",
-        "C-FN-1",
-        "C-FN-2",
-        "C-FN-3",
-        "C-CF-1",
-        "C-CF-2"
-      ],
-      "draft_contracts": [],
-      "command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-      "verify_entries": [
-        {
-          "contract_id": "C-IX-4",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
-        },
-        {
-          "contract_id": "C-ST-13",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
-        },
-        {
-          "contract_id": "C-FN-1",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
-        },
-        {
-          "contract_id": "C-FN-2",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
-        },
-        {
-          "contract_id": "C-FN-3",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
-        },
-        {
-          "contract_id": "C-CF-1",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
-        },
-        {
-          "contract_id": "C-CF-2",
-          "entry": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure",
-          "entry_kind": "command",
-          "resolved_command": "ctest --test-dir build_ci_test -C Release -L regression -LE day17 -j 1 --output-on-failure"
-        }
-      ],
-      "output": ".....   Passed    0.03 sec\n      Start  18: bs_test_attach_fsync_spot\n 9/75 Test  #18: bs_test_attach_fsync_spot .........................................   Passed    0.01 sec\n      Start  19: bs_test_attach_watch\n10/75 Test  #19: bs_test_attach_watch ..............................................   Passed    0.05 sec\n      Start  23: bs_test_reload_config_json_integration\n11/75 Test  #23: bs_test_reload_config_json_integration ............................   Passed    0.03 sec\n      Start  24: bs_test_path_registry\n12/75 Test  #24: bs_test_path_registry .............................................   Passed    0.01 sec\n      Start  25: bs_test_registry_hub\n13/75 Test  #25: bs_test_registry_hub ..............................................   Passed    0.01 sec\n      Start  26: bs_test_registry_facade\n14/75 Test  #26: bs_test_registry_facade ...........................................   Passed    0.01 sec\n      Start  27: bs_test_registry_guard\n15/75 Test  #27: bs_test_registry_guard ............................................   Passed    0.01 sec\n      Start  28: bs_test_registry_integration\n16/75 Test  #28: bs_test_registry_integration ......................................   Passed    0.03 sec\n      Start  29: bs_test_attach_pipeline_registry\n17/75 Test  #29: bs_test_attach_pipeline_registry ..................................   Passed    0.02 sec\n      Start  30: bs_test_registry_attach_contract\n18/75 Test  #30: bs_test_registry_attach_contract ..................................   Passed    0.02 sec\n      Start  31: bs_test_io_facade\n19/75 Test  #31: bs_test_io_facade .................................................   Passed    0.02 sec\n      Start  32: bs_test_io_local_provider\n20/75 Test  #32: bs_test_io_local_provider .........................................   Passed    0.02 sec\n      Start  33: bs_test_io_registry_phase\n21/75 Test  #33: bs_test_io_registry_phase .........................................   Passed    0.01 sec\n      Start  34: bs_test_io_facade_boundary\n22/75 Test  #34: bs_test_io_facade_boundary ........................................   Passed    0.02 sec\n      Start  35: bs_test_io_local_provider_boundary\n23/75 Test  #35: bs_test_io_local_provider_boundary ................................   Passed    0.03 sec\n      Start  36: bs_test_io_provider_stub\n24/75 Test  #36: bs_test_io_provider_stub ..........................................   Passed    0.01 sec\n      Start  37: bs_test_io_reload_batch\n25/75 Test  #37: bs_test_io_reload_batch ...........................................   Passed    0.01 sec\n      Start  40: bs_test_reload_per_batch_parallel_exec\n26/75 Test  #40: bs_test_reload_per_batch_parallel_exec ............................   Passed    0.02 sec\n      Start  41: bs_test_io_facade_max_read\n27/75 Test  #41: bs_test_io_facade_max_read ........................................   Passed    0.01 sec\n      Start  42: bs_test_io_local_provider_timeout\n28/75 Test  #42: bs_test_io_local_provider_timeout .................................   Passed    0.03 sec\n      Start  43: bs_test_io_attach_pipeline\n29/75 Test  #43: bs_test_io_attach_pipeline ........................................   Passed    0.02 sec\n      Start  44: bs_test_registry_bootstrap_io\n30/75 Test  #44: bs_test_registry_bootstrap_io .....................................   Passed    0.01 sec\n      Start  45: bs_test_attach_context_bootstrap\n31/75 Test  #45: bs_test_attach_context_bootstrap ..................................   Passed    0.01 sec\n      Start  46: bs_test_attach_freeze_eventbus_integration\n32/75 Test  #46: bs_test_attach_freeze_eventbus_integration ........................   Passed    0.01 sec\n      Start  48: bs_test_plugin_loader_attach\n33/75 Test  #48: bs_test_plugin_loader_attach ......................................   Passed    0.01 sec\n      Start  49: bs_test_plugin_orch_reload_registry\n34/75 Test  #49: bs_test_plugin_orch_reload_registry ...............................   Passed    0.02 sec\n      Start  50: bs_test_plugin_ir_requirements\n35/75 Test  #50: bs_test_plugin_ir_requirements ....................................   Passed    0.01 sec\n      Start  51: bs_test_attach_manifest_yaml\n36/75 Test  #51: bs_test_attach_manifest_yaml ......................................   Passed    0.01 sec\n      Start  52: bs_test_plugin_log_domains_attach_integration\n37/75 Test  #52: bs_test_plugin_log_domains_attach_integration .....................   Passed    0.02 sec\n      Start  53: bs_test_day8_attach_full_integration\n38/75 Test  #53: bs_test_day8_attach_full_integration ..............................   Passed    0.02 sec\n      Start  57: bs_test_kernel_executor\n39/75 Test  #57: bs_test_kernel_executor ...........................................   Passed    0.14 sec\n      Start  58: bs_test_kernel_pool\n40/75 Test  #58: bs_test_kernel_pool ...............................................   Passed    0.01 sec\n      Start  66: bs_test_status\n41/75 Test  #66: bs_test_status ....................................................   Passed    0.01 sec\n      Start  67: bs_test_log\n42/75 Test  #67: bs_test_log .......................................................   Passed    0.01 sec\n      Start  68: bs_test_registry_status_domain\n43/75 Test  #68: bs_test_registry_status_domain ....................................   Passed    0.01 sec\n      Start  69: bs_test_reload_report\n44/75 Test  #69: bs_test_reload_report .............................................   Passed    0.01 sec\n      Start  70: bs_test_reload_attach_guard\n45/75 Test  #70: bs_test_reload_attach_guard .......................................   Passed    0.01 sec\n      Start  71: bs_test_reload_gate_default\n46/75 Test  #71: bs_test_reload_gate_default .......................................   Passed    0.01 sec\n      Start  72: bs_test_log_domain_registration\n47/75 Test  #72: bs_test_log_domain_registration ...................................   Passed    0.01 sec\n      Start  73: bs_test_log_audit\n48/75 Test  #73: bs_test_log_audit .................................................   Passed    0.01 sec\n      Start  74: bs_test_reentrancy_io\n49/75 Test  #74: bs_test_reentrancy_io .............................................   Passed    0.01 sec\n      Start  75: bs_test_result_status_map\n50/75 Test  #75: bs_test_result_status_map .........................................   Passed    0.01 sec\n      Start  76: bs_test_io_status_table\n51/75 Test  #76: bs_test_io_status_table ...........................................   Passed    0.01 sec\n      Start  77: bs_test_reload_default_gate_report_eventbus_reentry_integration\n52/75 Test  #77: bs_test_reload_default_gate_report_eventbus_reentry_integration ...   Passed    0.01 sec\n      Start  78: bs_test_day19_memory_baseline\n53/75 Test  #78: bs_test_day19_memory_baseline .....................................   Passed    0.03 sec\n      Start  79: bs_test_day19_stress_reload_loop\n54/75 Test  #79: bs_test_day19_stress_reload_loop ..................................   Passed   25.02 sec\n      Start  80: bs_test_day19_stress_fail_ci\n55/75 Test  #80: bs_test_day19_stress_fail_ci ......................................   Passed   25.01 sec\n      Start  81: bs_test_attach_concurrency\n56/75 Test  #81: bs_test_attach_concurrency ........................................   Passed    0.16 sec\n      Start  83: bs_test_attach_day19_shortcoming_regression\n57/75 Test  #83: bs_test_attach_day19_shortcoming_regression .......................   Passed    6.01 sec\n      Start  82: bs_test_attach_p2_shortcoming_regression\n58/75 Test  #82: bs_test_attach_p2_shortcoming_regression ..........................   Passed    0.15 sec\n      Start  84: bs_test_attach_day19_shortcoming_manifest-fsync\n59/75 Test  #84: bs_test_attach_day19_shortcoming_manifest-fsync ...................   Passed    2.14 sec\n      Start  85: bs_test_attach_day19_shortcoming_wal-purge\n60/75 Test  #85: bs_test_attach_day19_shortcoming_wal-purge ........................   Passed    0.66 sec\n      Start  86: bs_test_attach_day19_shortcoming_ctx-store-budget\n61/75 Test  #86: bs_test_attach_day19_shortcoming_ctx-store-budget .................   Passed    1.21 sec\n      Start  87: bs_test_attach_day19_shortcoming_pool-warmup\n62/75 Test  #87: bs_test_attach_day19_shortcoming_pool-warmup ......................   Passed    0.16 sec\n      Start  88: bs_test_attach_day19_shortcoming_rs-reset\n63/75 Test  #88: bs_test_attach_day19_shortcoming_rs-reset .........................   Passed    2.47 sec\n      Start  89: bs_test_attach_day19_shortcoming_rs-store\n64/75 Test  #89: bs_test_attach_day19_shortcoming_rs-store .........................   Passed    0.99 sec\n      Start  90: bs_test_attach_day19_shortcoming_rs-oneshot\n65/75 Test  #90: bs_test_attach_day19_shortcoming_rs-oneshot .......................   Passed    0.05 sec\n      Start  91: bs_test_attach_recover_cold\n66/75 Test  #91: bs_test_attach_recover_cold .......................................   Passed    0.03 sec\n      Start  92: bs_test_attach_recover_fsm\n67/75 Test  #92: bs_test_attach_recover_fsm ........................................   Passed    0.06 sec\n      Start  93: bs_test_attach_recover_sidecar\n68/75 Test  #93: bs_test_attach_recover_sidecar ....................................   Passed    0.06 sec\n      Start  94: bs_test_attach_recover_concurrency\n69/75 Test  #94: bs_test_attach_recover_concurrency ................................   Passed    0.09 sec\n      Start  95: bs_test_attach_dual_truth_sync\n70/75 Test  #95: bs_test_attach_dual_truth_sync ....................................   Passed    0.05 sec\n      Start  96: bs_test_attach_wire_full_chain_integration\n71/75 Test  #96: bs_test_attach_wire_full_chain_integration ........................   Passed    0.03 sec\n      Start  97: bs_test_attach_notify_flush\n72/75 Test  #97: bs_test_attach_notify_flush .......................................   Passed    0.02 sec\n      Start 101: bs_test_day16_contract_registry_check\n73/75 Test #101: bs_test_day16_contract_registry_check .............................   Passed    0.04 sec\n      Start 102: bs_test_day16_contract_files_check\n74/75 Test #102: bs_test_day16_contract_files_check ................................   Passed    0.04 sec\n      Start 107: bs_test_attach_sync_prod_paths_check\n75/75 Test #107: bs_test_attach_sync_prod_paths_check ..............................   Passed    0.04 sec\n\n100% tests passed, 0 tests failed out of 75\n\nLabel Time Summary:\narch_gap             =  14.21 sec*proc (17 tests)\nattach               =  14.52 sec*proc (35 tests)\nday10                =   0.06 sec*proc (1 test)\nday11                =   0.02 sec*proc (1 test)\nday12                =   0.08 sec*proc (1 test)\nday13                =   0.04 sec*proc (1 test)\nday14                =   0.04 sec*proc (2 tests)\nday15                =   0.05 sec*proc (1 test)\nday16                =   0.08 sec*proc (2 tests)\nday19                =  63.75 sec*proc (11 tests)\nday20                =   0.33 sec*proc (3 tests)\nday7                 =   0.11 sec*proc (12 tests)\nday8                 =   0.14 sec*proc (10 tests)\nday9                 =   0.05 sec*proc (3 tests)\ndocs                 =   0.12 sec*proc (3 tests)\nintegration          =   0.17 sec*proc (9 tests)\nio                   =   0.28 sec*proc (19 tests)\nkernel_conc          =   0.15 sec*proc (2 tests)\nkernel_pool          =   0.17 sec*proc (3 tests)\nmem                  =   0.03 sec*proc (1 test)\nnegative             =  25.01 sec*proc (1 test)\nparser               =   0.16 sec*proc (6 tests)\nrecover              =   0.24 sec*proc (4 tests)\nregistry             =   0.35 sec*proc (27 tests)\nregression           =  65.54 sec*proc (75 tests)\nruntime              =   0.22 sec*proc (4 tests)\nshortcoming_stage    =   7.67 sec*proc (7 tests)\nstress               =  50.04 sec*proc (2 tests)\nunit                 =  65.54 sec*proc (75 tests)\nwin_spot             =   0.01 sec*proc (1 test)\nwire                 =   0.03 sec*proc (1 test)\n\nTotal Test time (real) =  65.61 sec\n"
-    },
-    {
-      "gate_id": "GATE-STYLE-LABELS",
-      "stage": "ci",
-      "result": "PASS",
-      "exit_code": 0,
-      "contracts": [
-        "C-ST-11",
-        "C-ST-9"
-      ],
-      "active_contracts": [
-        "C-ST-11",
-        "C-ST-9"
-      ],
-      "draft_contracts": [],
-      "command": "python tools/scripts/gates/check_ctest_labels.py",
-      "verify_entries": [
-        {
-          "contract_id": "C-ST-11",
-          "entry": "tools/scripts/gates/check_ctest_labels.py",
-          "entry_kind": "script",
-          "resolved_command": "python tools/scripts/gates/check_ctest_labels.py"
-        },
-        {
-          "contract_id": "C-ST-9",
-          "entry": "tools/scripts/gates/check_ctest_labels.py",
-          "entry_kind": "script",
-          "resolved_command": "python tools/scripts/gates/check_ctest_labels.py"
-        }
-      ],
-      "output": "[OK] C-ST-9/C-ST-11 ctest labels check passed\n"
+      "output": "Test project C:/Users/LJHlj/BlessStar/build_ci_test\n      Start 22: bs_test_app_vendor_reload_integration\n 1/14 Test #22: bs_test_app_vendor_reload_integration .............................   Passed  120.05 sec\n      Start 24: bs_test_app_config_reload_integration\n 2/14 Test #24: bs_test_app_config_reload_integration .............................   Passed    0.02 sec\n      Start 25: bs_test_reload_config_json_integration\n 3/14 Test #25: bs_test_reload_config_json_integration ............................   Passed  180.06 sec\n      Start 31: bs_test_attach_pipeline_registry\n 4/14 Test #31: bs_test_attach_pipeline_registry ..................................   Passed    0.02 sec\n      Start 40: bs_test_reload_per_batch_config_manager\n 5/14 Test #40: bs_test_reload_per_batch_config_manager ...........................***Timeout 120.01 sec\n\n      Start 41: bs_test_reload_ir_execute_integration\n 6/14 Test #41: bs_test_reload_ir_execute_integration .............................   Passed    0.02 sec\n      Start 42: bs_test_reload_per_batch_parallel_exec\n 7/14 Test #42: bs_test_reload_per_batch_parallel_exec ............................   Passed    0.01 sec\n      Start 45: bs_test_io_attach_pipeline\n 8/14 Test #45: bs_test_io_attach_pipeline ........................................   Passed    0.01 sec\n      Start 48: bs_test_attach_freeze_eventbus_integration\n 9/14 Test #48: bs_test_attach_freeze_eventbus_integration ........................   Passed    0.01 sec\n      Start 49: bs_test_attach_facade_freeze_delegate\n10/14 Test #49: bs_test_attach_facade_freeze_delegate .............................   Passed    0.01 sec\n      Start 54: bs_test_plugin_log_domains_attach_integration\n11/14 Test #54: bs_test_plugin_log_domains_attach_integration .....................   Passed    0.01 sec\n      Start 55: bs_test_day8_attach_full_integration\n12/14 Test #55: bs_test_day8_attach_full_integration ..............................   Passed  120.03 sec\n      Start 79: bs_test_reload_default_gate_report_eventbus_reentry_integration\n13/14 Test #79: bs_test_reload_default_gate_report_eventbus_reentry_integration ...***Timeout 120.02 sec\n\n      Start 98: bs_test_attach_wire_full_chain_integration\n14/14 Test #98: bs_test_attach_wire_full_chain_integration ........................   Passed  180.07 sec\n\n86% tests passed, 2 tests failed out of 14\n\nLabel Time Summary:\napp            = 120.07 sec*proc (2 tests)\narch_gap       = 180.07 sec*proc (1 test)\nattach         = 420.18 sec*proc (9 tests)\nday17          = 240.09 sec*proc (4 tests)\nday24          =   0.02 sec*proc (1 test)\nday7           = 120.02 sec*proc (1 test)\nday8           = 120.05 sec*proc (3 tests)\nday9           = 180.06 sec*proc (1 test)\nintegration    = 840.35 sec*proc (14 tests)\nio             = 420.12 sec*proc (4 tests)\nkernel_pool    =   0.01 sec*proc (1 test)\nparser         = 180.06 sec*proc (1 test)\nregistry       = 240.09 sec*proc (6 tests)\nregression     = 840.35 sec*proc (14 tests)\nruntime        =   0.02 sec*proc (2 tests)\nstate          = 120.01 sec*proc (1 test)\nunit           = 840.35 sec*proc (14 tests)\nwire           = 180.07 sec*proc (1 test)\n\nTotal Test time (real) = 840.37 sec\n\nThe following tests FAILED:\n\t 40 - bs_test_reload_per_batch_config_manager (Timeout) day17 integration regression state unit\n\t 79 - bs_test_reload_default_gate_report_eventbus_reentry_integration (Timeout) attach day7 integration io registry regression unit\nErrors while running CTest\n"
     },
     {
       "gate_id": "(stage:dev_ci)",
