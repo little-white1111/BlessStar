@@ -1,2 +1,0 @@
-[BS_WAIT_TRACE] site=persist_io:store_open tid=2300 path=<memory>
-[BS_WAIT_TRACE] site=persist_io:reload_manifest tid=2300 path=<memory>

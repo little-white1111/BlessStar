@@ -71,3 +71,7 @@ tools/ci/.github_token
 # Local scratch / IO test debris
 test.txt
 bs_io_*.txt
+cleanup_extra.py
+
+# Extra directory (build artifacts, logs, temp files)
+Extra/

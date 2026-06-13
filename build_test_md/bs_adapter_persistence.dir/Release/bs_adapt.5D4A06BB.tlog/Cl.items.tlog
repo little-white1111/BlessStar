@@ -1,8 +1,0 @@
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_store.cpp;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_store.obj
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_uri_path.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_uri_path.obj
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_audit.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_audit.obj
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_wal.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_wal.obj
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_watch.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_watch.obj
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_crc32.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_crc32.obj
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_fsync.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_fsync.obj
-C:\Users\LJHlj\BlessStar\adapter\persistence\attach_runtime_sidecar.c;C:\Users\LJHlj\BlessStar\build_test_md\bs_adapter_persistence.dir\Release\attach_runtime_sidecar.obj

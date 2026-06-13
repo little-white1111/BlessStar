@@ -1,3 +1,0 @@
-Day19Stress profile=ci duration_max=25 day_reload_min=30 night_batch_min=5
-stress,profile=ci,day=30/30(1.0000),night=5/5(1.0000),fail_parse=0,fail_gate=0,fail_read=0,night_abort=0,rss_slope_reg=0.000,rss_slope_reg_full=2.812,rss_delta_win=0.156,rss_slope_endpoint_ws=19.125,rss_delta_ws_win=0.156,samples=7,warmup_skip=2,win=5,slope_win_min=10,disk_mb=0
-Day19StressReloadLoopTest OK
