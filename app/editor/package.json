@@ -1,0 +1,42 @@
+{
+    "name":  "blessstar-config-editor",
+    "version":  "1.0.0",
+    "description":  "BlessStar Config Editor - Electron + React + TypeScript + Vite + TailwindCSS",
+    "main":  "dist-electron/main.js",
+    "scripts":  {
+                    "dev":  "vite",
+                    "build":  "vite build \u0026\u0026 electron-builder",
+                    "build:vite":  "tsc \u0026\u0026 vite build",
+                    "preview":  "vite preview",
+                    "typecheck":  "tsc --noEmit",
+                    "test":  "vitest run",
+                    "test:watch":  "vitest"
+                },
+    "dependencies":  {
+                         "@blockly/block-plus-minus":  "^9.0.10",
+                         "blockly":  "^13.0.0",
+                         "react":  "^18.3.1",
+                         "react-dom":  "^18.3.1",
+                         "react-router-dom":  "^6.28.0"
+                     },
+    "devDependencies":  {
+                            "@testing-library/jest-dom":  "^6.9.1",
+                            "@testing-library/react":  "^16.3.2",
+                            "@testing-library/user-event":  "^14.6.1",
+                            "@types/react":  "^18.3.12",
+                            "@types/react-dom":  "^18.3.1",
+                            "@vitejs/plugin-react":  "^4.7.0",
+                            "autoprefixer":  "^10.4.20",
+                            "electron":  "^33.2.0",
+                            "electron-builder":  "^25.1.8",
+                            "jsdom":  "^29.1.1",
+                            "postcss":  "^8.4.49",
+                            "tailwindcss":  "^3.4.15",
+                            "typescript":  "^5.6.3",
+                            "vite":  "^6.0.3",
+                            "vite-plugin-electron":  "^0.28.8",
+                            "vite-plugin-electron-renderer":  "^0.14.6",
+                            "vitest":  "^4.1.9"
+                        },
+    "author":  "BlessStar Team \u003cdev@blessstar.com\u003e"
+}

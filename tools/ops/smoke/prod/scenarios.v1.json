@@ -1,0 +1,30 @@
+{
+  "version": "v1",
+  "tier": "L3",
+  "environment": "production",
+  "description": "Non-destructive production smoke. No ctest regression. Requires BS_PROD_BLESSSTAR_HOME or --dry-run.",
+  "scenarios": [
+    {
+      "id": "PRD-01-binary-present",
+      "kind": "shell",
+      "command": "test -x \"${BS_PROD_BLESSSTAR_HOME}/bin/blessstar\" || test -f \"${BS_PROD_BLESSSTAR_HOME}/bin/blessstar.exe\"",
+      "rationale": "Deployed artifact exists",
+      "destructive": false
+    },
+    {
+      "id": "PRD-02-config-dir-writable-check",
+      "kind": "shell",
+      "command": "test -d \"${BS_PROD_MANIFEST_ROOT}\"",
+      "rationale": "Per-tenant manifest root configured",
+      "destructive": false
+    },
+    {
+      "id": "PRD-03-health-probe",
+      "kind": "shell",
+      "command": "test -f \"${BS_PROD_BLESSSTAR_HOME}/.blessstar_health_ok\" || echo smoke-skip-health-file",
+      "rationale": "Optional health stamp written by deploy hook",
+      "destructive": false,
+      "optional": true
+    }
+  ]
+}

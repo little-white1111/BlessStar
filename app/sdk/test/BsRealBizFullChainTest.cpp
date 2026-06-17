@@ -1361,6 +1361,185 @@ static int test_policy_metadata_gate_extended()
 }
 
 // ============================================================================
+// Scenario 10: Config change → Kernel WatchCallback → Schema → UIDL JSON
+//   Verify that a config submission triggers schema_to_uidl conversion and
+//   the output UIDL JSON matches UIDLDocument type shape.
+// ============================================================================
+
+#include "bs/kernel/schema/schema_types.h"
+#include "bs/kernel/ui_map/schema_to_uidl.h"
+
+static int test_config_change_to_uidl()
+{
+    std::fprintf(stderr, "\n=== SCENARIO 10: Config change → Schema → UIDL JSON ===\n");
+
+    const BsTestTempDirGuard tmp_guard(bs_test_unique_temp_dir("bs_uidl_scene"));
+    const fs::path&          temp_dir = tmp_guard.path;
+
+    // -- 1. Bootstrap attach context -------------------------------------------
+    BsTestAttachIoFixture fix{};
+    fix.ctx = bs_adapter_attach_ctx_create();
+    BS_TEST_REQUIRE("ctx-create", fix.ctx != nullptr);
+    BS_TEST_REQUIRE("bootstrap", bs_test_attach_bootstrap_begin_ctx(&fix) == 0);
+    BS_TEST_REQUIRE("freeze", bs_test_attach_bootstrap_freeze_ctx(&fix) == 0);
+    BS_TEST_REQUIRE("open-io", bs_test_attach_open_io(&fix) == 0);
+
+    const fs::path manifest = temp_dir / "uidl.manifest";
+    BS_TEST_REQUIRE("open-store",
+                    bs_adapter_attach_ctx_open_persist_store(fix.ctx, manifest.string().c_str()) == 0);
+
+    // -- 2. Write normalized v1 config bytes to a temp file --------------------
+    const std::string cfg_uri = write_bytes_to_file(temp_dir, "v1_uidl.json",
+                                                     kBlessStarConfigV1Golden,
+                                                     kBlessStarConfigV1GoldenLen);
+    BS_TEST_REQUIRE("write-cfg", !cfg_uri.empty());
+
+    // -- 3. Submit config via ReloadSession ------------------------------------
+    bs::app::ScenarioPolicy policy;
+    policy.allow_hot_reload = true;
+    policy.max_batch        = 64;
+
+    {
+        bs::app::ConfigReloadSession session(fix.ctx);
+        session.SetReadFn(facade_read_fn, &fix);
+        session.AddPolicyGate(policy);
+        BS_TEST_REQUIRE("add-uri", session.AddUri(cfg_uri.c_str()));
+
+        Report* report = session.Commit();
+        BS_TEST_REQUIRE("commit", report != nullptr);
+        BS_TEST_REQUIRE("commit-ok", bs_report_get_status(report) == REPORT_STATUS_SUCCESS);
+        bs_report_destroy(report);
+    }
+
+    // -- 4. Build a schema entry matching the v1 config structure ---------------
+    //     The v1 golden config has: type(enum), name(string), metadata(object)
+    //     with subject_code(string), tax_rate(string).
+    const char* type_enum_vals[] = {"test", NULL};
+    const char* field_ai_hint   = "BS test configuration schema for UIDL scene";
+
+    bs_schema_field_def_t  fields[5];
+    std::memset(fields, 0, sizeof(fields));
+
+    /* field 0: type (enum) */
+    fields[0].name        = "type";
+    fields[0].type        = BS_SCHEMA_TYPE_ENUM;
+    fields[0].required    = true;
+    fields[0].enum_values = type_enum_vals;
+    fields[0].ai_hint     = field_ai_hint;
+    fields[0].ui_label    = "Type";
+    fields[0].ui_order    = 1;
+
+    /* field 1: name (string) */
+    fields[1].name            = "name";
+    fields[1].type            = BS_SCHEMA_TYPE_STR;
+    fields[1].required        = true;
+    fields[1].ai_hint         = field_ai_hint;
+    fields[1].ui_label        = "Name";
+    fields[1].ui_order        = 2;
+    fields[1].ui_placeholder  = "instruction name";
+
+    /* field 2: metadata (object) */
+    bs_schema_field_def_t meta_fields[2];
+    std::memset(meta_fields, 0, sizeof(meta_fields));
+    meta_fields[0].name     = "subject_code";
+    meta_fields[0].type     = BS_SCHEMA_TYPE_STR;
+    meta_fields[0].required = true;
+    meta_fields[0].ai_hint  = field_ai_hint;
+    meta_fields[0].ui_label = "Subject Code";
+    meta_fields[0].ui_order = 1;
+
+    meta_fields[1].name     = "tax_rate";
+    meta_fields[1].type     = BS_SCHEMA_TYPE_STR;
+    meta_fields[1].required = true;
+    meta_fields[1].ai_hint  = field_ai_hint;
+    meta_fields[1].ui_label = "Tax Rate";
+    meta_fields[1].ui_order = 2;
+
+    fields[2].name         = "metadata";
+    fields[2].type         = BS_SCHEMA_TYPE_OBJ;
+    fields[2].required     = false;
+    fields[2].ai_hint      = field_ai_hint;
+    fields[2].ui_label     = "Metadata";
+    fields[2].ui_order     = 3;
+    fields[2].nested_fields = meta_fields;
+    fields[2].nested_count  = 2;
+
+    /* field 3: kernel_version (string) */
+    fields[3].name     = "kernel_version";
+    fields[3].type     = BS_SCHEMA_TYPE_STR;
+    fields[3].required = false;
+    fields[3].ai_hint  = field_ai_hint;
+    fields[3].ui_label = "Kernel Version";
+    fields[3].ui_order = 4;
+
+    /* field 4: adapter_version (string) */
+    fields[4].name     = "adapter_version";
+    fields[4].type     = BS_SCHEMA_TYPE_STR;
+    fields[4].required = false;
+    fields[4].ai_hint  = field_ai_hint;
+    fields[4].ui_label = "Adapter Version";
+    fields[4].ui_order = 5;
+
+    bs_schema_entry_t entry;
+    std::memset(&entry, 0, sizeof(entry));
+    entry.schema_id          = "com.blessstar.test.uidl";
+    entry.version            = "1.0";
+    entry.root_fields        = fields;
+    entry.root_count         = 3; /* omit kernel_version and adapter_version */
+    entry.ui_meta.title       = "RealBiz Full Chain Config";
+    entry.ui_meta.description = "Configuration schema for realbiz full chain test";
+
+    // -- 5. Call bs_schema_to_uidl ---------------------------------------------
+    char*   uidl_json = nullptr;
+    size_t  uidl_len  = 0;
+    int r = bs_schema_to_uidl(&entry, &uidl_json, &uidl_len);
+    BS_TEST_REQUIRE("schema-to-uidl-ok", r == 0);
+    BS_TEST_REQUIRE("uidl-not-null", uidl_json != nullptr);
+    BS_TEST_REQUIRE("uidl-len>0", uidl_len > 0);
+
+    std::fprintf(stderr, "  UIDL JSON (%zu bytes):\n%.*s\n",
+                 uidl_len, (int)uidl_len, uidl_json);
+
+    // -- 6. Verify UIDL JSON format matches UIDLDocument shape -----------------
+    //     Check: render_type, version, title, fields array
+    BS_TEST_REQUIRE("has-render_type", strstr(uidl_json, "\"render_type\"") != nullptr);
+    BS_TEST_REQUIRE("render_type=dynamic_form", strstr(uidl_json, "\"dynamic_form\"") != nullptr);
+    BS_TEST_REQUIRE("has-title", strstr(uidl_json, "\"RealBiz Full Chain Config\"") != nullptr);
+    BS_TEST_REQUIRE("has-fields", strstr(uidl_json, "\"fields\"") != nullptr);
+    BS_TEST_REQUIRE("has-version", strstr(uidl_json, "\"version\"") != nullptr);
+
+    // -- 7. Verify field entries match schema ----------------------------------
+    //     Each UIDL field should have: widget, label, key, (required), order.
+    BS_TEST_REQUIRE("field-type", strstr(uidl_json, "\"widget\":\"select\"") != nullptr);
+    BS_TEST_REQUIRE("field-type-label", strstr(uidl_json, "\"Type\"") != nullptr);
+    BS_TEST_REQUIRE("field-name", strstr(uidl_json, "\"widget\":\"input\"") != nullptr);
+    BS_TEST_REQUIRE("field-metadata", strstr(uidl_json, "\"widget\":\"group\"") != nullptr);
+
+    // -- 8. Verify SchemaForm compatibility: UIDL JSON is parseable as UIDLDocument
+    //     Count widget types by exact "widget":"<type>" substrings
+    int input_count  = 0;
+    int select_count = 0;
+    int group_count = 0;
+    const char* p = uidl_json;
+    while ((p = strstr(p, "\"widget\":")) != nullptr)
+    {
+        if (strncmp(p + 9, "\"input\"", 7) == 0)       ++input_count;
+        else if (strncmp(p + 9, "\"select\"", 8) == 0)  ++select_count;
+        else if (strncmp(p + 9, "\"group\"", 7) == 0)   ++group_count;
+        ++p;
+    }
+    BS_TEST_REQUIRE("input-count", input_count >= 2);  /* name, subject_code, tax_rate */
+    BS_TEST_REQUIRE("select-count", select_count == 1); /* type */
+    BS_TEST_REQUIRE("group-count", group_count == 1);   /* metadata */
+
+    std::free(uidl_json);
+
+    bs_test_attach_teardown(&fix);
+    std::fprintf(stderr, "SCENARIO 10: PASS\n");
+    return 0;
+}
+
+// ============================================================================
 // Main
 // ============================================================================
 
@@ -1378,6 +1557,7 @@ int main()
     rc |= test_metadata_consumption();
     rc |= test_policy_metadata_gate();
     rc |= test_policy_metadata_gate_extended();
+    rc |= test_config_change_to_uidl();
 
     if (rc != 0)
         std::fprintf(stderr, "\nFAIL: some real-biz scenarios returned non-zero\n");

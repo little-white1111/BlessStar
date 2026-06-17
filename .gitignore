@@ -1,20 +1,49 @@
+# ═══════════════════════════════════════════════════════════════════════
+#  BlessStar — Whitelist .gitignore
+#  Only core directories and files listed below will be tracked.
+#  Everything else is ignored by default.
+# ═══════════════════════════════════════════════════════════════════════
+
+# ── Ignore everything by default (whitelist approach) ──
+/*
+
+# ── Core directories ────────────────────────────────────────────────
+!/kernel/
+!/adapter/
+!/app/
+!/tools/
+!/cmake/
+!/docs/
+
+# ── Root-level files ────────────────────────────────────────────────
+!/.clang-format
+!/.dockerignore
+!/.gitattributes
+!.gitignore
+!/.github/
+!/AGENTS.md
+!/CMakeLists.txt
+!/CMakePresets.json
+!/Dockerfile
+!/Dockerfile.arm64
+!/README.md
+!/docker-compose.yml
+
+# ── OS / editor debris ──────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
 .vscode/
 .idea/
-
-# IDE / AI agent tooling (local only; not part of the framework deliverable)
 .cursor/
 .trae/
 .traecli/
 
-# Agent collaboration notes (local)
+# ── Agent collaboration notes (local) ───────────────────────────────
 一主二子agent模式搭建.md
 三智能体提示词.txt
 
-# OS
-Thumbs.db
-Desktop.ini
-
-# CMake
+# ── Build artifacts (anywhere) ──────────────────────────────────────
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
@@ -22,24 +51,10 @@ CTestTestfile.cmake
 Makefile
 compile_commands.json
 install_manifest.txt
-
-# Meson
 meson-private/
 meson-logs/
 meson-info/
 .mesonpy-*
-
-# Reference framework sources (local read-only; not shipped)
-Source/
-
-# Build dirs
-build/
-build-*/
-blessstar_build/
-out/
-dist/
-
-# Artifacts
 *.o
 *.obj
 *.a
@@ -51,23 +66,38 @@ dist/
 *.pdb
 *.ilk
 *.exp
-
-# Python
-__pycache__/
-*.py[cod]
-
-# Coverage
 *.gcda
 *.gcno
 *.gcov
+
+# ── Node / npm / Electron build ─────────────────────────────────────
+node_modules/
+app/editor/build/
+app/editor/dist/
+app/editor/dist-electron/
+app/editor/release/
+app/editor/=
+
+# ── Python ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
 coverage/
 
-# Logs
+# ── Logs (anywhere) ─────────────────────────────────────────────────
 *.log
 
-# Local secrets (do not commit)
+# ── Reference sources (local only) ──────────────────────────────────
+Source/
+
+# ── Local secrets ───────────────────────────────────────────────────
 tools/ci/.github_token
 
-# Local scratch / IO test debris
+# ── CI logs (anywhere under tools/) ────────────────────────────────
+tools/ci/logs/
+
+# ── Generated build tooling ────────────────────────────────────────
+tools/build/
+
+# ── Local scratch / IO test debris ──────────────────────────────────
 test.txt
 bs_io_*.txt

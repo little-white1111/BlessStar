@@ -1,0 +1,7 @@
+common:
+  app_name: BlessStar
+  version: 1.0
+
+threshold:
+  min_amount: 100.50
+  max_amount: 999999.99

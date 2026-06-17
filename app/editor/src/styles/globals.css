@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-surface-200 dark:border-surface-700;
+  }
+
+  body {
+    @apply bg-surface-50 text-surface-900 dark:bg-surface-900 dark:text-surface-50;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-300 dark:bg-surface-600 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-400 dark:bg-surface-500;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded text-sm font-medium
+           transition-colors duration-150 ease-in-out
+           focus:outline-none focus:ring-2 focus:ring-primary-500/40
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800
+           dark:bg-primary-500 dark:hover:bg-primary-600;
+  }
+  .btn-secondary {
+    @apply btn bg-surface-100 text-surface-700 hover:bg-surface-200 active:bg-surface-300
+           dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700;
+  }
+  .btn-ghost {
+    @apply btn text-surface-600 hover:bg-surface-100 active:bg-surface-200
+           dark:text-surface-400 dark:hover:bg-surface-800;
+  }
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 active:bg-red-800;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 rounded text-sm
+           bg-white dark:bg-surface-800
+           border border-surface-300 dark:border-surface-600
+           text-surface-900 dark:text-surface-50
+           placeholder:text-surface-400 dark:placeholder:text-surface-500
+           shadow-control
+           focus:outline-none focus:border-primary-500 focus:shadow-control-focus
+           transition-colors duration-150;
+  }
+
+  .card {
+    @apply bg-white dark:bg-surface-800 rounded shadow-panel
+           border border-surface-200 dark:border-surface-700;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded text-sm font-medium
+           text-surface-600 dark:text-surface-400
+           hover:bg-surface-100 dark:hover:bg-surface-700
+           hover:text-surface-900 dark:hover:text-surface-50
+           transition-colors duration-150 cursor-pointer;
+  }
+  .sidebar-item.active {
+    @apply bg-primary-50 dark:bg-primary-900/30
+           text-primary-700 dark:text-primary-300;
+  }
+}

@@ -2,6 +2,7 @@
 #include <sstream>
 
 #include "bs/app/sdk/vendor_config_normalizer.h"
+#include "bs/app/sdk/db/config_raw_parse.h"
 
 namespace bs::app
 {
@@ -119,6 +120,54 @@ static bool normalize_generic_business_json(const std::string& text, NormalizeRe
     return false;
 }
 
+static bool normalize_raw_ini(const std::uint8_t* data, std::size_t len, NormalizeResult* out)
+{
+    uint8_t* json = 0;
+    size_t json_len = 0;
+    int rc = bs_config_raw_ini_to_json(data, len, &json, &json_len);
+    if (rc != 0 || !json)
+    {
+        fail(out, "raw ini: parse failed");
+        return false;
+    }
+    out->v1_bytes.assign(json, json + json_len);
+    free(json);
+    out->source_vendor = "raw_ini";
+    return true;
+}
+
+static bool normalize_raw_xml(const std::uint8_t* data, std::size_t len, NormalizeResult* out)
+{
+    uint8_t* json = 0;
+    size_t json_len = 0;
+    int rc = bs_config_raw_xml_to_json(data, len, &json, &json_len);
+    if (rc != 0 || !json)
+    {
+        fail(out, "raw xml: parse failed");
+        return false;
+    }
+    out->v1_bytes.assign(json, json + json_len);
+    free(json);
+    out->source_vendor = "raw_xml";
+    return true;
+}
+
+static bool normalize_raw_yaml(const std::uint8_t* data, std::size_t len, NormalizeResult* out)
+{
+    uint8_t* json = 0;
+    size_t json_len = 0;
+    int rc = bs_config_raw_yaml_to_json(data, len, &json, &json_len);
+    if (rc != 0 || !json)
+    {
+        fail(out, "raw yaml: parse failed");
+        return false;
+    }
+    out->v1_bytes.assign(json, json + json_len);
+    free(json);
+    out->source_vendor = "raw_yaml";
+    return true;
+}
+
 } // namespace
 
 bool NormalizeVendorConfig(VendorFormat fmt, const std::string& vendor_file_path,
@@ -140,6 +189,60 @@ bool NormalizeVendorConfig(VendorFormat fmt, const std::string& vendor_file_path
     {
     case VendorFormat::GenericBusinessJson:
         ok = normalize_generic_business_json(text, out);
+        break;
+    case VendorFormat::RawIni:
+        ok = normalize_raw_ini(reinterpret_cast<const std::uint8_t*>(text.data()), text.size(), out);
+        break;
+    case VendorFormat::RawXml:
+        ok = normalize_raw_xml(reinterpret_cast<const std::uint8_t*>(text.data()), text.size(), out);
+        break;
+    case VendorFormat::RawYaml:
+        ok = normalize_raw_yaml(reinterpret_cast<const std::uint8_t*>(text.data()), text.size(), out);
+        break;
+    default:
+        fail(out, "unsupported vendor format");
+        return false;
+    }
+
+    if (!ok)
+        return false;
+
+    out->ok = !out->v1_bytes.empty();
+    if (!out->ok)
+        out->error = "empty v1 output";
+    return out->ok;
+}
+
+bool NormalizeVendorConfig(VendorFormat fmt, const std::uint8_t* data, std::size_t len,
+                           NormalizeResult* out)
+{
+    if (!out)
+        return false;
+    *out = NormalizeResult{};
+
+    if (!data || len == 0)
+    {
+        fail(out, "null or empty input data");
+        return false;
+    }
+
+    bool ok = false;
+    switch (fmt)
+    {
+    case VendorFormat::GenericBusinessJson:
+    {
+        std::string text(reinterpret_cast<const char*>(data), len);
+        ok = normalize_generic_business_json(text, out);
+        break;
+    }
+    case VendorFormat::RawIni:
+        ok = normalize_raw_ini(data, len, out);
+        break;
+    case VendorFormat::RawXml:
+        ok = normalize_raw_xml(data, len, out);
+        break;
+    case VendorFormat::RawYaml:
+        ok = normalize_raw_yaml(data, len, out);
         break;
     default:
         fail(out, "unsupported vendor format");

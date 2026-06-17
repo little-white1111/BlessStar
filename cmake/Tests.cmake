@@ -310,6 +310,8 @@ blessstar_add_unit_test(bs_test_real_biz_full_chain
     bs_kernel_io
     bs_kernel_report
     bs_kernel_common
+    bs_kernel_ui_map
+    bs_kernel_schema
 )
 target_include_directories(bs_test_real_biz_full_chain
   PRIVATE
@@ -1002,6 +1004,60 @@ set_tests_properties(bs_test_attach_watch_benchmark
 )
 
 # ---------------------------------------------------------------------------
+# Schema (day 26)
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_schema_registry
+  SOURCES kernel/schema/test/schema_registry_test.c
+  LIBS bs_kernel_schema
+)
+blessstar_add_unit_test(bs_test_schema_validator
+  SOURCES kernel/schema/test/schema_validator_test.c
+  LIBS bs_kernel_schema
+)
+blessstar_add_unit_test(bs_test_custom_validator
+  SOURCES kernel/schema/test/custom_validator_test.c
+  LIBS bs_kernel_schema
+)
+blessstar_add_unit_test(bs_test_converter_roundtrip
+  SOURCES kernel/schema/test/converter_roundtrip_test.c
+  LIBS bs_kernel_schema
+)
+blessstar_add_unit_test(bs_test_schema_bench
+  SOURCES kernel/schema/test/schema_bench_test.c
+  LIBS bs_kernel_schema
+)
+set_tests_properties(bs_test_schema_registry PROPERTIES LABELS "unit;schema;day26")
+set_tests_properties(bs_test_schema_validator PROPERTIES LABELS "unit;schema;day26")
+set_tests_properties(bs_test_custom_validator PROPERTIES LABELS "unit;schema;day26")
+set_tests_properties(bs_test_converter_roundtrip PROPERTIES LABELS "unit;schema;day26")
+set_tests_properties(bs_test_schema_bench PROPERTIES LABELS "unit;schema;day26;benchmark")
+
+# ---------------------------------------------------------------------------
+# UI Map / UIDL (day 27)
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_schema_to_uidl
+  SOURCES kernel/ui_map/test/schema_to_uidl_test.c
+  LIBS bs_kernel_ui_map bs_kernel_schema
+)
+set_tests_properties(bs_test_schema_to_uidl
+  PROPERTIES LABELS "unit;ui_map;day27"
+)
+
+# ---------------------------------------------------------------------------
+# Raw parse (day 26 · config_raw_parse)
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_raw_parse
+  SOURCES app/sdk/test/db/raw_parse_test.cpp
+  LIBS bs_app_sdk
+)
+target_include_directories(bs_test_raw_parse PRIVATE ${CMAKE_SOURCE_DIR}/app/sdk/include)
+set_tests_properties(bs_test_raw_parse
+  PROPERTIES
+    LABELS "unit;db;day26"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+# ---------------------------------------------------------------------------
 # Comprehensive (still unit scope; may be slower)
 # ---------------------------------------------------------------------------
 blessstar_add_unit_test(bs_test_memory_pool_comprehensive
@@ -1191,3 +1247,112 @@ if(Python3_FOUND)
     PROPERTIES LABELS "unit;docs;day17;regression" TIMEOUT 1900
   )
 endif()
+
+# ---------------------------------------------------------------------------
+# Day28: Editor (Vitest) — Node.js required
+# ---------------------------------------------------------------------------
+find_program(NODEJS node)
+if(NODEJS)
+  add_test(
+    NAME bs_test_day28_editor_vitest
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_SOURCE_DIR}/app/editor" npm test
+  )
+  set_tests_properties(bs_test_day28_editor_vitest
+    PROPERTIES
+      LABELS "unit;ui;day28;regression"
+      TIMEOUT 120
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/app/editor"
+  )
+endif()
+
+# ---------------------------------------------------------------------------
+# Day 30: Agent Factory MVP (OPT-01 ~ OPT-03)
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_day30_schema_foreach
+  SOURCES kernel/schema/test/schema_foreach_test.c
+  LIBS bs_kernel_schema
+)
+set_tests_properties(bs_test_day30_schema_foreach
+  PROPERTIES LABELS "unit;day30;schema"
+)
+
+blessstar_add_unit_test(bs_test_day30_gate_chain_serialize
+  SOURCES kernel/gate_chain/test/GateChainSerializeTest.c
+  LIBS bs_kernel_gate_chain
+)
+set_tests_properties(bs_test_day30_gate_chain_serialize
+  PROPERTIES LABELS "unit;day30;gate_chain"
+)
+
+blessstar_add_unit_test(bs_test_day30_agent_index_export
+  SOURCES app/sdk/test/AgentIndexExportTest.c
+  LIBS bs_app_sdk bs_kernel_schema bs_kernel_gate_chain
+)
+target_include_directories(bs_test_day30_agent_index_export
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/kernel/schema/include
+    ${CMAKE_SOURCE_DIR}/kernel/gate_chain/include
+    ${CMAKE_SOURCE_DIR}/app/sdk/src/agent_indexer/include
+)
+set_tests_properties(bs_test_day30_agent_index_export
+  PROPERTIES
+    LABELS "unit;day30;agent_index"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+# Day 30 Vitest (OPT-04/05)
+if(NODEJS)
+  add_test(
+    NAME bs_test_day30_editor_vitest
+    COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_SOURCE_DIR}/app/editor" npm test -- --run
+  )
+  set_tests_properties(bs_test_day30_editor_vitest
+    PROPERTIES
+      LABELS "unit;day30;editor"
+      TIMEOUT 120
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/app/editor"
+  )
+endif()
+
+# ---------------------------------------------------------------------------
+# Day 30: OPT-08 — Gate factory, matcher, evaluator, map/upsert, biz_introspector
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_day30_gate_map_upsert
+  SOURCES kernel/gate_chain/test/GateChainMapUpsertTest.c
+  LIBS bs_kernel_gate_chain
+)
+set_tests_properties(bs_test_day30_gate_map_upsert
+  PROPERTIES LABELS "unit;day30;gate_chain;opt08"
+)
+
+blessstar_add_unit_test(bs_test_day30_gate_factory
+  SOURCES kernel/gate_chain/test/GateFactoryTest.c
+  LIBS bs_kernel_gate_chain
+)
+set_tests_properties(bs_test_day30_gate_factory
+  PROPERTIES LABELS "unit;day30;gate_chain;opt08"
+)
+
+blessstar_add_unit_test(bs_test_day30_gate_evaluator
+  SOURCES kernel/gate_chain/test/GateEvaluatorTest.c
+  LIBS bs_kernel_gate_chain
+)
+set_tests_properties(bs_test_day30_gate_evaluator
+  PROPERTIES LABELS "unit;day30;gate_chain;opt08"
+)
+
+blessstar_add_unit_test(bs_test_day30_biz_introspector
+  SOURCES app/sdk/test/BizIntrospectorTest.c
+  LIBS bs_app_sdk
+)
+target_include_directories(bs_test_day30_biz_introspector
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+)
+set_tests_properties(bs_test_day30_biz_introspector
+  PROPERTIES
+    LABELS "unit;day30;agent_index;opt08"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)

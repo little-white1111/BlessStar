@@ -1,0 +1,50 @@
+{
+  "version": "v1",
+  "tier": "L2",
+  "environment": "staging",
+  "description": "Post-deploy acceptance on Staging (production-isomorphic). Reuses L1 binaries via ctest where noted.",
+  "defaults": {
+    "build_dir": "build_ci_test",
+    "ctest_config": "Release",
+    "working_directory": "repository_root"
+  },
+  "scenarios": [
+    {
+      "id": "STG-01-reload-golden",
+      "kind": "ctest",
+      "test": "bs_test_reload_config_json_integration",
+      "rationale": "M3 file:// v1 -> gate -> persist"
+    },
+    {
+      "id": "STG-02-day8-chain",
+      "kind": "ctest",
+      "test": "bs_test_day8_attach_full_integration",
+      "rationale": "Plugin + IO + reload + report"
+    },
+    {
+      "id": "STG-03-app-vendor",
+      "kind": "ctest",
+      "test": "bs_test_app_vendor_reload_integration",
+      "rationale": "App normalize -> reload",
+      "working_directory": "repository_root"
+    },
+    {
+      "id": "STG-04-persist-day14",
+      "kind": "ctest_label",
+      "label": "day14",
+      "rationale": "Atomic persist + fsync spot"
+    },
+    {
+      "id": "STG-05-kernel-runtime",
+      "kind": "ctest",
+      "test": "bs_test_kernel_runtime",
+      "rationale": "XVII runtime + pipeline execute"
+    },
+    {
+      "id": "STG-06-integration-bundle",
+      "kind": "ctest_label",
+      "label": "integration",
+      "rationale": "Cross-module integration slice"
+    }
+  ]
+}
