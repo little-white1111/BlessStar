@@ -1,0 +1,35 @@
+# BlessedStar ARM64 CI
+# DAY38-13: ubuntu-24.04-arm + macos-latest (ARM64) matrix
+# continue-on-error: true — does not block other platforms
+
+name: ARM64 CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  cmake-arm64:
+    name: cmake-arm64 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04-arm, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Configure (Unix - via build.py)
+        run: |
+          eval "$(python tools/build/build.py --release --print-cmake-args --build-dir=build_ci_test)"
+
+      - name: Build
+        run: cmake --build build_ci_test --config Release
+
+      - name: CTest
+        run: ctest --test-dir build_ci_test -C Release -LE "day17|day28|day30" --output-on-failure

@@ -3,7 +3,8 @@ export type { AIBridge } from './bridge'
 export { FUNCTION_TOOLS, getToolDefinitions } from './tools'
 export { executeToolCall, executeWithRetry, findTool } from './executor'
 export { validateBlessStarSchema, validateGateRule, formatValidationErrors } from './validator'
-export { AIPanel } from './AIPanel'
+export { default as AIPanel } from './AIPanel'
+export type { PanelPosition } from './AIPanel'
 export type {
   AIMessage, ToolCall, ToolResult, FunctionTool,
   AIBridgeConfig, AICompletionRequest, AICompletionResponse,

@@ -1,5 +1,6 @@
 #include "bs/app/sdk/config_reload_session.h"
 
+#include "bs/app/sdk/config_declare.h"
 #include "bs/adapter/parser/config_parse.h"
 #include "bs/adapter/attach_context.h"
 
@@ -234,14 +235,14 @@ void ConfigReloadSession::AddPolicyGates(const std::vector<ScenarioPolicy>& poli
     policy_gates_.insert(policy_gates_.end(), policies.begin(), policies.end());
 }
 
-void ConfigReloadSession::AddCustomGate(
-    int (*fn)(const void* data, size_t len, char* err, size_t err_cap, void* ctx),
-    void* user_ctx)
+void ConfigReloadSession::AddCustomGate(const CustomGateEntry& entry)
 {
     assert(thread_id_ == std::this_thread::get_id());
-    if (!fn)
+    if (!entry.fn)
         return;
-    custom_gates_.push_back({fn, user_ctx});
+    custom_gates_.push_back(entry);
+    // user_ctx 指向 session 内部副本，供 bs_custom_gate_eval 读取 ast_json
+    custom_gates_.back().user_ctx = &custom_gates_.back();
 }
 
 void ConfigReloadSession::ResetGates()
@@ -613,3 +614,500 @@ void ConfigReloadSession::Reset()
 }
 
 } // namespace bs::app
+
+/* ══════════════════════════════════════════════════════════════════
+ * C ABI — Editor bridge: config_commit_batch
+ *
+ * 批量提交配置变更。输入为 JSON 数组 [{key, value}, ...]，
+ * 批量 AddMemPath -> Commit -> Report JSON。
+ * 返回的 char* 由调用方 free()。
+ *
+ * 如果 AttachContext* 尚未注册 RegistryFacade（如未创建 AppSession），
+ * Commit 返回失败报告。
+ * ══════════════════════════════════════════════════════════════════ */
+extern "C" {
+
+static char* bs_report_to_json_c(const Report* report)
+{
+    return bs_report_to_json(report);
+}
+
+/**
+ * 解析简单 JSON 数组 `[{key,value},...]` 并批量提交。
+ *
+ * @param session      AppSession* 句柄
+ * @param entries_json JSON 数组字符串，如 `[{"key":"a","value":"1"},{"key":"b","value":"2"}]`
+ * @return Report JSON 字符串（调用方 free），失败时返回 null
+ */
+char* config_commit_batch_c(void* session_ptr, const char* entries_json)
+{
+    if (!session_ptr || !entries_json)
+        return nullptr;
+
+    auto* app_session = static_cast<bs::app::AppSession*>(session_ptr);
+    auto* actx = app_session->ctx();
+    if (!actx)
+        return nullptr;
+
+    /* 专题五 B4：CAS 版本检测 */
+    {
+        uint64_t expected = bs_config_declare_get_version();
+        if (bs_config_commit_check_version(expected) != 0) {
+            /* 版本冲突，返回 CONFLICT 报告 */
+            Report* conflict_report = bs_report_create("config_commit_batch");
+            bs_report_set_status(conflict_report, REPORT_STATUS_FAILED);
+            bs_report_add_info(conflict_report, "config_commit_batch", "CAS version conflict: another window committed first");
+            char* conflict_json = bs_report_to_json(conflict_report);
+            bs_report_destroy(conflict_report);
+            return conflict_json;
+        }
+    }
+
+    // ── 解析 entries_json：简单 JSON 数组解析 ──
+    // 格式: [{"key":"...","value":"..."}, ...]
+    // 不支持转义字符（Editor 侧保证 key/value 不含特殊字符）
+    std::vector<std::pair<std::string, std::string>> entries;
+    std::string json(entries_json);
+    std::size_t pos = 0;
+
+    while (pos < json.size())
+    {
+        // Find '{'
+        pos = json.find('{', pos);
+        if (pos == std::string::npos) break;
+
+        // Extract key
+        std::size_t k_start = json.find("\"key\":\"", pos);
+        if (k_start == std::string::npos) { pos++; continue; }
+        k_start += 7; // len of "\"key\":\""
+        std::size_t k_end = json.find('\"', k_start);
+        if (k_end == std::string::npos) break;
+        std::string key = json.substr(k_start, k_end - k_start);
+
+        // Extract value
+        std::size_t v_start = json.find("\"value\":\"", k_end);
+        if (v_start == std::string::npos) { pos = k_end + 1; continue; }
+        v_start += 8; // len of "\"value\":\""
+        std::size_t v_end = json.find('\"', v_start);
+        if (v_end == std::string::npos) break;
+        std::string value = json.substr(v_start, v_end - v_start);
+
+        entries.emplace_back(std::move(key), std::move(value));
+        pos = v_end + 1;
+    }
+
+    if (entries.empty())
+        return nullptr;
+
+    // ── 创建 ConfigReloadSession 并提交 ──
+    // 注意：ConfigReloadSession 创建时不持久化（无 manifest_path）
+    // 与 AppSession::AppSession(nullptr) 搭配 —— 仅内存提交
+    bs::app::ConfigReloadSession session(actx);
+
+    for (const auto& e : entries)
+    {
+        session.AddMemPath(e.first.c_str(),
+                           reinterpret_cast<const uint8_t*>(e.second.data()),
+                           e.second.size());
+    }
+
+    // ── 第34天 · GR-01：从 AppSession 读取已注册的 policy/custom gates ──
+    // 单源真相：gate_registry 的唯一拥有者是 AppSession
+    for (const auto& policy : app_session->getPolicyGates())
+    {
+        session.AddPolicyGate(policy);
+    }
+    for (const auto& custom : app_session->getCustomGates())
+    {
+        session.AddCustomGate(custom);
+    }
+
+    Report* report = session.Commit();
+    if (!report)
+        return nullptr;
+
+    if (bs_report_get_status(report) != REPORT_STATUS_SUCCESS)
+    {
+        char* json_out = bs_report_to_json(report);
+        // Caller gets error report
+        return json_out;
+    }
+
+    char* json_out = bs_report_to_json(report);
+    return json_out;
+}
+
+} // extern "C"
+
+// ── 第34天 · Custom Gate AST 求值器 ──────────────────────────────────
+// 所有 custom gate 共用同一个函数指针，差异由 ast_json 承载。
+// user_ctx 指向 CustomGateEntry，供求值器读取 gate_id/ast_json。
+
+namespace {
+
+// 轻量 JSON 字段提取器：从 JSON 字符串中按路径提取值
+static std::string json_extract_value(const char* json, size_t len, const char* key)
+{
+    if (!json || !key) return {};
+    std::string needle = std::string("\"") + key + "\":";
+    const char* p = std::search(json, json + len, needle.begin(), needle.end());
+    if (p >= json + len) return {};
+
+    p += needle.size();
+    // 跳过空白
+    while (p < json + len && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) ++p;
+    if (p >= json + len) return {};
+
+    if (*p == '"') {
+        // 字符串值
+        ++p;
+        const char* end = p;
+        while (end < json + len && *end != '"') ++end;
+        return std::string(p, static_cast<size_t>(end - p));
+    } else if (*p == '-' || (*p >= '0' && *p <= '9')) {
+        // 数值
+        const char* end = p;
+        while (end < json + len && (*end == '-' || *end == '.' || (*end >= '0' && *end <= '9'))) ++end;
+        return std::string(p, static_cast<size_t>(end - p));
+    } else if (strncmp(p, "null", 4) == 0) {
+        return "null";
+    } else if (strncmp(p, "true", 4) == 0) {
+        return "true";
+    } else if (strncmp(p, "false", 5) == 0) {
+        return "false";
+    }
+    return {};
+}
+
+// 数值比较
+static bool cmp_num(const std::string& left, const std::string& right,
+                    const std::string& op)
+{
+    double lv = std::atof(left.c_str());
+    double rv = std::atof(right.c_str());
+    if (op == "eq")        return lv == rv;
+    if (op == "neq")       return lv != rv;
+    if (op == "gt")        return lv > rv;
+    if (op == "lt")        return lv < rv;
+    if (op == "gte")       return lv >= rv;
+    if (op == "lte")       return lv <= rv;
+    return false;
+}
+
+// 字符串比较
+static bool cmp_str(const std::string& left, const std::string& right,
+                    const std::string& op)
+{
+    if (op == "eq")        return left == right;
+    if (op == "neq")       return left != right;
+    if (op == "match")     return left.find(right) != std::string::npos;
+    if (op == "in")        return right.find(left) != std::string::npos;
+    return false;
+}
+
+// 求值单个 condition 节点
+static bool eval_condition(const char* json, size_t len,
+                           const std::string& field,
+                           const std::string& op,
+                           const std::string& value,
+                           char* err, size_t err_cap)
+{
+    std::string actual = json_extract_value(json, len, field.c_str());
+    if (actual.empty() || actual == "null") {
+        if (op == "exists")      return false;
+        if (op == "not_exists")  return true;
+        if (err && err_cap > 0)
+            std::snprintf(err, err_cap, "custom_gate: field '%s' not found or null", field.c_str());
+        return false;
+    }
+    if (op == "exists")      return true;
+    if (op == "not_exists")  return false;
+
+    // 尝试数值比较，失败回退字符串比较
+    bool has_dot = (actual.find('.') != std::string::npos || value.find('.') != std::string::npos);
+    if (!has_dot && op != "match" && op != "in") {
+        return cmp_num(actual, value, op);
+    }
+    return cmp_str(actual, value, op);
+}
+
+// 递归 AST 求值
+static bool eval_ast_node(const std::string& ast_json, const char* json, size_t len,
+                          char* err, size_t err_cap);
+
+static std::string extract_str_val(const std::string& json,
+                                    const char* key, const std::string& fallback)
+{
+    std::string needle = std::string("\"") + key + "\":\"";
+    size_t p = json.find(needle);
+    if (p == std::string::npos) return fallback;
+    p += needle.size();
+    size_t e = json.find('"', p);
+    if (e == std::string::npos) return fallback;
+    return json.substr(p, e - p);
+}
+
+// 查找第 n 层大括号内的 JSON 对象
+static std::string find_json_object(const std::string& json, size_t& pos)
+{
+    size_t start = json.find('{', pos);
+    if (start == std::string::npos) return {};
+    int depth = 0;
+    size_t i = start;
+    for (; i < json.size(); ++i) {
+        if (json[i] == '{') ++depth;
+        else if (json[i] == '}') {
+            --depth;
+            if (depth == 0) { pos = i + 1; return json.substr(start, i - start + 1); }
+        }
+    }
+    return {};
+}
+
+// 按 key 名定向提取子对象：搜索 "KEY":{ 并返回平衡的 {...}
+static std::string find_sub_object(const std::string& json, const char* key)
+{
+    std::string needle = std::string("\"") + key + "\":";
+    size_t p = json.find(needle);
+    if (p == std::string::npos) return {};
+    p += needle.size();
+    // 跳过空白
+    while (p < json.size() && (json[p] == ' ' || json[p] == '\t' || json[p] == '\n' || json[p] == '\r')) ++p;
+    if (p >= json.size() || json[p] != '{') return {};
+    int depth = 0;
+    size_t start = p;
+    for (; p < json.size(); ++p) {
+        if (json[p] == '{') ++depth;
+        else if (json[p] == '}') {
+            --depth;
+            if (depth == 0) return json.substr(start, p - start + 1);
+        }
+    }
+    return {};
+}
+
+static bool eval_ast_node(const std::string& ast_json, const char* data, size_t dlen,
+                          char* err, size_t err_cap)
+{
+    size_t pos = 0;
+    std::string node_json = find_json_object(ast_json, pos);
+    if (node_json.empty()) return true; // 空 AST → pass
+
+    std::string type = extract_str_val(node_json, "type", "");
+
+    if (type == "condition") {
+        std::string field = extract_str_val(node_json, "field", "");
+        std::string op    = extract_str_val(node_json, "op", "eq");
+        std::string value = extract_str_val(node_json, "value", "");
+        return eval_condition(data, dlen, field, op, value, err, err_cap);
+    }
+
+    if (type == "and") {
+        std::string left  = find_sub_object(node_json, "left");
+        std::string right = find_sub_object(node_json, "right");
+        if (left.empty() || right.empty()) return true;
+        return eval_ast_node(left,  data, dlen, err, err_cap) &&
+               eval_ast_node(right, data, dlen, err, err_cap);
+    }
+
+    if (type == "or") {
+        std::string left  = find_sub_object(node_json, "left");
+        std::string right = find_sub_object(node_json, "right");
+        if (left.empty() || right.empty()) return true;
+        return eval_ast_node(left,  data, dlen, err, err_cap) ||
+               eval_ast_node(right, data, dlen, err, err_cap);
+    }
+
+    if (type == "not") {
+        std::string inner = find_sub_object(node_json, "node");
+        if (inner.empty()) return true;
+        return !eval_ast_node(inner, data, dlen, err, err_cap);
+    }
+
+    if (type == "then") {
+        std::string when = find_sub_object(node_json, "when");
+        if (when.empty()) return true;
+        return eval_ast_node(when, data, dlen, err, err_cap);
+    }
+
+    // action / 未知类型 → pass
+    return true;
+}
+
+} // anonymous namespace
+
+/**
+ * bs_custom_gate_eval — 通用 Custom Gate AST 求值器（第34天）
+ *
+ * 所有 custom gate 共用此函数指针。
+ * 通过 user_ctx → CustomGateEntry → ast_json 获取 AST，对 data 逐节点求值。
+ */
+static int bs_custom_gate_eval(const void* data, size_t len,
+                                char* err, size_t err_cap, void* ctx)
+{
+    if (!data || !ctx) return -1;
+
+    auto* entry = static_cast<bs::app::CustomGateEntry*>(ctx);
+    if (entry->ast_json.empty()) {
+        if (err && err_cap > 0)
+            std::snprintf(err, err_cap, "custom_gate '%s': empty ast_json", entry->gate_id.c_str());
+        return -1;
+    }
+
+    const char* json = static_cast<const char*>(data);
+    bool ok = eval_ast_node(entry->ast_json, json, len, err, err_cap);
+
+    if (!ok) {
+        // err 已经在 eval_condition 中填充
+        if (err && err_cap > 0 && err[0] == '\0') {
+            std::snprintf(err, err_cap, "custom_gate '%s': AST evaluation failed", entry->gate_id.c_str());
+        }
+        return -1;
+    }
+    return 0;
+}
+
+extern "C" {
+
+/**
+ * register_gate_rule_c — 注册/移除 Gate 规则到 AppSession gate_registry（第34天）
+ *
+ * 单源真相：Gate 规则的唯一拥有者是 AppSession。
+ * 支持 action: "add_rule" / "update_rule"（默认 upsert）/ "remove_rule"。
+ *
+ * @param session    AppSession 句柄
+ * @param gate_type  "policy" 或 "custom"
+ * @param rule_json  Gate 规则 JSON
+ * @return 0 成功，-1 失败
+ */
+int register_gate_rule_c(void* session, const char* gate_type, const char* rule_json)
+{
+    if (!session || !gate_type || !rule_json)
+        return -1;
+
+    auto* app_session = static_cast<bs::app::AppSession*>(session);
+    if (!app_session->ok())
+        return -1;
+
+    std::string type(gate_type);
+    std::string json(rule_json);
+
+    // 通用字段提取
+    auto extract_str = [&json](const char* key, const std::string& fallback) -> std::string {
+        std::string needle = std::string("\"") + key + "\":\"";
+        size_t p = json.find(needle);
+        if (p == std::string::npos) return fallback;
+        p += needle.size();
+        size_t e = json.find('"', p);
+        if (e == std::string::npos) return fallback;
+        return json.substr(p, e - p);
+    };
+
+    std::string gate_id = extract_str("gate_id", "");
+    std::string action  = extract_str("action", "add_rule");
+
+    // ── remove_rule：直接删除 ──
+    if (action == "remove_rule") {
+        if (gate_id.empty()) return -1;
+        if (type == "policy")
+            app_session->unregisterGatePolicy(gate_id);
+        else if (type == "custom")
+            app_session->unregisterGateCustom(gate_id);
+        else
+            return -1;
+        return 0;
+    }
+
+    // ── add_rule / update_rule（upsert）──────────────────────────────
+
+    if (type == "policy")
+    {
+        bs::app::ScenarioPolicy policy;
+        std::string scenario = extract_str("scenario", "production");
+        policy.type = (scenario == "production")
+            ? bs::app::ScenarioType::ExpenseReimburse
+            : bs::app::ScenarioType::GlMapping;
+
+        // 解析 metadata_rules 数组
+        size_t rules_start = json.find("\"metadata_rules\"");
+        if (rules_start != std::string::npos)
+        {
+            size_t bracket = json.find('[', rules_start);
+            if (bracket != std::string::npos)
+            {
+                size_t pos = bracket + 1;
+                while (pos < json.size())
+                {
+                    size_t obj_start = json.find('{', pos);
+                    if (obj_start == std::string::npos || obj_start > json.find(']', pos)) break;
+                    size_t obj_end = json.find('}', obj_start);
+                    if (obj_end == std::string::npos) break;
+
+                    std::string obj = json.substr(obj_start, obj_end - obj_start + 1);
+                    bs::app::MetaRule rule;
+                    rule.instr_name = extract_str("instr_name", obj);
+                    rule.key        = extract_str("key", obj);
+                    std::string op  = extract_str("op", obj);
+                    rule.value      = extract_str("value", obj);
+
+                    if (op == "eq")       rule.op = BS_META_EQ;
+                    else if (op == "neq") rule.op = BS_META_NE;
+                    else if (op == "gt")  rule.op = BS_META_GT;
+                    else if (op == "lt")  rule.op = BS_META_LT;
+                    else if (op == "gte") rule.op = BS_META_GE;
+                    else if (op == "lte") rule.op = BS_META_LE;
+                    else if (op == "in")  rule.op = BS_META_CONTAINS;
+                    else if (op == "match") rule.op = BS_META_REGEX;
+                    else if (op == "exists")      rule.op = BS_META_EXISTS;
+                    else if (op == "not_exists")  rule.op = BS_META_NOT_EXISTS;
+                    else rule.op = BS_META_EQ;
+
+                    policy.metadata_rules.push_back(rule);
+                    pos = obj_end + 1;
+                }
+            }
+        }
+
+        if (gate_id.empty()) return -1;
+        app_session->registerGatePolicy(gate_id, policy);
+        return 0;
+    }
+    else if (type == "custom")
+    {
+        if (gate_id.empty()) return -1;
+
+        // 提取 AST JSON（从顶层 ast 字段或整体 rule_json）
+        std::string ast_json;
+        size_t ast_field = json.find("\"ast\":{");
+        if (ast_field != std::string::npos) {
+            // 从 ast 字段提取完整对象
+            size_t obj_start = json.find('{', ast_field);
+            if (obj_start != std::string::npos) {
+                int depth = 0;
+                size_t i = obj_start;
+                for (; i < json.size(); ++i) {
+                    if (json[i] == '{') ++depth;
+                    else if (json[i] == '}') {
+                        --depth;
+                        if (depth == 0) break;
+                    }
+                }
+                if (depth == 0)
+                    ast_json = json.substr(obj_start, i - obj_start + 1);
+            }
+        }
+
+        bs::app::CustomGateEntry entry;
+        entry.gate_id = gate_id;
+        entry.ast_json = ast_json;
+        entry.fn = bs_custom_gate_eval;
+        entry.user_ctx = nullptr; // ConfigReloadSession::AddCustomGate 内部传入 &entry
+
+        app_session->registerGateCustom(gate_id, entry);
+        return 0;
+    }
+
+    return -1;
+}
+
+} // extern "C"

@@ -11,7 +11,7 @@ function Dashboard() {
             仪表盘
           </h1>
           <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-            BlessStar 配置编辑器概览
+            LiveDesign 配置编辑器概览
           </p>
         </div>
       </div>

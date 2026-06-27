@@ -1,0 +1,37 @@
+// schema.fbs — BlessStar SHM Schema FlatBuffer 定义（专题四 P1 ④）
+//
+// 编译命令（需要 flatc 工具链）：
+//   flatc --cpp --ts -o app/sdk/include/bs/app/sdk/shm/ app/sdk/include/bs/app/sdk/shm/schema.fbs
+//
+// 生成的 binding：
+//   app/sdk/include/bs/app/sdk/shm/schema_generated.h  ← C++ (SDK 端)
+//   app/editor/src/shm/schema_generated.ts              ← TypeScript (Editor 端)
+
+namespace bs.schema;
+
+// 字段类型枚举（与 bs_field_type_t 一一对应）
+enum FieldType : byte {
+    Int32   = 0,
+    Int64   = 1,
+    String  = 2,
+    Double  = 3,
+    Bool    = 4,
+}
+
+// 字段声明（FlatBuffer table 支持零拷贝读取）
+table FieldDecl {
+    key:         string    (required);     // 字段全路径，如 "db.host"
+    type:        FieldType = Int32;        // 字段类型
+    default_str: string;                   // 默认值（字符串表达）
+    description: string;                   // 人读语义 description
+    required:    bool = false;             // 是否必填
+}
+
+// Schema 根 table
+table Schema {
+    version:      string = "1.0";          // Schema 版本
+    generated_at: string;                  // ISO 8601 时间戳
+    fields:       [FieldDecl] (required);  // 字段列表
+}
+
+root_type Schema;

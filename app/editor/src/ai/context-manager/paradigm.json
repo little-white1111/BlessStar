@@ -1,0 +1,79 @@
+{
+  "universal": {
+    "systemName": "__universal__",
+    "toolTemplates": {
+      "list_directory": {
+        "announcing": "正在查看 {path} 目录...",
+        "success": "📂 已找到 {count} 项：{entries}",
+        "empty": "📂 {path}：空目录",
+        "failure": "❌ 无法读取目录 {path}：{error}"
+      },
+      "read_file": {
+        "announcing": "正在读取 {path} ...",
+        "success": "📄 {path}（{size} 字节）",
+        "empty": "📄 {path}：空文件",
+        "failure": "❌ 无法读取文件 {path}：{error}"
+      },
+      "search_content": {
+          "announcing": "正在搜索「{pattern}」...",
+          "success": "🔍 找到 {count} 个包含「{pattern}」的文件",
+          "empty": "🔍 未找到包含「{pattern}」的文件",
+        "failure": "❌ 搜索失败：{error}"
+      },
+      "find_files": {
+        "announcing": "正在查找匹配「{pattern}」的文件...",
+        "success": "📁 找到 {count} 个匹配「{pattern}」的文件",
+        "empty": "📁 未找到匹配「{pattern}」的文件",
+        "failure": "❌ 查找失败：{error}"
+      },
+      "run_terminal": {
+        "announcing": "正在执行命令...",
+        "success": "💻 命令执行完成（退出码: {exitCode}）",
+        "failure": "❌ 命令执行失败：{error}"
+      },
+      "read_config_value": {
+        "success": "📖 {key} = 「{value}」",
+        "empty": "⚠️ {key} 未设置值，当前为空",
+        "failure": "❌ 读取 {key} 失败：{error}"
+      },
+      "write_config_value": {
+        "announcing": "正在写入 {key}...",
+        "success": "✅ 已写入 {key} = 「{value}」",
+        "failure": "❌ 写入失败：{error}"
+      },
+      "create_schema_field": {
+        "announcing": "正在创建字段...",
+        "success": "✅ 已创建字段 {key}（{type}）",
+        "failure": "❌ 创建字段失败：{error}"
+      },
+      "update_gate_rule": {
+        "announcing": "正在更新 Gate 规则...",
+        "success": "✅ 已更新 Gate 规则",
+        "failure": "❌ 更新 Gate 规则失败：{error}"
+      },
+      "validate_config": {
+        "announcing": "正在校验配置...",
+        "success": "✅ 配置校验通过",
+        "failure": "❌ 配置校验失败：{error}"
+      },
+      "chat": {
+        "announcing": "正在思考...",
+        "success": "{reply}",
+        "failure": "❌ 对话失败：{error}"
+      },
+      "generate_normalizer_template": {
+        "announcing": "正在生成归一化模板...",
+        "success": "✅ 已生成归一化模板：{name}",
+        "failure": "❌ 生成失败：{error}"
+      },
+      "read_diagnostics": {
+        "announcing": "正在读取诊断信息...",
+        "success": "🔍 诊断结果：{count} 条",
+        "empty": "🔍 未发现问题",
+        "failure": "❌ 读取诊断失败：{error}"
+      }
+    }
+  },
+  "systems": [
+  ]
+}

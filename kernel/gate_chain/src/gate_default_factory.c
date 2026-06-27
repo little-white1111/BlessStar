@@ -85,16 +85,11 @@ void bs_gate_factory_free_node(bs_gate_node_t* node)
     free(node->sub_category);
     free(node->domain);
     free(node->entity);
-    if (node->child_ids) {
-        for (size_t j = 0; j < node->child_count; j++)
-            free(node->child_ids[j]);
-        free(node->child_ids);
-    }
-    if (node->do_ids) {
-        for (size_t j = 0; j < node->do_count; j++)
-            free(node->do_ids[j]);
-        free(node->do_ids);
-    }
+    /* Factory-produced nodes are standalone (no children/do_nodes links).
+     * If they happen to have arrays, free the array but NOT children recursively
+     * (factory doesn't own them). */
+    free(node->children);
+    free(node->do_nodes);
     free(node);
 }
 

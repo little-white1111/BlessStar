@@ -214,7 +214,7 @@ describe('BsSkillGenerator', () => {
     expect(names).toContain('create_schema_field')
     expect(names).toContain('update_gate_rule')
     expect(names).toContain('validate_config')
-    expect(names).toContain('suggest_field_type')
+    expect(names).toContain('chat')
     expect(names).toContain('generate_normalizer_template')
 
     // All have required type field
@@ -299,7 +299,7 @@ describe('BsSkillGenerator', () => {
   /* ── AGF-03: tool names match editor white list ──────────────────── */
 
   it('tool_defs.json names match expected editor tool set (AGF-03)', async () => {
-    const expected = ['create_schema_field', 'update_gate_rule', 'validate_config', 'suggest_field_type', 'generate_normalizer_template']
+    const expected = ['create_schema_field', 'update_gate_rule', 'validate_config', 'chat', 'generate_normalizer_template']
     const result = await gen.generate()
     const raw = mockFs.readFileSync(result.toolDefsPath)
     const parsed = JSON.parse(raw)

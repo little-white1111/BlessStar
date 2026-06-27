@@ -55,26 +55,26 @@ static int test_export_full(void)
 
     assert(bs_schema_register(reg, &entry) == BS_SCHEMA_OK);
 
-    /* Create gate chain */
-    bs_gate_chain_t* chain = (bs_gate_chain_t*)calloc(1, sizeof(bs_gate_chain_t));
+    /* Create gate chain (DAG-based API) */
+    bs_gate_chain_t* chain = bs_gate_chain_create();
     chain->version = strdup("1.0");
-    chain->node_count = 2;
-    chain->nodes = (bs_gate_node_t*)calloc(2, sizeof(bs_gate_node_t));
 
-    chain->nodes[0].type      = strdup("bs_condition");
-    chain->nodes[0].id        = strdup("g1");
-    chain->nodes[0].field_key = strdup("amount_limit");
-    chain->nodes[0].op        = strdup("lt");
-    chain->nodes[0].value     = strdup("50000");
-    chain->nodes[0].do_count  = 1;
-    chain->nodes[0].do_ids    = (char**)calloc(1, sizeof(char*));
-    chain->nodes[0].do_ids[0] = strdup("g2");
+    /* Create nodes */
+    bs_gate_node_t* node0 = bs_gate_node_create("bs_condition", "g1");
+    node0->field_key = strdup("amount_limit");
+    node0->op        = strdup("lt");
+    node0->value     = strdup("50000");
 
-    chain->nodes[1].type      = strdup("bs_meta_rule");
-    chain->nodes[1].id        = strdup("g2");
-    chain->nodes[1].field_key = strdup("approval_level");
-    chain->nodes[1].op        = strdup("required");
-    chain->nodes[1].value     = strdup("high");
+    bs_gate_node_t* node1 = bs_gate_node_create("bs_meta_rule", "g2");
+    node1->field_key = strdup("approval_level");
+    node1->op        = strdup("required");
+    node1->value     = strdup("high");
+
+    /* Link: g1 DO → g2 */
+    bs_gate_node_link_do(node0, node1);
+
+    /* Set root (DFS traversal entry point) */
+    chain->root = node0;
 
     /* Export */
     const char* out_dir = "build/test_agent_index_tmp";

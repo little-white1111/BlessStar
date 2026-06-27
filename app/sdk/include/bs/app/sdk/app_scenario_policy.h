@@ -23,6 +23,7 @@ enum class ScenarioType
 
 struct ScenarioPolicy
 {
+    std::string  gate_id;                     // 第34天：upsert/remove 的精确索引
     ScenarioType type = ScenarioType::ExpenseReimburse;
     std::string  tenant;
     bool         allow_hot_reload = true;

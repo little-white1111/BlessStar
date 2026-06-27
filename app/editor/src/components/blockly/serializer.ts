@@ -33,7 +33,7 @@ function serializeBlockToJson(block: Block, generator: Blockly.Generator): GateC
     return null
   }
 
-  const code = func(block, generator)
+  const code = String(func(block, generator) ?? '')
   try {
     return JSON.parse(code) as GateChainNode
   } catch {

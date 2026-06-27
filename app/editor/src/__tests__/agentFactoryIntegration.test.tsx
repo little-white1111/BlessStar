@@ -26,10 +26,10 @@ describe('AI Tool IPC Bridge', () => {
     expect(result.valid).toBe(true)
   })
 
-  it('suggest_field_type calls executeTool', async () => {
-    mockBlessStar.executeTool.mockResolvedValue({ success: true, result: 'input' })
-    const result = await mockBlessStar.executeTool('suggest_field_type', { label: '名称' })
-    expect(mockBlessStar.executeTool).toHaveBeenCalledWith('suggest_field_type', { label: '名称' })
+  it('chat calls executeTool', async () => {
+    mockBlessStar.executeTool.mockResolvedValue({ success: true, result: 'ok' })
+    const result = await mockBlessStar.executeTool('chat', { reply: '你好' })
+    expect(mockBlessStar.executeTool).toHaveBeenCalledWith('chat', { reply: '你好' })
     expect(result.success).toBe(true)
   })
 

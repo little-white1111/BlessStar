@@ -158,6 +158,108 @@ public:
         return true;
     }
 
+    bool ExecuteQuery(const char* sql,
+                      const std::vector<std::string>& params,
+                      std::vector<std::vector<std::string>>* out_rows,
+                      std::vector<std::string>* out_cols,
+                      std::string* out_error) override
+    {
+        if (!conn_)
+        {
+            if (out_error) *out_error = "mysql: not connected";
+            return false;
+        }
+        MYSQL_STMT* stmt = mysql_stmt_init(conn_);
+        if (!stmt)
+        {
+            if (out_error) *out_error = mysql_error(conn_);
+            return false;
+        }
+        if (mysql_stmt_prepare(stmt, sql, static_cast<unsigned long>(strlen(sql))) != 0)
+        {
+            if (out_error) *out_error = mysql_stmt_error(stmt);
+            mysql_stmt_close(stmt);
+            return false;
+        }
+        // Bind parameters
+        if (!params.empty())
+        {
+            std::vector<MYSQL_BIND> param_bind(params.size());
+            std::vector<unsigned long> param_lens(params.size());
+            memset(param_bind.data(), 0, param_bind.size() * sizeof(MYSQL_BIND));
+            for (size_t i = 0; i < params.size(); ++i)
+            {
+                param_bind[i].buffer_type = MYSQL_TYPE_STRING;
+                param_bind[i].buffer = const_cast<char*>(params[i].c_str());
+                param_lens[i] = static_cast<unsigned long>(params[i].size());
+                param_bind[i].length = &param_lens[i];
+            }
+            if (mysql_stmt_bind_param(stmt, param_bind.data()) != 0)
+            {
+                if (out_error) *out_error = mysql_stmt_error(stmt);
+                mysql_stmt_close(stmt);
+                return false;
+            }
+        }
+        if (mysql_stmt_execute(stmt) != 0)
+        {
+            if (out_error) *out_error = mysql_stmt_error(stmt);
+            mysql_stmt_close(stmt);
+            return false;
+        }
+        // Get column count
+        MYSQL_RES* meta = mysql_stmt_result_metadata(stmt);
+        int col_count = meta ? mysql_num_fields(meta) : 0;
+        if (out_cols && meta)
+        {
+            out_cols->clear();
+            for (int c = 0; c < col_count; ++c)
+            {
+                MYSQL_FIELD* field = mysql_fetch_field_direct(meta, c);
+                out_cols->push_back(field ? field->name : "");
+            }
+        }
+        // Bind result buffers
+        std::vector<MYSQL_BIND> result_bind(col_count);
+        std::vector<std::vector<char>> result_bufs(col_count);
+        std::vector<unsigned long> result_lens(col_count);
+        std::vector<bool> result_nulls(col_count);
+        memset(result_bind.data(), 0, result_bind.size() * sizeof(MYSQL_BIND));
+        for (int c = 0; c < col_count; ++c)
+        {
+            result_bufs[c].resize(65536, '\0');
+            result_bind[c].buffer_type = MYSQL_TYPE_STRING;
+            result_bind[c].buffer = result_bufs[c].data();
+            result_bind[c].buffer_length = 65536;
+            result_bind[c].length = &result_lens[c];
+            result_bind[c].is_null = reinterpret_cast<bool*>(&result_nulls[c]);
+        }
+        if (col_count > 0 && mysql_stmt_bind_result(stmt, result_bind.data()) != 0)
+        {
+            if (out_error) *out_error = mysql_stmt_error(stmt);
+            if (meta) mysql_free_result(meta);
+            mysql_stmt_close(stmt);
+            return false;
+        }
+        // Fetch rows
+        if (out_rows) out_rows->clear();
+        while (mysql_stmt_fetch(stmt) == 0)
+        {
+            std::vector<std::string> row;
+            for (int c = 0; c < col_count; ++c)
+            {
+                if (result_nulls[c])
+                    row.push_back("");
+                else
+                    row.push_back(std::string(result_bufs[c].data(), result_lens[c]));
+            }
+            if (out_rows) out_rows->push_back(std::move(row));
+        }
+        if (meta) mysql_free_result(meta);
+        mysql_stmt_close(stmt);
+        return true;
+    }
+
     const char* DriverName() const override { return "mysql"; }
 };
 

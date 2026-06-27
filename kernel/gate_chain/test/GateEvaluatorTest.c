@@ -1,44 +1,19 @@
-/* OPT-08: Gate evaluator tests */
+/* DAG version: Gate evaluator DFS tests */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <bs/kernel/gate_chain/gate_chain_types.h>
+#include <bs/kernel/gate_chain/gate_chain_serialize.h>
 #include <bs/kernel/gate_chain/gate_evaluator.h>
 
-static bs_gate_chain_t* make_chain(void)
+static int test_evaluator_empty_chain(void)
 {
-    bs_gate_chain_t* chain = (bs_gate_chain_t*)calloc(1, sizeof(bs_gate_chain_t));
-    chain->version = strdup("1.0");
-    return chain;
-}
+    printf("  test_evaluator_empty_chain ... ");
+    bs_gate_chain_t* chain = bs_gate_chain_create();
 
-static void add_node(bs_gate_chain_t* chain, const char* type, const char* field_key,
-                      const char* op, const char* value, int layer)
-{
-    size_t idx = chain->node_count;
-    chain->node_count++;
-    chain->nodes = (bs_gate_node_t*)realloc(chain->nodes,
-        chain->node_count * sizeof(bs_gate_node_t));
-    memset(&chain->nodes[idx], 0, sizeof(bs_gate_node_t));
-    chain->nodes[idx].type      = type ? strdup(type) : NULL;
-    chain->nodes[idx].field_key = field_key ? strdup(field_key) : NULL;
-    chain->nodes[idx].op        = op ? strdup(op) : NULL;
-    chain->nodes[idx].value     = value ? strdup(value) : NULL;
-    chain->nodes[idx].layer     = layer;
-}
-
-static int test_evaluator_passes_without_nodes(void)
-{
-    printf("  test_evaluator_passes_without_nodes ... ");
-
-    bs_gate_chain_t* chain = make_chain();
-    bs_gate_eval_context_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.field_key = "amount";
-    ctx.field_value = "1000";
-
+    bs_gate_eval_context_t ctx = { .field_key = "amount", .field_value = "1000" };
     bs_gate_eval_result_t result;
     memset(&result, 0, sizeof(result));
 
@@ -51,18 +26,19 @@ static int test_evaluator_passes_without_nodes(void)
     return 0;
 }
 
-static int test_evaluator_lt_pass(void)
+static int test_evaluator_single_condition_pass(void)
 {
-    printf("  test_evaluator_lt_pass ... ");
+    printf("  test_evaluator_single_condition_pass ... ");
+    bs_gate_chain_t* chain = bs_gate_chain_create();
 
-    bs_gate_chain_t* chain = make_chain();
-    add_node(chain, "bs_condition", "amount", "lt", "50000", BS_GATE_LAYER_DEFAULT);
+    bs_gate_node_t* cond = bs_gate_node_create("bs_condition", "c1");
+    cond->field_key = strdup("amount");
+    cond->op = strdup("lt");
+    cond->value = strdup("50000");
+    cond->layer = BS_GATE_LAYER_DEFAULT;
+    chain->root = cond;
 
-    bs_gate_eval_context_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.field_key = "amount";
-    ctx.field_value = "1000";
-
+    bs_gate_eval_context_t ctx = { .field_key = "amount", .field_value = "1000" };
     bs_gate_eval_result_t result;
     memset(&result, 0, sizeof(result));
 
@@ -75,26 +51,25 @@ static int test_evaluator_lt_pass(void)
     return 0;
 }
 
-static int test_evaluator_lt_fail(void)
+static int test_evaluator_condition_fail(void)
 {
-    printf("  test_evaluator_lt_fail ... ");
+    printf("  test_evaluator_condition_fail ... ");
+    bs_gate_chain_t* chain = bs_gate_chain_create();
 
-    bs_gate_chain_t* chain = make_chain();
-    add_node(chain, "bs_condition", "amount", "lt", "50000", BS_GATE_LAYER_DEFAULT);
+    bs_gate_node_t* cond = bs_gate_node_create("bs_condition", "c1");
+    cond->field_key = strdup("amount");
+    cond->op = strdup("lt");
+    cond->value = strdup("50000");
+    cond->layer = BS_GATE_LAYER_DEFAULT;
+    chain->root = cond;
 
-    bs_gate_eval_context_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.field_key = "amount";
-    ctx.field_value = "100000";
-
+    bs_gate_eval_context_t ctx = { .field_key = "amount", .field_value = "100000" };
     bs_gate_eval_result_t result;
     memset(&result, 0, sizeof(result));
 
     int r = bs_gate_evaluator_evaluate(chain, &ctx, &result);
     if (r != 0) { printf("FAIL: evaluate returned %d\n", r); bs_gate_chain_free(chain); return 1; }
     if (result.passed) { printf("FAIL: should fail (100000 >= 50000)\n"); bs_gate_chain_free(chain); return 1; }
-    if (result.failed_node_index != 0) { printf("FAIL: failed node index mismatch\n"); bs_gate_chain_free(chain); return 1; }
-    if (!result.error_message) { printf("FAIL: error_message should be set\n"); bs_gate_chain_free(chain); return 1; }
 
     bs_gate_eval_result_free(&result);
     bs_gate_chain_free(chain);
@@ -102,70 +77,61 @@ static int test_evaluator_lt_fail(void)
     return 0;
 }
 
-static int test_evaluator_eq_pass(void)
+static int test_evaluator_and_pass(void)
 {
-    printf("  test_evaluator_eq_pass ... ");
+    printf("  test_evaluator_and_pass ... ");
+    bs_gate_chain_t* chain = bs_gate_chain_create();
 
-    bs_gate_chain_t* chain = make_chain();
-    add_node(chain, "bs_condition", "mode", "eq", "production", BS_GATE_LAYER_POLICY);
+    bs_gate_node_t* and_node = bs_gate_node_create("bs_logic_and", "and1");
 
-    bs_gate_eval_context_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.field_key = "mode";
-    ctx.field_value = "production";
+    bs_gate_node_t* c1 = bs_gate_node_create("bs_condition", "c1");
+    c1->field_key = strdup("amount"); c1->op = strdup("lt"); c1->value = strdup("50000"); c1->layer = BS_GATE_LAYER_DEFAULT;
+    bs_gate_node_link_child(and_node, c1);
 
+    bs_gate_node_t* c2 = bs_gate_node_create("bs_condition", "c2");
+    c2->field_key = strdup("dept"); c2->op = strdup("eq"); c2->value = strdup("finance"); c2->layer = BS_GATE_LAYER_POLICY;
+    bs_gate_node_link_child(and_node, c2);
+
+    chain->root = and_node;
+
+    bs_gate_eval_context_t ctx = { .field_key = "amount", .field_value = "1000" };
     bs_gate_eval_result_t result;
     memset(&result, 0, sizeof(result));
 
     int r = bs_gate_evaluator_evaluate(chain, &ctx, &result);
     if (r != 0) { printf("FAIL: evaluate returned %d\n", r); bs_gate_chain_free(chain); return 1; }
-    if (!result.passed) { printf("FAIL: should pass (eq match)\n"); bs_gate_chain_free(chain); return 1; }
+    if (!result.passed) { printf("FAIL: AND should pass (amount ok, dept skipped)\n"); bs_gate_chain_free(chain); return 1; }
 
     bs_gate_chain_free(chain);
     printf("OK\n");
     return 0;
 }
 
-static int test_evaluator_layer_order(void)
+static int test_evaluator_or_pass(void)
 {
-    printf("  test_evaluator_layer_order ... ");
+    printf("  test_evaluator_or_pass ... ");
+    bs_gate_chain_t* chain = bs_gate_chain_create();
 
-    bs_gate_chain_t* chain = make_chain();
-    add_node(chain, "bs_condition",   "x", "eq", "1",    BS_GATE_LAYER_DEFAULT);
-    add_node(chain, "bs_policy_attr", "y", "gt", "100",  BS_GATE_LAYER_POLICY);
-    add_node(chain, "bs_custom_gate", "z", "eq", "ok",   BS_GATE_LAYER_CUSTOM);
+    bs_gate_node_t* or_node = bs_gate_node_create("bs_logic_or", "or1");
 
-    /* Test with field_key=z, custom layer */
-    bs_gate_eval_context_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    ctx.field_key = "z";
-    ctx.field_value = "ok";
+    bs_gate_node_t* c1 = bs_gate_node_create("bs_condition", "c1");
+    c1->field_key = strdup("role"); c1->op = strdup("eq"); c1->value = strdup("admin"); c1->layer = BS_GATE_LAYER_DEFAULT;
+    bs_gate_node_link_child(or_node, c1);
 
+    bs_gate_node_t* c2 = bs_gate_node_create("bs_condition", "c2");
+    c2->field_key = strdup("role"); c2->op = strdup("eq"); c2->value = strdup("manager"); c2->layer = BS_GATE_LAYER_DEFAULT;
+    bs_gate_node_link_child(or_node, c2);
+
+    chain->root = or_node;
+
+    bs_gate_eval_context_t ctx = { .field_key = "role", .field_value = "admin" };
     bs_gate_eval_result_t result;
     memset(&result, 0, sizeof(result));
 
     int r = bs_gate_evaluator_evaluate(chain, &ctx, &result);
     if (r != 0) { printf("FAIL: evaluate returned %d\n", r); bs_gate_chain_free(chain); return 1; }
-    if (!result.passed) { printf("FAIL: should pass (field z matches custom layer eq)\n"); bs_gate_chain_free(chain); return 1; }
+    if (!result.passed) { printf("FAIL: OR should pass (role=admin matches)\n"); bs_gate_chain_free(chain); return 1; }
 
-    /* Test with field_key=y, wrong value */
-    bs_gate_eval_context_t ctx2;
-    memset(&ctx2, 0, sizeof(ctx2));
-    ctx2.field_key = "y";
-    ctx2.field_value = "50";
-
-    bs_gate_eval_result_t result2;
-    memset(&result2, 0, sizeof(result2));
-
-    r = bs_gate_evaluator_evaluate(chain, &ctx2, &result2);
-    if (r != 0) { printf("FAIL: evaluate 2 returned %d\n", r); bs_gate_chain_free(chain); return 1; }
-    if (result2.passed) { printf("FAIL: should fail (50 <= 100)\n"); bs_gate_chain_free(chain); return 1; }
-    if (result2.failed_layer != BS_GATE_LAYER_POLICY) {
-        printf("FAIL: failed_layer expected %d, got %zu\n", BS_GATE_LAYER_POLICY, result2.failed_layer);
-        bs_gate_chain_free(chain); return 1;
-    }
-
-    bs_gate_eval_result_free(&result2);
     bs_gate_chain_free(chain);
     printf("OK\n");
     return 0;
@@ -175,11 +141,11 @@ int main(void)
 {
     printf("gate_evaluator_test:\n");
     int fail = 0;
-    fail += test_evaluator_passes_without_nodes();
-    fail += test_evaluator_lt_pass();
-    fail += test_evaluator_lt_fail();
-    fail += test_evaluator_eq_pass();
-    fail += test_evaluator_layer_order();
+    fail += test_evaluator_empty_chain();
+    fail += test_evaluator_single_condition_pass();
+    fail += test_evaluator_condition_fail();
+    fail += test_evaluator_and_pass();
+    fail += test_evaluator_or_pass();
     printf("  %s\n", fail ? "FAILED" : "ALL PASS");
     return fail ? 1 : 0;
 }

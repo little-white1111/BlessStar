@@ -98,8 +98,17 @@ static int test_custom_gate()
         return 0;
     };
 
-    session.AddCustomGate(custom_fn, nullptr);
-    session.AddCustomGate(nullptr, nullptr);
+    bs::app::CustomGateEntry entry1;
+    entry1.gate_id = "custom_fn";
+    entry1.fn      = custom_fn;
+    entry1.user_ctx = nullptr;
+    session.AddCustomGate(entry1);
+
+    bs::app::CustomGateEntry entry2;
+    entry2.gate_id = "null_fn";
+    entry2.fn      = nullptr;
+    entry2.user_ctx = nullptr;
+    session.AddCustomGate(entry2);
 
     bs_adapter_attach_ctx_destroy(ctx);
     return 0;

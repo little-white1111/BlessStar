@@ -280,6 +280,29 @@ static int build_domain_knowledge_compact(ai_json_buf_t* b,
  * Compact: constraint_knowledge
  * gate_id|scenario|field_key|op|value|layer|sub_category
  * ══════════════════════════════════════════════════════════════════════ */
+static void build_constraint_knowledge_compact_node(ai_json_buf_t* b, const bs_gate_node_t* n, const bs_agent_index_config_t* config)
+{
+    if (!n) return;
+    ai_json_buf_append(b, n->id ? n->id : "");
+    ai_json_buf_append(b, "|");
+    ai_json_buf_append(b, n->type ? n->type : "");
+    ai_json_buf_append(b, "|");
+    ai_json_buf_append(b, n->field_key ? n->field_key : "");
+    ai_json_buf_append(b, "|");
+    ai_json_buf_append(b, n->op ? n->op : "");
+    ai_json_buf_append(b, "|");
+    ai_json_buf_append(b, n->value ? n->value : "");
+    ai_json_buf_appendf(b, "|%d", n->layer);
+    ai_json_buf_append(b, "|");
+    ai_json_buf_append(b, n->sub_category ? n->sub_category : (n->type ? n->type : ""));
+    ai_json_buf_append(b, "\n");
+
+    for (size_t i = 0; i < n->child_count; i++)
+        build_constraint_knowledge_compact_node(b, n->children[i], config);
+    for (size_t i = 0; i < n->do_count; i++)
+        build_constraint_knowledge_compact_node(b, n->do_nodes[i], config);
+}
+
 static int build_constraint_knowledge_compact(ai_json_buf_t* b,
                                                const bs_gate_chain_t* chain,
                                                const bs_agent_index_config_t* config)
@@ -288,25 +311,8 @@ static int build_constraint_knowledge_compact(ai_json_buf_t* b,
     ai_json_buf_append(b, "# constraint_knowledge.compact\n");
     ai_json_buf_append(b, "gate_id|scenario|field_key|op|value|layer|sub_category\n");
 
-    if (!chain) return 0;
-    for (size_t i = 0; i < chain->node_count; i++) {
-        const bs_gate_node_t* n = &chain->nodes[i];
-        ai_json_buf_append(b, n->id ? n->id : "");
-        ai_json_buf_append(b, "|");
-        ai_json_buf_append(b, n->type ? n->type : "");
-        ai_json_buf_append(b, "|");
-        ai_json_buf_append(b, n->field_key ? n->field_key : "");
-        ai_json_buf_append(b, "|");
-        ai_json_buf_append(b, n->op ? n->op : "");
-        ai_json_buf_append(b, "|");
-        ai_json_buf_append(b, n->value ? n->value : "");
-        ai_json_buf_append(b, "|");
-        ai_json_buf_appendf(b, "%zu", n->layer);
-        ai_json_buf_append(b, "|");
-        /* sub_category is not directly in gate_node, use type as fallback */
-        ai_json_buf_append(b, n->type ? n->type : "");
-        ai_json_buf_append(b, "\n");
-    }
+    if (!chain || !chain->root) return 0;
+    build_constraint_knowledge_compact_node(b, chain->root, config);
     return 0;
 }
 
@@ -410,13 +416,68 @@ static int build_domain_knowledge(ai_json_buf_t* b,
     return 0;
 }
 
+/* ── Forward declarations ── */
+static void auto_json_field(ai_json_buf_t* b, int* first, const char* key, const char* val);
+
 /* ══════════════════════════════════════════════════════════════════════
  * Constraint knowledge builder (from gate chain)
  * ══════════════════════════════════════════════════════════════════════ */
+static void build_constraint_knowledge_node(ai_json_buf_t* b, const bs_gate_node_t* n, int* first)
+{
+    if (!n) return;
+    if (!(*first)) ai_json_buf_append(b, ",");
+    ai_json_buf_append(b, "\n    {");
+    *first = 0;
+    int local_first = 1;
+
+    auto_json_field(b, &local_first, "id", n->id);
+    auto_json_field(b, &local_first, "type", n->type);
+    auto_json_field(b, &local_first, "field_key", n->field_key);
+    auto_json_field(b, &local_first, "op", n->op);
+    auto_json_field(b, &local_first, "value", n->value);
+
+    if (n->child_count > 0 && n->children) {
+        if (!local_first) ai_json_buf_append(b, ",");
+        ai_json_buf_append(b, "\"children\":[");
+        for (size_t j = 0; j < n->child_count; j++) {
+            if (j > 0) ai_json_buf_append(b, ",");
+            ai_json_buf_append(b, "{");
+            int child_first = 1;
+            build_constraint_knowledge_node(b, n->children[j], &child_first);
+            ai_json_buf_append(b, "}");
+        }
+        ai_json_buf_append(b, "]");
+        local_first = 0;
+    }
+    if (n->do_count > 0 && n->do_nodes) {
+        if (!local_first) ai_json_buf_append(b, ",");
+        ai_json_buf_append(b, "\"do\":[");
+        for (size_t j = 0; j < n->do_count; j++) {
+            if (j > 0) ai_json_buf_append(b, ",");
+            ai_json_buf_append(b, "{");
+            int do_first = 1;
+            build_constraint_knowledge_node(b, n->do_nodes[j], &do_first);
+            ai_json_buf_append(b, "}");
+        }
+        ai_json_buf_append(b, "]");
+        local_first = 0;
+    }
+    ai_json_buf_append(b, "}");
+}
+
+static void auto_json_field(ai_json_buf_t* b, int* first, const char* key, const char* val)
+{
+    if (!val) return;
+    if (!(*first)) ai_json_buf_append(b, ",");
+    ai_json_buf_appendf(b, "\"%s\":", key);
+    ai_json_escape(val, b);
+    *first = 0;
+}
+
 static int build_constraint_knowledge(ai_json_buf_t* b,
                                        const bs_gate_chain_t* chain)
 {
-    if (!chain || chain->node_count == 0) {
+    if (!chain || !chain->root) {
         ai_json_buf_append(b, "{\"version\":\"1.0\",\"generated_at\":\"\",\"gates\":[]}\n");
         return 0;
     }
@@ -430,63 +491,9 @@ static int build_constraint_knowledge(ai_json_buf_t* b,
     ai_json_escape(ts, b);
     ai_json_buf_append(b, ",\n\"gates\":[\n");
 
-    for (size_t i = 0; i < chain->node_count; i++) {
-        if (i > 0) ai_json_buf_append(b, ",");
-        const bs_gate_node_t* n = &chain->nodes[i];
-        ai_json_buf_append(b, "\n    {");
-        int first = 1;
+    int first = 1;
+    build_constraint_knowledge_node(b, chain->root, &first);
 
-        if (n->id) {
-            ai_json_buf_append(b, "\"id\":");
-            ai_json_escape(n->id, b);
-            first = 0;
-        }
-        if (n->type) {
-            if (!first) ai_json_buf_append(b, ",");
-            ai_json_buf_append(b, "\"type\":");
-            ai_json_escape(n->type, b);
-            first = 0;
-        }
-        if (n->field_key) {
-            if (!first) ai_json_buf_append(b, ",");
-            ai_json_buf_append(b, "\"field_key\":");
-            ai_json_escape(n->field_key, b);
-            first = 0;
-        }
-        if (n->op) {
-            if (!first) ai_json_buf_append(b, ",");
-            ai_json_buf_append(b, "\"op\":");
-            ai_json_escape(n->op, b);
-            first = 0;
-        }
-        if (n->value) {
-            if (!first) ai_json_buf_append(b, ",");
-            ai_json_buf_append(b, "\"value\":");
-            ai_json_escape(n->value, b);
-            first = 0;
-        }
-        if (n->child_count > 0 && n->child_ids) {
-            if (!first) ai_json_buf_append(b, ",");
-            ai_json_buf_append(b, "\"children\":[");
-            for (size_t j = 0; j < n->child_count; j++) {
-                if (j > 0) ai_json_buf_append(b, ",");
-                ai_json_escape(n->child_ids[j], b);
-            }
-            ai_json_buf_append(b, "]");
-            first = 0;
-        }
-        if (n->do_count > 0 && n->do_ids) {
-            if (!first) ai_json_buf_append(b, ",");
-            ai_json_buf_append(b, "\"do\":[");
-            for (size_t j = 0; j < n->do_count; j++) {
-                if (j > 0) ai_json_buf_append(b, ",");
-                ai_json_escape(n->do_ids[j], b);
-            }
-            ai_json_buf_append(b, "]");
-            first = 0;
-        }
-        ai_json_buf_append(b, "}");
-    }
     ai_json_buf_append(b, "\n  ]\n}\n");
     return 0;
 }
@@ -573,6 +580,74 @@ static int build_field_semantics(ai_json_buf_t* b,
 /* ══════════════════════════════════════════════════════════════════════
  * Public API
  * ══════════════════════════════════════════════════════════════════════ */
+
+/* 专题五 C1：收集字段指纹的 foreach 回调 */
+typedef struct {
+    unsigned long hash;
+    int first;
+} fingerprint_ctx_t;
+
+static void fingerprint_foreach_cb(const bs_schema_entry_t* entry, void* userdata)
+{
+    fingerprint_ctx_t* ctx = (fingerprint_ctx_t*)userdata;
+    if (!entry) return;
+    /* 用 schema_id 做简单哈希混合 */
+    const char* p = entry->schema_id ? entry->schema_id : "";
+    while (*p) {
+        ctx->hash = ctx->hash * 131 + (unsigned char)(*p);
+        p++;
+    }
+    /* 混合所有字段的 key 和 type */
+    for (size_t i = 0; i < entry->root_count; i++) {
+        const bs_schema_field_def_t* fd = &entry->root_fields[i];
+        const char* k = fd->name ? fd->name : "";
+        while (*k) {
+            ctx->hash = ctx->hash * 131 + (unsigned char)(*k);
+            k++;
+        }
+        ctx->hash = ctx->hash * 131 + (unsigned long)fd->type;
+    }
+    ctx->first = 0;
+}
+
+int bs_agent_index_needs_rebuild(
+    bs_schema_registry_t*  reg,
+    const bs_agent_index_config_t* config)
+{
+    if (!reg || !config) return -1;
+
+    /* 计算当前指纹 */
+    fingerprint_ctx_t ctx;
+    ctx.hash = 5381;
+    ctx.first = 1;
+    bs_schema_foreach(reg, fingerprint_foreach_cb, &ctx);
+
+    unsigned long new_fp = ctx.hash;
+
+    /* 读取已有指纹文件 */
+    char path[512];
+    snprintf(path, sizeof(path), "%s/biz_index_fingerprint.txt", config->output_dir);
+
+    FILE* fp = fopen(path, "r");
+    if (!fp) return 1; /* 文件不存在 → 需要重建 */
+
+    unsigned long old_fp = 0;
+    if (fscanf(fp, "biz_semantic_index:v1:%*[^:]:%*[^:]:%lu", &old_fp) < 1) {
+        /* 兼容旧格式：整行 hash */
+        rewind(fp);
+        char buf[256];
+        if (fgets(buf, sizeof(buf), fp)) {
+            /* 尝试解析纯数字 */
+            char* end = NULL;
+            old_fp = strtoul(buf, &end, 10);
+            if (end == buf) old_fp = 0;
+        }
+    }
+    fclose(fp);
+
+    return (new_fp == old_fp) ? 0 : 1;
+}
+
 int bs_agent_index_export(
     bs_schema_registry_t*  reg,
     const bs_gate_chain_t* chain,
@@ -681,12 +756,18 @@ int bs_agent_index_export(
         ai_json_buf_destroy(&bi);
         if (ret) return ret;
 
-        /* Write fingerprint */
+        /* Write fingerprint — 包含当前 registry 的哈希值 */
         snprintf(path, sizeof(path), "%s/biz_index_fingerprint.txt", config->output_dir);
         FILE* fp = fopen(path, "w");
         if (fp) {
-            fprintf(fp, "biz_semantic_index:v1:%s:%s\n",
-                    ts, config->business_name ? config->business_name : "default");
+            /* 为下次比较，计算当前 registry 的指纹哈希 */
+            fingerprint_ctx_t fctx;
+            fctx.hash = 5381;
+            fctx.first = 1;
+            bs_schema_foreach(reg, fingerprint_foreach_cb, &fctx);
+            fprintf(fp, "biz_semantic_index:v1:%s:%s:%lu\n",
+                    ts, config->business_name ? config->business_name : "default",
+                    fctx.hash);
             fclose(fp);
         }
     }

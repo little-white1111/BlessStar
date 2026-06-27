@@ -13,21 +13,16 @@
 !/app/
 !/tools/
 !/cmake/
-!/docs/
 
 # ── Root-level files ────────────────────────────────────────────────
 !/.clang-format
-!/.dockerignore
 !/.gitattributes
 !.gitignore
 !/.github/
-!/AGENTS.md
 !/CMakeLists.txt
 !/CMakePresets.json
-!/Dockerfile
-!/Dockerfile.arm64
 !/README.md
-!/docker-compose.yml
+!/config_v1_golden.h
 
 # ── OS / editor debris ──────────────────────────────────────────────
 Thumbs.db
@@ -76,7 +71,30 @@ app/editor/build/
 app/editor/dist/
 app/editor/dist-electron/
 app/editor/release/
+app/editor/.electron-cache/
+app/editor/dist-renderer/
+app/editor/dist.asar
+app/editor/build-output/
 app/editor/=
+app/editor/native/target/
+app/editor/native/*.node
+app/editor/native/build_err*.txt
+
+# ── Editor temp / debug files ──────────────────────────────────────
+app/editor/._*
+app/editor/_*.cjs
+app/editor/_*.mjs
+app/editor/*.txt
+app/editor/.api-check.json
+app/editor/.batch-ai-test-report.json
+app/editor/.final-test-report.json
+app/editor/asar_*.txt
+app/editor/batch-ai-test*.mjs
+app/editor/cli-ai.mjs
+app/editor/test-cli.mjs
+app/editor/test-write.json
+app/editor/check-report.js
+app/editor/update-asar.ps1
 
 # ── Python ──────────────────────────────────────────────────────────
 __pycache__/

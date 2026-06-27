@@ -35,14 +35,13 @@ describe('toolDeltaFormatter — 压缩摘要', () => {
     expect(result.summary).toContain('config_json')
   })
 
-  it('suggest_field_type 压缩：含 widget 和置信度', () => {
-    const result = buildToolDelta('suggest_field_type', {
+  it('chat 压缩：截取前50字符', () => {
+    const result = buildToolDelta('chat', {
       success: true,
-      data: { primary: 'number', score: 0.92, suggestions: [{ widget: 'number', reason: '数字输入' }] },
+      data: { reply: '你好，我来帮你了解 BlessStar 配置系统的基本概念和使用方法' },
     })
 
-    expect(result.summary).toContain('number')
-    expect(result.summary).toContain('0.92')
+    expect(result.summary).toContain('你好')
   })
 
   it('空结果兜底：返回 "✅ 操作成功" 或 "❌"', () => {

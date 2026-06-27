@@ -1,4 +1,5 @@
 #include "bs/kernel/common/Metrics.h"
+#include "metrics_internal.h"
 
 #include <cstdlib>
 
@@ -6,27 +7,6 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
-
-struct BsMetric
-{
-    BsMetricType   type;
-    const char*    name;
-    const char*    help;
-    BsMetricLabel* labels;
-    union
-    {
-        std::atomic<uint64_t> counter_value;
-        std::atomic<double>   gauge_value;
-    };
-    std::atomic<uint64_t> duration_sum;
-    std::atomic<uint32_t> duration_count;
-};
-
-struct BsMetricRegistry
-{
-    std::unordered_map<std::string, BsMetric*> metrics;
-    std::mutex                                 mutex;
-};
 
 BsMetricRegistry* bs_metric_registry_create(void)
 {

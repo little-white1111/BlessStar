@@ -35,7 +35,6 @@ static int test_introspect_free_null(void)
 {
     printf("  test_introspect_free_null ... ");
     bs_biz_introspect_free(NULL);
-    bs_biz_introspect_free((char*)1 + 1); /* null-like, just no crash test */
     printf("OK\n");
     return 0;
 }

@@ -36,7 +36,7 @@ const metaRuleJsonDef = {
   helpUrl: '',
 }
 
-function metaRuleGenerator(block: Block, generator: Generator): string {
+function metaRuleGenerator(block: Block, _generator: Generator): string {
   const field = block.getFieldValue('FIELD') || 'metadata.field'
   const operator = block.getFieldValue('OPERATOR') || 'eq'
   const value = block.getFieldValue('VALUE') || ''

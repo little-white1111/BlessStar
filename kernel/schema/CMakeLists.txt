@@ -10,6 +10,7 @@ add_library(bs_kernel_schema STATIC
     src/schema_validator.c
     src/custom_validator.c
     src/schema_json_converter.c
+    src/schema_validator_plugin.c
 )
 
 target_include_directories(bs_kernel_schema PUBLIC

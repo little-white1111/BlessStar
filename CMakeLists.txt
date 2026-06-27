@@ -80,6 +80,19 @@ add_library(bs_app_sdk
     app/sdk/src/db/config_raw_parse.cpp
     app/sdk/src/agent_indexer/src/agent_indexer.c
     app/sdk/src/bs_biz_introspector.c
+    app/sdk/src/config_declare.cpp
+    # ── 归一化器插件注册表 ──
+    app/sdk/src/normalizer_registry.cpp
+    # ── 专题二：运行时查询执行器 ──
+    app/sdk/src/query_executor_registry.cpp
+    app/sdk/src/db_query_executor.cpp
+    # ── 多语言内省插件（Phase 2） ──
+    app/sdk/src/biz_introspector/lang_plugin.c
+    app/sdk/src/biz_introspector/lang_c.c
+    app/sdk/src/biz_introspector/lang_go.c
+    app/sdk/src/biz_introspector/lang_py.c
+    app/sdk/src/biz_introspector/lang_java.c
+    app/sdk/src/biz_introspector/lang_yaml.c
 )
 
 # Build bs_db_core independent pure DB interfaces
@@ -97,8 +110,40 @@ add_subdirectory(kernel/ui_map)
 # Build gate_chain library
 add_subdirectory(kernel/gate_chain)
 
+# Build kernel common (MUST be first — provides bs_kernel_common used by all)
+add_subdirectory(kernel/common)
+
+# Build kernel state library
+add_subdirectory(kernel/state)
+
+# Build kernel io library
+add_subdirectory(kernel/io)
+
+# Build kernel ir library
+add_subdirectory(kernel/ir)
+
+# Build kernel registry library
+add_subdirectory(kernel/registry)
+
+# Build kernel pipeline library
+add_subdirectory(kernel/pipeline)
+
+# Build kernel report library
+add_subdirectory(kernel/report)
+
+# Build kernel runtime library
+add_subdirectory(kernel/runtime)
+
+# Build all adapter libraries
+add_subdirectory(adapter)
+
 # Link kernel libraries unconditionally
 target_link_libraries(bs_app_sdk PRIVATE bs_kernel_schema bs_kernel_gate_chain)
+
+# SDK public include directory (for lang_plugin.h etc.)
+target_include_directories(bs_app_sdk PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/include
+)
 
 # Build tests
 add_subdirectory(app/sdk/test)
@@ -135,6 +180,14 @@ if(BS_WITH_DB)
     target_link_libraries(sqlite_smoke_test PRIVATE bs_db_core bs_db_mgmt sqlite3_lib)
     add_test(NAME sqlite_smoke_test COMMAND sqlite_smoke_test)
 
+    # Copy sqlite3.dll to output directory for runtime loading
+    add_custom_command(TARGET sqlite_smoke_test POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/sqlite3.dll"
+            $<TARGET_FILE_DIR:sqlite_smoke_test>
+        COMMENT "Copying sqlite3.dll to output directory"
+    )
+
     # ── MySQL smoke test ───────────────────────────────────────────
     add_executable(mysql_smoke_test
         app/sdk/test/db/mysql_smoke_test.cpp
@@ -149,7 +202,7 @@ if(BS_WITH_DB)
     target_link_libraries(mysql_smoke_test PRIVATE bs_db_core bs_db_mgmt mysql_dll sqlite3_lib)
     add_test(NAME mysql_smoke_test COMMAND mysql_smoke_test)
 
-    # Copy libmysql.dll + SSL deps to output directory for runtime loading
+    # Copy libmysql.dll + SSL deps + sqlite3.dll to output directory for runtime loading
     add_custom_command(TARGET mysql_smoke_test POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "C:/Program Files/MySQL/MySQL Server 9.7/lib/libmysql.dll"
@@ -160,8 +213,42 @@ if(BS_WITH_DB)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "C:/Program Files/MySQL/MySQL Connector C++ 9.7/lib64/libcrypto-3-x64.dll"
             $<TARGET_FILE_DIR:mysql_smoke_test>
-        COMMENT "Copying MySQL libmysql.dll + SSL deps to output directory"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/sqlite3.dll"
+            $<TARGET_FILE_DIR:mysql_smoke_test>
+        COMMENT "Copying MySQL libmysql.dll + SSL deps + sqlite3.dll to output directory"
     )
 else()
     target_compile_definitions(bs_app_sdk PRIVATE BS_WITH_DB=0)
+endif()
+
+# ── bs_config_declare_ffi ───────────────────────────────────────────
+# 薄库：仅包含 Rust FFI bridge 需要的源文件。
+# 避免拉入完整 bs_app_sdk（~30 个 .obj 的 attach/orchestrator/parser
+# 会连锁拉入 47 个适配器/内核符号）。
+add_library(bs_config_declare_ffi STATIC
+    app/sdk/src/config_declare.cpp
+    app/sdk/src/shm/shm_manager.cpp
+    app/sdk/src/app_session.cpp
+    app/sdk/src/vendor_config_normalizer.cpp
+    app/sdk/src/db/config_raw_parse.cpp
+    # D38-3: execute_query IPC 工具（C ABI → Rust napi）
+    app/sdk/src/query_executor_registry.cpp
+    # ── 归一化器插件注册表（Rust FFI 入口）──
+    app/sdk/src/normalizer_registry.cpp
+)
+target_include_directories(bs_config_declare_ffi PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/bs_db_mgmt/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/app/bs_db_core/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/adapter/include
+)
+target_link_libraries(bs_config_declare_ffi PRIVATE
+    bs_db_core
+    bs_db_mgmt
+    bs_kernel_schema
+    bs_kernel_gate_chain
+)
+if(MSVC)
+    target_compile_options(bs_config_declare_ffi PRIVATE /utf-8)
 endif()

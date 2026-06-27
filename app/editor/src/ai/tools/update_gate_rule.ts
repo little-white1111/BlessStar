@@ -39,6 +39,17 @@ export const updateGateRuleTool: FunctionTool = {
     },
   },
 
+  resultRenderer(data: unknown): string[] {
+    const d = data as Record<string, unknown> | undefined
+    if (!d) return ['❌ 无数据']
+    const lines: string[] = ['✅ 已更新 Gate 规则']
+    if (d.gate_id) lines.push(`  Gate: ${d.gate_id}`)
+    if (d.scenario) lines.push(`  场景: ${d.scenario}`)
+    if (d.action) lines.push(`  操作: ${d.action}`)
+    if (d.field) lines.push(`  字段: ${d.field}`)
+    return lines
+  },
+
   async execute(args: Record<string, unknown>): Promise<ToolResult> {
     const gate_id = String(args.gate_id || '')
     const scenario = String(args.scenario || '')
@@ -54,17 +65,57 @@ export const updateGateRuleTool: FunctionTool = {
       condition: operator ? { operator, value } : undefined,
     }, null, 2)
 
-    // Validate via Gate rule validator
-    const validation = await validateGateRule(JSON.stringify({
-      gate_id, scenario,
-      do: [{ type: 'meta_rule', field: field || 'target', operator: operator || 'eq', value: value || '' }],
-    }))
+    // Validate via Gate rule validator（remove_rule 不需要校验 rule 内容）
+    if (action !== 'remove_rule') {
+      const validation = await validateGateRule(JSON.stringify({
+        gate_id, scenario,
+        do: [{ type: 'meta_rule', field: field || 'target', operator: operator || 'eq', value: value || '' }],
+      }))
 
-    if (!validation.valid) {
-      return {
-        success: false,
-        error: `Gate 规则未能通过校验：\n${formatValidationErrors(validation)}`,
+      if (!validation.valid) {
+        return {
+          success: false,
+          error: `Gate 规则未能通过校验：\n${formatValidationErrors(validation)}`,
+        }
       }
+    }
+
+    // ── 第34天 · GR-01：调用 registerGate IPC 注册/删除规则 ──
+    try {
+      if (action === 'remove_rule') {
+        // 删除规则：只需 gate_id
+        const ruleJson = JSON.stringify({
+          type: 'policy',
+          gate_id,
+          action: 'remove_rule',
+        })
+        const result = await window.blessstar.registerGate('policy', ruleJson)
+        if (!result.success) {
+          return { success: false, error: `Gate 删除失败: ${result.error || '未知错误'}` }
+        }
+      } else if (field && operator) {
+        // add/update：构造完整 policy gate
+        const ruleJson = JSON.stringify({
+          type: 'policy',
+          gate_id,
+          scenario: scenario || 'production',
+          action: action || 'add_rule',
+          metadata_rules: [
+            {
+              instr_name: gate_id,
+              key: field,
+              op: operator,
+              value: value || '',
+            },
+          ],
+        })
+        const result = await window.blessstar.registerGate('policy', ruleJson)
+        if (!result.success) {
+          return { success: false, error: `Gate 注册失败: ${result.error || '未知错误'}` }
+        }
+      }
+    } catch (e) {
+      return { success: false, error: `Gate 注册异常: ${(e as Error).message}` }
     }
 
     return {

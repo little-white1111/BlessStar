@@ -37,7 +37,7 @@ function deserializeSingleNode(
     }
   }
 
-  block.setEnabled(true)
+  (block as any).setEnabled(true)
 
   if (parentBlock && parentInputName) {
     const input = parentBlock.getInput(parentInputName)
@@ -96,7 +96,8 @@ function deserializeToWorkspace(
     if (gateNode.if) {
       const ifBlock = deserializeSingleNode(workspace, gateNode.if, topBlock, 'IF')
       if (ifBlock) {
-        ifBlock.setEnabled(true)
+        (ifBlock as any).setEnabled(true)
+
         if (gateNode.if.A) {
           deserializeSingleNode(workspace, gateNode.if.A, ifBlock, 'A')
         }
@@ -113,8 +114,8 @@ function deserializeToWorkspace(
       deserializeSingleNode(workspace, gateNode.B, topBlock, 'B')
     }
 
-    topBlock.initSvg()
-    topBlock.render()
+    (topBlock as any).initSvg()
+    (topBlock as any).render()
   }
 }
 
@@ -146,8 +147,8 @@ function deserializeChildren(
       }
     }
 
-    childBlock.initSvg()
-    childBlock.render()
+    (childBlock as any).initSvg()
+    (childBlock as any).render()
 
     prevChild = childBlock
   }

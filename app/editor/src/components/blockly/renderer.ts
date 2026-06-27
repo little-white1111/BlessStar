@@ -37,8 +37,9 @@ class BlessStarConstantProvider extends Blockly.blockRendering.ConstantProvider 
     }
   }
 
-  override shapeFor(connection: Blockly.RenderedConnection): Blockly.blockRendering.IPShape | null {
-    let shape: Blockly.blockRendering.IPShape | null = null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  override shapeFor(connection: Blockly.RenderedConnection): any {
+    let shape: any = null
 
     switch (connection.type) {
       case Blockly.PREVIOUS_STATEMENT:
@@ -57,7 +58,7 @@ class BlessStarConstantProvider extends Blockly.blockRendering.ConstantProvider 
   }
 }
 
-class RectangularShape implements Blockly.blockRendering.IPShape {
+class RectangularShape {
   readonly width: number
   readonly height: number
   readonly pathLeft: string
@@ -65,7 +66,7 @@ class RectangularShape implements Blockly.blockRendering.IPShape {
   readonly pathDown: string
   readonly pathUp: string
 
-  constructor(constants: Blockly.blockRendering.ConstantProvider, type: 'statement' | 'input') {
+  constructor(_constants: Blockly.blockRendering.ConstantProvider, type: 'statement' | 'input') {
     const r = type === 'statement' ? 4 : 6
     const w = type === 'statement' ? 20 : 16
     const h = type === 'statement' ? 12 : 16

@@ -43,6 +43,19 @@ export const createSchemaFieldTool: FunctionTool = {
     },
   },
 
+  resultRenderer(data: unknown): string[] {
+    const d = data as Record<string, unknown> | undefined
+    if (!d) return ['❌ 无数据']
+    const field = d.field as Record<string, unknown> | undefined
+    if (!field) return [`✅ Schema JSON:\n${String(d.fieldJson || '')}`]
+    const lines: string[] = ['✅ 已创建 Schema 字段']
+    if (field.key) lines.push(`  字段名: ${field.key}`)
+    if (field.widget) lines.push(`  控件类型: ${field.widget}`)
+    if (field.label) lines.push(`  标签: ${field.label}`)
+    if (field.required) lines.push('  状态: 必填')
+    return lines
+  },
+
   async execute(args: Record<string, unknown>): Promise<ToolResult> {
     const key = String(args.key || '')
     const widget = String(args.widget || '')

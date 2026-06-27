@@ -45,18 +45,12 @@
 #include "bs/adapter/orchestration/reload_gate_default.h"
 
 #include "bs/app/sdk/app_scenario_policy.h"
+#include "bs/app/sdk/app_session.h"
 #include "bs/app/sdk/app_vendor_precheck.h"
 #include "bs/app/sdk/mem_audit_log.h"
 
 namespace bs::app
 {
-
-/** App-level custom gate entry (not the adapter ReloadPathGateFn). */
-struct CustomGateEntry
-{
-    int (*fn)(const void* data, size_t len, char* err, size_t err_cap, void* ctx);
-    void* user_ctx;
-};
 
 /**
  * PathSource enum for AddPath overloads.
@@ -83,9 +77,7 @@ public:
     void SetNoGate();
     void AddPolicyGate(const ScenarioPolicy& policy);
     void AddPolicyGates(const std::vector<ScenarioPolicy>& policies);
-    void AddCustomGate(
-        int (*fn)(const void* data, size_t len, char* err, size_t err_cap, void* ctx),
-        void* user_ctx);
+    void AddCustomGate(const CustomGateEntry& entry);
     void ResetGates();
 
     // --- data passing (R2 - flexible mode) ---

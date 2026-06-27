@@ -18,6 +18,13 @@ export interface ContextBuilderInput {
   toolDefs: FunctionToolParam[]      // 5 个 function tool 定义
   indexCompact: CompactIndex | null  // compact 索引（从预生成文件读取）
   lastToolDelta?: ToolDelta          // 可选：上一轮 tool 结果摘要
+  /**
+   * 可选：历史对话消息（最近的对话轮次）。
+   * 按时间顺序排列，在 system 之后、当前 user 之前插入。
+   * 建议保留最近 3-5 轮助手的工具调用 + 用户反馈。
+   * 只传 assistant 和 user 角色，不传 system。
+   */
+  historyMessages?: AIMessage[]
 }
 
 const INDEX_SEPARATOR = '=== Agent Skill Index ==='
@@ -67,11 +74,33 @@ export function buildContext(input: ContextBuilderInput): AIMessage[] {
 
   result.push({ role: 'system', content: systemContent })
 
+  // ── 可选：注入历史对话消息 ──
+  if (input.historyMessages && input.historyMessages.length > 0) {
+    // 限制最多传 5 轮（10 条消息），避免 token 过长
+    const recent = input.historyMessages.slice(-10)
+    for (const msg of recent) {
+      if (msg.role === 'system') continue // 跳过 system
+      // DeepSeek/OpenAI 要求 tool 消息必须带 tool_call_id，没有则降级为 user
+      if (msg.role === 'tool') {
+        result.push({
+          role: msg.tool_call_id ? 'tool' : 'user',
+          content: msg.content || '',
+        })
+      } else {
+        result.push({
+          role: msg.role,
+          content: msg.content || '',
+        })
+      }
+    }
+  }
+
   // ── 可选 tool delta (Layer 1 work memory) ──
   if (input.lastToolDelta) {
+    // 用 user 角色而非 tool 角色，避免 DeepSeek/OpenAI 要求 tool_call_id
     result.push({
-      role: 'tool',
-      content: input.lastToolDelta.summary,
+      role: 'user',
+      content: `[上轮工具结果] ${input.lastToolDelta.summary}`,
     })
   }
 

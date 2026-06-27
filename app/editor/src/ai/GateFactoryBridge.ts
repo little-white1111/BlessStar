@@ -1,9 +1,8 @@
 /* GateFactoryBridge — TypeScript-side integration for Gate factory operations.
  * Maps TS calls to existing IPC tool executeTool / validateConfig / update_gate_rule. */
 
-import type { ToolResult } from '../types'
-import { executeToolCall } from '../executor'
-import { validateGateRule, formatValidationErrors } from '../validator'
+import type { ToolResult } from './types'
+import { validateGateRule, formatValidationErrors } from './validator'
 
 /* ── Types (mirroring C-layer bs_gate_rule_def_t, bs_gate_factory_t) ── */
 
@@ -167,7 +166,7 @@ export async function gateFactoryProduce(
 /* ── Match gates by field + scenario ────────────────────────────────── */
 
 export async function gateMatcherMatch(
-  request: GateMatchRequest,
+  _request: GateMatchRequest,
 ): Promise<GateMatchResult> {
   // For MVP: returns placeholder
   // Full impl would query a loaded gate registry via IPC
@@ -181,7 +180,7 @@ export async function gateMatcherMatch(
 /* ── Evaluate a single field value against gate chain ──────────────── */
 
 export async function gateEvaluatorEvaluate(
-  ctx: GateEvalContext,
+  _ctx: GateEvalContext,
 ): Promise<GateEvalResult> {
   // For MVP: always pass
   // Full impl would call bs_gate_evaluator_evaluate via napi-rs

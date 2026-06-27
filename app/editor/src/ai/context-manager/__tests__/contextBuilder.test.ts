@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { buildContext } from '../contextBuilder'
 import type { CompactIndex, ToolDelta } from '../contextBuilder'
 
@@ -48,10 +48,10 @@ describe('contextBuilder — 基础流程', () => {
       lastToolDelta: delta,
     })
 
-    expect(result.length).toBe(3) // system + tool + user
+    expect(result.length).toBe(3) // system + tool_delta(as user) + user
     expect(result[0].role).toBe('system')
-    expect(result[1].role).toBe('tool')
-    expect(result[1].content).toBe(delta.summary)
+    expect(result[1].role).toBe('user')
+    expect(result[1].content).toContain(delta.summary)
     expect(result[2].role).toBe('user')
   })
 

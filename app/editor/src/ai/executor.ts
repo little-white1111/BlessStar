@@ -1,6 +1,7 @@
 import type { ToolResult, ToolCall, FunctionTool } from './types'
 import { MAX_TOOL_RETRIES } from './types'
 import { FUNCTION_TOOLS } from './tools'
+import { evaluatePreGates, TOOL_PRE_GATE_RULES, deepEvaluate } from './preGate'
 
 /** Find a FunctionTool by name */
 export function findTool(name: string): FunctionTool | undefined {
@@ -8,8 +9,11 @@ export function findTool(name: string): FunctionTool | undefined {
 }
 
 /**
- * Execute a single tool call with BlessStar validation gateway.
- * Returns error to AI for retry on validation failure.
+ * Execute a single tool call with two-stage Pre-Gate validation.
+ * Stage 1: JS quick filter (not_empty/regex) — synchronous.
+ * Stage 2: C deep evaluation (bs_gate_evaluator_evaluate) — async via IPC.
+ *
+ * DAY38-06: 二段式校验（JS 快筛 + C 精判）
  */
 export async function executeToolCall(tc: ToolCall): Promise<ToolResult> {
   const tool = findTool(tc.function.name)
@@ -22,6 +26,18 @@ export async function executeToolCall(tc: ToolCall): Promise<ToolResult> {
     args = JSON.parse(tc.function.arguments)
   } catch {
     return { success: false, error: `工具参数 JSON 解析失败: ${tc.function.arguments}` }
+  }
+
+  // Stage 1: JS 快筛
+  const preGateError = evaluatePreGates(TOOL_PRE_GATE_RULES[tc.function.name], args)
+  if (preGateError !== null) {
+    return { success: false, error: `[Pre-Gate JS] ${preGateError}` }
+  }
+
+  // Stage 2: C 深判
+  const deepError = await deepEvaluate(tc.function.name, args)
+  if (deepError !== null) {
+    return { success: false, error: deepError }
   }
 
   return tool.execute(args)
@@ -42,11 +58,7 @@ export async function executeWithRetry(tc: ToolCall): Promise<{ result: ToolResu
       return { result: lastResult, attempts: attempt }
     }
 
-    // If not last attempt, we'd retry — but since the tool execution
-    // is deterministic for MVP (no side effects), we just return.
-    // In production, AI would modify args and retry.
     if (attempt < MAX_TOOL_RETRIES) {
-      // Allow next iteration to re-execute
       continue
     }
   }

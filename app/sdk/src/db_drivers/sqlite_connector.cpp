@@ -93,6 +93,88 @@ public:
         return true;
     }
 
+    // ── Callback context for sqlite3_exec ────────────────────────
+    struct CbCtx
+    {
+        std::vector<std::vector<std::string>>* rows = nullptr;
+        std::vector<std::string>*              cols = nullptr;
+        bool                                   first = true;
+    };
+
+    static int exec_callback(void* arg, int argc, char** argv, char** colv)
+    {
+        auto* c = static_cast<CbCtx*>(arg);
+        if (c->first && c->cols)
+        {
+            c->cols->clear();
+            for (int i = 0; i < argc; ++i)
+                c->cols->push_back(colv[i] ? colv[i] : "");
+            c->first = false;
+        }
+        if (c->rows)
+        {
+            std::vector<std::string> row;
+            for (int i = 0; i < argc; ++i)
+                row.push_back(argv[i] ? argv[i] : "");
+            c->rows->push_back(std::move(row));
+        }
+        return 0;
+    }
+
+    bool ExecuteQuery(const char* sql,
+                      const std::vector<std::string>& params,
+                      std::vector<std::vector<std::string>>* out_rows,
+                      std::vector<std::string>* out_cols,
+                      std::string* out_error) override
+    {
+        if (!db_)
+        {
+            if (out_error) *out_error = "sqlite: not connected";
+            return false;
+        }
+        // Build parameterized SQL by replacing '?' with escaped values
+        std::string expanded_sql;
+        size_t pi = 0;
+        for (const char* p = sql; *p; ++p)
+        {
+            if (*p == '?' && pi < params.size())
+            {
+                expanded_sql += '\'';
+                for (char c : params[pi++])
+                {
+                    if (c == '\'') expanded_sql += '\'\'';
+                    else expanded_sql += c;
+                }
+                expanded_sql += '\'';
+            }
+            else
+            {
+                expanded_sql += *p;
+            }
+        }
+
+        // Use sqlite3_exec with callback to capture result set
+        CbCtx ctx;
+        ctx.rows = out_rows;
+        ctx.cols = out_cols;
+        ctx.first = true;
+
+        if (out_rows) out_rows->clear();
+
+        char* err = nullptr;
+        int rc = sqlite3_exec(db_, expanded_sql.c_str(),
+                               exec_callback,
+                               static_cast<void*>(&ctx), &err);
+        if (rc != SQLITE_OK)
+        {
+            if (out_error) *out_error = err ? err : "sqlite3_exec failed";
+            if (err) sqlite3_free(err);
+            return false;
+        }
+        if (err) sqlite3_free(err);
+        return true;
+    }
+
     const char* DriverName() const override { return "sqlite"; }
 };
 

@@ -120,16 +120,7 @@ void bs_gate_match_result_free(bs_gate_match_result_t* result)
             free(n->op); free(n->value);
             free(n->stable_key); free(n->sub_category);
             free(n->domain); free(n->entity);
-            if (n->child_ids) {
-                for (size_t j = 0; j < n->child_count; j++)
-                    free(n->child_ids[j]);
-                free(n->child_ids);
-            }
-            if (n->do_ids) {
-                for (size_t j = 0; j < n->do_count; j++)
-                    free(n->do_ids[j]);
-                free(n->do_ids);
-            }
+            /* Match result nodes are shallow copies; no child/do tree to free */
         }
         free(result->nodes);
     }

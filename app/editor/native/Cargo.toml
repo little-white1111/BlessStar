@@ -15,6 +15,7 @@ serde_json = "1"
 
 [build-dependencies]
 napi-build = "2"
+cc = "1"
 
 [profile.release]
 lto = true

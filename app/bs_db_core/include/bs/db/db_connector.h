@@ -40,6 +40,27 @@ public:
         std::vector<std::vector<std::uint8_t>>* out_results,
         std::string* out_error) = 0;
 
+    /**
+     * Execute a parameterized SQL query.
+     * @param sql       SQL statement with '?' placeholders
+     * @param params    Parameter values in order (stringified)
+     * @param out_rows  Output: flat vector of all row values (row-major)
+     * @param out_cols  Output: column names
+     * @param out_error Error message on failure
+     * @return true on success, false on failure
+     */
+    virtual bool ExecuteQuery(const char* sql,
+                              const std::vector<std::string>& params,
+                              std::vector<std::vector<std::string>>* out_rows,
+                              std::vector<std::string>* out_cols,
+                              std::string* out_error)
+    {
+        (void)sql; (void)params; (void)out_rows; (void)out_cols;
+        if (out_error)
+            *out_error = "ExecuteQuery not implemented by this driver";
+        return false;
+    }
+
     /** Human-readable driver name for logging. */
     virtual const char* DriverName() const = 0;
 

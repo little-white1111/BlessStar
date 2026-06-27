@@ -25,10 +25,10 @@ function Sidebar({ currentPath, onNavigate, darkMode, onToggleTheme, aiPanelOpen
       {/* Logo */}
       <div className="h-14 flex items-center gap-3 px-4 border-b border-surface-200 dark:border-surface-700">
         <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
-          BS
+          LD
         </div>
         <span className="font-semibold text-sm text-surface-900 dark:text-surface-50">
-          BlessStar
+          LiveDesign
         </span>
       </div>
 

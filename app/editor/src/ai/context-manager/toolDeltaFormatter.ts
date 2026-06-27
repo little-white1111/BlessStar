@@ -1,19 +1,26 @@
 import type { ToolDelta } from './contextBuilder'
+import { findTool } from '../executor'
 
 /**
  * 根据 tool name 和 result 压缩为单行摘要（< 50 tokens）。
  *
- * 支持的 tool：
- * - create_schema_field
- * - update_gate_rule
- * - validate_config
- * - suggest_field_type
- * - generate_normalizer_template
+ * 优先使用 Tool Declaration 中通过 createTool 工厂内置的 deltaFormatter
+ * （对应缺口二：Tool Result Schema 声明式格式化），
+ * 未迁移的工具回退到 legacy switch/case 分支。
  */
 export function buildToolDelta(toolName: string, result: unknown): ToolDelta {
   if (result === null || result === undefined) {
     return { summary: '❌ 操作失败：空结果' }
   }
+
+  // ── 优先：使用 createTool 工厂内置的 deltaFormatter ──
+  // 对应缺口二（Tool Result Schema 声明式格式化），已迁移的工具走此路径
+  const tool = findTool(toolName) as Record<string, unknown> | undefined
+  if (tool?.deltaFormatter && typeof tool.deltaFormatter === 'function') {
+    return (tool.deltaFormatter as (r: unknown) => ToolDelta)(result)
+  }
+
+  // ── 回退：legacy switch/case ──
 
   switch (toolName) {
     case 'create_schema_field': {
@@ -61,15 +68,14 @@ export function buildToolDelta(toolName: string, result: unknown): ToolDelta {
       return { summary: `❌ 校验失败: ${firstErr}` }
     }
 
-    case 'suggest_field_type': {
+    case 'chat': {
       const r = result as Record<string, unknown>
       if (r.success === false) {
-        return { summary: `❌ 推荐失败: ${r.error || '未知错误'}` }
+        return { summary: `❌ chat: ${r.error || '未知错误'}` }
       }
       const data = (r.data || r) as Record<string, unknown>
-      const primary = data.primary as string || data.widget as string || ''
-      const score = data.score ? `（置信度 ${data.score}）` : ''
-      return { summary: `✅ 推荐控件: ${primary}${score}` }
+      const reply = String(data.reply || '').slice(0, 50)
+      return { summary: reply || '💬 已回复' }
     }
 
     case 'generate_normalizer_template': {
@@ -84,6 +90,23 @@ export function buildToolDelta(toolName: string, result: unknown): ToolDelta {
         : template?.mapping ? (template.mapping as unknown[]).length
         : 0
       return { summary: `✅ 已生成归一化模板: ${name}${mappings ? `，${mappings} 个映射` : ''}` }
+    }
+
+    case 'read_config_value': {
+      const r = result as Record<string, unknown>
+      if (r.success) {
+        const data = r.data as Record<string, unknown> | undefined
+        if (data) {
+          const key = data.key as string
+          const val = data.value
+          if (val === null || val === '') {
+            return { summary: `⚠️ ${key} 未设置值，当前为空` }
+          }
+          return { summary: `📖 ${key} = "${val}"` }
+        }
+        return { summary: '✅ 读取成功' }
+      }
+      return { summary: `❌ 读取失败: ${(r.error as string) || '未知错误'}` }
     }
 
     default: {

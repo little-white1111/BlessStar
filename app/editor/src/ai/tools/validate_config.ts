@@ -23,6 +23,13 @@ export const validateConfigTool: FunctionTool = {
     },
   },
 
+  resultRenderer(data: unknown): string[] {
+    const d = data as Record<string, unknown> | undefined
+    if (!d) return ['❌ 无数据']
+    if (d.valid) return [`✅ 配置校验通过 ✓（模式: ${d.mode || 'schema'}）`]
+    return ['❌ 配置校验未通过', String(d.error || '未知错误')]
+  },
+
   async execute(args: Record<string, unknown>): Promise<ToolResult> {
     const configJson = String(args.config_json || '').trim()
     const mode = String(args.mode || 'schema')

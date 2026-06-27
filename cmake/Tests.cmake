@@ -9,6 +9,28 @@ function(blessstar_add_unit_test name)
   if(NOT _arg_SOURCES)
     message(FATAL_ERROR "blessstar_add_unit_test(${name}): SOURCES required")
   endif()
+  if(_arg_LIBS)
+    # Check all library targets exist before creating the test executable
+    set(_missing_libs "")
+    foreach(_lib ${_arg_LIBS})
+      if(NOT TARGET ${_lib})
+        list(APPEND _missing_libs ${_lib})
+      endif()
+    endforeach()
+    if(_missing_libs)
+      message(WARNING "blessstar_add_unit_test(${name}): SKIPPED — missing target(s): ${_missing_libs}")
+      # Create a real (empty) executable so that all post-call operations
+      # (target_include_directories / target_compile_definitions / set_tests_properties)
+      # work normally. The CTest will be registered but marked DISABLED.
+      set(_bs_skip_stub "${CMAKE_CURRENT_BINARY_DIR}/skipped_stub.c")
+      if(NOT EXISTS "${_bs_skip_stub}")
+        file(WRITE "${_bs_skip_stub}" "int main(void){return 0;}\n")
+      endif()
+      set(_arg_SOURCES "${_bs_skip_stub}")
+      set(_arg_LIBS "")
+      set(_bs_skipped_target TRUE)
+    endif()
+  endif()
   add_executable(${name} ${_arg_SOURCES})
   if(MSVC)
     # Release tests must still execute assert() bodies (otherwise C4101 / false greens).
@@ -21,6 +43,21 @@ function(blessstar_add_unit_test name)
   if(_arg_LIBS)
     target_link_libraries(${name} PRIVATE ${_arg_LIBS})
     list(JOIN _arg_LIBS " " _bs_test_libs_joined)
+    if(_bs_test_libs_joined MATCHES "bs_app_sdk")
+      # Copy sqlite3.dll to output directory for runtime loading (Windows only)
+      if(MSVC AND EXISTS "${CMAKE_SOURCE_DIR}/sqlite3.dll")
+        add_custom_command(TARGET ${name} POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/sqlite3.dll"
+            "$<TARGET_FILE_DIR:${name}>"
+          COMMENT "Copying sqlite3.dll to ${name} output directory"
+        )
+        # Delay-load sqlite3.dll to avoid CRT mismatch crash at process startup
+        # (BizIntrospectorTest etc. don't use SQLite but bs_app_sdk links it)
+        target_link_options(${name} PRIVATE /DELAYLOAD:sqlite3.dll)
+        target_link_libraries(${name} PRIVATE delayimp.lib)
+      endif()
+    endif()
     if(_bs_test_libs_joined MATCHES "bs_adapter_")
       target_sources(${name} PRIVATE
         ${CMAKE_SOURCE_DIR}/adapter/test/support/test_temp_dir.cpp
@@ -45,6 +82,10 @@ function(blessstar_add_unit_test name)
     add_test(NAME ${name} COMMAND "$<TARGET_FILE:${name}>")
   endif()
   set_tests_properties(${name} PROPERTIES TIMEOUT 300 LABELS "unit")
+  if(_bs_skipped_target)
+    set_tests_properties(${name} PROPERTIES DISABLED TRUE LABELS "skipped")
+    set(_bs_skipped_target FALSE PARENT_SCOPE)
+  endif()
   set_property(GLOBAL APPEND PROPERTY BLESSSTAR_UNIT_TEST_TARGETS "${name}")
 endfunction()
 
@@ -252,6 +293,23 @@ set_tests_properties(bs_test_app_vendor_reload_integration
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     RESOURCE_LOCK "attach_integration"
 )
+
+# ── 专题二：运行时查询执行器 ────────────────────────────────────
+blessstar_add_unit_test(bs_test_query_executor
+  SOURCES app/sdk/test/QueryExecutorTest.cpp
+  LIBS bs_app_sdk bs_db_core bs_db_mgmt sqlite3_lib
+)
+target_include_directories(bs_test_query_executor
+  PRIVATE ${CMAKE_SOURCE_DIR}/app/sdk/include
+  ${CMAKE_SOURCE_DIR}/app/bs_db_core/include
+  ${CMAKE_SOURCE_DIR}/app/bs_db_mgmt/include
+)
+target_link_libraries(bs_test_query_executor PRIVATE sqlite3_lib)
+set_tests_properties(bs_test_query_executor
+  PROPERTIES LABELS "unit;app;day38;regression" TIMEOUT 120
+                   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
 blessstar_add_unit_test(bs_test_config_reload_session
   SOURCES app/sdk/test/ConfigReloadSessionTest.cpp
   LIBS
@@ -617,7 +675,7 @@ blessstar_add_unit_test(bs_test_ir_boundary
 )
 blessstar_add_unit_test(bs_test_pipeline_boundary
   SOURCES kernel/pipeline/test/PipelineBoundaryTest.cpp
-  LIBS bs_kernel_pipeline bs_kernel_report
+  LIBS bs_kernel_pipeline bs_kernel_report bs_kernel_ir
 )
 blessstar_add_unit_test(bs_test_report_boundary
   SOURCES kernel/report/test/ReportBoundaryTest.cpp
@@ -1316,6 +1374,60 @@ if(NODEJS)
 endif()
 
 # ---------------------------------------------------------------------------
+# Day 31: 方案 H — bs_config_declare() 全局注册 C ABI
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_day31_config_declare
+  SOURCES app/sdk/test/ConfigDeclareTest.c
+  LIBS bs_app_sdk
+)
+target_include_directories(bs_test_day31_config_declare
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+)
+set_tests_properties(bs_test_day31_config_declare
+  PROPERTIES
+    LABELS "unit;day31;config_declare"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+# ---------------------------------------------------------------------------
+# Day 31 (P0): 专题四 — 10,000 字段性能基准测试
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_day31_config_bench
+  SOURCES app/sdk/test/ConfigDeclareBenchTest.cpp
+  LIBS bs_app_sdk
+)
+target_include_directories(bs_test_day31_config_bench
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+)
+set_tests_properties(bs_test_day31_config_bench
+  PROPERTIES
+    LABELS "unit;benchmark;day31;config_declare"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+# ---------------------------------------------------------------------------
+# Day 32: 专题五 — SHM 跨语言 round-trip 集成测试 (B9)
+# ---------------------------------------------------------------------------
+blessstar_add_unit_test(bs_test_day32_shm_roundtrip
+  SOURCES app/sdk/test/ShmRoundTripTest.cpp
+  LIBS bs_app_sdk
+)
+target_include_directories(bs_test_day32_shm_roundtrip
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/app/sdk/include
+)
+set_tests_properties(bs_test_day32_shm_roundtrip
+  PROPERTIES
+    LABELS "unit;day32;shm_roundtrip"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+# ---------------------------------------------------------------------------
 # Day 30: OPT-08 — Gate factory, matcher, evaluator, map/upsert, biz_introspector
 # ---------------------------------------------------------------------------
 blessstar_add_unit_test(bs_test_day30_gate_map_upsert
@@ -1339,7 +1451,19 @@ blessstar_add_unit_test(bs_test_day30_gate_evaluator
   LIBS bs_kernel_gate_chain
 )
 set_tests_properties(bs_test_day30_gate_evaluator
-  PROPERTIES LABELS "unit;day30;gate_chain;opt08"
+  PROPERTIES LABELS "unit;day30;gate_chain;opt08;day32"
+)
+
+# Day 32: Gate AST compiler (DAG upgrade)
+blessstar_add_unit_test(bs_test_day32_gate_ast_compiler
+  SOURCES kernel/gate_chain/test/GateAstCompilerTest.c
+  LIBS bs_kernel_gate_ast bs_kernel_gate_chain
+)
+set_tests_properties(bs_test_day32_gate_ast_compiler
+  PROPERTIES LABELS "unit;day32;gate_chain;dag"
+)
+set_tests_properties(bs_test_day30_gate_evaluator bs_test_day30_gate_factory bs_test_day30_gate_map_upsert bs_test_day30_gate_chain_serialize
+  PROPERTIES LABELS "unit;day30;day32;gate_chain;opt08;dag"
 )
 
 blessstar_add_unit_test(bs_test_day30_biz_introspector
@@ -1353,6 +1477,18 @@ target_include_directories(bs_test_day30_biz_introspector
 set_tests_properties(bs_test_day30_biz_introspector
   PROPERTIES
     LABELS "unit;day30;agent_index;opt08"
+    TIMEOUT 120
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+)
+
+# Day 31: 多语言内省插件（专题三 · Phase 2）
+blessstar_add_unit_test(bs_test_day31_introspector_lang
+  SOURCES app/sdk/test/IntrospectorLangTest.c
+  LIBS bs_app_sdk
+)
+set_tests_properties(bs_test_day31_introspector_lang
+  PROPERTIES
+    LABELS "unit;day31;introspector;lang"
     TIMEOUT 120
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )

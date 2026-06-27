@@ -18,7 +18,23 @@ beforeEach(() => {
     onMenuOpen: vi.fn(),
     onMenuSave: vi.fn(),
     onMenuSaveAs: vi.fn(),
-  }
+    // Agent Factory (OPT-04)
+    exportAgentIndex: vi.fn(),
+    getRegisteredSchemas: vi.fn(),
+    getGateChain: vi.fn(),
+    validateConfig: vi.fn(),
+    executeTool: vi.fn(),
+    // AI
+    aiComplete: vi.fn(),
+    ollamaListModels: vi.fn(),
+    aiChat: vi.fn(),
+    // E2E Editor Bridge
+    normalizeVendor: vi.fn(),
+    appSessionCreate: vi.fn(),
+    appSessionDestroy: vi.fn(),
+    commitBatch: vi.fn(),
+    subscribeWatch: vi.fn(),
+  } as any
 })
 
 describe('useBlessStar', () => {

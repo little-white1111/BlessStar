@@ -2,6 +2,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import Editor from '../../routes/Editor'
+import { ToastProvider } from '../../components/ToastProvider'
 
 const mockLoadConfig = vi.fn()
 const mockSaveConfig = vi.fn()
@@ -12,7 +13,7 @@ const mockOnMenuSave = vi.fn()
 const mockOnMenuSaveAs = vi.fn()
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  vi.resetAllMocks()
   window.blessstar = {
     loadConfig: mockLoadConfig,
     saveConfig: mockSaveConfig,
@@ -22,14 +23,16 @@ beforeEach(() => {
     onMenuOpen: mockOnMenuOpen,
     onMenuSave: mockOnMenuSave,
     onMenuSaveAs: mockOnMenuSaveAs,
-  }
+  } as any
 })
 
 /** Helper: render Editor inside MemoryRouter */
 function renderEditor() {
   return render(
     <MemoryRouter initialEntries={['/editor']}>
-      <Editor />
+      <ToastProvider>
+        <Editor />
+      </ToastProvider>
     </MemoryRouter>,
   )
 }
@@ -54,10 +57,12 @@ describe('Editor integration', () => {
     expect(mockSchemaToUidl).toHaveBeenCalled()
   })
 
-  it('shows "加载演示模板" button when no UIDL', () => {
+  it('shows "加载演示模板" button when no UIDL', async () => {
     mockSchemaToUidl.mockResolvedValue(null)
     renderEditor()
-    expect(screen.getByText('加载演示模板')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('加载演示模板')).toBeInTheDocument()
+    })
   })
 
   it('clicking demo template button loads demo', async () => {
@@ -73,6 +78,12 @@ describe('Editor integration', () => {
       )
 
     renderEditor()
+
+    // Wait for mount async settle (loading→false, empty state visible)
+    await waitFor(() => {
+      expect(screen.getByText('加载演示模板')).toBeInTheDocument()
+    })
+
     const btn = screen.getByText('加载演示模板')
     fireEvent.click(btn)
 
@@ -169,7 +180,7 @@ describe('Editor integration', () => {
       expect(screen.getByText('Test')).toBeInTheDocument()
     })
 
-    const undoBtn = screen.getByTitle('撤销')
+    const undoBtn = screen.getByTitle('撤销 (Ctrl+Z)')
     const redoBtn = screen.getByTitle('重做')
 
     // Initially undo disabled, redo disabled

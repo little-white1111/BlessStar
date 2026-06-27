@@ -22,14 +22,19 @@ function Settings() {
           <SettingRow label="语言" control={<select className="input-field w-40"><option selected>简体中文</option><option>English</option></select>} />
         </SettingSection>
 
-        <SettingSection title="BlessStar 集成">
+        <SettingSection title="BlessStar 引擎集成">
           <SettingRow label="napi-rs Addon 路径" control={<input type="text" className="input-field" placeholder="native/blessstar_core.linux-x64-gnu.node" />} />
           <SettingRow label="配置模板目录" control={<input type="text" className="input-field" placeholder="templates/" />} />
+        </SettingSection>
+
+        <SettingSection title="AI">
+          <SettingRow label="Embedding 模型" control={<input type="text" className="input-field" placeholder="默认同聊天模型，如 nomic-embed-text" />} />
+          <SettingRow label="余弦相似度阈值" control={<select className="input-field w-24"><option selected>0.5</option><option>0.3</option><option>0.4</option><option>0.6</option><option>0.7</option></select>} />
         </SettingSection>
       </div>
 
       <div className="text-right text-xs text-surface-400 dark:text-surface-500">
-        BlessStar Config Editor v1.0.0
+        LiveDesign Config Editor v1.0.0
       </div>
     </div>
   )

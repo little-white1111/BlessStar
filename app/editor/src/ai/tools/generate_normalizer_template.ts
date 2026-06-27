@@ -25,6 +25,20 @@ export const generateNormalizerTemplateTool: FunctionTool = {
     },
   },
 
+  resultRenderer(data: unknown): string[] {
+    const d = data as Record<string, unknown> | undefined
+    if (!d) return ['❌ 无数据']
+    const template = d.template as Record<string, unknown> | undefined
+    const mapping = template?.mapping as Array<unknown> | undefined
+    const lines: string[] = ['✅ 已生成归一化模板']
+    if (template?.normalizer_id) lines.push(`  ID: ${template.normalizer_id}`)
+    if (template?.source_vendor) lines.push(`  厂商: ${template.source_vendor}`)
+    if (template?.version) lines.push(`  版本: ${template.version}`)
+    if (mapping) lines.push(`  字段映射数: ${mapping.length}`)
+    if (d.instructions) lines.push(`  说明: ${d.instructions}`)
+    return lines
+  },
+
   async execute(args: Record<string, unknown>): Promise<ToolResult> {
     const vendorName = String(args.vendor_name || '').trim()
     const version = String(args.version || '1.0')

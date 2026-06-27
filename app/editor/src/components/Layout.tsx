@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import PropertyPanel from './PropertyPanel'
-import AIPanel from '../ai/AIPanel'
+import AIPanel, { type PanelPosition } from '../ai/AIPanel'
+import { ErrorBoundary } from './ErrorBoundary'
 
 interface LayoutProps {
   children: ReactNode
@@ -16,6 +17,8 @@ function Layout({ children }: LayoutProps) {
     return false
   })
   const [aiPanelOpen, setAiPanelOpen] = useState(false)
+  const [aiPanelPosition, setAiPanelPosition] = useState<PanelPosition>('right')
+  const [aiPanelSize, setAiPanelSize] = useState<number>(380)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -63,19 +66,57 @@ function Layout({ children }: LayoutProps) {
         onToggleAiPanel={() => setAiPanelOpen((prev) => !prev)}
       />
 
-      <main className="flex-1 overflow-y-auto p-6">
-        {children}
-      </main>
-
-      {showPropertyPanel && !aiPanelOpen && (
-        <PropertyPanel />
+      {aiPanelOpen ? (
+        aiPanelPosition === 'bottom' ? (
+          // 底部模式：main 占顶部，AI 面板可上下拉伸
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <main
+              className="overflow-y-auto p-6"
+              style={{ flex: `0 0 calc(100% - ${Math.max(200, aiPanelSize)}px)`, minHeight: 100 }}
+            >
+              {children}
+            </main>
+            <ErrorBoundary panelName="AI 助手">
+            <AIPanel
+              isOpen={aiPanelOpen}
+              position={aiPanelPosition}
+              panelSize={aiPanelSize}
+              onResize={setAiPanelSize}
+              onChangePosition={setAiPanelPosition}
+              onClose={() => setAiPanelOpen(false)}
+              onAcceptSuggestion={handleAcceptSuggestion}
+            />
+            </ErrorBoundary>
+          </div>
+        ) : (
+          // 右侧模式：main 占左侧，AI 面板可左右拉伸
+          <div className="flex-1 flex flex-row overflow-hidden">
+            <main className="flex-1 overflow-y-auto p-6">
+              {children}
+            </main>
+            <ErrorBoundary panelName="AI 助手">
+            <AIPanel
+              isOpen={aiPanelOpen}
+              position={aiPanelPosition}
+              panelSize={aiPanelSize}
+              onResize={setAiPanelSize}
+              onChangePosition={setAiPanelPosition}
+              onClose={() => setAiPanelOpen(false)}
+              onAcceptSuggestion={handleAcceptSuggestion}
+            />
+            </ErrorBoundary>
+          </div>
+        )
+      ) : (
+        <>
+          <main className="flex-1 overflow-y-auto p-6">
+            {children}
+          </main>
+          {showPropertyPanel && (
+            <PropertyPanel />
+          )}
+        </>
       )}
-
-      <AIPanel
-        isOpen={aiPanelOpen}
-        onClose={() => setAiPanelOpen(false)}
-        onAcceptSuggestion={handleAcceptSuggestion}
-      />
     </div>
   )
 }

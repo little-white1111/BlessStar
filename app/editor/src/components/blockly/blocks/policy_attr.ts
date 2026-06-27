@@ -24,7 +24,7 @@ const policyAttrJsonDef = {
   helpUrl: '',
 }
 
-function policyAttrGenerator(block: Block, generator: Generator): string {
+function policyAttrGenerator(block: Block, _generator: Generator): string {
   const key = block.getFieldValue('ATTR_KEY') || 'key'
   const value = block.getFieldValue('ATTR_VALUE') || ''
 

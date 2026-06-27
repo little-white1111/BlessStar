@@ -33,7 +33,9 @@ export default defineConfig({
           },
         },
       },
-    ]),
+    ], {
+      asar: false,
+    }),
     renderer(),
   ],
   resolve: {
@@ -42,6 +44,6 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: 'dist-renderer',
   },
 })

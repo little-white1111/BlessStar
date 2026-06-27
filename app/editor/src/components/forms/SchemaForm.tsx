@@ -1,5 +1,6 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import type { UIDLNode, FormValues } from '../../types/uidl'
+import type { VersionRegistry } from '../../ai/types'
 import InputControl from './InputControl'
 import SelectControl from './SelectControl'
 import CheckboxControl from './CheckboxControl'
@@ -13,9 +14,11 @@ interface SchemaFormProps {
   values: FormValues
   onChange: (values: FormValues) => void
   parentKey?: string
+  /** 版本注册表（第33天 · 配置编辑器版本下拉） */
+  versionRegistry?: VersionRegistry
 }
 
-function SchemaForm({ fields, values, onChange, parentKey = '' }: SchemaFormProps) {
+function SchemaForm({ fields, values, onChange, parentKey = '', versionRegistry }: SchemaFormProps) {
   const updateValue = useCallback(
     (key: string, value: unknown) => {
       const fullKey = parentKey ? `${parentKey}.${key}` : key
@@ -50,6 +53,8 @@ function SchemaForm({ fields, values, onChange, parentKey = '' }: SchemaFormProp
           values={values}
           onValuesChange={onChange}
           parentKey={field.key}
+          versionRegistry={versionRegistry}
+          configKey={parentKey ? `${parentKey}.${field.key}` : field.key}
         />
       ))}
     </div>
@@ -63,24 +68,45 @@ interface SchemaFieldProps {
   values: FormValues
   onValuesChange: (values: FormValues) => void
   parentKey?: string
+  /** 版本注册表（第33天 · 配置编辑器版本下拉） */
+  versionRegistry?: VersionRegistry
+  /** 当前字段的完整配置 key */
+  configKey?: string
 }
 
-function SchemaField({ field, value, onChange, values, onValuesChange, parentKey }: SchemaFieldProps) {
+function SchemaField({ field, value, onChange, values, onValuesChange, parentKey: _parentKey, versionRegistry, configKey }: SchemaFieldProps) {
+  // ── 版本下拉（第33天）─────────────────────────────────────────
+  const versions = (configKey && versionRegistry?.[configKey]) || []
+  const [showVersionDropdown, setShowVersionDropdown] = useState(false)
+  const [versionFilter, setVersionFilter] = useState('')
+  const filteredVersions = versionFilter
+    ? versions.filter((v) =>
+        (v.displayName || v.versionId).toLowerCase().includes(versionFilter.toLowerCase()),
+      )
+    : versions
+
+  let control: React.ReactNode
   switch (field.widget) {
     case 'input':
-      return <InputControl field={field} value={value as string} onChange={onChange} />
+      control = <InputControl field={field} value={value as string} onChange={onChange} />
+      break
     case 'select':
-      return <SelectControl field={field} value={value as string} onChange={onChange} />
+      control = <SelectControl field={field} value={value as string} onChange={onChange} />
+      break
     case 'checkbox':
-      return <CheckboxControl field={field} value={value as boolean} onChange={onChange} />
+      control = <CheckboxControl field={field} value={value as boolean} onChange={onChange} />
+      break
     case 'radio':
-      return <RadioControl field={field} value={value as string} onChange={onChange} />
+      control = <RadioControl field={field} value={value as string} onChange={onChange} />
+      break
     case 'number':
-      return <NumberControl field={field} value={value as number} onChange={onChange} />
+      control = <NumberControl field={field} value={value as number} onChange={onChange} />
+      break
     case 'textarea':
-      return <TextareaControl field={field} value={value as string} onChange={onChange} />
+      control = <TextareaControl field={field} value={value as string} onChange={onChange} />
+      break
     case 'group':
-      return (
+      control = (
         <GroupControl
           field={field}
           value={value as Record<string, unknown>}
@@ -89,8 +115,9 @@ function SchemaField({ field, value, onChange, values, onValuesChange, parentKey
           onAllValuesChange={onValuesChange}
         />
       )
+      break
     case 'repeatable':
-      return (
+      control = (
         <RepeatableControl
           field={field}
           value={value as Record<string, unknown>[]}
@@ -99,9 +126,67 @@ function SchemaField({ field, value, onChange, values, onValuesChange, parentKey
           onAllValuesChange={onValuesChange}
         />
       )
+      break
     default:
-      return <div className="text-red-500 text-sm">未知控件类型: {field.widget}</div>
+      control = <div className="text-red-500 text-sm">未知控件类型: {field.widget}</div>
   }
+
+  return (
+    <div className="space-y-1">
+      {control}
+      {versions.length > 0 && (
+        <div className="relative">
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-xs text-surface-400 dark:text-surface-500">版本:</span>
+            <button
+              onClick={() => setShowVersionDropdown(!showVersionDropdown)}
+              className="text-xs px-2 py-0.5 rounded border border-surface-200 dark:border-surface-600 text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 flex items-center gap-1"
+            >
+              {(() => {
+                const currentVer = versions.find((v) => v.value === String(value))
+                return (currentVer?.displayName || currentVer?.versionId || '最新')
+              })()}
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
+          {showVersionDropdown && (
+            <div className="absolute left-0 top-full mt-1 z-30 min-w-[240px] rounded-lg p-2 shadow-xl border border-surface-200 dark:border-surface-600 bg-white dark:bg-surface-800">
+              <input
+                autoFocus
+                value={versionFilter}
+                onChange={(e) => setVersionFilter(e.target.value)}
+                placeholder="搜索版本或输入版本号..."
+                className="w-full px-2 py-1.5 text-xs rounded border border-surface-200 dark:border-surface-600 bg-surface-50 dark:bg-surface-700 text-surface-900 dark:text-surface-50 mb-2"
+              />
+              <div className="max-h-48 overflow-y-auto space-y-0.5">
+                {filteredVersions.map((v) => (
+                  <button
+                    key={v.versionId}
+                    onClick={() => { onChange(v.value); setShowVersionDropdown(false); setVersionFilter('') }}
+                    className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                      v.value === String(value)
+                        ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
+                        : 'text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-700'
+                    }`}
+                  >
+                    <span className="font-mono">{v.displayName || v.versionId}</span>
+                    <span className="ml-2 text-surface-400 dark:text-surface-500">({v.value})</span>
+                  </button>
+                ))}
+                {filteredVersions.length === 0 && (
+                  <div className="text-xs text-surface-400 dark:text-surface-500 text-center py-2">
+                    无匹配版本
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function RepeatableControl({

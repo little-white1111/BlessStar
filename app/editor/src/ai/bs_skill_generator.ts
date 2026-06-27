@@ -150,7 +150,7 @@ export class BsSkillGenerator {
       '| `create_schema_field` | 创建 Schema 字段定义 |',
       '| `update_gate_rule` | 更新 Gate 门禁规则 |',
       '| `validate_config` | 校验配置 JSON 是否符合 Schema + Gate |',
-      '| `suggest_field_type` | 根据字段标签推荐控件类型 |',
+      '| `chat` | 兜底对话工具，无匹配工具时使用 |',
       '| `generate_normalizer_template` | 生成厂商归一化模板 |',
       '',
       '## 架构不变量',
@@ -368,15 +368,14 @@ ${constraints.gates.map((g, i) => `${i + 1}. \`${g.gate_id}\` — ${g.field_key}
       {
         type: 'function',
         function: {
-          name: 'suggest_field_type',
-          description: '根据字段标签或名称推荐最合适的控件类型',
+          name: 'chat',
+          description: '兜底对话工具。当用户询问语气且其他工具都不满足需求时调用。仅返回 LLM 文本回复，不执行任何系统操作。',
           parameters: {
             type: 'object',
             properties: {
-              label: { type: 'string', description: '字段标签或名称文本' },
-              context: { type: 'string', description: '额外上下文说明（可选）' },
+              reply: { type: 'string', description: 'LLM 对用户的直接回复文本' },
             },
-            required: ['label'],
+            required: ['reply'],
           },
         },
       },

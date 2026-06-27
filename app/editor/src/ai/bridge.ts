@@ -1,119 +1,125 @@
-import type {
-  AIBridgeConfig, AICompletionRequest, AICompletionResponse,
-  AIMessage, ToolCall, FunctionToolParam,
-} from './types'
-
-// === IPC-backed AI Tool Functions for MVP ===
-
-const IPC_TOOLS: Record<string, (...args: unknown[]) => Promise<string>> = {
-  create_schema_field: async (args: unknown) => {
-    const result = await window.blessstar.executeTool('create_schema_field', args)
-    return JSON.stringify(result)
-  },
-  update_gate_rule: async (args: unknown) => {
-    const result = await window.blessstar.executeTool('update_gate_rule', args)
-    return JSON.stringify(result)
-  },
-  validate_config: async (args: unknown) => {
-    const a = args as Record<string, string>
-    const result = await window.blessstar.validateConfig(a.configJson || '{}')
-    return JSON.stringify(result)
-  },
-  suggest_field_type: async (args: unknown) => {
-    const result = await window.blessstar.executeTool('suggest_field_type', args)
-    return JSON.stringify(result)
-  },
-  generate_normalizer_template: async (args: unknown) => {
-    const result = await window.blessstar.executeTool('generate_normalizer_template', args)
-    return JSON.stringify(result)
-  },
-}
-
-async function mockCompletion(messages: AIMessage[], tools?: FunctionToolParam[]): Promise<AICompletionResponse> {
-  const lastMsg = messages[messages.length - 1]
-  if (!lastMsg) {
-    return {
-      message: { role: 'assistant', content: '您好，我是 AI 助手。请问需要什么帮助？' },
-    }
-  }
-
-  // If the last message is a tool result, generate a follow-up
-  if (lastMsg.role === 'tool') {
-    return {
-      message: {
-        role: 'assistant',
-        content: `已处理工具调用。结果：\n\`\`\`json\n${lastMsg.content}\n\`\`\`\n\n如需继续操作，请告知。`,
-      },
-    }
-  }
-
-  // If tools are available and user asks for an action, simulate a tool call
-  if (tools && tools.length > 0 && lastMsg.role === 'user') {
-    const userText = lastMsg.content.toLowerCase()
-    const matchedTool = tools.find((t) => userText.includes(t.name))
-    if (matchedTool && IPC_TOOLS[matchedTool.name]) {
-      // Parse args from user message (very basic)
-      const args: Record<string, string> = {}
-      const argNames = Object.keys(matchedTool.parameters.properties as Record<string, unknown>)
-      for (const argName of argNames) {
-        const regex = new RegExp(`${argName}[=:]\\s*["']?([^"'\\s,，。]+)`, 'i')
-        const match = userText.match(regex)
-        if (match) args[argName] = match[1]
-      }
-
-      // Execute via IPC immediately and return result
-      const result = await IPC_TOOLS[matchedTool.name](args)
-
-      const toolCalls: ToolCall[] = [{
-        id: `call_mock_${Date.now()}`,
-        type: 'function',
-        function: {
-          name: matchedTool.name,
-          arguments: JSON.stringify(args),
-        },
-      }]
-
-      return {
-        message: {
-          role: 'assistant',
-          content: `我将为您执行 \`${matchedTool.name}\` 工具。\n结果：\n\`\`\`json\n${result}\n\`\`\``,
-        },
-        tool_calls: toolCalls,
-      }
-    }
-  }
-
-  return {
-    message: {
-      role: 'assistant',
-      content: '收到您的消息。请描述具体操作，或从以下工具中选择：\n' +
-        (tools || []).map((t) => `- \`${t.name}\`: ${t.description}`).join('\n'),
-    },
-  }
-}
-
-class OpenAIProvider implements AIBridge {
-  async complete(req: AICompletionRequest): Promise<AICompletionResponse> {
-    return mockCompletion(req.messages, req.tools)
-  }
-}
+import type { AIBridgeConfig, AICompletionRequest, AICompletionResponse } from './types'
 
 /**
- * OllamaProvider: 接收调用方传人的上下文（contextBuilder 产出或已有的 messages），
- * 不做历史累积，直接透传给后端。符合 CTX-01（每轮只发 Layer 1+2+3，不做对话历史累积）。
+ * CloudProvider: 通用 OpenAI 兼容接口（DeepSeek / OpenAI）。
+ * 通过 IPC 调用主进程 fetch，避免渲染进程直接跨域请求。
  */
-class OllamaProvider implements AIBridge {
+class CloudProvider implements AIBridge {
   private baseUrl: string
+  private apiKey: string
   private model: string
+  private embeddingModel: string
 
   constructor(config: AIBridgeConfig) {
-    this.baseUrl = config.ollamaUrl || 'http://localhost:11434'
-    this.model = config.ollamaModel || 'qwen2.5-coder:7b'
+    // DeepSeek 默认 https://api.deepseek.com，OpenAI 默认 https://api.openai.com
+    this.baseUrl = config.baseUrl || (
+      config.provider === 'deepseek'
+        ? 'https://api.deepseek.com'
+        : 'https://api.openai.com'
+    )
+    this.apiKey = config.apiKey || ''
+    this.model = config.model || (
+      config.provider === 'deepseek' ? 'deepseek-chat' : 'gpt-4o'
+    )
+    // EMB: embedding 模型名，默认同 chat 模型
+    this.embeddingModel = config.embeddingModel || this.model
   }
 
   async complete(req: AICompletionRequest): Promise<AICompletionResponse> {
     const body: Record<string, unknown> = {
+      model: req.model || this.model,
+      messages: req.messages.map((m) => ({
+        role: m.role === 'tool' ? 'tool' : m.role,
+        content: m.content,
+        ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+      })),
+      stream: false,
+    }
+
+    if (req.tools && req.tools.length > 0) {
+      body.tools = req.tools.map((t) => ({
+        type: 'function',
+        function: {
+          name: t.name,
+          description: t.description,
+          parameters: t.parameters,
+        },
+      }))
+    }
+
+    const raw = await window.blessstar.aiChat({
+      baseUrl: this.baseUrl,
+      apiKey: this.apiKey,
       model: this.model,
+      body: JSON.stringify(body),
+    })
+    const data = JSON.parse(raw)
+    const msg = data.choices?.[0]?.message || data.message || {}
+
+    const response: AICompletionResponse = {
+      message: {
+        role: msg.role || 'assistant',
+        content: msg.content || '',
+      },
+    }
+
+    if (msg.tool_calls && msg.tool_calls.length > 0) {
+      response.tool_calls = msg.tool_calls.map((tc: { id?: string; type?: string; function?: { name: string; arguments: string } }) => ({
+        id: tc.id || `call_${Date.now()}`,
+        type: 'function',
+        function: {
+          name: tc.function?.name || '',
+          arguments: tc.function?.arguments || '{}',
+        },
+      }))
+    }
+
+    if (data.usage) {
+      response.usage = {
+        prompt_tokens: Number(data.usage.prompt_tokens) || 0,
+        completion_tokens: Number(data.usage.completion_tokens) || 0,
+        total_tokens: Number(data.usage.total_tokens) || 0,
+      }
+    }
+
+    return response
+  }
+
+  /** EMB: 调用 OpenAI 兼容 embedding API */
+  async embed(text: string): Promise<number[]> {
+    const body = JSON.stringify({
+      model: this.embeddingModel,
+      input: text,
+    })
+    const raw = await window.blessstar.aiEmbed({
+      url: `${this.baseUrl.replace(/\/+$/, '')}/v1/embeddings`,
+      apiKey: this.apiKey,
+      body,
+    })
+    const data = JSON.parse(raw)
+    return data.data?.[0]?.embedding || []
+  }
+}
+
+/**
+ * OllamaProvider: 本地 Ollama 推理。
+ * 通过 IPC 调用主进程 fetch 到 http://localhost:11434/api/chat。
+ */
+class OllamaProvider implements AIBridge {
+  private model: string
+  private embeddingModel: string
+  private ollamaUrl: string
+
+  constructor(config: AIBridgeConfig) {
+    this.model = config.ollamaModel || 'qwen2.5-coder:7b'
+    // EMB: embedding 模型名，默认同 chat 模型
+    this.embeddingModel = config.embeddingModel || this.model
+    this.ollamaUrl = (config.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '')
+  }
+
+  async complete(req: AICompletionRequest): Promise<AICompletionResponse> {
+    const body: Record<string, unknown> = {
+      model: req.model || this.model,
       messages: req.messages.map((m) => ({
         role: m.role === 'tool' ? 'tool' : m.role,
         content: m.content,
@@ -155,21 +161,49 @@ class OllamaProvider implements AIBridge {
       }))
     }
 
+    // Ollama /api/chat 返回: prompt_eval_count, eval_count, prompt_eval_duration, eval_duration
+    const promptTokens = Number(data.prompt_eval_count) || 0
+    const completionTokens = Number(data.eval_count) || 0
+    if (promptTokens || completionTokens) {
+      response.usage = {
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        total_tokens: promptTokens + completionTokens,
+      }
+    }
+
     return response
+  }
+
+  /** EMB: 调用 Ollama /api/embeddings */
+  async embed(text: string): Promise<number[]> {
+    const body = JSON.stringify({
+      model: this.embeddingModel,
+      prompt: text,
+    })
+    const raw = await window.blessstar.aiEmbed({
+      url: `${this.ollamaUrl}/api/embeddings`,
+      body,
+    })
+    const data = JSON.parse(raw)
+    return data.embedding || []
   }
 }
 
 export function createAIBridge(config: AIBridgeConfig): AIBridge {
   switch (config.provider) {
     case 'openai':
-      return new OpenAIProvider()
+    case 'deepseek':
+      return new CloudProvider(config)
     case 'ollama':
       return new OllamaProvider(config)
     default:
-      return new OpenAIProvider()
+      return new OllamaProvider(config)
   }
 }
 
 export interface AIBridge {
   complete(req: AICompletionRequest): Promise<AICompletionResponse>
+  /** EMB: 将文本转为 embedding 向量 */
+  embed(text: string): Promise<number[]>
 }

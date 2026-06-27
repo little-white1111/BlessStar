@@ -95,7 +95,7 @@ static int test_eq_rule_pass()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "key1", "eq", "hello"});
+    policy.metadata_rules.push_back({"instr-a", "key1", BS_META_EQ, "hello"});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = ok ? 0 : 1;
@@ -111,7 +111,7 @@ static int test_eq_rule_fail()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "key1", "eq", "world"});
+    policy.metadata_rules.push_back({"instr-a", "key1", BS_META_EQ, "world"});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = (!ok && !err.empty()) ? 0 : 1;
@@ -127,7 +127,7 @@ static int test_gt_rule_pass()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "amount", "gt", "50"});
+    policy.metadata_rules.push_back({"instr-a", "amount", BS_META_GT, "50"});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = ok ? 0 : 1;
@@ -143,7 +143,7 @@ static int test_gt_rule_fail()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "amount", "gt", "200"});
+    policy.metadata_rules.push_back({"instr-a", "amount", BS_META_GT, "200"});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = (!ok && !err.empty()) ? 0 : 1;
@@ -159,7 +159,7 @@ static int test_exists_rule_pass()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "region", "exists", ""});
+    policy.metadata_rules.push_back({"instr-a", "region", BS_META_EXISTS, ""});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = ok ? 0 : 1;
@@ -175,7 +175,7 @@ static int test_not_exists_rule_pass()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "nonexistent", "not_exists", ""});
+    policy.metadata_rules.push_back({"instr-a", "nonexistent", BS_META_NOT_EXISTS, ""});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = ok ? 0 : 1;
@@ -191,7 +191,7 @@ static int test_regex_rule_pass()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "code", "regex", "^[A-Z]+-[0-9]+$"});
+    policy.metadata_rules.push_back({"instr-a", "code", BS_META_REGEX, "^[A-Z]+-[0-9]+$"});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = ok ? 0 : 1;
@@ -207,7 +207,7 @@ static int test_contains_rule_pass()
     if (!instrs) return 0;
 
     ScenarioPolicy policy = make_policy();
-    policy.metadata_rules.push_back({"instr-a", "code", "contains", "ABC"});
+    policy.metadata_rules.push_back({"instr-a", "code", BS_META_CONTAINS, "ABC"});
     std::string err;
     bool ok = run_precheck(policy, instrs, &err);
     int rc = ok ? 0 : 1;

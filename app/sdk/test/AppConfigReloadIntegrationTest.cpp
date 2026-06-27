@@ -271,7 +271,11 @@ static int test_session_custom_gate()
         };
 
         bs::app::ConfigReloadSession session(fix.ctx);
-        session.AddCustomGate(custom_fn, &custom_ctx);
+        bs::app::CustomGateEntry entry;
+        entry.gate_id = "custom_test";
+        entry.fn      = custom_fn;
+        entry.user_ctx = &custom_ctx;
+        session.AddCustomGate(entry);
 
         const uint8_t* raw = reinterpret_cast<const uint8_t*>(norm.v1_bytes.data());
         BS_TEST_REQUIRE("add-v1", session.AddPath("main", raw, norm.v1_bytes.size()));

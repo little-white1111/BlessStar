@@ -1,4 +1,5 @@
-/* Gate chain JSON serialization + map + upsert. Zero external dependency. */
+/* Gate chain JSON serialization + map + upsert. Zero external dependency.
+ * DAG version: pointer-based tree, recursive DFS traversal. */
 #include <bs/kernel/gate_chain/gate_chain_serialize.h>
 
 #include <ctype.h>
@@ -8,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* ── Dynamic JSON string builder (inline, mirrors schema_json_converter.c) ── */
+/* ── Dynamic JSON string builder ────────────────────────────────────── */
 typedef struct {
     char*  buf;
     size_t len;
@@ -89,7 +90,277 @@ static void json_escape(const char* s, json_buf_t* b)
     json_buf_append(b, "\"");
 }
 
-/* ── Minimal JSON tokenizer (mirrors schema_json_converter.c) ── */
+/* ══════════════════════════════════════════════════════════════════════
+ * Lifecycle
+ * ══════════════════════════════════════════════════════════════════════ */
+
+bs_gate_chain_t* bs_gate_chain_create(void)
+{
+    bs_gate_chain_t* c = (bs_gate_chain_t*)calloc(1, sizeof(bs_gate_chain_t));
+    if (c) c->version = strdup("1.0");
+    return c;
+}
+
+bs_gate_node_t* bs_gate_node_create(const char* type, const char* id)
+{
+    bs_gate_node_t* n = (bs_gate_node_t*)calloc(1, sizeof(bs_gate_node_t));
+    if (!n) return NULL;
+    if (type) n->type = strdup(type);
+    if (id)   n->id = strdup(id);
+    return n;
+}
+
+void bs_gate_node_free(bs_gate_node_t* node)
+{
+    if (!node) return;
+    free(node->type);
+    free(node->id);
+    free(node->field_key);
+    free(node->op);
+    free(node->value);
+    free(node->stable_key);
+    free(node->sub_category);
+    free(node->domain);
+    free(node->entity);
+
+    /* Recursively free children */
+    for (size_t i = 0; i < node->child_count; i++)
+        bs_gate_node_free(node->children[i]);
+    free(node->children);
+
+    /* Recursively free do_nodes */
+    for (size_t i = 0; i < node->do_count; i++)
+        bs_gate_node_free(node->do_nodes[i]);
+    free(node->do_nodes);
+
+    free(node);
+}
+
+/* ── Node linking ───────────────────────────────────────────────────── */
+int bs_gate_node_link_child(bs_gate_node_t* parent, bs_gate_node_t* child)
+{
+    if (!parent || !child) return -1;
+    bs_gate_node_t** new_c = (bs_gate_node_t**)realloc(parent->children,
+        (parent->child_count + 1) * sizeof(bs_gate_node_t*));
+    if (!new_c) return -1;
+    parent->children = new_c;
+    parent->children[parent->child_count++] = child;
+    return 0;
+}
+
+int bs_gate_node_link_do(bs_gate_node_t* parent, bs_gate_node_t* do_node)
+{
+    if (!parent || !do_node) return -1;
+    bs_gate_node_t** new_d = (bs_gate_node_t**)realloc(parent->do_nodes,
+        (parent->do_count + 1) * sizeof(bs_gate_node_t*));
+    if (!new_d) return -1;
+    parent->do_nodes = new_d;
+    parent->do_nodes[parent->do_count++] = do_node;
+    return 0;
+}
+
+/* ── DFS node count ─────────────────────────────────────────────────── */
+typedef struct {
+    bs_gate_node_t** nodes;
+    size_t count;
+    size_t cap;
+} node_set_t;
+
+static bool node_set_contains(node_set_t* set, bs_gate_node_t* n)
+{
+    for (size_t i = 0; i < set->count; i++)
+        if (set->nodes[i] == n) return true;
+    return false;
+}
+
+static int node_set_add(node_set_t* set, bs_gate_node_t* n)
+{
+    if (set->count >= set->cap) {
+        set->cap = set->cap ? set->cap * 2 : 64;
+        bs_gate_node_t** new_n = (bs_gate_node_t**)realloc(set->nodes, set->cap * sizeof(bs_gate_node_t*));
+        if (!new_n) return -1;
+        set->nodes = new_n;
+    }
+    set->nodes[set->count++] = n;
+    return 0;
+}
+
+static void dfs_collect(bs_gate_node_t* node, node_set_t* set)
+{
+    if (!node || node_set_contains(set, node)) return;
+    node_set_add(set, node);
+    for (size_t i = 0; i < node->child_count; i++)
+        dfs_collect(node->children[i], set);
+    for (size_t i = 0; i < node->do_count; i++)
+        dfs_collect(node->do_nodes[i], set);
+}
+
+size_t bs_gate_chain_node_count(const bs_gate_chain_t* chain)
+{
+    if (!chain || !chain->root) return 0;
+    node_set_t set;
+    memset(&set, 0, sizeof(set));
+    dfs_collect(chain->root, &set);
+    size_t count = set.count;
+    free(set.nodes);
+    return count;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * bs_gate_chain_free
+ * ══════════════════════════════════════════════════════════════════════ */
+void bs_gate_chain_free(bs_gate_chain_t* chain)
+{
+    if (!chain) return;
+    free(chain->version);
+    bs_gate_node_free(chain->root);   /* recursive DFS free */
+    bs_gate_map_free(chain->map);
+    free(chain);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * Serialization: node → JSON (recursive)
+ * ══════════════════════════════════════════════════════════════════════ */
+
+static int serialize_node(const bs_gate_node_t* n, json_buf_t* b, int indent);
+
+static int serialize_node_array(const bs_gate_node_t** arr, size_t count,
+                                 json_buf_t* b, int indent)
+{
+    json_buf_append(b, "[\n");
+    for (size_t i = 0; i < count; i++) {
+        if (i > 0) json_buf_append(b, ",\n");
+        for (int j = 0; j < indent + 1; j++) json_buf_append(b, "  ");
+        serialize_node(arr[i], b, indent + 1);
+    }
+    json_buf_append(b, "\n");
+    for (int j = 0; j < indent; j++) json_buf_append(b, "  ");
+    json_buf_append(b, "]");
+    return 0;
+}
+
+static int serialize_node(const bs_gate_node_t* n, json_buf_t* b, int indent)
+{
+    if (!n) { json_buf_append(b, "null"); return 0; }
+
+    json_buf_append(b, "{");
+    int first = 1;
+
+    /* Scalar fields */
+    if (n->type) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"type\":");
+        json_escape(n->type, b);
+        first = 0;
+    }
+    if (n->id) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"id\":");
+        json_escape(n->id, b);
+        first = 0;
+    }
+    if (n->field_key) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"field_key\":");
+        json_escape(n->field_key, b);
+        first = 0;
+    }
+    if (n->op) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"op\":");
+        json_escape(n->op, b);
+        first = 0;
+    }
+    if (n->value) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"value\":");
+        json_escape(n->value, b);
+        first = 0;
+    }
+
+    /* Semantic fields */
+    if (n->layer >= 0 && n->layer < BS_GATE_LAYER_COUNT) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_appendf(b, "\"layer\":%d", n->layer);
+        first = 0;
+    }
+    if (n->stable_key) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"stable_key\":");
+        json_escape(n->stable_key, b);
+        first = 0;
+    }
+    if (n->sub_category) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"sub_category\":");
+        json_escape(n->sub_category, b);
+        first = 0;
+    }
+    if (n->domain) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"domain\":");
+        json_escape(n->domain, b);
+        first = 0;
+    }
+    if (n->entity) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\"entity\":");
+        json_escape(n->entity, b);
+        first = 0;
+    }
+
+    /* DAG children array (recursive sub-objects) */
+    if (n->child_count > 0 && n->children) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\n");
+        for (int j = 0; j < indent + 1; j++) json_buf_append(b, "  ");
+        json_buf_append(b, "\"children\":");
+        serialize_node_array((const bs_gate_node_t**)n->children, n->child_count, b, indent + 1);
+        first = 0;
+    }
+    /* DAG do_nodes array (recursive sub-objects) */
+    if (n->do_count > 0 && n->do_nodes) {
+        if (!first) json_buf_append(b, ",");
+        json_buf_append(b, "\n");
+        for (int j = 0; j < indent + 1; j++) json_buf_append(b, "  ");
+        json_buf_append(b, "\"do\":");
+        serialize_node_array((const bs_gate_node_t**)n->do_nodes, n->do_count, b, indent + 1);
+        first = 0;
+    }
+
+    json_buf_append(b, "}");
+    return 0;
+}
+
+int bs_gate_chain_to_json(const bs_gate_chain_t* chain,
+                           char** out_json, size_t* out_len)
+{
+    if (!chain || !out_json) return -1;
+
+    json_buf_t b;
+    if (json_buf_init(&b)) return -1;
+
+    json_buf_append(&b, "{\n");
+    json_buf_appendf(&b, "  \"version\":\"%s\",\n",
+                     chain->version ? chain->version : "1.0");
+
+    /* Serialize root recursively */
+    json_buf_append(&b, "  \"root\":");
+    if (chain->root)
+        serialize_node(chain->root, &b, 1);
+    else
+        json_buf_append(&b, "null");
+
+    json_buf_append(&b, "\n}\n");
+
+    *out_json = b.buf;
+    if (out_len) *out_len = b.len;
+    return 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+ * JSON tokenizer (minimal, mirrors schema_json_converter.c)
+ * ══════════════════════════════════════════════════════════════════════ */
 typedef enum {
     GTOK_EOF, GTOK_LBRACE, GTOK_RBRACE, GTOK_LBRACK, GTOK_RBRACK,
     GTOK_COMMA, GTOK_COLON, GTOK_STRING, GTOK_NUMBER,
@@ -111,6 +382,12 @@ static void gparse_init(gparse_t* p, const char* json, size_t len)
     p->end = json + len;
     p->str_val = NULL;
     p->tok_start = NULL;
+}
+
+static void gparse_free(gparse_t* p)
+{
+    free(p->str_val);
+    p->str_val = NULL;
 }
 
 static void gparse_advance(gparse_t* p)
@@ -178,290 +455,130 @@ static void gparse_advance(gparse_t* p)
     }
 }
 
-/* ── JSON dict (generic key-value pairs) ── */
-#define GMAX_DICT 256
+/* ── Recursive JSON → node parser ───────────────────────────────────── */
 
-typedef struct {
-    const char* keys[GMAX_DICT];
-    char*       vals[GMAX_DICT]; /* owned JSON substring */
-    int         count;
-} gjson_dict_t;
+static bs_gate_node_t* parse_node(gparse_t* p);
 
-static void gjson_dict_init(gjson_dict_t* d) { d->count = 0; }
-
-static void gjson_dict_add(gjson_dict_t* d, const char* key,
-                            const char* val_str /* already unquoted */)
-{
-    if (d->count >= GMAX_DICT) return;
-    d->keys[d->count] = strdup(key);
-    d->vals[d->count] = val_str ? strdup(val_str) : NULL;
-    d->count++;
-}
-
-static const char* gjson_dict_get(const gjson_dict_t* d, const char* key)
-{
-    for (int i = 0; i < d->count; i++)
-        if (d->keys[i] && strcmp(d->keys[i], key) == 0)
-            return d->vals[i];
-    return NULL;
-}
-
-static void gjson_dict_destroy(gjson_dict_t* d)
-{
-    for (int i = 0; i < d->count; i++) {
-        free((void*)d->keys[i]);
-        free(d->vals[i]);
-    }
-    d->count = 0;
-}
-
-/* Parse dict object into key/value pairs. Values are stored unquoted. */
-static void gparse_dict_into(gparse_t* p, gjson_dict_t* out)
-{
-    if (p->kind != GTOK_LBRACE) return;
-    gparse_advance(p);
-
-    while (p->kind == GTOK_STRING) {
-        char* key = strdup(p->str_val);
-        gparse_advance(p);
-        if (p->kind != GTOK_COLON) { free(key); return; }
-        gparse_advance(p);
-
-        /* Capture value: use str_val for strings, raw text for composites */
-        if (p->kind == GTOK_STRING) {
-            gjson_dict_add(out, key, p->str_val);
-            gparse_advance(p);
-        } else if (p->kind == GTOK_NUMBER) {
-            char num_buf[64];
-            snprintf(num_buf, sizeof(num_buf), "%g", p->num_val);
-            gjson_dict_add(out, key, num_buf);
-            gparse_advance(p);
-        } else if (p->kind == GTOK_TRUE || p->kind == GTOK_FALSE || p->kind == GTOK_NULL) {
-            const char* lit = (p->kind == GTOK_TRUE ? "true" : (p->kind == GTOK_FALSE ? "false" : "null"));
-            gjson_dict_add(out, key, lit);
-            gparse_advance(p);
-        } else if (p->kind == GTOK_LBRACE || p->kind == GTOK_LBRACK) {
-            /* Copy raw JSON for composites */
-            const char* val_pos = p->tok_start;
-            int depth = 1;
-            while (depth > 0 && p->kind != GTOK_EOF && p->kind != GTOK_ERROR) {
-                gparse_advance(p);
-                if (p->kind == GTOK_LBRACE || p->kind == GTOK_LBRACK) depth++;
-                if (p->kind == GTOK_RBRACE || p->kind == GTOK_RBRACK) depth--;
-            }
-            size_t val_len = (size_t)(p->pos - val_pos);
-            if (p->kind != GTOK_EOF) gparse_advance(p);
-            char* raw = (char*)malloc(val_len + 1);
-            if (raw) { memcpy(raw, val_pos, val_len); raw[val_len] = '\0'; }
-            gjson_dict_add(out, key, raw);
-            free(raw);
-        } else {
-            gjson_dict_add(out, key, "");
-            gparse_advance(p);
-        }
-
-        free(key);
-
-        if (p->kind == GTOK_COMMA) gparse_advance(p);
-    }
-
-    /* Advance past closing delimiter */
-    if (p->kind == GTOK_RBRACE || p->kind == GTOK_RBRACK)
-        gparse_advance(p);
-}
-
-/* Parse JSON string array into char** */
-static char** parse_string_array(gparse_t* p, size_t* out_count)
+/* Parse a JSON array of nodes: [ {...}, {...} ] */
+static bs_gate_node_t** parse_node_array(gparse_t* p, size_t* out_count)
 {
     if (p->kind != GTOK_LBRACK) return NULL;
     gparse_advance(p);
 
     size_t cap = 8, cnt = 0;
-    char** arr = (char**)calloc(cap, sizeof(char*));
+    bs_gate_node_t** arr = (bs_gate_node_t**)calloc(cap, sizeof(bs_gate_node_t*));
     if (!arr) return NULL;
 
-    while (p->kind == GTOK_STRING) {
+    while (p->kind == GTOK_LBRACE) {
         if (cnt >= cap) {
             cap *= 2;
-            char** new_arr = (char**)realloc(arr, cap * sizeof(char*));
+            bs_gate_node_t** new_arr = (bs_gate_node_t**)realloc(arr, cap * sizeof(bs_gate_node_t*));
             if (!new_arr) { free(arr); return NULL; }
             arr = new_arr;
         }
-        arr[cnt++] = strdup(p->str_val);
-        gparse_advance(p);
+        arr[cnt++] = parse_node(p);
         if (p->kind == GTOK_COMMA) gparse_advance(p);
     }
 
-    if (p->kind != GTOK_RBRACK) { /* error */ }
+    if (p->kind != GTOK_RBRACK) { /* ignore parse error */ }
     if (p->kind != GTOK_EOF) gparse_advance(p);
 
     *out_count = cnt;
     return arr;
 }
 
-/* Extract quoted string (strip outer "") */
-static char* extract_quoted(const char* s)
+/* Parse a single node object */
+static bs_gate_node_t* parse_node(gparse_t* p)
 {
-    if (!s || s[0] != '"') return NULL;
-    size_t sl = strlen(s);
-    if (sl < 2) return NULL;
-    char* out = (char*)malloc(sl);
-    if (!out) return NULL;
-    memcpy(out, s + 1, sl - 2);
-    out[sl - 2] = '\0';
-    return out;
-}
+    if (p->kind != GTOK_LBRACE) return NULL;
 
-/* ══════════════════════════════════════════════════════════════════════
- * bs_gate_chain_free
- * ══════════════════════════════════════════════════════════════════════ */
-void bs_gate_chain_free(bs_gate_chain_t* chain)
-{
-    if (!chain) return;
-    free(chain->version);
-    for (size_t i = 0; i < chain->node_count; i++) {
-        bs_gate_node_t* n = &chain->nodes[i];
-        free(n->type);
-        free(n->id);
-        free(n->field_key);
-        free(n->op);
-        free(n->value);
-        /* ── OPT-08: free new semantic fields ── */
-        free(n->stable_key);
-        free(n->sub_category);
-        free(n->domain);
-        free(n->entity);
-        if (n->child_ids) {
-            for (size_t j = 0; j < n->child_count; j++)
-                free(n->child_ids[j]);
-            free(n->child_ids);
-        }
-        if (n->do_ids) {
-            for (size_t j = 0; j < n->do_count; j++)
-                free(n->do_ids[j]);
-            free(n->do_ids);
-        }
-    }
-    free(chain->nodes);
-    bs_gate_map_free(chain->map);
-    free(chain);
-}
+    bs_gate_node_t* n = (bs_gate_node_t*)calloc(1, sizeof(bs_gate_node_t));
+    if (!n) return NULL;
 
-/* ══════════════════════════════════════════════════════════════════════
- * bs_gate_chain_to_json
- * ══════════════════════════════════════════════════════════════════════ */
-int bs_gate_chain_to_json(const bs_gate_chain_t* chain,
-                            char** out_json, size_t* out_len)
-{
-    if (!chain || !out_json) return -1;
+    gparse_advance(p); /* skip { */
 
-    json_buf_t b;
-    if (json_buf_init(&b)) return -1;
+    while (p->kind == GTOK_STRING) {
+        char* key = strdup(p->str_val);
+        gparse_advance(p);
+        if (p->kind != GTOK_COLON) { free(key); break; }
+        gparse_advance(p);
 
-    json_buf_append(&b, "{\n");
-    json_buf_appendf(&b, "\"version\":%s,\n", chain->version ? chain->version : "\"1.0\"");
-    json_buf_append(&b, "\"gates\":[\n");
-
-    for (size_t i = 0; i < chain->node_count; i++) {
-        if (i > 0) json_buf_append(&b, ",\n");
-        const bs_gate_node_t* n = &chain->nodes[i];
-        json_buf_append(&b, "  {");
-        int first = 1;
-
-        if (n->type) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"type\":");
-            json_escape(n->type, &b);
-            first = 0;
-        }
-        if (n->id) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"id\":");
-            json_escape(n->id, &b);
-            first = 0;
-        }
-        if (n->field_key) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"field_key\":");
-            json_escape(n->field_key, &b);
-            first = 0;
-        }
-        if (n->op) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"op\":");
-            json_escape(n->op, &b);
-            first = 0;
-        }
-        if (n->value) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"value\":");
-            json_escape(n->value, &b);
-            first = 0;
-        }
-        /* ── OPT-08: serialize layer, stable_key, sub_category, domain, entity ── */
-        if (n->layer >= 0 && n->layer < BS_GATE_LAYER_COUNT) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_appendf(&b, "\"layer\":%d", n->layer);
-            first = 0;
-        }
-        if (n->stable_key) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"stable_key\":");
-            json_escape(n->stable_key, &b);
-            first = 0;
-        }
-        if (n->sub_category) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"sub_category\":");
-            json_escape(n->sub_category, &b);
-            first = 0;
-        }
-        if (n->domain) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"domain\":");
-            json_escape(n->domain, &b);
-            first = 0;
-        }
-        if (n->entity) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"entity\":");
-            json_escape(n->entity, &b);
-            first = 0;
-        }
-        /* child_ids */
-        if (n->child_count > 0 && n->child_ids) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"children\":[");
-            for (size_t j = 0; j < n->child_count; j++) {
-                if (j > 0) json_buf_append(&b, ",");
-                json_escape(n->child_ids[j], &b);
+        if (strcmp(key, "type") == 0 && p->kind == GTOK_STRING) {
+            n->type = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "id") == 0 && p->kind == GTOK_STRING) {
+            n->id = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "field_key") == 0 && p->kind == GTOK_STRING) {
+            n->field_key = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "op") == 0 && p->kind == GTOK_STRING) {
+            n->op = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "value") == 0 && p->kind == GTOK_STRING) {
+            n->value = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "layer") == 0 && p->kind == GTOK_NUMBER) {
+            n->layer = (int)p->num_val;
+            gparse_advance(p);
+        } else if (strcmp(key, "stable_key") == 0 && p->kind == GTOK_STRING) {
+            n->stable_key = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "sub_category") == 0 && p->kind == GTOK_STRING) {
+            n->sub_category = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "domain") == 0 && p->kind == GTOK_STRING) {
+            n->domain = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "entity") == 0 && p->kind == GTOK_STRING) {
+            n->entity = strdup(p->str_val);
+            gparse_advance(p);
+        } else if (strcmp(key, "children") == 0 && p->kind == GTOK_LBRACK) {
+            n->children = parse_node_array(p, &n->child_count);
+        } else if (strcmp(key, "do") == 0 && p->kind == GTOK_LBRACK) {
+            n->do_nodes = parse_node_array(p, &n->do_count);
+        } else {
+            /* Skip unknown value */
+            if (p->kind == GTOK_LBRACE || p->kind == GTOK_LBRACK) {
+                int depth = 1;
+                while (depth > 0 && p->kind != GTOK_EOF && p->kind != GTOK_ERROR) {
+                    gparse_advance(p);
+                    if (p->kind == GTOK_LBRACE || p->kind == GTOK_LBRACK) depth++;
+                    if (p->kind == GTOK_RBRACE || p->kind == GTOK_RBRACK) depth--;
+                }
+                if (p->kind != GTOK_EOF) gparse_advance(p);
+            } else {
+                gparse_advance(p);
             }
-            json_buf_append(&b, "]");
-            first = 0;
         }
-        /* do_ids */
-        if (n->do_count > 0 && n->do_ids) {
-            if (!first) json_buf_append(&b, ",");
-            json_buf_append(&b, "\"do\":[");
-            for (size_t j = 0; j < n->do_count; j++) {
-                if (j > 0) json_buf_append(&b, ",");
-                json_escape(n->do_ids[j], &b);
-            }
-            json_buf_append(&b, "]");
-            first = 0;
-        }
-        json_buf_append(&b, "}");
+
+        free(key);
+        if (p->kind == GTOK_COMMA) gparse_advance(p);
     }
 
-    json_buf_append(&b, "\n]}\n");
+    if (p->kind == GTOK_RBRACE)
+        gparse_advance(p);
 
-    *out_json = b.buf;
-    if (out_len) *out_len = b.len;
-    return 0;
+    return n;
+}
+
+/* ── Legacy "gates" array → DAG root converter ──────────────────────── */
+static bs_gate_node_t* legacy_gates_to_dag(bs_gate_node_t** nodes, size_t count)
+{
+    if (count == 0) return NULL;
+    if (count == 1) return nodes[0];
+
+    bs_gate_node_t* root = (bs_gate_node_t*)calloc(1, sizeof(bs_gate_node_t));
+    if (!root) return nodes[0];
+    root->type = strdup("bs_gate_root");
+    root->id   = strdup("_auto_root");
+    root->children = nodes;
+    root->child_count = count;
+    return root;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
- * bs_gate_chain_from_json — direct token-stream parser (no dict capture)
+ * bs_gate_chain_from_json — supports both DAG (root) and legacy (gates)
  * ══════════════════════════════════════════════════════════════════════ */
 int bs_gate_chain_from_json(const char* json, bs_gate_chain_t** out)
 {
@@ -475,16 +592,15 @@ int bs_gate_chain_from_json(const char* json, bs_gate_chain_t** out)
     if (!chain) return -1;
     chain->version = strdup("1.0");
 
-    /* Parse top-level { ... } */
     gparse_advance(&p);
     if (p.kind != GTOK_LBRACE) { bs_gate_chain_free(chain); return -1; }
     gparse_advance(&p);
 
     while (p.kind == GTOK_STRING) {
         char* key = strdup(p.str_val);
-        gparse_advance(&p); /* skip string */
+        gparse_advance(&p);
         if (p.kind != GTOK_COLON) { free(key); bs_gate_chain_free(chain); return -1; }
-        gparse_advance(&p); /* skip colon */
+        gparse_advance(&p);
 
         if (strcmp(key, "version") == 0) {
             if (p.kind == GTOK_STRING) {
@@ -492,86 +608,38 @@ int bs_gate_chain_from_json(const char* json, bs_gate_chain_t** out)
                 chain->version = strdup(p.str_val);
             }
             gparse_advance(&p);
-        } else if (strcmp(key, "gates") == 0) {
-            if (p.kind == GTOK_LBRACK) {
-                gparse_advance(&p); /* skip [ */
-
-                size_t cap = 16, cnt = 0;
-                chain->nodes = (bs_gate_node_t*)calloc(cap, sizeof(bs_gate_node_t));
-
-                while (p.kind == GTOK_LBRACE) {
-                    if (cnt >= cap) {
-                        cap *= 2;
-                        bs_gate_node_t* new_nodes = (bs_gate_node_t*)
-                            realloc(chain->nodes, cap * sizeof(bs_gate_node_t));
-                        if (!new_nodes) break;
-                        chain->nodes = new_nodes;
-                    }
-
-                    bs_gate_node_t* n = &chain->nodes[cnt];
-                    memset(n, 0, sizeof(*n));
-                    gparse_advance(&p); /* skip { */
-
-                    while (p.kind == GTOK_STRING) {
-                        char* fk = strdup(p.str_val);
-                        gparse_advance(&p);
-                        if (p.kind != GTOK_COLON) { free(fk); break; }
-                        gparse_advance(&p);
-
-                        if (strcmp(fk, "type") == 0 && p.kind == GTOK_STRING) {
-                            n->type = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "id") == 0 && p.kind == GTOK_STRING) {
-                            n->id = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "field_key") == 0 && p.kind == GTOK_STRING) {
-                            n->field_key = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "op") == 0 && p.kind == GTOK_STRING) {
-                            n->op = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "value") == 0 && p.kind == GTOK_STRING) {
-                            n->value = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "children") == 0 && p.kind == GTOK_LBRACK)
-                            n->child_ids = parse_string_array(&p, &n->child_count);
-                        else if (strcmp(fk, "do") == 0 && p.kind == GTOK_LBRACK)
-                            n->do_ids = parse_string_array(&p, &n->do_count);
-                        /* ── OPT-08: parse new semantic fields ── */
-                        else if (strcmp(fk, "layer") == 0 && p.kind == GTOK_NUMBER) {
-                            n->layer = (int)p.num_val;
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "stable_key") == 0 && p.kind == GTOK_STRING) {
-                            n->stable_key = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "sub_category") == 0 && p.kind == GTOK_STRING) {
-                            n->sub_category = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "domain") == 0 && p.kind == GTOK_STRING) {
-                            n->domain = strdup(p.str_val);
-                            gparse_advance(&p);
-                        } else if (strcmp(fk, "entity") == 0 && p.kind == GTOK_STRING) {
-                            n->entity = strdup(p.str_val);
-                            gparse_advance(&p);
-                        }
-                        else
-                            gparse_advance(&p); /* skip unknown value */
-
-                        free(fk);
-                        if (p.kind == GTOK_COMMA) gparse_advance(&p);
-                    }
-
-                    /* Advance past closing } */
-                    if (p.kind == GTOK_RBRACE) gparse_advance(&p);
-                    cnt++;
-                    if (p.kind == GTOK_COMMA) gparse_advance(&p);
-                }
-                chain->node_count = cnt;
-            } else {
+        } else if (strcmp(key, "root") == 0) {
+            if (p.kind == GTOK_LBRACE) {
+                chain->root = parse_node(&p);
+            } else if (p.kind == GTOK_NULL) {
+                chain->root = NULL;
                 gparse_advance(&p);
             }
+        } else if (strcmp(key, "gates") == 0 && p.kind == GTOK_LBRACK) {
+            /* Legacy flat array format */
+            gparse_advance(&p); /* skip [ */
+
+            size_t cap = 16, cnt = 0;
+            bs_gate_node_t** nodes = (bs_gate_node_t**)calloc(cap, sizeof(bs_gate_node_t*));
+
+            while (p.kind == GTOK_LBRACE) {
+                if (cnt >= cap) {
+                    cap *= 2;
+                    bs_gate_node_t** new_nodes = (bs_gate_node_t**)realloc(nodes, cap * sizeof(bs_gate_node_t*));
+                    if (!new_nodes) break;
+                    nodes = new_nodes;
+                }
+                nodes[cnt++] = parse_node(&p);
+                if (p.kind == GTOK_COMMA) gparse_advance(&p);
+            }
+
+            if (p.kind != GTOK_RBRACK) { /* skip trailing */ }
+            if (p.kind != GTOK_EOF) gparse_advance(&p);
+
+            chain->root = legacy_gates_to_dag(nodes, cnt);
+            /* Note: legacy_gates_to_dag takes ownership of the nodes array */
         } else {
-            /* Skip unknown key's value */
+            /* Skip unknown field */
             if (p.kind == GTOK_LBRACE || p.kind == GTOK_LBRACK) {
                 int depth = 1;
                 while (depth > 0 && p.kind != GTOK_EOF && p.kind != GTOK_ERROR) {
@@ -579,6 +647,7 @@ int bs_gate_chain_from_json(const char* json, bs_gate_chain_t** out)
                     if (p.kind == GTOK_LBRACE || p.kind == GTOK_LBRACK) depth++;
                     if (p.kind == GTOK_RBRACE || p.kind == GTOK_RBRACK) depth--;
                 }
+                if (p.kind != GTOK_EOF) gparse_advance(&p);
             } else {
                 gparse_advance(&p);
             }
@@ -588,75 +657,59 @@ int bs_gate_chain_from_json(const char* json, bs_gate_chain_t** out)
         if (p.kind == GTOK_COMMA) gparse_advance(&p);
     }
 
-    free(p.str_val);
+    gparse_free(&p);
+
     *out = chain;
-
-    /* ── OPT-08: Rebuild map after deserializing all nodes ── */
-    if (chain->node_count > 0) {
-        bs_gate_map_create(&chain->map, chain->node_count * 2);
-        for (size_t i = 0; i < chain->node_count; i++) {
-            if (chain->nodes[i].stable_key) {
-                bs_gate_map_insert(chain->map, chain->nodes[i].stable_key, i);
-            }
-        }
-    }
-
     return 0;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
- * bs_gate_map — FNV-1a hash + open addressing
+ * Hash map (FNV-1a + open addressing, pointer-based)
  * ══════════════════════════════════════════════════════════════════════ */
 
-/* Compute next power of 2 >= n */
+#define kMapTombstone ((char*)1)
+
+static uint64_t fnv1a_hash(const char* key)
+{
+    uint64_t h = 14695981039346656037ULL;
+    while (*key) { h ^= (unsigned char)*key++; h *= 1099511628211ULL; }
+    return h;
+}
+
+static inline bool SLOT_EMPTY(const bs_gate_map_slot_t s)
+{
+    return s.stable_key == NULL;
+}
+static inline bool SLOT_TOMB(const bs_gate_map_slot_t s)
+{
+    return s.stable_key == kMapTombstone;
+}
+
 static size_t next_pow2(size_t n)
 {
-    if (n == 0) return 1;
-    size_t v = 1;
-    while (v < n) v <<= 1;
-    return v;
+    size_t p = 1;
+    while (p < n) p <<= 1;
+    return p;
 }
-
-/* FNV-1a 64-bit hash of a string */
-static uint64_t fnv1a_hash(const char* s)
-{
-    uint64_t hash = 14695981039346656037ULL;
-    while (*s) {
-        hash ^= (uint64_t)(unsigned char)*s;
-        hash *= 1099511628211ULL;
-        s++;
-    }
-    return hash;
-}
-
-/* SLOT_EMPTY sentinel: empty slot (slot->stable_key == NULL) */
-/* SLOT_TOMB: tombstone marker (use a static const sentinel ptr) */
-static const char kMapTombstone[1] = {0};
-
-#define SLOT_EMPTY(s)   ((s).stable_key == NULL)
-#define SLOT_TOMB(s)    ((s).stable_key == kMapTombstone)
 
 static bs_gate_map_slot_t* map_find_slot(bs_gate_map_t* map,
                                           const char* stable_key,
                                           uint64_t hash)
 {
-    size_t idx = (size_t)(hash & (map->capacity - 1));
+    size_t mask = map->capacity - 1;
+    size_t idx = (size_t)(hash & mask);
     bs_gate_map_slot_t* tombstone = NULL;
 
     for (size_t i = 0; i < map->capacity; i++) {
         bs_gate_map_slot_t* slot = &map->slots[idx];
-        if (SLOT_EMPTY(*slot)) {
-            return tombstone ? tombstone : slot;
-        }
+        if (SLOT_EMPTY(*slot)) return tombstone ? tombstone : slot;
         if (SLOT_TOMB(*slot)) {
             if (!tombstone) tombstone = slot;
-            idx = (idx + 1) & (map->capacity - 1);
+            idx = (idx + 1) & mask;
             continue;
         }
-        if (strcmp(slot->stable_key, stable_key) == 0) {
-            return slot;
-        }
-        idx = (idx + 1) & (map->capacity - 1);
+        if (strcmp(slot->stable_key, stable_key) == 0) return slot;
+        idx = (idx + 1) & mask;
     }
     return tombstone;
 }
@@ -715,7 +768,7 @@ int bs_gate_map_rebuild(bs_gate_map_t* map)
         if (old_slots[i].stable_key &&
             old_slots[i].stable_key != kMapTombstone) {
             bs_gate_map_insert(map, old_slots[i].stable_key,
-                               old_slots[i].node_index);
+                               old_slots[i].node_ptr);
             free(old_slots[i].stable_key);
         }
     }
@@ -724,11 +777,10 @@ int bs_gate_map_rebuild(bs_gate_map_t* map)
 }
 
 int bs_gate_map_insert(bs_gate_map_t* map, const char* stable_key,
-                        size_t node_index)
+                        bs_gate_node_t* node_ptr)
 {
     if (!map || !stable_key) return -1;
 
-    /* Rebuild if load factor > 0.7 */
     if (map->count + 1 > map->capacity * 7 / 10) {
         if (bs_gate_map_rebuild(map) != 0) return -1;
     }
@@ -738,144 +790,104 @@ int bs_gate_map_insert(bs_gate_map_t* map, const char* stable_key,
     if (!slot) return -1;
 
     if (!SLOT_EMPTY(*slot) && !SLOT_TOMB(*slot)) {
-        /* Overwrite existing: free old key */
         free(slot->stable_key);
     } else {
         map->count++;
     }
     slot->stable_key = strdup(stable_key);
-    slot->node_index = node_index;
+    slot->node_ptr = node_ptr;
     return 0;
 }
 
 int bs_gate_map_lookup(const bs_gate_map_t* map, const char* stable_key,
-                        size_t* out_index)
+                        bs_gate_node_t** out_ptr)
 {
-    if (!map || !stable_key || !out_index) return -1;
+    if (!map || !stable_key || !out_ptr) return -1;
     if (map->count == 0) return -1;
 
     uint64_t hash = fnv1a_hash(stable_key);
-    size_t idx = (size_t)(hash & (map->capacity - 1));
+    size_t mask = map->capacity - 1;
+    size_t idx = (size_t)(hash & mask);
 
     for (size_t i = 0; i < map->capacity; i++) {
         const bs_gate_map_slot_t* slot = &map->slots[idx];
         if (SLOT_EMPTY(*slot)) return -1;
         if (!SLOT_TOMB(*slot) && strcmp(slot->stable_key, stable_key) == 0) {
-            *out_index = slot->node_index;
+            *out_ptr = slot->node_ptr;
             return 0;
         }
-        idx = (idx + 1) & (map->capacity - 1);
+        idx = (idx + 1) & mask;
     }
     return -1;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
- * bs_gate_chain_upsert — idempotent write via stable_key
+ * bs_gate_chain_find — lookup by stable_key
  * ══════════════════════════════════════════════════════════════════════ */
-int bs_gate_chain_upsert(bs_gate_chain_t* chain, const bs_gate_node_t* node,
-                          size_t* out_index)
+bs_gate_node_t* bs_gate_chain_find(bs_gate_chain_t* chain, const char* stable_key)
 {
-    if (!chain || !node) return -1;
+    if (!chain || !stable_key || !chain->map) return NULL;
+    bs_gate_node_t* ptr = NULL;
+    if (bs_gate_map_lookup(chain->map, stable_key, &ptr) == 0)
+        return ptr;
+    return NULL;
+}
 
-    /* Lazy-init map */
-    if (!chain->map && chain->node_count > 0) {
-        bs_gate_map_create(&chain->map, chain->node_count * 2);
-        for (size_t i = 0; i < chain->node_count; i++) {
-            if (chain->nodes[i].stable_key) {
-                bs_gate_map_insert(chain->map, chain->nodes[i].stable_key, i);
-            }
+/* ══════════════════════════════════════════════════════════════════════
+ * bs_gate_chain_upsert_node — idempotent create or overwrite
+ * ══════════════════════════════════════════════════════════════════════ */
+static void copy_node_fields(bs_gate_node_t* dst, const bs_gate_node_t* src)
+{
+    free(dst->type);     dst->type     = NULL;
+    free(dst->id);       dst->id       = NULL;
+    free(dst->field_key); dst->field_key = NULL;
+    free(dst->op);       dst->op       = NULL;
+    free(dst->value);    dst->value    = NULL;
+    free(dst->stable_key); dst->stable_key = NULL;
+    free(dst->sub_category); dst->sub_category = NULL;
+    free(dst->domain);   dst->domain   = NULL;
+    free(dst->entity);   dst->entity   = NULL;
+
+    if (src->type)       dst->type       = strdup(src->type);
+    if (src->id)         dst->id         = strdup(src->id);
+    if (src->field_key)  dst->field_key  = strdup(src->field_key);
+    if (src->op)         dst->op         = strdup(src->op);
+    if (src->value)      dst->value      = strdup(src->value);
+    if (src->stable_key) dst->stable_key = strdup(src->stable_key);
+    if (src->sub_category) dst->sub_category = strdup(src->sub_category);
+    if (src->domain)     dst->domain     = strdup(src->domain);
+    if (src->entity)     dst->entity     = strdup(src->entity);
+    dst->layer = src->layer;
+}
+
+bs_gate_node_t* bs_gate_chain_upsert_node(bs_gate_chain_t* chain,
+                                           const bs_gate_node_t* src)
+{
+    if (!chain || !src) return NULL;
+
+    if (!chain->map) {
+        bs_gate_map_create(&chain->map, 16);
+    }
+
+    if (src->stable_key) {
+        bs_gate_node_t* existing = NULL;
+        if (bs_gate_map_lookup(chain->map, src->stable_key, &existing) == 0 && existing) {
+            copy_node_fields(existing, src);
+            return existing;
         }
     }
 
-    /* Try lookup by stable_key */
-    if (node->stable_key && chain->map) {
-        size_t existing_idx;
-        if (bs_gate_map_lookup(chain->map, node->stable_key, &existing_idx) == 0) {
-            /* Overwrite existing node at existing_idx */
-            bs_gate_node_t* dst = &chain->nodes[existing_idx];
-            /* Free old fields before overwrite */
-            free(dst->type); free(dst->id); free(dst->field_key);
-            free(dst->op); free(dst->value);
-            free(dst->stable_key); free(dst->sub_category);
-            free(dst->domain); free(dst->entity);
-            if (dst->child_ids) {
-                for (size_t j = 0; j < dst->child_count; j++) free(dst->child_ids[j]);
-                free(dst->child_ids);
-            }
-            if (dst->do_ids) {
-                for (size_t j = 0; j < dst->do_count; j++) free(dst->do_ids[j]);
-                free(dst->do_ids);
-            }
-            /* Copy new fields */
-            memset(dst, 0, sizeof(*dst));
-            dst->type = node->type ? strdup(node->type) : NULL;
-            dst->id = node->id ? strdup(node->id) : NULL;
-            dst->field_key = node->field_key ? strdup(node->field_key) : NULL;
-            dst->op = node->op ? strdup(node->op) : NULL;
-            dst->value = node->value ? strdup(node->value) : NULL;
-            dst->stable_key = node->stable_key ? strdup(node->stable_key) : NULL;
-            dst->layer = node->layer;
-            dst->sub_category = node->sub_category ? strdup(node->sub_category) : NULL;
-            dst->domain = node->domain ? strdup(node->domain) : NULL;
-            dst->entity = node->entity ? strdup(node->entity) : NULL;
-            if (node->child_count > 0 && node->child_ids) {
-                dst->child_count = node->child_count;
-                dst->child_ids = (char**)malloc(node->child_count * sizeof(char*));
-                for (size_t j = 0; j < node->child_count; j++)
-                    dst->child_ids[j] = strdup(node->child_ids[j]);
-            }
-            if (node->do_count > 0 && node->do_ids) {
-                dst->do_count = node->do_count;
-                dst->do_ids = (char**)malloc(node->do_count * sizeof(char*));
-                for (size_t j = 0; j < node->do_count; j++)
-                    dst->do_ids[j] = strdup(node->do_ids[j]);
-            }
-            if (out_index) *out_index = existing_idx;
-            return 0;
-        }
+    bs_gate_node_t* new_node = (bs_gate_node_t*)calloc(1, sizeof(bs_gate_node_t));
+    if (!new_node) return NULL;
+    copy_node_fields(new_node, src);
+
+    if (new_node->stable_key) {
+        bs_gate_map_insert(chain->map, new_node->stable_key, new_node);
     }
 
-    /* Append new node at end */
-    size_t new_count = chain->node_count + 1;
-    bs_gate_node_t* new_nodes = (bs_gate_node_t*)realloc(
-        chain->nodes, new_count * sizeof(bs_gate_node_t));
-    if (!new_nodes) return -1;
-    chain->nodes = new_nodes;
-
-    bs_gate_node_t* dst = &chain->nodes[chain->node_count];
-    memset(dst, 0, sizeof(*dst));
-    dst->type = node->type ? strdup(node->type) : NULL;
-    dst->id = node->id ? strdup(node->id) : NULL;
-    dst->field_key = node->field_key ? strdup(node->field_key) : NULL;
-    dst->op = node->op ? strdup(node->op) : NULL;
-    dst->value = node->value ? strdup(node->value) : NULL;
-    dst->stable_key = node->stable_key ? strdup(node->stable_key) : NULL;
-    dst->layer = node->layer;
-    dst->sub_category = node->sub_category ? strdup(node->sub_category) : NULL;
-    dst->domain = node->domain ? strdup(node->domain) : NULL;
-    dst->entity = node->entity ? strdup(node->entity) : NULL;
-    if (node->child_count > 0 && node->child_ids) {
-        dst->child_count = node->child_count;
-        dst->child_ids = (char**)malloc(node->child_count * sizeof(char*));
-        for (size_t j = 0; j < node->child_count; j++)
-            dst->child_ids[j] = strdup(node->child_ids[j]);
-    }
-    if (node->do_count > 0 && node->do_ids) {
-        dst->do_count = node->do_count;
-        dst->do_ids = (char**)malloc(node->do_count * sizeof(char*));
-        for (size_t j = 0; j < node->do_count; j++)
-            dst->do_ids[j] = strdup(node->do_ids[j]);
+    if (!chain->root) {
+        chain->root = new_node;
     }
 
-    size_t new_idx = chain->node_count;
-    chain->node_count = new_count;
-
-    /* Insert into map */
-    if (dst->stable_key) {
-        if (!chain->map) bs_gate_map_create(&chain->map, 16);
-        if (chain->map) bs_gate_map_insert(chain->map, dst->stable_key, new_idx);
-    }
-
-    if (out_index) *out_index = new_idx;
-    return 0;
+    return new_node;
 }

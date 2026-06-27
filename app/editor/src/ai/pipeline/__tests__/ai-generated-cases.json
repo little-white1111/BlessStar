@@ -1,0 +1,1423 @@
+{
+  "generator": "tools/ai/test-gen/generate_tests.py",
+  "generatedAt": "",
+  "domains": [
+    "livedesign",
+    "expense",
+    "permission"
+  ],
+  "totalCases": 63,
+  "description": "AI 管线五环节自动化测试集 — 对接 pipeline-e2e.test.ts",
+  "testCases": [
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-LIST-01",
+      "input": "当前有哪些配置",
+      "scenario": "自动生成: LIST livedesign 全部配置",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "list_configs"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "LIST",
+        "所有配置项"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · 10 字段"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-READ-01",
+      "input": "查看房间号",
+      "scenario": "自动生成: READ 房间号 → livedesign.room.room_id",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "房间号"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.room.room_id"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-READ-02",
+      "input": "查看最大重连次数",
+      "scenario": "自动生成: READ 最大重连次数 → livedesign.connection.max_reconnect",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "最大重连次数"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.connection.max_reconnect"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-READ-03",
+      "input": "查看心跳间隔",
+      "scenario": "自动生成: READ 心跳间隔 → livedesign.connection.heartbeat_interval_ms",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "心跳间隔"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.connection.heartbeat_interval_ms"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-READ-04",
+      "input": "查看弹幕字号",
+      "scenario": "自动生成: READ 弹幕字号 → livedesign.danmaku.font_size",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "弹幕字号"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.danmaku.font_size"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-READ-05",
+      "input": "查看弹幕颜色",
+      "scenario": "自动生成: READ 弹幕颜色 → livedesign.danmaku.font_color",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "弹幕颜色"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.danmaku.font_color"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-01",
+      "input": "把房间号改成20082",
+      "scenario": "自动生成: WRITE 房间号 → livedesign.room.room_id",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "房间号"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "房间号"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.room.room_id · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-02",
+      "input": "把最大重连次数改成10",
+      "scenario": "自动生成: WRITE 最大重连次数 → livedesign.connection.max_reconnect",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "最大重连次数"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "最大重连次数"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.connection.max_reconnect · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-03",
+      "input": "把心跳间隔改成60000",
+      "scenario": "自动生成: WRITE 心跳间隔 → livedesign.connection.heartbeat_interval_ms",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "心跳间隔"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "心跳间隔"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.connection.heartbeat_interval_ms · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-04",
+      "input": "把弹幕字号改成28",
+      "scenario": "自动生成: WRITE 弹幕字号 → livedesign.danmaku.font_size",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "弹幕字号"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "弹幕字号"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.danmaku.font_size · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-05",
+      "input": "把弹幕颜色改成测试值",
+      "scenario": "自动生成: WRITE 弹幕颜色 → livedesign.danmaku.font_color",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "弹幕颜色"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "弹幕颜色"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.danmaku.font_color · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-06",
+      "input": "把屏蔽点赞改成true",
+      "scenario": "自动生成: WRITE 屏蔽点赞 → livedesign.danmaku.block_like",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "屏蔽点赞"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "屏蔽点赞"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.danmaku.block_like · type=bool"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-07",
+      "input": "把最低用户等级改成0",
+      "scenario": "自动生成: WRITE 最低用户等级 → livedesign.danmaku.min_user_level",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "最低用户等级"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "最低用户等级"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.danmaku.min_user_level · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-08",
+      "input": "把窗口宽度改成2400",
+      "scenario": "自动生成: WRITE 窗口宽度 → livedesign.display.window_width",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "窗口宽度"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "窗口宽度"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.display.window_width · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-09",
+      "input": "把窗口高度改成1600",
+      "scenario": "自动生成: WRITE 窗口高度 → livedesign.display.window_height",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "窗口高度"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "窗口高度"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.display.window_height · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-WRITE-10",
+      "input": "把窗口置顶改成true",
+      "scenario": "自动生成: WRITE 窗口置顶 → livedesign.display.window_ontop",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "窗口置顶"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "窗口置顶"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · configKey=livedesign.display.window_ontop · type=bool"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-GATE-01",
+      "input": "给room_id加个校验，房间号必须为正整数",
+      "scenario": "自动生成: GATE room_id_positive → livedesign.room.room_id gte 1",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · gate_id=room_id_positive · gte(livedesign.room.room_id, 1)"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-GATE-02",
+      "input": "给font_size加个校验，弹幕字号范围 12-32",
+      "scenario": "自动生成: GATE font_size_range → livedesign.danmaku.font_size range 12-32",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · gate_id=font_size_range · range(livedesign.danmaku.font_size, 12-32)"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-GATE-03",
+      "input": "给min_user_level加个校验，用户等级上限 80",
+      "scenario": "自动生成: GATE min_user_level_max → livedesign.danmaku.min_user_level lte 80",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · gate_id=min_user_level_max · lte(livedesign.danmaku.min_user_level, 80)"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-MIXED-01",
+      "input": "当前有哪些配置，帮我把房间号改成42，gate是什么",
+      "scenario": "自动生成: MIXED LIST+WRITE+CHAT (livedesign)",
+      "expectTools": true,
+      "minToolCalls": 3,
+      "mustIncludeTools": [
+        "list_configs",
+        "write_config_value"
+      ],
+      "intentCount": 3,
+      "expectChatReply": true,
+      "mustContainPlanKeywords": [
+        "LIST",
+        "WRITE"
+      ],
+      "mustContainResultKeywords": [
+        "已列出",
+        "已将",
+        "门禁"
+      ],
+      "mustNotContainMarkers": [
+        "证据不足",
+        "无 Registry"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · per-item is_chat 分流验证"
+    },
+    {
+      "id": "AI-TC-AUTO-LIVEDESIGN-L1UNR-01",
+      "input": "把弹幕字体大小改成20",
+      "scenario": "自动生成: L1_UNRESOLVED 未命中 (livedesign)",
+      "expectTools": false,
+      "minToolCalls": 0,
+      "mustIncludeTools": [],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [],
+      "mustContainResultKeywords": [
+        "未找到"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=livedesign · L1 三步兜底全失败 → l1_unresolved 回问"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-LIST-01",
+      "input": "当前有哪些配置",
+      "scenario": "自动生成: LIST expense 全部配置",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "list_configs"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "LIST",
+        "所有配置项"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · 10 字段"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-READ-01",
+      "input": "查看审批金额阈值",
+      "scenario": "自动生成: READ 审批金额阈值 → expense.reimburse.max_amount",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "审批金额阈值"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.max_amount"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-READ-02",
+      "input": "查看最低报销金额",
+      "scenario": "自动生成: READ 最低报销金额 → expense.reimburse.min_amount",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "最低报销金额"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.min_amount"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-READ-03",
+      "input": "查看税率",
+      "scenario": "自动生成: READ 税率 → expense.reimburse.tax_rate",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "税率"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.tax_rate"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-READ-04",
+      "input": "查看审批人",
+      "scenario": "自动生成: READ 审批人 → expense.reimburse.approver",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "审批人"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.approver"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-READ-05",
+      "input": "查看部门代码",
+      "scenario": "自动生成: READ 部门代码 → expense.reimburse.dept_code",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "部门代码"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.dept_code"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-01",
+      "input": "把审批金额阈值改成20000",
+      "scenario": "自动生成: WRITE 审批金额阈值 → expense.reimburse.max_amount",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "审批金额阈值"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "审批金额阈值"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.max_amount · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-02",
+      "input": "把最低报销金额改成100",
+      "scenario": "自动生成: WRITE 最低报销金额 → expense.reimburse.min_amount",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "最低报销金额"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "最低报销金额"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.min_amount · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-03",
+      "input": "把税率改成0.26",
+      "scenario": "自动生成: WRITE 税率 → expense.reimburse.tax_rate",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "税率"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "税率"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.tax_rate · type=double"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-04",
+      "input": "把审批人改成测试值",
+      "scenario": "自动生成: WRITE 审批人 → expense.reimburse.approver",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "审批人"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "审批人"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.approver · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-05",
+      "input": "把部门代码改成测试值",
+      "scenario": "自动生成: WRITE 部门代码 → expense.reimburse.dept_code",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "部门代码"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "部门代码"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.dept_code · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-06",
+      "input": "把货币类型改成测试值",
+      "scenario": "自动生成: WRITE 货币类型 → expense.reimburse.currency",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "货币类型"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "货币类型"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.currency · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-07",
+      "input": "把需要发票改成false",
+      "scenario": "自动生成: WRITE 需要发票 → expense.reimburse.require_invoice",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "需要发票"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "需要发票"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.require_invoice · type=bool"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-08",
+      "input": "把自动审批改成true",
+      "scenario": "自动生成: WRITE 自动审批 → expense.reimburse.auto_approve",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "自动审批"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "自动审批"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.auto_approve · type=bool"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-09",
+      "input": "把报销有效期改成60",
+      "scenario": "自动生成: WRITE 报销有效期 → expense.reimburse.max_days",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "报销有效期"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "报销有效期"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.max_days · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-WRITE-10",
+      "input": "把通知邮箱改成测试值",
+      "scenario": "自动生成: WRITE 通知邮箱 → expense.reimburse.notify_email",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "通知邮箱"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "通知邮箱"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · configKey=expense.reimburse.notify_email · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-GATE-01",
+      "input": "给max_amount加个校验，单笔审批上限",
+      "scenario": "自动生成: GATE max_amount_upper → expense.reimburse.max_amount lte 1000000",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · gate_id=max_amount_upper · lte(expense.reimburse.max_amount, 1000000)"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-GATE-02",
+      "input": "给tax_rate加个校验，税率范围 0-1",
+      "scenario": "自动生成: GATE tax_rate_range → expense.reimburse.tax_rate range 0.0-1.0",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · gate_id=tax_rate_range · range(expense.reimburse.tax_rate, 0.0-1.0)"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-GATE-03",
+      "input": "给max_days加个校验，有效期 1-365 天",
+      "scenario": "自动生成: GATE max_days_range → expense.reimburse.max_days range 1-365",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · gate_id=max_days_range · range(expense.reimburse.max_days, 1-365)"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-MIXED-01",
+      "input": "当前有哪些配置，帮我把审批金额阈值改成42，gate是什么",
+      "scenario": "自动生成: MIXED LIST+WRITE+CHAT (expense)",
+      "expectTools": true,
+      "minToolCalls": 3,
+      "mustIncludeTools": [
+        "list_configs",
+        "write_config_value"
+      ],
+      "intentCount": 3,
+      "expectChatReply": true,
+      "mustContainPlanKeywords": [
+        "LIST",
+        "WRITE"
+      ],
+      "mustContainResultKeywords": [
+        "已列出",
+        "已将",
+        "门禁"
+      ],
+      "mustNotContainMarkers": [
+        "证据不足",
+        "无 Registry"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · per-item is_chat 分流验证"
+    },
+    {
+      "id": "AI-TC-AUTO-EXPENSE-L1UNR-01",
+      "input": "把弹幕字体大小改成20",
+      "scenario": "自动生成: L1_UNRESOLVED 未命中 (expense)",
+      "expectTools": false,
+      "minToolCalls": 0,
+      "mustIncludeTools": [],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [],
+      "mustContainResultKeywords": [
+        "未找到"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=expense · L1 三步兜底全失败 → l1_unresolved 回问"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-LIST-01",
+      "input": "当前有哪些配置",
+      "scenario": "自动生成: LIST permission 全部配置",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "list_configs"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "LIST",
+        "所有配置项"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · 10 字段"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-READ-01",
+      "input": "查看管理员角色名",
+      "scenario": "自动生成: READ 管理员角色名 → permission.rbac.admin_role",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "管理员角色名"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.admin_role"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-READ-02",
+      "input": "查看默认角色",
+      "scenario": "自动生成: READ 默认角色 → permission.rbac.default_role",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "默认角色"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.default_role"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-READ-03",
+      "input": "查看会话超时",
+      "scenario": "自动生成: READ 会话超时 → permission.rbac.session_ttl",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "会话超时"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.session_ttl"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-READ-04",
+      "input": "查看需要MFA",
+      "scenario": "自动生成: READ 需要MFA → permission.rbac.mfa_required",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "需要MFA"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.mfa_required"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-READ-05",
+      "input": "查看最大登录尝试",
+      "scenario": "自动生成: READ 最大登录尝试 → permission.rbac.max_failed_attempts",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "read_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "READ",
+        "最大登录尝试"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.max_failed_attempts"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-01",
+      "input": "把管理员角色名改成测试值",
+      "scenario": "自动生成: WRITE 管理员角色名 → permission.rbac.admin_role",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "管理员角色名"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "管理员角色名"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.admin_role · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-02",
+      "input": "把默认角色改成测试值",
+      "scenario": "自动生成: WRITE 默认角色 → permission.rbac.default_role",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "默认角色"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "默认角色"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.default_role · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-03",
+      "input": "把会话超时改成7200",
+      "scenario": "自动生成: WRITE 会话超时 → permission.rbac.session_ttl",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "会话超时"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "会话超时"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.session_ttl · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-04",
+      "input": "把需要MFA改成true",
+      "scenario": "自动生成: WRITE 需要MFA → permission.rbac.mfa_required",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "需要MFA"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "需要MFA"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.mfa_required · type=bool"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-05",
+      "input": "把最大登录尝试改成10",
+      "scenario": "自动生成: WRITE 最大登录尝试 → permission.rbac.max_failed_attempts",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "最大登录尝试"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "最大登录尝试"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.max_failed_attempts · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-06",
+      "input": "把锁定时间改成30",
+      "scenario": "自动生成: WRITE 锁定时间 → permission.rbac.lockout_minutes",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "锁定时间"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "锁定时间"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.lockout_minutes · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-07",
+      "input": "把密码最小长度改成16",
+      "scenario": "自动生成: WRITE 密码最小长度 → permission.rbac.password_min_len",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "密码最小长度"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "密码最小长度"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.password_min_len · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-08",
+      "input": "把需要大写字母改成false",
+      "scenario": "自动生成: WRITE 需要大写字母 → permission.rbac.require_uppercase",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "需要大写字母"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "需要大写字母"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.require_uppercase · type=bool"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-09",
+      "input": "把Token刷新间隔改成1800",
+      "scenario": "自动生成: WRITE Token刷新间隔 → permission.rbac.token_refresh_sec",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "Token刷新间隔"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "Token刷新间隔"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.token_refresh_sec · type=int32"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-WRITE-10",
+      "input": "把IP白名单改成测试值",
+      "scenario": "自动生成: WRITE IP白名单 → permission.rbac.ip_whitelist",
+      "expectTools": true,
+      "minToolCalls": 2,
+      "mustIncludeTools": [
+        "write_config_value"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "WRITE",
+        "IP白名单"
+      ],
+      "mustContainResultKeywords": [
+        "已将",
+        "IP白名单"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · configKey=permission.rbac.ip_whitelist · type=string"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-GATE-01",
+      "input": "给session_ttl加个校验，会话超时至少 60 秒",
+      "scenario": "自动生成: GATE session_ttl_min → permission.rbac.session_ttl gte 60",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · gate_id=session_ttl_min · gte(permission.rbac.session_ttl, 60)"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-GATE-02",
+      "input": "给max_failed_attempts加个校验，登录尝试 1-20 次",
+      "scenario": "自动生成: GATE max_attempts_range → permission.rbac.max_failed_attempts range 1-20",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · gate_id=max_attempts_range · range(permission.rbac.max_failed_attempts, 1-20)"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-GATE-03",
+      "input": "给password_min_len加个校验，密码最小长度 >= 6",
+      "scenario": "自动生成: GATE password_min_len_min → permission.rbac.password_min_len gte 6",
+      "expectTools": true,
+      "minToolCalls": 1,
+      "mustIncludeTools": [
+        "create_gate_chain"
+      ],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [
+        "CREATE_RULE_CHAIN"
+      ],
+      "mustContainResultKeywords": [],
+      "mustNotContainMarkers": [
+        "证据不足"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · gate_id=password_min_len_min · gte(permission.rbac.password_min_len, 6)"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-MIXED-01",
+      "input": "当前有哪些配置，帮我把管理员角色名改成42，gate是什么",
+      "scenario": "自动生成: MIXED LIST+WRITE+CHAT (permission)",
+      "expectTools": true,
+      "minToolCalls": 3,
+      "mustIncludeTools": [
+        "list_configs",
+        "write_config_value"
+      ],
+      "intentCount": 3,
+      "expectChatReply": true,
+      "mustContainPlanKeywords": [
+        "LIST",
+        "WRITE"
+      ],
+      "mustContainResultKeywords": [
+        "已列出",
+        "已将",
+        "门禁"
+      ],
+      "mustNotContainMarkers": [
+        "证据不足",
+        "无 Registry"
+      ],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · per-item is_chat 分流验证"
+    },
+    {
+      "id": "AI-TC-AUTO-PERMISSION-L1UNR-01",
+      "input": "把弹幕字体大小改成20",
+      "scenario": "自动生成: L1_UNRESOLVED 未命中 (permission)",
+      "expectTools": false,
+      "minToolCalls": 0,
+      "mustIncludeTools": [],
+      "intentCount": 1,
+      "expectChatReply": false,
+      "mustContainPlanKeywords": [],
+      "mustContainResultKeywords": [
+        "未找到"
+      ],
+      "mustNotContainMarkers": [],
+      "manualOnly": false,
+      "note": "自动生成 · domain=permission · L1 三步兜底全失败 → l1_unresolved 回问"
+    }
+  ]
+}

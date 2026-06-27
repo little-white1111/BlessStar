@@ -35,6 +35,17 @@ public:
         return false;
     }
 
+    bool ExecuteQuery(const char* /*sql*/,
+                      const std::vector<std::string>& /*params*/,
+                      std::vector<std::vector<std::string>>* /*out_rows*/,
+                      std::vector<std::string>* /*out_cols*/,
+                      std::string* out_error) override
+    {
+        if (out_error)
+            *out_error = "null driver: DB not configured";
+        return false;
+    }
+
     const char* DriverName() const override { return "null"; }
 };
 

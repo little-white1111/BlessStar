@@ -18,7 +18,7 @@ typedef struct bs_agent_index_config {
     bool        include_gate_chain;/* 是否导出 Gate 约束 */
     bool        include_biz_index; /* ★ OPT-08: 是否导出 biz_semantic_index.json */
     const char* format;            /* 输出格式："json"（默认）或 "compact"（管道分隔） */
-|} bs_agent_index_config_t;
+} bs_agent_index_config_t;
 
 /* 完整导出：Schema + Gate */
 int bs_agent_index_export(
@@ -32,6 +32,19 @@ int bs_agent_index_export_schema_only(
     bs_schema_registry_t*  reg,
     const bs_agent_index_config_t* config
 );
+
+/**
+ * bs_agent_index_needs_rebuild() — 专题五 C1: 检查索引是否需要重建
+ * @reg:       Schema registry
+ * @config:    索引配置
+ * @return:    1 = 需要重建，0 = 无需重建（指纹匹配），-1 = 错误
+ *
+ * 通过对比 Schema registry 的当前哈希指纹与上一次写入的
+ * biz_index_fingerprint.txt 判断是否需要重建。
+ */
+int bs_agent_index_needs_rebuild(
+    bs_schema_registry_t*  reg,
+    const bs_agent_index_config_t* config);
 
 #ifdef __cplusplus
 }
