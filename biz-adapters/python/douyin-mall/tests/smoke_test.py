@@ -10,11 +10,15 @@ no real config source is available.
 
 import sys
 import os
+from contextlib import nullcontext
 
 # Add the parent directory so we can import the provider package
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from provider.blessstar_provider import provide_blessstar_adapters
+
+# Shared dummy context for smoke test calls
+_CTX = nullcontext()
 
 
 def test_smoke_nil_reader_no_panic():
@@ -23,26 +27,26 @@ def test_smoke_nil_reader_no_panic():
     assert adapters is not None, "provide_blessstar_adapters(None) returned None"
     print("✅ blessstar_provider: Adapters created with None reader")
 
-    # Call one method per domain
-    assert adapters.product_config.status_values() is not None
+    # Call one method per domain with a dummy context
+    assert adapters.product_config.status_values(_CTX) is not None
     print("✅ ProductConfig.status_values() OK")
 
-    assert adapters.cors_config.allowed_origins() is not None
+    assert adapters.cors_config.allowed_origins(_CTX) is not None
     print("✅ CorsConfig.allowed_origins() OK")
 
-    assert adapters.payment_config.type_values() is not None
+    assert adapters.payment_config.type_values(_CTX) is not None
     print("✅ PaymentConfig.type_values() OK")
 
-    assert adapters.user_config.role_values() is not None
+    assert adapters.user_config.role_values(_CTX) is not None
     print("✅ UserConfig.role_values() OK")
 
-    assert adapters.order_config.status_values() is not None
+    assert adapters.order_config.status_values(_CTX) is not None
     print("✅ OrderConfig.status_values() OK")
 
-    assert adapters.auth_config.jwt_token_expiry_seconds() is not None
+    assert adapters.auth_config.jwt_token_expiry_seconds(_CTX) is not None
     print("✅ AuthConfig.jwt_token_expiry_seconds() OK")
 
-    assert adapters.review_config.rating_min() is not None
+    assert adapters.review_config.rating_min(_CTX) is not None
     print("✅ ReviewConfig.rating_min() OK")
 
     print("🎉 All smoke tests passed!")
