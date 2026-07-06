@@ -289,8 +289,10 @@ func runCheckMode(allGenerated map[string][]*backend.File, bizID, outputDir stri
 			src := filepath.Join(existingDir, d)
 			if _, err := os.Stat(src); err == nil {
 				dst := filepath.Join(tmpLangDir, d)
-				// cp -r works on CI (ubuntu); on Windows it's best-effort.
-				if err := exec.Command("cp", "-r", src, dst).Run(); err != nil {
+				// Use src/. dst/ to copy the *contents* of src/ into dst/,
+				// not the directory itself. This matters when dst/ already
+				// exists (e.g. Java's src/ is created by codegen).
+				if err := exec.Command("cp", "-r", src+string(filepath.Separator)+".", dst+string(filepath.Separator)).Run(); err != nil {
 					log.Printf("⚠️  [%s] Failed to copy non-generated dir %s: %v", lang, d, err)
 				}
 			}
