@@ -278,12 +278,24 @@ func runCheckMode(allGenerated map[string][]*backend.File, bizID, outputDir stri
 			os.Exit(1)
 		}
 
-		// git diff --no-index doesn't support pathspec excludes, so instead
-		// we diff the tmp dir (generated) as the base and compare existing to it.
-		// This way, extra files in existing/ (like hand-written smoke tests)
-		// don't cause false positives.
+		// git diff --no-index doesn't support pathspec excludes, so we copy
+		// non-generated directories (e.g. tests/, src/test/) from existing to
+		// tmp before comparing. This way, hand-written smoke test files in
+		// existing/ that are not produced by the code generator won't cause
+		// false positives.
+		nonGeneratedDirs := []string{"tests", "src"}
 		tmpLangDir := filepath.Join(tmpDir, lang, bizID)
-		cmd := exec.Command("git", "diff", "--no-index", "--exit-code", tmpLangDir, existingDir)
+		for _, d := range nonGeneratedDirs {
+			src := filepath.Join(existingDir, d)
+			if _, err := os.Stat(src); err == nil {
+				dst := filepath.Join(tmpLangDir, d)
+				// cp -r works on CI (ubuntu); on Windows it's best-effort.
+				if err := exec.Command("cp", "-r", src, dst).Run(); err != nil {
+					log.Printf("⚠️  [%s] Failed to copy non-generated dir %s: %v", lang, d, err)
+				}
+			}
+		}
+		cmd := exec.Command("git", "diff", "--no-index", "--exit-code", existingDir, tmpLangDir)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
