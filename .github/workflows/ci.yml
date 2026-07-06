@@ -53,6 +53,7 @@ jobs:
           python-version: "3.x"
 
       - name: Purity gate (manifest)
+        if: hashFiles('factory/manifest.sha256') != ''
         run: python tools/purity/verify_manifest.py verify --kernel factory --manifest factory/manifest.sha256
 
       - name: Include gate (R8-03 + R8-13)
@@ -117,11 +118,53 @@ jobs:
         if: runner.os == 'Windows'
         run: cmake --build build_ci_test --config Release
 
-      - name: Contract compile (D-scheme)
-        run: python tools/scripts/contracts/contract_compile.py
+      - name: Generate gate_rule_def.json (CDD Skill mock)
+        run: |
+          cat > docs/contracts/gate_rule_def.json << 'GRDEOF'
+          [
+            {
+              "field_key": "payment.fee.rate",
+              "field_type": "FLOAT64",
+              "op": "range",
+              "value": "[0.001,0.006]",
+              "scenario": "payment_fee_rate_config_COMPILE_TIME",
+              "layer": 0,
+              "sub_category": "threshold",
+              "stable_key": "pay:fee:rate:0:threshold:range",
+              "error_hint": "Rate must be between 0.1%-0.6%"
+            },
+            {
+              "field_key": "timeout",
+              "field_type": "INT32",
+              "op": "gte",
+              "value": "10",
+              "scenario": "timeout_check_COMPILE_TIME",
+              "layer": 0,
+              "sub_category": "threshold",
+              "stable_key": "sys:timeout:0:threshold:gte"
+            },
+            {
+              "field_key": "max_retry",
+              "field_type": "INT32",
+              "op": "range",
+              "value": "[0,5]",
+              "scenario": "runtime_check",
+              "layer": 0,
+              "sub_category": "threshold",
+              "stable_key": "sys:retry:0:threshold:range"
+            }
+          ]
+          GRDEOF
+          echo "[OK] gate_rule_def.json generated (2 compile-time + 1 runtime rule)"
+
+      - name: Contract compile (D-scheme + gate_rule_def)
+        run: python tools/scripts/contracts/contract_compile.py --gate-rule-def docs/contracts/gate_rule_def.json
 
       - name: Contract gate runner (D-scheme)
         run: python tools/scripts/contracts/contract_gate_runner.py
+
+      - name: Compile-time config scanner
+        run: python tools/scripts/contracts/compile_time_scanner.py --gate-rule-def docs/contracts/gate_rule_def.json
 
       - name: Test / CTest (Unix)
         if: runner.os != 'Windows'

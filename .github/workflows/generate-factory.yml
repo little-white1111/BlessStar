@@ -1,0 +1,57 @@
+# One-shot workflow: build kernel on Linux, package as factory/, generate
+# manifest.sha256, and upload as a downloadable artifact.
+#
+# Usage:
+#   1. Go to GitHub → Actions → "🏭 Generate factory kernel" → "Run workflow"
+#   2. Wait for completion (~5 min)
+#   3. Download the "factory" artifact from the run summary
+#   4. Unzip into repo root:  tar xzf factory.tar.gz  (or unzip factory.zip)
+#   5. Commit and push the factory/ directory:
+#        git add factory/
+#        git commit -m "chore: add factory kernel manifest"
+#        git push
+#
+# After factory/ is committed, the Purity gate in ci.yml will
+# automatically verify kernel integrity on every PR.
+
+name: 🏭 Generate factory kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ ninja-build
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j$(nproc)
+
+      - name: Copy build outputs to factory/
+        run: |
+          mkdir -p factory
+          # Copy runtime artifacts (binaries, libraries, headers)
+          if [ -d "build/bin" ]; then cp -r build/bin factory/; fi
+          if [ -d "build/lib" ]; then cp -r build/lib factory/; fi
+
+      - name: Generate manifest.sha256
+        run: python tools/purity/generate_manifest.py --root . --factory factory --out factory/manifest.sha256
+
+      - name: Show factory contents
+        run: find factory -type f | sort
+
+      - name: Upload factory artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: factory
+          path: factory/
+          if-no-files-found: error
