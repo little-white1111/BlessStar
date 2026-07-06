@@ -1,0 +1,139 @@
+{
+  "biz_id": "douyin-mall",
+  "display_name": "抖音商城",
+  "description": "抖音电商平台后端服务，提供用户认证、商品管理、订单交易、支付处理和评价管理等核心电商能力。",
+  "version": "1.0.0",
+  "sdk_version": ">=1.0.0 <2.0.0",
+  "fields": [
+    {"key": "auth.jwt.token_expiry_seconds", "type": "I64", "default": "86400", "description": "JWT登录令牌的有效期时长（秒），过期后用户需重新登录。", "required": false},
+    {"key": "auth.password.bcrypt_cost", "type": "I32", "default": "10", "description": "密码哈希计算成本因子，控制密码加密强度。", "required": true},
+    {"key": "user.role.values", "type": "ENUM", "default": "[\"user\",\"admin\"]", "description": "平台用户角色枚举定义，决定用户在系统中的权限等级。", "required": false},
+    {"key": "user.status.values", "type": "ENUM", "default": "{\"1\":\"active\",\"0\":\"inactive\",\"-1\":\"deleted\"}", "description": "用户账号状态枚举定义。1=正常，0=停用，-1=已删除。", "required": false},
+    {"key": "user.registration.default_role", "type": "STR", "default": "user", "description": "新用户注册时默认分配的角色。", "required": false},
+    {"key": "user.registration.default_status", "type": "I32", "default": "1", "description": "新用户注册成功后的默认账号状态。1=正常激活。", "required": false},
+    {"key": "user.validation.username_min_length", "type": "I32", "default": "3", "description": "用户名允许的最小字符数。", "required": false},
+    {"key": "user.validation.username_max_length", "type": "I32", "default": "50", "description": "用户名允许的最大字符数，与数据库varchar(50)一致。", "required": false},
+    {"key": "user.validation.password_min_length", "type": "I32", "default": "6", "description": "密码允许的最小字符数。", "required": false},
+    {"key": "user.validation.password_max_length", "type": "I32", "default": "50", "description": "密码允许的最大字符数。", "required": false},
+    {"key": "user.validation.email_required", "type": "BOOL", "default": "true", "description": "注册时是否强制要求填写邮箱地址。", "required": false},
+    {"key": "cors.allowed_origins", "type": "ARR", "default": "[\"*\"]", "description": "允许跨域访问的域名来源列表。", "required": false},
+    {"key": "order.status.values", "type": "ENUM", "default": "{\"0\":\"pending_payment\",\"1\":\"paid\",\"2\":\"shipped\",\"3\":\"delivered\",\"4\":\"completed\",\"-1\":\"cancelled\"}", "description": "订单生命周期状态枚举。", "required": false},
+    {"key": "payment.type.values", "type": "ENUM", "default": "{\"1\":\"alipay\",\"2\":\"wechat\",\"3\":\"credit_card\"}", "description": "平台支持的支付方式枚举。", "required": false},
+    {"key": "payment.record_status.values", "type": "ENUM", "default": "{\"0\":\"pending\",\"1\":\"success\",\"2\":\"failed\",\"3\":\"refunded\"}", "description": "支付记录处理状态枚举。", "required": false},
+    {"key": "product.status.values", "type": "ENUM", "default": "{\"1\":\"on_sale\",\"0\":\"off_sale\",\"-1\":\"deleted\"}", "description": "商品生命周期状态枚举。", "required": false},
+    {"key": "review.rating.min", "type": "I32", "default": "1", "description": "商品评论评分的最低分值。", "required": true},
+    {"key": "review.rating.max", "type": "I32", "default": "5", "description": "商品评论评分的最高分值。", "required": true}
+  ],
+  "ai_data": {
+    "summary": "抖音商城（douyin-mall）是抖音电商平台的后端业务模块，使用Go语言（Gin框架）实现，通过GORM操作MySQL数据库。核心业务域包括：用户管理（注册/登录/鉴权）、订单管理（全生命周期状态机）、支付管理（多支付渠道）、商品管理（上下架/库存）、评价管理（星级评分）。该模块已完整实现用户注册登录和JWT鉴权能力，订单/支付/商品/评价的业务逻辑待进一步开发。",
+    "business_capabilities": [
+      "用户认证与权限管理：支持JWT令牌认证、bcrypt密码加密、用户角色（user/admin）和状态（active/inactive/deleted）管理",
+      "注册校验策略：用户名（3-50字符）、密码（6-50字符）、邮箱必填、手机号格式（11位数字）等注册字段校验",
+      "商品生命周期管理：在售/下架/已删除三种状态，影响商品搜索展示和交易链路",
+      "订单状态流转：待支付→已支付→已发货→已送达→已完成（正向）/ 已取消（逆向），全生命周期管理",
+      "多支付方式支持：支付宝、微信支付、信用卡三种支付渠道，以及支付记录状态追踪（待处理/成功/失败/已退款）",
+      "商品评价系统：1-5星评分机制，由数据库CHECK约束保障数据合规性"
+    ],
+    "config_domains": {
+      "auth": "认证鉴权域：JWT令牌过期时间、密码加密强度",
+      "user": "用户域：角色枚举、状态枚举、注册默认值、校验规则",
+      "cors": "安全策略域：跨域域名白名单",
+      "order": "订单域：订单状态枚举定义",
+      "payment": "支付域：支付方式枚举、支付记录状态枚举",
+      "product": "商品域：商品状态枚举",
+      "review": "评价域：评分范围约束"
+    },
+
+    "configLabels": {
+      "auth.jwt.token_expiry_seconds": "JWT过期时间",
+      "auth.password.bcrypt_cost": "密码加密强度",
+      "user.role.values": "用户角色",
+      "user.status.values": "用户状态",
+      "user.registration.default_role": "默认角色",
+      "user.registration.default_status": "默认状态",
+      "user.validation.username_min_length": "用户名最小长度",
+      "user.validation.username_max_length": "用户名最大长度",
+      "user.validation.password_min_length": "密码最小长度",
+      "user.validation.password_max_length": "密码最大长度",
+      "user.validation.email_required": "邮箱必填",
+      "cors.allowed_origins": "跨域白名单",
+      "order.status.values": "订单状态",
+      "payment.type.values": "支付方式",
+      "payment.record_status.values": "支付记录状态",
+      "product.status.values": "商品状态",
+      "review.rating.min": "评分下限",
+      "review.rating.max": "评分上限"
+    },
+
+    "invertedIndex": [
+      {"keyword": "JWT", "configKeys": ["auth.jwt.token_expiry_seconds"]},
+      {"keyword": "令牌", "configKeys": ["auth.jwt.token_expiry_seconds"]},
+      {"keyword": "登录过期", "configKeys": ["auth.jwt.token_expiry_seconds"]},
+      {"keyword": "密码", "configKeys": ["auth.password.bcrypt_cost", "user.validation.password_min_length", "user.validation.password_max_length"]},
+      {"keyword": "加密强度", "configKeys": ["auth.password.bcrypt_cost"]},
+      {"keyword": "bcrypt", "configKeys": ["auth.password.bcrypt_cost"]},
+      {"keyword": "角色", "configKeys": ["user.role.values", "user.registration.default_role"]},
+      {"keyword": "用户状态", "configKeys": ["user.status.values", "user.registration.default_status"]},
+      {"keyword": "注册", "configKeys": ["user.registration.default_role", "user.registration.default_status", "user.validation.*"]},
+      {"keyword": "用户名", "configKeys": ["user.validation.username_min_length", "user.validation.username_max_length"]},
+      {"keyword": "密码长度", "configKeys": ["user.validation.password_min_length", "user.validation.password_max_length"]},
+      {"keyword": "邮箱", "configKeys": ["user.validation.email_required"]},
+      {"keyword": "跨域", "configKeys": ["cors.allowed_origins"]},
+      {"keyword": "CORS", "configKeys": ["cors.allowed_origins"]},
+      {"keyword": "订单", "configKeys": ["order.status.values"]},
+      {"keyword": "订单状态", "configKeys": ["order.status.values"]},
+      {"keyword": "支付", "configKeys": ["payment.type.values", "payment.record_status.values"]},
+      {"keyword": "支付方式", "configKeys": ["payment.type.values"]},
+      {"keyword": "退款", "configKeys": ["payment.record_status.values"]},
+      {"keyword": "商品", "configKeys": ["product.status.values"]},
+      {"keyword": "商品状态", "configKeys": ["product.status.values"]},
+      {"keyword": "评分", "configKeys": ["review.rating.min", "review.rating.max"]}
+    ],
+
+    "skillRoutes": [
+      {
+        "prefix": "douyin-mall",
+        "description": "抖音商城综合配置管理：认证、用户、订单、支付、商品、评价等全领域配置的读取与修改",
+        "toolChain": ["read_config_value", "write_config_value", "validate_value"],
+        "priority": 10
+      },
+      {
+        "prefix": "douyin-mall-auth",
+        "description": "抖音商城认证鉴权域：JWT过期时间、密码加密强度等安全相关配置",
+        "toolChain": ["read_config_value", "write_config_value"],
+        "priority": 20
+      },
+      {
+        "prefix": "douyin-mall-user",
+        "description": "抖音商城用户域：角色状态管理、注册校验规则等用户相关配置",
+        "toolChain": ["read_config_value", "write_config_value"],
+        "priority": 20
+      },
+      {
+        "prefix": "douyin-mall-trade",
+        "description": "抖音商城交易域：订单状态、支付方式、支付记录等交易相关配置",
+        "toolChain": ["read_config_value", "write_config_value"],
+        "priority": 20
+      }
+    ],
+    "dependency_hints": {
+      "order.status.values": "依赖 payment.record_status.values（支付状态影响订单状态流转）和 product.status.values（商品下架影响已售订单）",
+      "payment.record_status.values": "依赖 payment.type.values（不同支付方式的状态机一致）和 order.status.values（支付成功/失败驱动订单状态变化）",
+      "user.registration.default_role": "必须存在于 user.role.values 枚举中，建议始终为最低权限角色",
+      "user.registration.default_status": "必须存在于 user.status.values 枚举中",
+      "user.validation.username_min_length": "与 username_max_length 配合使用形成范围约束",
+      "user.validation.username_max_length": "不应超过数据库字段 varchar(50) 长度限制",
+      "user.validation.password_min_length": "与 password_max_length 配合使用形成范围约束",
+      "user.validation.password_max_length": "不应超过bcrypt算法72字节输入上限",
+      "review.rating.min": "与 review.rating.max 配合，由数据库 CHECK 约束保障，变更需执行DDL",
+      "review.rating.max": "变更评分上限（如改为10分制）是重大产品变更，需全链路改造"
+    },
+    "security_notes": [
+      "JWT Secret Key 不应纳入配置管理，应通过环境变量或密钥管理系统注入",
+      "cors.allowed_origins 生产环境禁止使用通配符*，需配置具体前端域名",
+      "user.registration.default_role 应始终保持为最低权限角色（user）",
+      "auth.password.bcrypt_cost 建议生产环境设为10~12，过高会影响登录性能",
+      "所有枚举值变更需评估对上下游系统的影响，尤其是订单和支付状态枚举"
+    ]
+  }
+}

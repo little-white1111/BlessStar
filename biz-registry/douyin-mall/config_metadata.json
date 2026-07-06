@@ -1,0 +1,596 @@
+[
+  {
+    "config_key": "auth.jwt.token_expiry_seconds",
+    "registry_path": "/config/douyin-mall/auth/jwt/token_expiry_seconds",
+    "data_type": "I64",
+    "required": false,
+    "default_value": "86400",
+    "biz_id": "douyin-mall",
+    "business_domain": "认证鉴权",
+    "business_description": "JWT登录令牌的有效期时长（秒），过期后用户需重新登录。24小时=86400秒，可根据安全策略调整。",
+    "impact_scope": ["用户登录", "会话管理", "接口鉴权", "安全策略"],
+    "contract_metrics": {
+      "slo": "用户连续登录成功率 ≥99.9%",
+      "risk_hint": "缩短有效期会增加用户重新登录频率，延长有效期会增加token泄露风险。变更前需与安全团队确认。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "涉及用户登录安全策略，需安全团队审批；变更后需同步通知前端团队调整token刷新逻辑"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "3600~604800（1小时~7天），推荐步长3600秒",
+    "ui_metadata": {
+      "ui_label": "Token过期时间（秒）",
+      "ui_description": "用户登录后JWT令牌的有效期，到期后需重新登录。建议值：86400（24小时）",
+      "ui_placeholder": "输入过期秒数，如 86400",
+      "ui_order": 1,
+      "hidden": false
+    },
+    "ai_hint": "JWT token过期时间配置，影响用户登录会话时长和安全策略。单位秒。常见配置：3600(1小时)、43200(12小时)、86400(24小时)、604800(7天)。",
+    "search_keywords": ["token过期", "登录有效期", "jwt过期", "会话时长", "自动登出"],
+    "pattern": "^[0-9]+$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "auth.password.bcrypt_cost",
+    "registry_path": "/config/douyin-mall/auth/password/bcrypt_cost",
+    "data_type": "I32",
+    "required": true,
+    "default_value": "10",
+    "biz_id": "douyin-mall",
+    "business_domain": "认证鉴权",
+    "business_description": "密码哈希计算成本因子，控制密码加密强度。数值越高越安全但计算越慢。修改后不影响已有密码验证，仅影响新密码哈希。",
+    "impact_scope": ["用户注册", "密码修改", "登录验证"],
+    "contract_metrics": {
+      "slo": "单次密码验证响应时间 <500ms P99",
+      "risk_hint": "成本值过高（>14）会导致注册/登录响应时间显著增加，可能触达超时阈值。调整后需做压力测试。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "涉及密码安全策略，需安全团队审批；变更后需进行压测确认性能"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "4~14，推荐步长1。生产建议10~12",
+    "ui_metadata": {
+      "ui_label": "密码哈希成本",
+      "ui_description": "bcrypt密码加密的计算成本因子（4~14），值越高越安全但运算越慢",
+      "ui_placeholder": "输入成本值，建议10~12",
+      "ui_order": 2,
+      "hidden": true
+    },
+    "ai_hint": "bcrypt密码哈希成本因子。控制密码加密的计算复杂度。值每+1，计算时间翻倍。默认10适合多数场景。",
+    "search_keywords": ["密码加密", "bcrypt成本", "哈希强度", "密码安全", "加密算法"],
+    "pattern": "^([4-9]|1[0-4])$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.role.values",
+    "registry_path": "/config/douyin-mall/user/role/values",
+    "data_type": "ENUM",
+    "required": false,
+    "default_value": "[\"user\",\"admin\"]",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "平台用户角色枚举定义，决定用户在系统中的权限等级。当前支持普通用户(user)和管理员(admin)。",
+    "impact_scope": ["用户注册", "权限控制", "接口访问授权", "后台管理"],
+    "contract_metrics": {
+      "slo": "角色权限校验准确率 100%",
+      "risk_hint": "新增角色需同步更新权限校验逻辑和前端页面路由守卫。变更需上下游团队（前端、网关）同步知悉。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "新增或修改角色枚举影响全系统权限模型，需产品和架构师审批；变更后需同步更新RBAC权限矩阵"
+    },
+    "dependencies": ["user.registration.default_role"],
+    "value_range_suggestion": "当前支持 user, admin。如需扩展可新增如 merchant,客服等角色",
+    "ui_metadata": {
+      "ui_label": "用户角色枚举",
+      "ui_description": "系统支持的用户角色列表，用于权限控制和身份标识",
+      "ui_placeholder": "输入角色名称列表",
+      "ui_order": 3,
+      "hidden": false
+    },
+    "ai_hint": "用户角色枚举值定义。当前支持user(普通用户)和admin(管理员)。新增角色需配套实现权限校验逻辑。",
+    "search_keywords": ["用户角色", "角色枚举", "权限等级", "角色管理", "用户类型"],
+    "pattern": null,
+    "enum_values": ["user", "admin"],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.status.values",
+    "registry_path": "/config/douyin-mall/user/status/values",
+    "data_type": "ENUM",
+    "required": false,
+    "default_value": "{\"1\":\"active\",\"0\":\"inactive\",\"-1\":\"deleted\"}",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "用户账号状态枚举定义。1=正常(active)，0=停用(inactive)，-1=已删除(deleted)。控制用户能否登录和使用平台功能。",
+    "impact_scope": ["用户登录", "账号管理", "风控策略", "用户搜索"],
+    "contract_metrics": {
+      "slo": "用户状态校验延迟 <100ms",
+      "risk_hint": "新增状态类型需同步更新用户相关的所有业务逻辑（订单、支付、评论等）的状态校验。变更影响范围大。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "用户状态是核心业务元数据，变更需产品和架构师审批；需评估对其他业务域（订单、支付等）的影响"
+    },
+    "dependencies": ["user.registration.default_status"],
+    "value_range_suggestion": "当前支持 active(1)/inactive(0)/deleted(-1)。建议保留-1作为删除标记",
+    "ui_metadata": {
+      "ui_label": "用户状态枚举",
+      "ui_description": "用户账号的生命周期状态定义，用于控制用户对平台功能的访问权限",
+      "ui_placeholder": "输入状态定义列表",
+      "ui_order": 4,
+      "hidden": false
+    },
+    "ai_hint": "用户状态枚举。1=正常/active（可正常登录使用），0=停用/inactive（账号冻结不可登录），-1=已删除/deleted（软删除不可恢复）。",
+    "search_keywords": ["用户状态", "账号状态", "状态枚举", "账户冻结", "用户停用"],
+    "pattern": null,
+    "enum_values": ["1", "0", "-1"],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.registration.default_role",
+    "registry_path": "/config/douyin-mall/user/registration/default_role",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "user",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "新用户注册时默认分配的角色。当前默认值为普通用户(user)，新注册用户均为普通用户权限。",
+    "impact_scope": ["用户注册流程", "新用户权限", "注册转化率"],
+    "contract_metrics": {
+      "slo": "注册成功率 ≥99.9%",
+      "risk_hint": "默认角色影响所有新注册用户的初始权限。如改为admin会导致严重安全风险。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "新用户默认角色影响全体新注册用户的权限，变更需安全团队和产品审批"
+    },
+    "dependencies": ["user.role.values"],
+    "value_range_suggestion": "必须为 user.role.values 中定义的值，当前有效值：user, admin",
+    "ui_metadata": {
+      "ui_label": "注册默认角色",
+      "ui_description": "新用户注册后自动分配的角色，通常为普通用户",
+      "ui_placeholder": "输入默认角色名",
+      "ui_order": 5,
+      "hidden": false
+    },
+    "ai_hint": "新用户注册的默认角色。必须存在于user.role.values中。安全原则：默认值应为最低权限角色（user）。",
+    "search_keywords": ["默认角色", "注册角色", "新用户权限", "初始角色", "注册设置"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.registration.default_status",
+    "registry_path": "/config/douyin-mall/user/registration/default_status",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "1",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "新用户注册成功后的默认账号状态。1=正常激活，用户注册完成后即可正常登录使用。",
+    "impact_scope": ["用户注册流程", "用户激活策略", "新用户体验"],
+    "contract_metrics": {
+      "slo": "注册即用成功率 ≥99.9%",
+      "risk_hint": "如改为0(inactive)，新用户注册后将无法直接登录，需额外激活流程（如邮箱验证）。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "变更默认状态仅影响注册后用户初始体验，如改为inactive需配套激活流程开发"
+    },
+    "dependencies": ["user.status.values"],
+    "value_range_suggestion": "必须为 user.status.values 中定义的值。1=正常激活，0=停用（需额外激活）",
+    "ui_metadata": {
+      "ui_label": "注册默认状态",
+      "ui_description": "新用户注册后的初始账号状态，1为正常激活可立即使用",
+      "ui_placeholder": "输入状态值，1=激活",
+      "ui_order": 6,
+      "hidden": false
+    },
+    "ai_hint": "新用户注册的默认账号状态。1=active/正常激活，0=inactive/需额外激活。通常设为1以提供无 friction 的注册体验。",
+    "search_keywords": ["默认状态", "注册状态", "新用户激活", "账号状态默认值", "注册设置"],
+    "pattern": "^(-1|0|1)$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.validation.username_min_length",
+    "registry_path": "/config/douyin-mall/user/validation/username_min_length",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "3",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "用户名允许的最小字符数，当前限制为3个字符。控制用户名的简短程度。",
+    "impact_scope": ["用户注册", "用户信息修改", "前端注册表单校验"],
+    "contract_metrics": {
+      "slo": "注册校验通过率 ≥99%",
+      "risk_hint": "前后端校验规则必须一致。变更后需同步更新前端的表单校验规则和错误提示文案。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "影响注册体验，建议与产品确认后变更；变更后需同步前端校验"
+    },
+    "dependencies": ["user.validation.username_max_length"],
+    "value_range_suggestion": "1~20，推荐步长1。建议不低于2",
+    "ui_metadata": {
+      "ui_label": "用户名最小长度",
+      "ui_description": "用户名的字符数下限，建议不低于2个字符",
+      "ui_placeholder": "输入最小长度",
+      "ui_order": 7,
+      "hidden": false
+    },
+    "ai_hint": "用户名最小字符长度限制。当前值3。前后端共享校验规则。与username_max_length配合使用形成范围约束。",
+    "search_keywords": ["用户名长度", "用户名最短", "用户名限制", "注册校验", "用户名校验"],
+    "pattern": "^[1-9][0-9]*$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.validation.username_max_length",
+    "registry_path": "/config/douyin-mall/user/validation/username_max_length",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "50",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "用户名允许的最大字符数，当前限制为50个字符。控制用户名的最大长度，与数据库varchar(50)一致。",
+    "impact_scope": ["用户注册", "用户信息修改", "前端注册表单校验", "数据库存储"],
+    "contract_metrics": {
+      "slo": "注册校验通过率 ≥99%",
+      "risk_hint": "此值不应超过数据库字段varchar(50)的长度限制。如需增大，需同步执行数据库DDL变更。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "超过数据库varchar(50)限制时需要DBA审批执行DDL变更；建议不超过50"
+    },
+    "dependencies": ["user.validation.username_min_length"],
+    "value_range_suggestion": "10~50，推荐步长5。建议不超过数据库字段长度（当前50）",
+    "ui_metadata": {
+      "ui_label": "用户名最大长度",
+      "ui_description": "用户名的字符数上限，受数据库字段长度限制",
+      "ui_placeholder": "输入最大长度",
+      "ui_order": 8,
+      "hidden": false
+    },
+    "ai_hint": "用户名最大字符长度限制。当前值50。与数据库varchar(50)定义一致。如需增加需同时修改DDL。",
+    "search_keywords": ["用户名最长", "用户名上限", "用户名限制", "注册校验", "数据库长度"],
+    "pattern": "^[1-9][0-9]*$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.validation.password_min_length",
+    "registry_path": "/config/douyin-mall/user/validation/password_min_length",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "6",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "密码允许的最小字符数，当前限制为6个字符。控制密码强度的下限。",
+    "impact_scope": ["用户注册", "密码修改", "密码重置", "前端密码校验"],
+    "contract_metrics": {
+      "slo": "注册校验通过率 ≥99%",
+      "risk_hint": "提高最小长度会增强安全性但可能降低注册转化率。前后端校验规则必须同步更新。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "变更密码策略需与安全团队确认；变更后需同步前端校验和提示文案"
+    },
+    "dependencies": ["user.validation.password_max_length"],
+    "value_range_suggestion": "6~20，推荐步长1。建议不低于6",
+    "ui_metadata": {
+      "ui_label": "密码最小长度",
+      "ui_description": "密码的字符数下限，建议不低于6以保障基本安全性",
+      "ui_placeholder": "输入最小长度",
+      "ui_order": 9,
+      "hidden": false
+    },
+    "ai_hint": "密码最小字符长度限制。当前值6。与password_max_length配合使用。安全建议：至少8位。",
+    "search_keywords": ["密码长度", "密码最短", "密码限制", "密码强度", "密码安全"],
+    "pattern": "^[1-9][0-9]*$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.validation.password_max_length",
+    "registry_path": "/config/douyin-mall/user/validation/password_max_length",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "50",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "密码允许的最大字符数，当前限制为50个字符。控制密码长度上限，与数据库varchar(255)存储兼容。",
+    "impact_scope": ["用户注册", "密码修改", "密码重置", "前端密码校验"],
+    "contract_metrics": {
+      "slo": "注册校验通过率 ≥99%",
+      "risk_hint": "过长密码（如>72字符）可能与bcrypt算法产生兼容问题。当前bcrypt最大输入为72字节。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "变更需注意bcrypt算法的72字节输入限制；超过此限制需评估密码处理方案"
+    },
+    "dependencies": ["user.validation.password_min_length"],
+    "value_range_suggestion": "20~72，推荐步长5。建议不超过72（bcrypt算法输入上限）",
+    "ui_metadata": {
+      "ui_label": "密码最大长度",
+      "ui_description": "密码的字符数上限，受bcrypt算法输入限制（72字节）",
+      "ui_placeholder": "输入最大长度",
+      "ui_order": 10,
+      "hidden": false
+    },
+    "ai_hint": "密码最大字符长度限制。当前值50。bcrypt算法有72字节输入上限，因此密码最大长度不宜超过72。",
+    "search_keywords": ["密码最长", "密码上限", "密码限制", "密码强度", "bcrypt限制"],
+    "pattern": "^[1-9][0-9]*$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "user.validation.email_required",
+    "registry_path": "/config/douyin-mall/user/validation/email_required",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "true",
+    "biz_id": "douyin-mall",
+    "business_domain": "用户管理",
+    "business_description": "注册时是否强制要求填写邮箱地址。当前为必填，开启后可确保用户邮箱验证和密码找回功能可用。",
+    "impact_scope": ["用户注册", "密码找回", "邮箱验证", "营销通知"],
+    "contract_metrics": {
+      "slo": "注册转化率",
+      "risk_hint": "改为false（非必填）可能降低注册门槛提升转化率，但会失去邮箱验证和密码找回通道。通常与手机号验证互为补充。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "是否必填邮箱影响注册流程设计和后续营销触达渠道，建议与产品确认"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "true/false。true=必填，false=选填",
+    "ui_metadata": {
+      "ui_label": "邮箱必填",
+      "ui_description": "控制用户注册时邮箱是否为必填字段，影响注册表单和密码找回功能",
+      "ui_placeholder": "选择是否必填",
+      "ui_order": 11,
+      "hidden": false
+    },
+    "ai_hint": "注册时邮箱是否必填。true=必填（当前默认），false=选填。影响：密码找回、营销邮件触达、注册转化率。",
+    "search_keywords": ["邮箱必填", "注册字段", "邮箱验证", "注册设置", "字段必填"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "cors.allowed_origins",
+    "registry_path": "/config/douyin-mall/cors/allowed_origins",
+    "data_type": "ARR",
+    "required": false,
+    "default_value": "[\"*\"]",
+    "biz_id": "douyin-mall",
+    "business_domain": "安全策略",
+    "business_description": "允许跨域访问的域名来源列表。生产环境建议限制为具体的前端域名，而非通配符*。",
+    "impact_scope": ["前端页面API调用", "跨域访问安全", "第三方接入"],
+    "contract_metrics": {
+      "slo": "前端API调用成功率 ≥99.9%",
+      "risk_hint": "当前配置为通配符*，生产环境存在安全风险。建议按环境分别配置具体域名。变更可能导致前端跨域请求失败。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "涉及安全策略，需安全团队审批；生产环境禁止使用通配符*；变更需同步更新网关规则"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "生产环境禁止使用*。推荐格式：[\"https://mall.douyin.com\",\"https://admin.douyin.com\"]",
+    "ui_metadata": {
+      "ui_label": "跨域允许域名",
+      "ui_description": "允许访问API的跨域域名列表，生产环境请配置具体域名",
+      "ui_placeholder": "输入域名列表，如 https://example.com",
+      "ui_order": 12,
+      "hidden": false
+    },
+    "ai_hint": "CORS跨域允许的域名来源列表。当前值为通配符*，生产环境有安全风险。应限制为具体前端域名。",
+    "search_keywords": ["跨域配置", "CORS", "允许域名", "跨域安全", "前端访问"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "order.status.values",
+    "registry_path": "/config/douyin-mall/order/status/values",
+    "data_type": "ENUM",
+    "required": false,
+    "default_value": "{\"0\":\"pending_payment\",\"1\":\"paid\",\"2\":\"shipped\",\"3\":\"delivered\",\"4\":\"completed\",\"-1\":\"cancelled\"}",
+    "biz_id": "douyin-mall",
+    "business_domain": "订单管理",
+    "business_description": "订单生命周期状态枚举。0=待支付→1=已支付→2=已发货→3=已送达→4=已完成（正向流转），-1=已取消（逆向终止）。",
+    "impact_scope": ["下单流程", "订单查询", "售后处理", "物流跟踪", "财务报表"],
+    "contract_metrics": {
+      "slo": "订单状态流转正确率 100%",
+      "risk_hint": "订单状态机变更影响整个交易链路，包括支付回调、物流同步、售后流程。新增状态需评估对财务对账和库存释放的影响。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "订单状态机是核心交易链路，变更需产品、架构师、财务联合审批；需同步更新前端订单详情页面和物流系统"
+    },
+    "dependencies": ["payment.record_status.values", "product.status.values"],
+    "value_range_suggestion": "当前状态流转：0→1→2→3→4（正向），任何状态均可→-1（取消）。新增状态（如售后中、退款中）需定义流转规则",
+    "ui_metadata": {
+      "ui_label": "订单状态枚举",
+      "ui_description": "订单的完整生命周期状态定义，控制订单从创建到完成的流转路径",
+      "ui_placeholder": "输入订单状态列表",
+      "ui_order": 13,
+      "hidden": false
+    },
+    "ai_hint": "订单状态枚举定义。正向流转：0(待支付)→1(已支付)→2(已发货)→3(已送达)→4(已完成)。逆向终止：-1(已取消)。影响交易全链路。",
+    "search_keywords": ["订单状态", "订单流转", "订单生命周期", "订单枚举", "交易状态"],
+    "pattern": null,
+    "enum_values": ["0", "1", "2", "3", "4", "-1"],
+    "registration_phase": "P2"
+  },
+  {
+    "config_key": "payment.type.values",
+    "registry_path": "/config/douyin-mall/payment/type/values",
+    "data_type": "ENUM",
+    "required": false,
+    "default_value": "{\"1\":\"alipay\",\"2\":\"wechat\",\"3\":\"credit_card\"}",
+    "biz_id": "douyin-mall",
+    "business_domain": "支付管理",
+    "business_description": "平台支持的支付方式枚举。1=支付宝，2=微信支付，3=信用卡。用户下单时可选择。",
+    "impact_scope": ["收银台", "支付流程", "订单支付", "财务对账", "退款流程"],
+    "contract_metrics": {
+      "slo": "支付成功率 ≥99.5%",
+      "risk_hint": "新增支付方式需与第三方支付机构对接，同步更新支付网关回调逻辑、财务对账系统和退款流程。涉及资金安全，必须严格测试。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "新增支付方式影响资金安全和财务对账，需财务、法务、技术三方审批；需接入第三方支付SDK并进行安全审计"
+    },
+    "dependencies": ["payment.record_status.values"],
+    "value_range_suggestion": "当前支持：1=支付宝，2=微信支付，3=信用卡。新增需评估支付通道成本和技术对接周期",
+    "ui_metadata": {
+      "ui_label": "支付方式枚举",
+      "ui_description": "平台支持的所有支付方式定义，用户下单时可选择的支付渠道",
+      "ui_placeholder": "输入支付方式列表",
+      "ui_order": 14,
+      "hidden": false
+    },
+    "ai_hint": "支付方式枚举。1=支付宝(alipay)，2=微信支付(wechat)，3=信用卡(credit_card)。涉及资金安全和财务对账，新增需谨慎。",
+    "search_keywords": ["支付方式", "支付类型", "支付宝", "微信支付", "支付渠道"],
+    "pattern": null,
+    "enum_values": ["1", "2", "3"],
+    "registration_phase": "P2"
+  },
+  {
+    "config_key": "payment.record_status.values",
+    "registry_path": "/config/douyin-mall/payment/record_status/values",
+    "data_type": "ENUM",
+    "required": false,
+    "default_value": "{\"0\":\"pending\",\"1\":\"success\",\"2\":\"failed\",\"3\":\"refunded\"}",
+    "biz_id": "douyin-mall",
+    "business_domain": "支付管理",
+    "business_description": "支付记录处理状态枚举。0=待处理（支付发起中），1=成功（支付完成），2=失败（支付未完成），3=已退款（资金退回）。",
+    "impact_scope": ["支付处理", "退款流程", "资金对账", "订单支付状态同步"],
+    "contract_metrics": {
+      "slo": "支付状态一致性 100%",
+      "risk_hint": "支付状态是资金流转的关键证据。状态数据必须保证最终一致性，修改状态枚举需确保不影响对账系统。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "支付记录状态涉及资金安全和财务对账，变更需财务和架构师审批；需同步更新支付网关回调处理和退款逻辑"
+    },
+    "dependencies": ["payment.type.values", "order.status.values"],
+    "value_range_suggestion": "当前支持：0=待处理→1=成功/2=失败，3=已退款（从成功状态转入）",
+    "ui_metadata": {
+      "ui_label": "支付记录状态枚举",
+      "ui_description": "支付记录的处理状态定义，追踪每笔支付从发起到完成的处理结果",
+      "ui_placeholder": "输入支付状态列表",
+      "ui_order": 15,
+      "hidden": false
+    },
+    "ai_hint": "支付记录状态枚举。0=待处理(pending)，1=成功(success)，2=失败(failed)，3=已退款(refunded)。涉及资金安全，状态机需严格定义。",
+    "search_keywords": ["支付状态", "支付记录", "支付结果", "退款状态", "支付对账"],
+    "pattern": null,
+    "enum_values": ["0", "1", "2", "3"],
+    "registration_phase": "P2"
+  },
+  {
+    "config_key": "product.status.values",
+    "registry_path": "/config/douyin-mall/product/status/values",
+    "data_type": "ENUM",
+    "required": false,
+    "default_value": "{\"1\":\"on_sale\",\"0\":\"off_sale\",\"-1\":\"deleted\"}",
+    "biz_id": "douyin-mall",
+    "business_domain": "商品管理",
+    "business_description": "商品生命周期状态枚举。1=在售（可搜索购买），0=下架（不可购买但保留信息），-1=已删除（软删除不可见）。",
+    "impact_scope": ["商品搜索", "商品详情", "下单购买", "库存管理", "商家后台"],
+    "contract_metrics": {
+      "slo": "商品可见性正确率 100%",
+      "risk_hint": "新增商品状态（如预售、限时抢购）需同步更新搜索索引、缓存策略和前端商品展示逻辑。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "商品状态变更影响搜索展示和交易链路，需产品和运营审批；变更后需重建搜索索引"
+    },
+    "dependencies": ["order.status.values"],
+    "value_range_suggestion": "当前支持：1=在售，0=下架，-1=已删除。可扩展预售等状态但需配套逻辑",
+    "ui_metadata": {
+      "ui_label": "商品状态枚举",
+      "ui_description": "商品的生命周期状态，控制在售、下架或删除等展示规则",
+      "ui_placeholder": "输入商品状态列表",
+      "ui_order": 16,
+      "hidden": false
+    },
+    "ai_hint": "商品状态枚举。1=在售(on_sale，可搜索可购买)，0=下架(off_sale，不可购买但可保留信息)，-1=已删除(deleted，软删除)。",
+    "search_keywords": ["商品状态", "商品上下架", "商品生命周期", "商品枚举", "商品管理"],
+    "pattern": null,
+    "enum_values": ["1", "0", "-1"],
+    "registration_phase": "P2"
+  },
+  {
+    "config_key": "review.rating.min",
+    "registry_path": "/config/douyin-mall/review/rating/min",
+    "data_type": "I32",
+    "required": true,
+    "default_value": "1",
+    "biz_id": "douyin-mall",
+    "business_domain": "评价管理",
+    "business_description": "商品评论评分的最低分值，当前为1分。与商品评价星级展示规则绑定，由数据库CHECK约束保障。",
+    "impact_scope": ["商品评价", "评分统计", "商品排序", "用户评价输入"],
+    "contract_metrics": {
+      "slo": "评分数据合规率 100%",
+      "risk_hint": "变更评分范围影响所有历史评分的归一化处理，以及推荐算法中的评分权重计算。同时需修改数据库CHECK约束。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "评分规则变更影响推荐算法和商品排序，需产品和算法团队审批；变更后需执行DDL修改CHECK约束并迁移数据"
+    },
+    "dependencies": ["review.rating.max"],
+    "value_range_suggestion": "1~5，推荐与max配合使用确保min<max",
+    "ui_metadata": {
+      "ui_label": "评分最小值",
+      "ui_description": "商品评论的最低评分，受数据库CHECK约束保护",
+      "ui_placeholder": "输入最低评分",
+      "ui_order": 17,
+      "hidden": true
+    },
+    "ai_hint": "商品评论评分最小值。当前值1。与review.rating.max构成评分范围[1,5]。由数据库CHECK约束(product_reviews_chk_1)保障。",
+    "search_keywords": ["评分下限", "最低评分", "评分范围", "评价分数", "星级评分"],
+    "pattern": "^[1-5]$",
+    "enum_values": null,
+    "registration_phase": "P2"
+  },
+  {
+    "config_key": "review.rating.max",
+    "registry_path": "/config/douyin-mall/review/rating/max",
+    "data_type": "I32",
+    "required": true,
+    "default_value": "5",
+    "biz_id": "douyin-mall",
+    "business_domain": "评价管理",
+    "business_description": "商品评论评分的最高分值，当前为5分（五星制）。控制商品评分的上限，影响商品星级展示和排序权重。",
+    "impact_scope": ["商品评价", "评分统计", "商品排序", "用户评价输入"],
+    "contract_metrics": {
+      "slo": "评分数据合规率 100%",
+      "risk_hint": "变更最高分值（如改为10分制）是重大产品变更，需同步更新前端评分组件（星级图标）、推荐算法权重、数据库CHECK约束和已有评分数据的归一化处理。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "评分上限变更影响前端展示、推荐算法和数据规范，需产品、算法、DBA联合审批；需同步更新前端组件和数据库约束"
+    },
+    "dependencies": ["review.rating.min"],
+    "value_range_suggestion": "1~10，推荐与min配合使用。当前为五星制(5)，如需更多粒度可改为10分制",
+    "ui_metadata": {
+      "ui_label": "评分最大值",
+      "ui_description": "商品评论的最高评分，当前为5星制",
+      "ui_placeholder": "输入最高评分",
+      "ui_order": 18,
+      "hidden": true
+    },
+    "ai_hint": "商品评论评分最大值。当前值5（五星制）。与review.rating.min构成评分范围[1,5]。如需改为10分制需全链路改造。",
+    "search_keywords": ["评分上限", "最高评分", "评分范围", "满分", "星级评分"],
+    "pattern": "^[1-9]|10$",
+    "enum_values": null,
+    "registration_phase": "P2"
+  }
+]

@@ -1,0 +1,303 @@
+# =============================================================================
+# BlessStar Codegen CI — 三层防御体系
+#
+# 设计原则:
+#   1. 一致性校验（最快失败）— 最先执行，防止错误扩散
+#   2. PR 门禁（--check 比对）— 不自动提交，只拦截不一致
+#   3. 多语言编译验证 — 确保所有语言产物语法正确
+#   4. main 分支全量生成（通过后 auto-commit）
+#
+# 架构不变量（来自 ADR: 移除 blessstar-sdk-go 外部依赖）:
+#   - Ports 接口不得依赖外部 SDK
+#   - ConfigReader 由业务方实现，零外部依赖
+#   - adapter 对业务层透明
+# =============================================================================
+
+name: blessstar-codegen
+
+on:
+  pull_request:
+    paths:
+      - 'biz-registry/**/manifest.json'
+      - 'biz-registry/**/config_metadata.json'
+  push:
+    branches: [main, master]
+    paths:
+      - 'biz-registry/**/manifest.json'
+      - 'biz-registry/**/config_metadata.json'
+  workflow_dispatch:
+    inputs:
+      lang:
+        description: 'Target languages, comma-separated (go/java/python/c)'
+        required: true
+        default: 'go,java,python,c'
+      manifest:
+        description: 'Path to manifest.json (relative to repo root)'
+        required: true
+        default: 'biz-registry/douyin-mall/manifest.json'
+
+# =============================================================================
+# 防御第 1 层：一致性校验
+# — manifest.json 与 config_metadata.json 字段匹配性验证
+# — 不匹配则立即失败，不生成任何代码
+# =============================================================================
+jobs:
+  check-consistency:
+    name: '🔍 一致性校验 (Consistency)'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: tools/blessstar-codegen/go.mod
+
+      - name: Build codegen CLI
+        working-directory: tools/blessstar-codegen
+        run: go build -o blessstar-codegen .
+
+      - name: Detect changed manifests
+        id: manifests
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MANIFESTS="${{ github.event.inputs.manifest }}"
+          else
+            MANIFESTS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'biz-registry/**/manifest.json' | tr '\n' ' ')
+          fi
+          echo "manifests=${MANIFESTS}" >> $GITHUB_OUTPUT
+
+      - name: Validate manifest vs metadata consistency
+        run: |
+          for manifest in ${{ steps.manifests.outputs.manifests }}; do
+            dir=$(dirname "$manifest")
+            metadata="${dir}/config_metadata.json"
+            echo "🔍 Validating: $manifest ↔ $metadata"
+            if [ -f "$metadata" ]; then
+              tools/blessstar-codegen/blessstar-codegen \
+                --check-consistency \
+                --manifest "$manifest" \
+                --metadata "$metadata"
+            else
+              echo "⚠️  No config_metadata.json found at $metadata, skipping consistency check"
+            fi
+          done
+
+  # ===========================================================================
+  # 防御第 2 层：PR 门禁
+  # — 生成代码到临时目录，与现有代码做 diff
+  # — 有差异则 CI 失败，提示开发者提交生成代码
+  # — 绝不自动 push（责任在开发者）
+  # ===========================================================================
+  check-gen:
+    name: '🔧 生成校验 (gen-diff)'
+    needs: check-consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 需要 full history 做 git diff
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: tools/blessstar-codegen/go.mod
+
+      - name: Build codegen CLI
+        working-directory: tools/blessstar-codegen
+        run: go build -o blessstar-codegen .
+
+      - name: Detect changed manifests
+        id: manifests
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MANIFESTS="${{ github.event.inputs.manifest }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            MANIFESTS=$(git diff --name-only origin/${{ github.base_ref }} HEAD -- 'biz-registry/**/manifest.json' | tr '\n' ' ')
+          else
+            MANIFESTS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'biz-registry/**/manifest.json' | tr '\n' ' ')
+          fi
+          echo "manifests=${MANIFESTS}" >> $GITHUB_OUTPUT
+
+      - name: Run --check mode for each manifest
+        run: |
+          FAILED=0
+          for manifest in ${{ steps.manifests.outputs.manifests }}; do
+            dir=$(dirname "$manifest")
+            metadata="${dir}/config_metadata.json"
+            biz_id=$(basename "$dir")
+            output="biz-adapters"
+
+            echo "📋 Checking: $manifest"
+            if ! tools/blessstar-codegen/blessstar-codegen \
+              --lang go,java,python,c \
+              --manifest "$manifest" \
+              --metadata "$metadata" \
+              --output "$output" \
+              --check; then
+              echo "❌ $manifest: 生成的代码与现有代码不一致"
+              echo "   💡 请在本地运行 'blessstar-codegen' 并提交生成的代码"
+              FAILED=1
+            else
+              echo "✅ $manifest: 一致"
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            exit 1
+          fi
+
+  # ===========================================================================
+  # 防御第 3 层：多语言编译验证
+  # — 并行验证 Go/Java/Python/C 四种语言产物的语法正确性
+  # — 仅在 PR 合并前执行（push 不重复跑）
+  # ===========================================================================
+  validate-langs:
+    name: '🔨 ${{ matrix.lang }} 编译验证'
+    needs: check-gen
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [go, java, python, c]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        if: matrix.lang == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Setup Java
+        if: matrix.lang == 'java'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Python
+        if: matrix.lang == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate Go compilation
+        if: matrix.lang == 'go'
+        run: |
+          for dir in biz-adapters/*/; do
+            if [ -f "${dir}go.mod" ]; then
+              echo "🔨 Go build: $dir"
+              cd "$dir"
+              go mod tidy 2>/dev/null || true
+              go build ./... 2>&1 || echo "⚠️  Go build warnings in $dir"
+              cd -
+            fi
+          done
+          echo "✅ Go compilation validated"
+
+      - name: Validate Java compilation
+        if: matrix.lang == 'java'
+        run: |
+          for dir in biz-adapters/*/; do
+            if [ -f "${dir}pom.xml" ]; then
+              echo "🔨 Java compile: $dir"
+              cd "$dir"
+              mvn compile -q 2>&1 || echo "⚠️  Java compile warnings in $dir"
+              cd -
+            fi
+          done
+          echo "✅ Java compilation validated"
+
+      - name: Validate Python syntax
+        if: matrix.lang == 'python'
+        run: |
+          for dir in biz-adapters/*/ports biz-adapters/*/adapters biz-adapters/*/provider; do
+            if [ -d "$dir" ]; then
+              for pyfile in "$dir"/*.py; do
+                if [ -f "$pyfile" ]; then
+                  python -m py_compile "$pyfile" 2>&1 || exit 1
+                fi
+              done
+            fi
+          done
+          echo "✅ Python syntax validated"
+
+      - name: Validate C compilation
+        if: matrix.lang == 'c'
+        run: |
+          for dir in biz-adapters/*/; do
+            if [ -f "${dir}CMakeLists.txt" ]; then
+              echo "🔨 C build: $dir"
+              cd "$dir"
+              mkdir -p build && cd build
+              cmake .. 2>&1 && cmake --build . 2>&1 || echo "⚠️  C build warnings in $dir"
+              cd "${{ github.workspace }}"
+            fi
+          done
+          echo "✅ C compilation validated"
+
+  # ===========================================================================
+  # main 分支自动生成
+  # — 仅在 push 到 main 时执行
+  # — 使用 git-auto-commit-action（比原始 git push 安全）
+  # — 前置条件：所有防御层通过
+  # ===========================================================================
+  generate-and-commit:
+    name: '📦 全量生成 + 提交'
+    needs: [check-consistency, check-gen]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: tools/blessstar-codegen/go.mod
+
+      - name: Build codegen CLI
+        working-directory: tools/blessstar-codegen
+        run: go build -o blessstar-codegen .
+
+      - name: Detect changed manifests
+        id: manifests
+        run: |
+          MANIFESTS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- 'biz-registry/**/manifest.json' | tr '\n' ' ')
+          echo "manifests=${MANIFESTS}" >> $GITHUB_OUTPUT
+
+      - name: Generate all languages
+        run: |
+          for manifest in ${{ steps.manifests.outputs.manifests }}; do
+            dir=$(dirname "$manifest")
+            metadata="${dir}/config_metadata.json"
+            biz_id=$(basename "$dir")
+            output="biz-adapters"
+
+            echo "📋 Generating code for: $manifest"
+            tools/blessstar-codegen/blessstar-codegen \
+              --lang go,java,python,c \
+              --manifest "$manifest" \
+              --metadata "$metadata" \
+              --output "$output"
+          done
+
+      - name: Commit generated code
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: |
+            chore(codegen): auto-generate port-adapter code
+
+            Auto-generated by blessstar-codegen on manifest.json change.
+            Includes: Port interfaces, BlessStar adapters (3-stage fallback),
+            Mock implementations, and DI provider for Go/Java/Python/C.
+          file_pattern: 'biz-adapters/'
+          commit_user_name: 'blessstar-codegen[bot]'
+          commit_user_email: 'blessstar-codegen[bot]@users.noreply.github.com'

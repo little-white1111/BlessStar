@@ -14,6 +14,10 @@
 !/tools/
 !/cmake/
 
+# ── Business registry & generated code (for codegen CI) ──────────
+!/biz-registry/
+!/biz-adapters/
+
 # ── Root-level files ────────────────────────────────────────────────
 !/.clang-format
 !/.gitattributes
@@ -23,6 +27,9 @@
 !/CMakePresets.json
 !/README.md
 !/config_v1_golden.h
+!/架构方案选择记录.md
+!/项目修改记录.md
+!/SKILL.md
 
 # ── OS / editor debris ──────────────────────────────────────────────
 Thumbs.db
@@ -37,6 +44,12 @@ Desktop.ini
 # ── Agent collaboration notes (local) ───────────────────────────────
 一主二子agent模式搭建.md
 三智能体提示词.txt
+
+# ── Go HTTP ConfigReader implementation ────────────────────────────
+!/go-httpreader/
+
+# ── Architecture documentation ─────────────────────────────────────
+!/docs/
 
 # ── Build artifacts (anywhere) ──────────────────────────────────────
 CMakeFiles/
