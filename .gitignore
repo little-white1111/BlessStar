@@ -9,10 +9,15 @@
 
 # ── Core directories ────────────────────────────────────────────────
 !/kernel/
+!/kernel/**
 !/adapter/
+!/adapter/**
 !/app/
+!/app/**
 !/tools/
+!/tools/**
 !/cmake/
+!/cmake/**
 
 # ── Business registry & generated code (for codegen CI) ──────────
 !/biz-registry/
