@@ -829,5 +829,9 @@ config_reader_t* cached_reader_create(config_reader_vtable_t* inner_vtable) {
 	}, nil
 }
 
+func (c *CBackend) GenerateInitFiles(biz *types.BizSystem) ([]*backend.File, error) {
+	return nil, nil
+}
+
 // Ensure interface compliance
 var _ backend.LanguageBackend = (*CBackend)(nil)

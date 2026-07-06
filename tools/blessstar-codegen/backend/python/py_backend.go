@@ -464,6 +464,59 @@ class CachedReader:
 	}, nil
 }
 
+func (p *PythonBackend) GenerateInitFiles(biz *types.BizSystem) ([]*backend.File, error) {
+	sortedDomains := sortBizDomains(biz)
+
+	// Collect domains that have configs
+	var activeDomains []string
+	for _, d := range sortedDomains {
+		if len(biz.ConfigsByDomain[d]) > 0 {
+			activeDomains = append(activeDomains, d)
+		}
+	}
+
+	// adapters/blessstar/__init__.py — re-export all adapter classes
+	var blessstarInit strings.Builder
+	blessstarInit.WriteString("# Package adapters.blessstar — BlessStar 适配器实现\n")
+	blessstarInit.WriteString("# 请勿手动修改 — 由 blessstar-codegen 自动生成\n\n")
+
+	for _, d := range activeDomains {
+		adapterName := AdapterTypeName(d)
+		adapterFile := AdapterFileName(d)
+		moduleName := strings.TrimSuffix(adapterFile, ".py")
+		blessstarInit.WriteString(fmt.Sprintf("from .%s import %s\n", moduleName, adapterName))
+	}
+
+	var mockInit strings.Builder
+	mockInit.WriteString("# Package adapters.mock — Mock 适配器实现（单元测试用）\n")
+	mockInit.WriteString("# 请勿手动修改 — 由 blessstar-codegen 自动生成\n\n")
+	for _, d := range activeDomains {
+		mockName := MockTypeName(d)
+		mockFile := MockFileName(d)
+		moduleName := strings.TrimSuffix(mockFile, ".py")
+		mockInit.WriteString(fmt.Sprintf("from .%s import %s\n", moduleName, mockName))
+	}
+
+	return []*backend.File{
+		{
+			Path:    "adapters/__init__.py",
+			Content: "# Package adapters — BlessStar 适配器\n",
+		},
+		{
+			Path:    "adapters/blessstar/__init__.py",
+			Content: blessstarInit.String(),
+		},
+		{
+			Path:    "adapters/mock/__init__.py",
+			Content: mockInit.String(),
+		},
+		{
+			Path:    "ports/__init__.py",
+			Content: "# Package ports — BlessStar 配置端口接口\n",
+		},
+	}, nil
+}
+
 // sortBizDomains returns sorted domain names from BizSystem
 func sortBizDomains(biz *types.BizSystem) []string {
 	var domains []string

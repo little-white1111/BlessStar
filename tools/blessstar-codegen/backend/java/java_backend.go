@@ -748,5 +748,9 @@ func lowerFirst(s string) string {
 	return string(s[0]+32) + s[1:]
 }
 
+func (j *JavaBackend) GenerateInitFiles(biz *types.BizSystem) ([]*backend.File, error) {
+	return nil, nil
+}
+
 // Ensure interface compliance
 var _ backend.LanguageBackend = (*JavaBackend)(nil)

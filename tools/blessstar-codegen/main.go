@@ -220,6 +220,17 @@ func generateForBackend(gen backend.LanguageBackend, biz *types.BizSystem, outpu
 		}
 	}
 
+	// Generate language-specific init files (e.g. Python __init__.py)
+	initFiles, err := gen.GenerateInitFiles(biz)
+	if err != nil {
+		log.Printf("⚠️  [%s] Failed to generate init files: %v", gen.Name(), err)
+	} else {
+		for _, f := range initFiles {
+			f.Content = prependHeader(f.Path, f.Content, biz)
+			files = append(files, f)
+		}
+	}
+
 	return files
 }
 

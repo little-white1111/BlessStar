@@ -678,5 +678,9 @@ func formatGoDefault(goType, defaultVal string) string {
 	}
 }
 
+func (g *GoBackend) GenerateInitFiles(biz *types.BizSystem) ([]*backend.File, error) {
+	return nil, nil
+}
+
 // Ensure all interfaces are satisfied
 var _ backend.LanguageBackend = (*GoBackend)(nil)

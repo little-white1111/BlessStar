@@ -43,6 +43,10 @@ type LanguageBackend interface {
 	// Returns multiple files (ports/config_reader.go, provider/cached_reader.go),
 	// or nil if not applicable.
 	GenerateConfigReaderFile(biz *types.BizSystem) ([]*File, error)
+
+	// GenerateInitFiles generates language-specific package init files (e.g.
+	// Python's __init__.py). Returns nil if not applicable.
+	GenerateInitFiles(biz *types.BizSystem) ([]*File, error)
 }
 
 // PackageNameFromBiz derives a Go package name from biz_id
