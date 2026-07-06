@@ -268,7 +268,17 @@ func (g *GoBackend) GenerateBlessStarAdapter(biz *types.BizSystem, domain string
 		if defaultVal == "" {
 			defaultVal = types.GoBlessStarTypeZero(goType)
 		}
-		b.WriteString(fmt.Sprintf("\t\t\t%q: %s,\n", methodName, formatGoDefault(goType, defaultVal)))
+		// Duration 字段需要在硬编码默认值中加入 time.Duration() 包装
+		// 以匹配接口方法签名中的 time.Duration 返回类型
+		isDuration := strings.Contains(strings.ToLower(c.Key), "timeout") ||
+			strings.Contains(strings.ToLower(c.Key), "expiry") ||
+			strings.Contains(strings.ToLower(c.Key), "ttl") ||
+			strings.Contains(strings.ToLower(c.Key), "duration")
+		defaultGoType := goType
+		if isDuration {
+			defaultGoType = "time.Duration"
+		}
+		b.WriteString(fmt.Sprintf("\t\t\t%q: %s,\n", methodName, formatGoDefault(defaultGoType, defaultVal)))
 	}
 	b.WriteString("\t\t},\n")
 	b.WriteString("\t}\n")
@@ -609,11 +619,16 @@ func sortBizDomains(biz *types.BizSystem) []string {
 // formatGoDefault formats a default value as a Go literal
 func formatGoDefault(goType, defaultVal string) string {
 	switch {
-	case goType == "int64" || goType == "int32":
+	case goType == "int64":
 		if defaultVal == "" {
-			return "0"
+			return "int64(0)"
 		}
-		return defaultVal
+		return fmt.Sprintf("int64(%s)", defaultVal)
+	case goType == "int32":
+		if defaultVal == "" {
+			return "int32(0)"
+		}
+		return fmt.Sprintf("int32(%s)", defaultVal)
 	case goType == "bool":
 		if defaultVal == "true" || defaultVal == "1" {
 			return "true"

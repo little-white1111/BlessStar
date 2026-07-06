@@ -32,8 +32,8 @@ func NewAuthConfigAdapter(reader ports.ConfigReader) ports.AuthConfig {
 	return &AuthConfigAdapter{
 		reader: reader,
 		hardcodedDefaults: map[string]interface{}{
-			"JwtTokenExpirySeconds": 86400,
-			"PasswordBcryptCost": 10,
+			"JwtTokenExpirySeconds": time.Duration(86400),
+			"PasswordBcryptCost": int32(10),
 		},
 	}
 }

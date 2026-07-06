@@ -40,19 +40,19 @@ func NewUserConfigMock() ports.UserConfig {
 			return "user", nil
 		},
 		RegistrationDefaultStatusFunc: func(ctx context.Context) (int32, error) {
-			return 1, nil
+			return int32(1), nil
 		},
 		ValidationUsernameMinLengthFunc: func(ctx context.Context) (int32, error) {
-			return 3, nil
+			return int32(3), nil
 		},
 		ValidationUsernameMaxLengthFunc: func(ctx context.Context) (int32, error) {
-			return 50, nil
+			return int32(50), nil
 		},
 		ValidationPasswordMinLengthFunc: func(ctx context.Context) (int32, error) {
-			return 6, nil
+			return int32(6), nil
 		},
 		ValidationPasswordMaxLengthFunc: func(ctx context.Context) (int32, error) {
-			return 50, nil
+			return int32(50), nil
 		},
 		ValidationEmailRequiredFunc: func(ctx context.Context) (bool, error) {
 			return true, nil

@@ -198,6 +198,19 @@ jobs:
           done
           echo "✅ Go compilation validated"
 
+      - name: Go smoke test
+        if: matrix.lang == 'go'
+        run: |
+          for dir in biz-adapters/*/; do
+            if [ -d "${dir}tests" ] && ls "${dir}tests/"*_test.go 2>/dev/null >/dev/null; then
+              echo "🔥 Go smoke test: $dir"
+              cd "$dir"
+              go test -v -run TestSmoke ./tests/ 2>&1 || exit 1
+              cd -
+            fi
+          done
+          echo "✅ Go smoke tests passed"
+
       - name: Validate Java compilation
         if: matrix.lang == 'java'
         run: |
@@ -210,6 +223,21 @@ jobs:
             fi
           done
           echo "✅ Java compilation validated"
+
+      - name: Java smoke test
+        if: matrix.lang == 'java'
+        run: |
+          for dir in biz-adapters/*/; do
+            if [ -f "${dir}pom.xml" ] && [ -f "${dir}src/test/java/SmokeTest.java" ]; then
+              echo "🔥 Java smoke test: $dir"
+              cd "$dir"
+              mkdir -p target/test-classes
+              javac -cp target/classes -d target/test-classes src/test/java/SmokeTest.java 2>&1 || exit 1
+              java -ea -cp target/classes:target/test-classes SmokeTest 2>&1 || exit 1
+              cd -
+            fi
+          done
+          echo "✅ Java smoke tests passed"
 
       - name: Validate Python syntax
         if: matrix.lang == 'python'
@@ -225,6 +253,18 @@ jobs:
           done
           echo "✅ Python syntax validated"
 
+      - name: Python smoke test
+        if: matrix.lang == 'python'
+        run: |
+          for dir in biz-adapters/*/*/; do
+            test_file="${dir}tests/smoke_test.py"
+            if [ -f "$test_file" ]; then
+              echo "🔥 Python smoke test: $dir"
+              python "$test_file" 2>&1 || exit 1
+            fi
+          done
+          echo "✅ Python smoke tests passed"
+
       - name: Validate C compilation
         if: matrix.lang == 'c'
         run: |
@@ -238,6 +278,20 @@ jobs:
             fi
           done
           echo "✅ C compilation validated"
+
+      - name: C smoke test
+        if: matrix.lang == 'c'
+        run: |
+          for dir in biz-adapters/*/; do
+            if [ -f "${dir}CMakeLists.txt" ] && [ -f "${dir}tests/smoke_test.c" ]; then
+              echo "🔥 C smoke test: $dir"
+              cd "$dir"
+              gcc tests/smoke_test.c -I. -Lbuild -ldouyin_mall_config -o tests/smoke_test 2>&1 || exit 1
+              ./tests/smoke_test 2>&1 || exit 1
+              cd "${{ github.workspace }}"
+            fi
+          done
+          echo "✅ C smoke tests passed"
 
   # ===========================================================================
   # main 分支自动生成

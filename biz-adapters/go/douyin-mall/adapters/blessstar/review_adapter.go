@@ -30,8 +30,8 @@ func NewReviewConfigAdapter(reader ports.ConfigReader) ports.ReviewConfig {
 	return &ReviewConfigAdapter{
 		reader: reader,
 		hardcodedDefaults: map[string]interface{}{
-			"RatingMin": 1,
-			"RatingMax": 5,
+			"RatingMin": int32(1),
+			"RatingMax": int32(5),
 		},
 	}
 }

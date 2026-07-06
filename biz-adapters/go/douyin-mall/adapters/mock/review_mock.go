@@ -24,10 +24,10 @@ type ReviewConfigMock struct {
 func NewReviewConfigMock() ports.ReviewConfig {
 	return &ReviewConfigMock{
 		RatingMinFunc: func(ctx context.Context) (int32, error) {
-			return 1, nil
+			return int32(1), nil
 		},
 		RatingMaxFunc: func(ctx context.Context) (int32, error) {
-			return 5, nil
+			return int32(5), nil
 		},
 	}
 }

@@ -25,10 +25,10 @@ type AuthConfigMock struct {
 func NewAuthConfigMock() ports.AuthConfig {
 	return &AuthConfigMock{
 		JwtTokenExpirySecondsFunc: func(ctx context.Context) (time.Duration, error) {
-			return 86400, nil
+			return int64(86400), nil
 		},
 		PasswordBcryptCostFunc: func(ctx context.Context) (int32, error) {
-			return 10, nil
+			return int32(10), nil
 		},
 	}
 }
