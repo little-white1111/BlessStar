@@ -293,6 +293,7 @@ func (p *PythonBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, e
 	b.WriteString(fmt.Sprintf("# 请勿手动修改 — 由 blessstar-codegen 自动生成\n\n"))
 	b.WriteString("from dataclasses import dataclass\n")
 	b.WriteString("from ports.config_reader import ConfigReader\n")
+	b.WriteString("from adapters import blessstar as adapter_blessstar\n")
 	sortedDomains := sortBizDomains(biz)
 	for _, d := range sortedDomains {
 		configs := biz.ConfigsByDomain[d]

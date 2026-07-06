@@ -636,12 +636,12 @@ func (j *JavaBackend) GenerateConfigReaderFile(biz *types.BizSystem) ([]*backend
 public interface ConfigReader {
     /**
      * 读取一个配置值。
-     * @param path 配置的完整注册路径（如 "/config/%[1]s/auth/jwt/token_expiry_seconds"）
+     * @param path 配置的完整注册路径（如 "/config/%s/auth/jwt/token_expiry_seconds"）
      * @return 配置值（可直接类型断言）或 null
      */
     Object get(String path);
 }
-`, biz.BizID)
+`, pkg, biz.BizID)
 
 	// Generate provider/CachedReader.java
 	cachedReaderContent := fmt.Sprintf(`package %s.provider;

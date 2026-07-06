@@ -8,6 +8,7 @@
 
 from dataclasses import dataclass
 from ports.config_reader import ConfigReader
+from adapters import blessstar as adapter_blessstar
 from ports.product import ProductConfig
 from ports.cors import CorsConfig
 from ports.payment import PaymentConfig

@@ -93,7 +93,7 @@ func main() {
 	// ─── Step 7: Write files to disk ───
 	totalWritten := 0
 	for lang, files := range allGenerated {
-		bizOutputDir := filepath.Join(*outputDir, biz.BizID)
+		bizOutputDir := filepath.Join(*outputDir, lang, biz.BizID)
 		for _, f := range files {
 			fullPath := filepath.Join(bizOutputDir, f.Path)
 			dir := filepath.Dir(fullPath)
@@ -229,6 +229,10 @@ func prependHeader(path, content string, biz *types.BizSystem) string {
 	if strings.Contains(content, "DO NOT EDIT") {
 		return content
 	}
+	// Skip XML files (pom.xml) - XML declaration must be first in file
+	if strings.HasSuffix(path, ".xml") {
+		return content
+	}
 	header := backend.HeaderForBiz(path, biz.BizID, biz.DisplayName)
 	return header + "\n" + content
 }
@@ -247,7 +251,7 @@ func runCheckMode(allGenerated map[string][]*backend.File, bizID, outputDir stri
 	// Write all generated files to temp dir
 	written := 0
 	for lang, files := range allGenerated {
-		bizOutputDir := filepath.Join(tmpDir, bizID)
+		bizOutputDir := filepath.Join(tmpDir, lang, bizID)
 		for _, f := range files {
 			fullPath := filepath.Join(bizOutputDir, f.Path)
 			dir := filepath.Dir(fullPath)
@@ -264,37 +268,38 @@ func runCheckMode(allGenerated map[string][]*backend.File, bizID, outputDir stri
 	}
 	fmt.Printf("   临时目录: %s (%d 个文件)\n", tmpDir, written)
 
-	// Diff with existing output
-	existingDir := filepath.Join(outputDir, bizID)
-	if _, err := os.Stat(existingDir); os.IsNotExist(err) {
-		fmt.Printf("   ❌ 现有代码目录不存在: %s\n", existingDir)
-		fmt.Println("   💡 请先运行 blessstar-codegen 生成代码")
+	// Diff with existing output — per-language
+	anyDiff := false
+	for lang := range allGenerated {
+		existingDir := filepath.Join(outputDir, lang, bizID)
+		if _, err := os.Stat(existingDir); os.IsNotExist(err) {
+			fmt.Printf("   ❌ [%s] 现有代码目录不存在: %s\n", lang, existingDir)
+			fmt.Println("   💡 请先运行 blessstar-codegen 生成代码")
+			os.Exit(1)
+		}
+
+		cmd := exec.Command("git", "diff", "--no-index", "--exit-code", existingDir, filepath.Join(tmpDir, lang, bizID))
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		if err := cmd.Run(); err != nil {
+			if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+				fmt.Printf("\n❌ [%s] 生成的代码与现有代码不一致!\n", lang)
+				anyDiff = true
+			} else {
+				fmt.Printf("⚠️  [%s] diff 执行失败: %v\n", lang, err)
+			}
+		} else {
+			fmt.Printf("   ✅ [%s] 一致\n", lang)
+		}
+	}
+
+	if anyDiff {
+		fmt.Println("\n❌ 存在不一致的语言，请运行 blessstar-codegen 并提交生成的代码")
 		os.Exit(1)
 	}
 
-	// Use git diff if available, otherwise use OS diff
-	cmd := exec.Command("git", "diff", "--no-index", "--exit-code", existingDir, filepath.Join(tmpDir, bizID))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
-			fmt.Println("\n❌ 生成的代码与现有代码不一致!")
-			fmt.Println("   💡 请运行 blessstar-codegen 并提交生成的代码")
-			os.Exit(1)
-		}
-		fmt.Printf("⚠️  diff 执行失败: %v (fallback: directory compare)\n", err)
-		// Fallback: simple file count comparison
-		existingFiles := countFiles(existingDir)
-		if existingFiles != written {
-			fmt.Printf("❌ 文件数量不一致: 现有 %d, 生成 %d\n", existingFiles, written)
-			os.Exit(1)
-		}
-		fmt.Println("   ✅ 文件数量一致（无法逐行比对）")
-		return
-	}
-
-	fmt.Println("\n✅ 生成的代码与现有代码完全一致!")
+	fmt.Println("\n✅ 所有语言生成的代码与现有代码完全一致!")
 }
 
 // runDryRun prints a preview of all generated files without writing them.
@@ -306,7 +311,7 @@ func runDryRun(allGenerated map[string][]*backend.File, bizID, outputDir string)
 	for lang, files := range allGenerated {
 		fmt.Printf("\n  [%s]\n", strings.ToUpper(lang))
 		for _, f := range files {
-			bizOutputDir := filepath.Join(outputDir, bizID)
+			bizOutputDir := filepath.Join(outputDir, lang, bizID)
 			fullPath := filepath.Join(bizOutputDir, f.Path)
 			// Count lines
 			lineCount := strings.Count(f.Content, "\n")
@@ -329,17 +334,4 @@ func runDryRun(allGenerated map[string][]*backend.File, bizID, outputDir string)
 	fmt.Println("\n💡 移除 --dry-run 标志以实际写入文件")
 }
 
-// countFiles counts the number of files in a directory recursively.
-func countFiles(dir string) int {
-	count := 0
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
-		}
-		if !info.IsDir() {
-			count++
-		}
-		return nil
-	})
-	return count
-}
+

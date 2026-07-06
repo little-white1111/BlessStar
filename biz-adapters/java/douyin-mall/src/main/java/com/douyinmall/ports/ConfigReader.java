@@ -2,7 +2,7 @@
 // Source: manifest.json
 // Business System: 抖音商城 (douyin-mall)
 
-package douyin-mall.ports;
+package com.douyinmall.ports;
 
 /**
  * 配置读取接口，业务方自行选择实现方式。

@@ -214,7 +214,7 @@ jobs:
       - name: Validate Python syntax
         if: matrix.lang == 'python'
         run: |
-          for dir in biz-adapters/*/ports biz-adapters/*/adapters biz-adapters/*/provider; do
+          for dir in biz-adapters/*/*/ports biz-adapters/*/*/adapters biz-adapters/*/*/provider; do
             if [ -d "$dir" ]; then
               for pyfile in "$dir"/*.py; do
                 if [ -f "$pyfile" ]; then
