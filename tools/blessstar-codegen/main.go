@@ -268,6 +268,10 @@ func runCheckMode(allGenerated map[string][]*backend.File, bizID, outputDir stri
 	}
 	fmt.Printf("   临时目录: %s (%d 个文件)\n", tmpDir, written)
 
+	// 非代码生成器产物的目录列表（如手写的 smoke test 文件），
+	// 在 --check 比对前从 existingDir 复制到 tmpDir，避免误报差异。
+	nonGeneratedDirs := []string{"tests", "src"}
+
 	// Diff with existing output — per-language
 	anyDiff := false
 	for lang := range allGenerated {
@@ -278,7 +282,26 @@ func runCheckMode(allGenerated map[string][]*backend.File, bizID, outputDir stri
 			os.Exit(1)
 		}
 
-		cmd := exec.Command("git", "diff", "--no-index", "--exit-code", existingDir, filepath.Join(tmpDir, lang, bizID))
+		// Copy non-generated directories (e.g. tests/) from existing to tmp
+		// so git diff only compares codegen-produced files.
+		tmpLangDir := filepath.Join(tmpDir, lang, bizID)
+		for _, d := range nonGeneratedDirs {
+			src := filepath.Join(existingDir, d)
+			if _, err := os.Stat(src); err == nil {
+				dst := filepath.Join(tmpLangDir, d)
+				// Use robocopy on Windows, cp -r on Linux
+				copyCmd := exec.Command("cp", "-r", src, dst)
+				if err := copyCmd.Run(); err != nil {
+					// On Windows cp might not be available; try robocopy or just warn
+					robocopyCmd := exec.Command("robocopy", src, dst, "/E", "/NFL", "/NDL", "/NJH", "/NJS")
+					if err := robocopyCmd.Run(); err != nil {
+						log.Printf("⚠️  [%s] Failed to copy non-generated dir %s: %v", lang, d, err)
+					}
+				}
+			}
+		}
+
+		cmd := exec.Command("git", "diff", "--no-index", "--exit-code", existingDir, tmpLangDir)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
