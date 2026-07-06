@@ -192,7 +192,7 @@ jobs:
               echo "🔨 Go build: $dir"
               cd "$dir"
               go mod tidy 2>/dev/null || true
-              go build ./... 2>&1 || echo "⚠️  Go build warnings in $dir"
+              go build ./... 2>&1 || exit 1
               cd -
             fi
           done
@@ -205,7 +205,7 @@ jobs:
             if [ -f "${dir}pom.xml" ]; then
               echo "🔨 Java compile: $dir"
               cd "$dir"
-              mvn compile -q 2>&1 || echo "⚠️  Java compile warnings in $dir"
+              mvn compile -q 2>&1 || exit 1
               cd -
             fi
           done
@@ -233,7 +233,7 @@ jobs:
               echo "🔨 C build: $dir"
               cd "$dir"
               mkdir -p build && cd build
-              cmake .. 2>&1 && cmake --build . 2>&1 || echo "⚠️  C build warnings in $dir"
+              cmake .. 2>&1 && cmake --build . 2>&1 || exit 1
               cd "${{ github.workspace }}"
             fi
           done

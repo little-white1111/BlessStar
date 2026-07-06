@@ -515,7 +515,7 @@ func (j *JavaBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, err
 			b.WriteString(fmt.Sprintf("\t\t\t%s %s\n", portName, fieldName))
 			first = false
 		} else {
-			b.WriteString(fmt.Sprintf("\t\t\t%s %s\n", portName, fieldName))
+			b.WriteString(fmt.Sprintf("\t\t\t, %s %s\n", portName, fieldName))
 		}
 	}
 	b.WriteString("\t\t) {\n")

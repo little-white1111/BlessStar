@@ -34,12 +34,12 @@ public class BlessstarProvider {
 
 		public Adapters(
 			ProductConfig productConfig
-			CorsConfig corsConfig
-			PaymentConfig paymentConfig
-			UserConfig userConfig
-			OrderConfig orderConfig
-			AuthConfig authConfig
-			ReviewConfig reviewConfig
+			, CorsConfig corsConfig
+			, PaymentConfig paymentConfig
+			, UserConfig userConfig
+			, OrderConfig orderConfig
+			, AuthConfig authConfig
+			, ReviewConfig reviewConfig
 		) {
 			this.productConfig = productConfig;
 			this.corsConfig = corsConfig;
