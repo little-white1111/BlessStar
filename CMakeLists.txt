@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.3)
-project(BlessStar VERSION 1.0 LANGUAGES CXX)
+project(BlessStar VERSION 1.0 LANGUAGES C CXX)
 
 # ── Build output convention ──────────────────────────────────────
 # Default: cmake --preset default   (or)   cmake -B build
@@ -145,8 +145,10 @@ target_include_directories(bs_app_sdk PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/include
 )
 
-# Build tests
-add_subdirectory(app/sdk/test)
+# Build tests (if SDK test directory exists)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test")
+    add_subdirectory(app/sdk/test)
+endif()
 
 # Register module tests from Tests.cmake
 include(cmake/Tests.cmake)
