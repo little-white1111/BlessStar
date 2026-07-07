@@ -131,9 +131,6 @@ tools/ci/.github_token
 # ── CI logs (anywhere under tools/) ────────────────────────────────
 tools/ci/logs/
 
-# ── Generated build tooling ────────────────────────────────────────
-tools/build/
-
 # ── Local scratch / IO test debris ──────────────────────────────────
 test.txt
 bs_io_*.txt

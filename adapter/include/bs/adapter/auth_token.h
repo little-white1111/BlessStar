@@ -10,44 +10,46 @@
 #ifdef __cplusplus
 #include <cstddef>
 #include <cstdint>
-extern "C" {
+extern "C"
+{
 #else
 #include <stddef.h>
 #include <stdint.h>
 #endif
 
-/* ── Auth context (token-level interceptor) ────────────────────────── */
-typedef struct BsAuthContext {
-    const char* token;
-    const char* user_id;
-    const char* session_id;
-    uint64_t    expires_at;   /* unix timestamp, 0 = no expiry */
-    int         authenticated;
-    char        error_message[256];
-} BsAuthContext;
+    /* ── Auth context (token-level interceptor) ────────────────────────── */
+    typedef struct BsAuthContext
+    {
+        const char* token;
+        const char* user_id;
+        const char* session_id;
+        uint64_t    expires_at; /* unix timestamp, 0 = no expiry */
+        int         authenticated;
+        char        error_message[256];
+    } BsAuthContext;
 
-/* ── API ───────────────────────────────────────────────────────────── */
+    /* ── API ───────────────────────────────────────────────────────────── */
 
-/** Create an empty auth context */
-BsAuthContext* bs_auth_context_create(void);
+    /** Create an empty auth context */
+    BsAuthContext* bs_auth_context_create(void);
 
-/** Destroy an auth context */
-void bs_auth_context_destroy(BsAuthContext* ctx);
+    /** Destroy an auth context */
+    void bs_auth_context_destroy(BsAuthContext* ctx);
 
-/** Set the session token and validate basic format */
-int bs_auth_token_set(BsAuthContext* ctx, const char* token);
+    /** Set the session token and validate basic format */
+    int bs_auth_token_set(BsAuthContext* ctx, const char* token);
 
-/** Verify a token against a stored hash (simple equality for MVP) */
-int bs_auth_token_verify(const BsAuthContext* ctx, const char* expected);
+    /** Verify a token against a stored hash (simple equality for MVP) */
+    int bs_auth_token_verify(const BsAuthContext* ctx, const char* expected);
 
-/** Check if the auth context is authenticated and not expired */
-int bs_auth_is_valid(const BsAuthContext* ctx);
+    /** Check if the auth context is authenticated and not expired */
+    int bs_auth_is_valid(const BsAuthContext* ctx);
 
-/** Check if token has expired */
-int bs_auth_is_expired(const BsAuthContext* ctx);
+    /** Check if token has expired */
+    int bs_auth_is_expired(const BsAuthContext* ctx);
 
-/** Clear the auth context (logout) */
-void bs_auth_reset(BsAuthContext* ctx);
+    /** Clear the auth context (logout) */
+    void bs_auth_reset(BsAuthContext* ctx);
 
 #ifdef __cplusplus
 }

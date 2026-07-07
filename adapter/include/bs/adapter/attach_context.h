@@ -16,6 +16,7 @@
 #include "bs/kernel/ir/ir.h"
 #include "bs/kernel/registry/registry_facade.h"
 
+#include "bs/adapter/persistence/attach_epoch.h"
 #include "bs/adapter/persistence/attach_store.h"
 
 #ifdef __cplusplus
@@ -95,11 +96,13 @@ extern "C"
     void bs_adapter_attach_ctx_shutdown_all_logs(void);
 
     /** MD-D-02: 获取指定 URI 的 Gate 校验结果（所有权归批控器），nullptr 表示无缓存 */
-    const IRInstructionList* bs_adapter_attach_ctx_get_gate_result(AttachContext* ctx, const char* uri);
+    const IRInstructionList* bs_adapter_attach_ctx_get_gate_result(AttachContext* ctx,
+                                                                   const char*    uri);
 
-    /** MD-D-03: 设置指定 URI 的 Gate 校验结果缓存（覆盖旧值）。批控器在 gate_path_work 成功后调用。 */
+    /** MD-D-03: 设置指定 URI 的 Gate 校验结果缓存（覆盖旧值）。批控器在 gate_path_work 成功后调用。
+     */
     void bs_adapter_attach_ctx_set_gate_result(AttachContext* ctx, const char* uri,
-                                                IRInstructionList* ir_list);
+                                               IRInstructionList* ir_list);
 
     /** MD-D-03: 清理指定 URI 的 Gate 校验结果缓存（批控器 reset 时调用）。 */
     void bs_adapter_attach_ctx_clear_gate_result(AttachContext* ctx, const char* uri);
@@ -109,6 +112,11 @@ extern "C"
 
     /** MD-D-07: 递增 hot_update 版本号 */
     void bs_adapter_attach_ctx_increment_hot_update_version(AttachContext* ctx);
+
+    /* ── 持久化与通信修复 (方案C，Fix 1) ────────────────────── */
+
+    /** 获取 AttachContext 上 epoch 状态的指针 */
+    bs_epoch_state_t* bs_adapter_attach_ctx_epoch_state(AttachContext* ctx);
 
 #ifdef __cplusplus
 }
