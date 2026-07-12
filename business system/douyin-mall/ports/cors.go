@@ -1,0 +1,24 @@
+﻿// Package ports 自动生成于 BlessStar 配置端口-适配器
+// 业务系统: 抖音商城 (douyin-mall)
+// 领域: 安全策略
+// 请勿手动修改 — 由 blessstar-codegen 自动生成
+// Source: manifest.json
+
+package ports
+
+import (
+	"context"
+)
+
+// CorsConfig 安全策略 域配置接口
+// 对应 domain: "安全策略"
+// 禁止直接 import BlessStar SDK — 请通过此接口访问配置
+type CorsConfig interface {
+
+	// // 跨域白名单 (cors.allowed_origins)
+// 描述: 允许跨域访问的域名来源列表。
+// 建议值: 生产环境禁止使用*。推荐格式：["https://mall.douyin.com","https://admin.douyin.com"]
+// 类型: ARR
+	// Returns: []string
+	AllowedOrigins(ctx context.Context) ([]string, error)
+}

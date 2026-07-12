@@ -1,0 +1,21 @@
+﻿// Package ports 提供业务系统的配置读取接口。
+// 所有 Port 接口定义在此包中，业务代码仅依赖此包。
+// 请勿手动修改 — 由 blessstar-codegen 自动生成
+package ports
+
+import "context"
+
+// ConfigReader 是配置读取接口，业务方自行选择实现方式。
+// 内置实现包括：CachedReader（秒级轮询缓存）、EnvReader（环境变量）、FileReader（本地文件）等。
+//
+// 实现类通过环境变量 BLESSSTAR_ENDPOINT 获取 Electron 地址（HTTPReader 场景）。
+// 初始化失败时不得阻塞进程，由 adapter 的三阶段降级兜底。
+//
+// Get 返回 interface{} 以便 adapter 进行类型断言（与三阶段降级兼容）。
+// 常见返回类型：int64, bool, string, []string, time.Duration。
+// 业务方也可选择返回 JSON string 并在 adapter 外部自行解析。
+type ConfigReader interface {
+	// Get 读取一个配置值。path 是配置的完整注册路径（如 "/config/douyin-mall-go-template/auth/jwt/token_expiry_seconds"）。
+	// 返回配置值（可直接类型断言）或 error。
+	Get(ctx context.Context, path string) (interface{}, error)
+}

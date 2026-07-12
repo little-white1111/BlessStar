@@ -1,0 +1,66 @@
+# config-schema.d/avatar.yaml — 悬浮球 & 虚拟角色配置
+# SSOT: 悬浮球位置 / 缩放 / Live2D 模型
+domain: livedesign
+version: v1.1.0
+x-version: v1.0.0
+x-domain: avatar
+x-extensions:
+  biz_id: "livedesign"
+  registration_phase: "P1"
+  generated_by: "configdesigner"
+fields:
+  - key: avatar.position_x
+    type: I32
+    default: 0
+    required: false
+    business_desc: "悬浮球初始 X 坐标，用户拖拽后实时持久化到本地存储"
+    contract:
+      range: [-1920, 3840]
+      slo_impact: "UI 定位准确性"
+    ui_meta:
+      label: "悬浮球 X 坐标"
+      order: 1
+      hidden: true
+    search_keywords:
+      - "悬浮球位置"
+      - "坐标"
+      - "拖拽"
+    ai_hint: "控制悬浮球在屏幕上的水平位置，范围 -1920~3840 像素。用户拖拽后自动保存，无需手动修改。"
+
+  - key: avatar.position_y
+    type: I32
+    default: 0
+    required: false
+    business_desc: "悬浮球初始 Y 坐标，用户拖拽后实时持久化到本地存储"
+    contract:
+      range: [-1080, 2160]
+      slo_impact: "UI 定位准确性"
+    ui_meta:
+      label: "悬浮球 Y 坐标"
+      order: 2
+      hidden: true
+    search_keywords:
+      - "悬浮球位置"
+      - "坐标"
+      - "拖拽"
+    ai_hint: "控制悬浮球在屏幕上的垂直位置，范围 -1080~2160 像素。用户拖拽后自动保存，无需手动修改。"
+
+  - key: avatar.scale
+    type: F64
+    default: 1.0
+    required: false
+    business_desc: "虚拟角色（Live2D 模型）的缩放比例，影响角色在屏幕上的显示大小"
+    contract:
+      range: [0.5, 2.0]
+      slo_impact: "角色渲染视觉效果"
+    ui_meta:
+      label: "角色缩放"
+      order: 3
+      placeholder: "1.0"
+      description: "控制 Live2D 虚拟角色的显示大小"
+      hidden: false
+    search_keywords:
+      - "角色缩放"
+      - "Live2D"
+      - "显示大小"
+    ai_hint: "控制 Live2D 虚拟角色的显示大小，范围 0.5~2.0 倍。默认 1.0 为原始大小，增大可让角色在屏幕上更醒目。"

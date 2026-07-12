@@ -1,0 +1,439 @@
+# config-schema.yaml — 自动生成
+domain: livestyle
+version: v1.0.0
+x-extensions:
+  biz_id: "livestyle"
+  registration_phase: "P2"
+  generated_by: "configdesigner"
+  description: "直播直播间样式可视化设计器 — 系统级与组件级配置"
+
+fields:
+  # ============================================================
+  # 系统级配置 — 画布 (canvas.*)
+  # ============================================================
+  - key: canvas.grid.size
+    type: I32
+    default: 20
+    required: false
+    business_desc: "画布网格对齐粒度（px），控制拖拽组件时吸附的网格大小。0 表示关闭网格对齐，值越大吸附越粗糙，影响布局精度和操作手感"
+    contract:
+      range: [0, 100]
+      approval_required: false
+    ui_meta:
+      label: "网格对齐粒度"
+      order: 1
+      placeholder: "20"
+      description: "设置画布网格大小（px），组件拖拽时自动吸附到网格交点"
+    ai_hint: "控制画布网格对齐精度的像素值，0=关闭网格，越大吸附越粗糙"
+    search_keywords:
+      - "网格大小"
+      - "对齐粒度"
+      - "吸附间距"
+      - "网格像素"
+
+  - key: canvas.grid.snap
+    type: BOOL
+    default: true
+    required: false
+    business_desc: "是否启用网格吸附对齐。开启后拖拽组件会自动吸附到最近的网格交点，帮助用户精确对齐布局；关闭后组件可自由放置"
+    contract:
+      dependencies:
+        - "canvas.grid.size > 0"
+    ui_meta:
+      label: "网格吸附"
+      order: 2
+      description: "拖拽组件时是否自动吸附到网格交点"
+    ai_hint: "控制是否启用网格吸附功能，仅在 grid.size > 0 时有效"
+    search_keywords:
+      - "吸附对齐"
+      - "网格吸附"
+      - "自动对齐"
+      - "snap"
+
+  - key: canvas.default_width
+    type: I32
+    default: 1920
+    required: false
+    business_desc: "画布默认宽度（px），对应直播输出分辨率宽度。影响所有组件在画布上的布局范围和导出时的分辨率"
+    ui_meta:
+      label: "画布宽度"
+      order: 3
+      placeholder: "1920"
+      description: "设置画布默认宽度，对应直播画面的水平分辨率"
+    ai_hint: "画布默认宽度，对应直播输出分辨率宽度，影响组件布局空间"
+    search_keywords:
+      - "画布宽度"
+      - "分辨率宽度"
+      - "直播分辨率"
+      - "画布尺寸"
+
+  - key: canvas.default_height
+    type: I32
+    default: 1080
+    required: false
+    business_desc: "画布默认高度（px），对应直播输出分辨率高度。影响所有组件在画布上的布局范围和导出时的分辨率"
+    ui_meta:
+      label: "画布高度"
+      order: 4
+      placeholder: "1080"
+      description: "设置画布默认高度，对应直播画面的垂直分辨率"
+    ai_hint: "画布默认高度，对应直播输出分辨率高度，影响组件布局空间"
+    search_keywords:
+      - "画布高度"
+      - "分辨率高度"
+      - "直播分辨率"
+      - "画布尺寸"
+
+  - key: canvas.autosave_interval_ms
+    type: I32
+    default: 30000
+    required: false
+    business_desc: "自动保存间隔（毫秒），控制画布编辑状态自动保存到本地的频率。0 表示关闭自动保存。间隔越短数据越安全，但频繁写入可能影响性能"
+    contract:
+      range: [5000, 300000]
+      slo_impact: "影响数据持久性的及时性：间隔越短，意外断电/崩溃时的数据丢失越少；但过短的间隔（<5000ms）可能导致高频文件写入，影响编辑器性能"
+      approval_required: false
+    ui_meta:
+      label: "自动保存间隔"
+      order: 5
+      placeholder: "30000"
+      description: "自动保存的时间间隔（毫秒），设置为 0 可关闭自动保存"
+    ai_hint: "控制自动保存频率，范围5000-300000毫秒，0=关闭自动保存"
+    search_keywords:
+      - "自动保存"
+      - "保存间隔"
+      - "自动备份"
+      - "防丢失"
+
+  # ============================================================
+  # 系统级配置 — 组件默认尺寸 (component.*)
+  # ============================================================
+  - key: component.default_width
+    type: I32
+    default: 400
+    required: false
+    business_desc: "新拖入组件的默认宽度（px）。用户在组件面板将新组件拖入画布时，自动使用此宽度创建占位区域"
+    ui_meta:
+      label: "组件默认宽度"
+      order: 6
+      placeholder: "400"
+      description: "新组件拖入画布时的默认宽度"
+    ai_hint: "新拖入组件默认宽度，影响组件拖入体验和初始布局"
+    search_keywords:
+      - "默认宽度"
+      - "组件大小"
+      - "拖入尺寸"
+
+  - key: component.default_height
+    type: I32
+    default: 300
+    required: false
+    business_desc: "新拖入组件的默认高度（px）。用户在组件面板将新组件拖入画布时，自动使用此高度创建占位区域"
+    ui_meta:
+      label: "组件默认高度"
+      order: 7
+      placeholder: "300"
+      description: "新组件拖入画布时的默认高度"
+    ai_hint: "新拖入组件默认高度，影响组件拖入体验和初始布局"
+    search_keywords:
+      - "默认高度"
+      - "组件大小"
+      - "拖入尺寸"
+
+  # ============================================================
+  # 系统级配置 — 引擎渲染 (engine.render.*)
+  # ============================================================
+  - key: engine.render.fps_limit
+    type: I32
+    default: 60
+    required: false
+    business_desc: "组件引擎渲染帧率上限（fps），控制直播间组件（弹幕、动画等）的刷新频率。帧率越高动画越流畅，但 CPU/GPU 负载也越高"
+    contract:
+      range: [15, 120]
+      slo_impact: "直接影响渲染性能和动画流畅度：帧率过低（<15fps）会导致动画卡顿，影响直播观感；帧率过高（>60fps）会显著增加 CPU/GPU 负载，可能影响直播编码性能"
+      approval_required: false
+    ui_meta:
+      label: "渲染帧率上限"
+      order: 8
+      placeholder: "60"
+      description: "设置组件引擎的渲染帧率上限（fps），值越高动画越流畅但性能消耗越大"
+    ai_hint: "引擎渲染帧率上限，控制组件动画流畅度和性能消耗的平衡"
+    search_keywords:
+      - "帧率"
+      - "渲染帧率"
+      - "FPS"
+      - "动画流畅度"
+      - "性能限制"
+
+  - key: engine.render.dirty_rect_enabled
+    type: BOOL
+    default: true
+    required: false
+    business_desc: "是否启用脏矩形增量渲染。开启后引擎只重新绘制有变更的区域，大幅提升多组件场景下的渲染性能；关闭后每次更新全量重绘"
+    contract:
+      slo_impact: "影响渲染性能：启用脏矩形可减少50%-90%的无效重绘区域，对多组件（>10个）场景的渲染帧率有显著影响"
+      approval_required: false
+    ui_meta:
+      label: "脏矩形增量渲染"
+      order: 9
+      description: "启用后引擎只重绘变更区域，大幅提升多组件场景下的渲染性能"
+    ai_hint: "脏矩形增量渲染开关，影响渲染性能和 CPU 占用率"
+    search_keywords:
+      - "增量渲染"
+      - "脏矩形"
+      - "渲染优化"
+      - "性能优化"
+      - "dirty rect"
+
+  # ============================================================
+  # 系统级配置 — OBS 连接 (obs.connection.*)
+  # ============================================================
+  - key: obs.connection.host
+    type: STR
+    default: "localhost"
+    required: true
+    business_desc: "OBS websocket 主机地址，用于 livestyle 连接 OBS Studio 进行实时推流控制。通常为本地回环地址，远程部署时可配置为局域网 IP"
+    ui_meta:
+      label: "OBS 主机地址"
+      order: 10
+      placeholder: "localhost"
+      description: "OBS websocket 服务的主机地址或 IP"
+    ai_hint: "OBS websocket 连接主机地址，默认 localhost，远程时可配置局域网 IP"
+    search_keywords:
+      - "OBS地址"
+      - "OBS主机"
+      - "websocket地址"
+      - "OBS连接"
+
+  - key: obs.connection.port
+    type: I32
+    default: 4455
+    required: true
+    business_desc: "OBS websocket 端口号，对应 OBS Studio 中 websocket 服务器设置的监听端口。修改后需与 OBS 端实际配置一致"
+    contract:
+      range: [1, 65535]
+      slo_impact: "端口配置错误将导致无法连接 OBS，影响直播推送功能"
+      approval_required: false
+    ui_meta:
+      label: "OBS 端口"
+      order: 11
+      placeholder: "4455"
+      description: "OBS websocket 服务端口号，默认 4455"
+    ai_hint: "OBS websocket 连接端口，范围1-65535，需与 OBS 端配置一致"
+    search_keywords:
+      - "OBS端口"
+      - "websocket端口"
+      - "端口号"
+      - "OBS连接"
+
+  - key: obs.connection.password
+    type: SECRET
+    default: ""
+    required: false
+    business_desc: "OBS websocket 连接密码（加密存储）。如果 OBS 端开启了 websocket 认证，需要在此配置对应的密码才能成功建立连接"
+    contract:
+      approval_required: true
+    ui_meta:
+      label: "OBS 密码"
+      order: 12
+      placeholder: "输入 OBS websocket 密码"
+      description: "OBS websocket 认证密码，用于安全连接（加密存储）"
+      hidden: true
+    ai_hint: "OBS websocket 认证密码，敏感信息需加密存储，空字符串表示无认证"
+    search_keywords:
+      - "OBS密码"
+      - "websocket密码"
+      - "认证密码"
+      - "OBS认证"
+
+  - key: obs.connection.auto_reconnect
+    type: BOOL
+    default: true
+    required: false
+    business_desc: "是否启用 OBS 自动重连。开启后当 OBS 连接意外断开时，系统会自动按配置的间隔尝试重新连接，无需手动干预"
+    ui_meta:
+      label: "自动重连 OBS"
+      order: 13
+      description: "启用后 OBS 连接断开时自动尝试重新连接"
+    ai_hint: "OBS 自动重连开关，启用后可在连接断开时自动恢复"
+    search_keywords:
+      - "自动重连"
+      - "OBS重连"
+      - "断线重连"
+      - "自动恢复"
+
+  - key: obs.connection.retry_interval_ms
+    type: I32
+    default: 5000
+    required: false
+    business_desc: "OBS 自动重连间隔（毫秒），控制每次重连尝试之间的等待时间。间隔太短会频繁发起连接请求，太长则断连恢复慢"
+    contract:
+      range: [1000, 60000]
+      dependencies:
+        - "obs.connection.auto_reconnect == true"
+      slo_impact: "影响 OBS 断连恢复时间：间隔越长，从断连到恢复的等待时间越长，影响直播推送的连续性"
+      approval_required: false
+    ui_meta:
+      label: "重连间隔"
+      order: 14
+      placeholder: "5000"
+      description: "OBS 自动重连的间隔时间（毫秒），仅 auto_reconnect 启用时有效"
+    ai_hint: "OBS 重连间隔，范围1000-60000毫秒，仅在 auto_reconnect=true 时生效"
+    search_keywords:
+      - "重连间隔"
+      - "重连频率"
+      - "OBS重连"
+      - "重试间隔"
+
+  - key: obs.sync.debounce_ms
+    type: I32
+    default: 200
+    required: false
+    business_desc: "OBS 同步防抖时间（毫秒），避免频繁向 OBS 推送配置变更。当用户连续操作时，只有最后一次操作后的等待期内无新操作才会触发同步"
+    contract:
+      range: [50, 5000]
+      slo_impact: "影响 OBS 配置同步的实时性和频率：值越小同步越实时但网络请求越频繁，值越大同步延迟越高但能减少无效推送"
+      approval_required: false
+    ui_meta:
+      label: "OBS 同步防抖"
+      order: 15
+      placeholder: "200"
+      description: "向 OBS 推送配置时的防抖等待时间（毫秒），避免频繁推送"
+    ai_hint: "OBS 同步防抖间隔，范围50-5000毫秒，平衡实时性和推送频率"
+    search_keywords:
+      - "同步防抖"
+      - "OBS同步"
+      - "防抖时间"
+      - "推送频率"
+      - "debounce"
+
+  # ============================================================
+  # 组件级配置 — TaskList (component.task-list.*)
+  # ============================================================
+  - key: component.task-list.title
+    type: STR
+    default: "任务列表"
+    required: false
+    business_desc: "TaskList 组件标题文字，显示在组件顶部的标题栏区域。主播可根据直播主题自定义标题内容"
+    ui_meta:
+      label: "标题"
+      order: 16
+      placeholder: "任务列表"
+      description: "设置任务列表组件的标题文字"
+    ai_hint: "TaskList 组件标题，用于自定义组件顶部标题栏显示文字"
+    search_keywords:
+      - "任务标题"
+      - "组件标题"
+      - "标题文字"
+      - "任务列表标题"
+
+  - key: component.task-list.backgroundColor
+    type: STR
+    default: "#1a1a2e"
+    required: false
+    business_desc: "TaskList 组件背景色，支持 hex 格式颜色值。影响组件的整体视觉风格，需与直播间主题色调协调"
+    contract:
+      pattern: "^#[0-9a-fA-F]{6}$"
+    ui_meta:
+      label: "背景色"
+      order: 17
+      placeholder: "#1a1a2e"
+      description: "任务列表组件的背景颜色（十六进制）"
+    ai_hint: "TaskList 背景色，hex格式如 #1a1a2e，影响组件视觉风格"
+    search_keywords:
+      - "背景颜色"
+      - "组件背景"
+      - "背景色"
+      - "主题色"
+
+  - key: component.task-list.fontSize
+    type: I32
+    default: 14
+    required: false
+    business_desc: "TaskList 字体大小（px），控制组件内任务文字的显示大小。需考虑直播画面分辨率和观众观看距离"
+    contract:
+      range: [10, 48]
+      slo_impact: "字体过小（<10px）可能导致直播画面中文字不可读，过大（>48px）可能破坏布局美观"
+      approval_required: false
+    ui_meta:
+      label: "字体大小"
+      order: 18
+      placeholder: "14"
+      description: "任务文字的字体大小（像素）"
+    ai_hint: "TaskList 字体大小，范围10-48px，影响直播画面可读性"
+    search_keywords:
+      - "字体大小"
+      - "字号"
+      - "文字大小"
+      - "字体尺寸"
+
+  - key: component.task-list.textColor
+    type: STR
+    default: "#ffffff"
+    required: false
+    business_desc: "TaskList 文字颜色，支持 hex 格式颜色值。控制任务列表中所有文字（包括标题和任务项）的显示颜色"
+    contract:
+      pattern: "^#[0-9a-fA-F]{6}$"
+    ui_meta:
+      label: "文字颜色"
+      order: 19
+      placeholder: "#ffffff"
+      description: "任务文字的颜色（十六进制），推荐与背景色有足够对比度"
+    ai_hint: "TaskList 文字颜色，hex格式如 #ffffff，建议与背景色保持高对比度"
+    search_keywords:
+      - "文字颜色"
+      - "字体颜色"
+      - "文字色"
+      - "前景色"
+
+  - key: component.task-list.items
+    type: STR
+    default: "任务1,任务2,任务3"
+    required: false
+    business_desc: "逗号分隔的任务列表文本，定义组件中显示的任务条目。每个逗号分隔的值对应一个任务项，支持中英文混合"
+    ui_meta:
+      label: "任务列表"
+      order: 20
+      placeholder: "任务1,任务2,任务3"
+      description: "逗号分隔的任务文字，每个逗号之间的内容为一条任务"
+    ai_hint: "逗号分隔的任务列表，每个逗号对应一个任务项，如'喝水,休息,互动'"
+    search_keywords:
+      - "任务内容"
+      - "任务列表"
+      - "待办事项"
+      - "任务项"
+
+  - key: component.task-list.showHeader
+    type: BOOL
+    default: true
+    required: false
+    business_desc: "是否显示 TaskList 组件标题栏。开启后在组件顶部显示标题区域，关闭后只显示任务列表内容，提供更紧凑的布局"
+    ui_meta:
+      label: "显示标题"
+      order: 21
+      description: "是否显示组件顶部的标题栏区域"
+    ai_hint: "控制 TaskList 标题栏的显隐，关闭后组件布局更紧凑"
+    search_keywords:
+      - "显示标题"
+      - "标题栏"
+      - "标题显隐"
+      - "头部显示"
+
+  - key: component.task-list.borderRadius
+    type: I32
+    default: 8
+    required: false
+    business_desc: "TaskList 边框圆角大小（px），控制组件四个角的圆润程度。圆角越大视觉效果越柔和，0 表示直角"
+    contract:
+      range: [0, 20]
+    ui_meta:
+      label: "边框圆角"
+      order: 22
+      placeholder: "8"
+      description: "组件边框的圆角大小（像素），0 为直角"
+    ai_hint: "TaskList 边框圆角，范围0-20px，影响组件视觉风格的圆润度"
+    search_keywords:
+      - "圆角"
+      - "边框圆角"
+      - "圆角大小"
+      - "border radius"

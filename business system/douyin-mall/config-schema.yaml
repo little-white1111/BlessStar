@@ -1,0 +1,100 @@
+# config-schema.yaml — 配置宪法（唯一真理源）
+# 业务系统: 抖音商城 (douyin-mall)
+# 此文件是所有配置字段的单一真理源，codegen 和 BlessStar 均从此推导各自的产物
+domain: douyin-mall
+version: v1.0.0
+fields:
+  - key: auth.jwt.token_expiry_seconds
+    type: I64
+    default: "11520"
+    business_desc: "JWT 访问令牌的有效期时长（分钟）"
+    impact_scope: ["用户登录", "会话管理", "接口鉴权"]
+    contract:
+      range: [60, 43200]
+      dependencies:
+        - "auth.jwt.token_expiry_seconds > auth.password.bcrypt_cost * 10"
+      slo_impact: "用户连续登录成功率 ≥99.9%"
+      approval_required: true
+    env_overrides:
+      production:
+        range: [60, 1440]
+    ui_meta:
+      label: "Token 过期时间（分钟）"
+      order: 1
+    search_keywords: ["Token过期", "JWT", "登录有效期"]
+    ai_hint: "JWT 访问令牌过期时间（分钟），默认 11520（8天），生产建议 60~1440 分钟"
+
+  - key: auth.password.bcrypt_cost
+    type: I32
+    default: "12"
+    business_desc: "密码哈希的 bcrypt 计算成本因子"
+    impact_scope: ["用户登录", "密码安全", "性能"]
+    contract:
+      range: [8, 16]
+    ui_meta:
+      label: "密码加密成本"
+      order: 2
+    ai_hint: "bcrypt 成本因子，默认 12，越大越安全但越慢"
+
+  - key: payment.timeout
+    type: I64
+    default: "30"
+    business_desc: "支付等待超时（秒），超过则自动取消订单"
+    impact_scope: ["订单状态", "支付结果"]
+    contract:
+      range: [10, 120]
+      dependencies:
+        - "payment.timeout > payment.max_retry * 2"
+      slo_impact: "支付成功率"
+      approval_required: true
+    ui_meta:
+      label: "支付超时时间"
+      order: 3
+    ai_hint: "支付等待超时，默认 30秒，需大于重试次数的 2 倍"
+
+  - key: payment.max_retry
+    type: I32
+    default: "3"
+    contract:
+      range: [1, 5]
+    ui_meta:
+      label: "支付最大重试次数"
+      order: 4
+
+  - key: cors.allowed_origins
+    type: ARR
+    default: '["http://localhost","http://localhost:5173"]'
+    business_desc: "CORS 跨域允许的前端来源域名列表"
+    impact_scope: ["前端 API 调用", "跨域安全"]
+    contract:
+      slo_impact: "前端 API 调用成功率 ≥99.9%"
+      approval_required: true
+    env_overrides:
+      production:
+        range: [1, 10]
+    ui_meta:
+      label: "CORS 跨域白名单"
+      order: 5
+    ai_hint: "CORS 允许域名列表，生产环境应严格限制"
+
+  - key: environment.deploy
+    type: ENUM
+    default: "local"
+    enum_values: ["local", "staging", "production"]
+    business_desc: "当前部署环境标识"
+    impact_scope: ["安全策略", "日志级别", "调试模式"]
+    contract:
+      slo_impact: "环境切换零故障"
+      approval_required: true
+    ui_meta:
+      label: "部署环境"
+      order: 6
+
+  - key: sentry.dsn
+    type: STR
+    default: ""
+    business_desc: "Sentry 错误监控服务的 DSN"
+    impact_scope: ["错误监控", "排障", "生产运维"]
+    ui_meta:
+      label: "Sentry DSN"
+      order: 7

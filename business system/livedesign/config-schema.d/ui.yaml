@@ -1,0 +1,92 @@
+# config-schema.d/ui.yaml — 界面主题 & 视觉配置
+# SSOT: 主题方案 / 透明度 / 工具列表 / 插件管理
+domain: livedesign
+version: v1.1.0
+x-version: v1.0.0
+x-domain: ui
+x-extensions:
+  biz_id: "livedesign"
+  registration_phase: "P1"
+  generated_by: "configdesigner"
+fields:
+  - key: ui.theme
+    type: STR
+    default: system
+    required: false
+    business_desc: "界面主题配色方案，影响所有 UI 组件的颜色风格"
+    contract:
+      slo_impact: "用户视觉体验"
+    ui_meta:
+      label: "界面主题"
+      order: 6
+      placeholder: "system"
+      description: "切换应用界面的主题配色"
+      hidden: false
+    search_keywords:
+      - "主题"
+      - "配色"
+      - "浅色"
+      - "深色"
+    ai_hint: "切换应用界面的主题配色。light 为浅色主题，dark 为深色主题，system 跟随系统设置。主题切换实时生效，无需重启。"
+
+  - key: ui.transparency
+    type: F64
+    default: 1.0
+    required: false
+    business_desc: "悬浮球窗口的透明度级别，影响悬浮球在桌面的视觉融合度"
+    contract:
+      range: [0.1, 1.0]
+      slo_impact: "悬浮球视觉效果"
+    ui_meta:
+      label: "悬浮球透明度"
+      order: 7
+      placeholder: "1.0"
+      description: "调节悬浮球窗口的透明度"
+      hidden: false
+    search_keywords:
+      - "透明度"
+      - "悬浮球"
+      - "视觉效果"
+    ai_hint: "调节悬浮球窗口的透明度。1.0 为完全不透明，0.1 为几乎透明。调低透明度可让悬浮球更融入桌面背景，减少视觉干扰。"
+
+  - key: assistant.tools
+    type: ARR
+    default: '[{"name":"code_editor","requires_approval":true},{"name":"fs_read","requires_approval":true},{"name":"web_search","requires_approval":true}]'
+    required: false
+    business_desc: "助手模式下 AI 可调用的工具列表。每次工具调用前需经过用户动作审批确认"
+    contract:
+      slo_impact: "用户数据安全与操作权限"
+      approval_required: true
+    ui_meta:
+      label: "可用工具列表"
+      order: 8
+      placeholder: "[{\"name\":\"code_editor\",\"requires_approval\":true}]"
+      description: "助手模式可调用的工具列表，涉及敏感操作需用户审批"
+      hidden: false
+    search_keywords:
+      - "工具"
+      - "审批"
+      - "权限"
+      - "code_editor"
+    ai_hint: "配置助手模式可调用的工具列表。涉及代码编辑、文件读取、网络请求等敏感操作，每次调用都需要用户确认审批。建议仅开启需要的工具以减少审批打扰。"
+
+  - key: plugin.enabled
+    type: ARR
+    default: "[]"
+    required: false
+    business_desc: "当前已启用的插件 ID 列表，仅启用列表中的插件会被加载到 Plugin Host 沙箱中执行"
+    contract:
+      slo_impact: "系统安全与功能扩展"
+      approval_required: true
+    ui_meta:
+      label: "已启用插件"
+      order: 9
+      placeholder: "[]"
+      description: "管理已安装插件的启用状态"
+      hidden: false
+    search_keywords:
+      - "插件"
+      - "启用"
+      - "沙箱"
+      - "Plugin Host"
+    ai_hint: "管理已安装插件的启用状态。插件运行在独立的 Plugin Host 沙箱进程中，但仍可能请求文件系统或网络能力。启用新插件时需要用户确认审批。修改后需重启插件宿主进程生效。"

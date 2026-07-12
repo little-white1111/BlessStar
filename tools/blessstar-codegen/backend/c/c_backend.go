@@ -833,5 +833,19 @@ func (c *CBackend) GenerateInitFiles(biz *types.BizSystem) ([]*backend.File, err
 	return nil, nil
 }
 
+// ─── Schema-First 扩展方法（stub — C 后端暂不支持） ───
+
+func (c *CBackend) GenerateGateConfigs(biz *types.BizSystem, gateConfigs []types.GateConfig) (*backend.File, error) {
+	return nil, nil
+}
+
+func (c *CBackend) GenerateTestCases(biz *types.BizSystem, testCases []string) (*backend.File, error) {
+	return nil, nil
+}
+
+func (c *CBackend) GenerateObservability(biz *types.BizSystem, rules []string) (*backend.File, error) {
+	return nil, nil
+}
+
 // Ensure interface compliance
 var _ backend.LanguageBackend = (*CBackend)(nil)

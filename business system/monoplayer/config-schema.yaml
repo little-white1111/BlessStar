@@ -1,0 +1,784 @@
+# config-schema.yaml — 配置宪法（唯一真理源）
+# 业务系统: monoplayer (Godot 4.x 3D→2D 动画视频渲染播放器)
+# 此文件是所有配置字段的单一真理源，codegen 和 BlessStar 均从此推导各自的产物
+domain: monoplayer
+version: v1.0.0
+x-extensions:
+  biz_id: "monoplayer"
+  registration_phase: "P2"
+  generated_by: "configdesigner"
+fields:
+  # ============================================================================
+  # 相机配置 (cam)
+  # ============================================================================
+  - key: monoplayer.cam.orthogonal_size
+    type: F64
+    default: "5.0"
+    required: true
+    business_desc: "正交相机的视野大小，控制 3D 角色在画面中的缩放比例。值越小角色越大越局部，值越大角色越小越能看到全身。"
+    impact_scope: ["角色可见性", "画面构图", "渲染输出"]
+    contract:
+      range: [0.1, 50.0]
+      slo_impact: "角色在画面中的可见性和构图完整性。超出范围会导致角色不可见或画面空白面积过大。"
+      approval_required: false
+    ui_meta:
+      label: "正交相机视野"
+      order: 1
+      placeholder: "5.0"
+      description: "控制角色在画面中的缩放比例，类似镜头焦距"
+      hidden: false
+    ai_hint: "正交相机视野大小，默认 5.0。值越小角色显示越大（特写），值越大角色显示越小（全景）。建议范围 1.0~20.0。"
+    search_keywords:
+      - "视野大小"
+      - "角色缩放"
+      - "正交尺寸"
+      - "相机视野"
+
+  # ============================================================================
+  # 动画参数配置 (anim)
+  # ============================================================================
+  - key: monoplayer.anim.angle_x
+    type: F64
+    default: "0.15"
+    required: true
+    business_desc: "角色头部的 X 轴倾斜角度，用于模拟 Live2D 风格的头部 Param 控制。正值低头，负值仰头。"
+    impact_scope: ["角色姿态", "面部朝向", "Live2D 参数模拟"]
+    contract:
+      range: [-90.0, 90.0]
+      slo_impact: "角色姿态的自然度。极端值可能导致角色头部旋转过度，影响画面观感。"
+      approval_required: false
+    ui_meta:
+      label: "头部 X 轴倾斜角度"
+      order: 10
+      placeholder: "0.15"
+      description: "模拟 Live2D Head X Param，正值低头，负值仰头"
+      hidden: false
+    ai_hint: "头部 X 轴倾斜角度（度），默认 0.15。用于模拟 Live2D 风格的 Param 控制，范围 -90~90。"
+    search_keywords:
+      - "头部倾斜"
+      - "Live2D参数"
+      - "头部角度"
+      - "Param控制"
+
+  - key: monoplayer.anim.eye_open
+    type: F64
+    default: "1.0"
+    required: true
+    business_desc: "角色眼睛睁开程度，0.0=完全闭合，1.0=完全睁开。用于控制眨眼动画和表情表现。"
+    impact_scope: ["角色表情", "眨眼动画", "面部表现"]
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "角色表情的自然度和可信度。超出范围会导致眼部变形。"
+      approval_required: false
+    ui_meta:
+      label: "眼睛睁开程度"
+      order: 11
+      placeholder: "1.0"
+      description: "0.0=闭合，1.0=全开，控制眨眼和表情"
+      hidden: false
+    ai_hint: "角色眼睛睁开程度，默认 1.0（全开）。范围 0.0~1.0，用于控制眨眼动画和 Live2D 表情 Param。"
+    search_keywords:
+      - "眨眼"
+      - "眼睛睁开"
+      - "表情参数"
+      - "眼部动画"
+
+  - key: monoplayer.anim.default_name
+    type: STR
+    default: "IdleLoop"
+    required: true
+    business_desc: "默认播放的动画片段名称，对应 Godot AnimationPlayer 节点中已定义的动画资源名。启动时自动播放该动画。"
+    impact_scope: ["初始动画状态", "渲染启动行为"]
+    contract:
+      approval_required: false
+    ui_meta:
+      label: "默认动画名称"
+      order: 12
+      placeholder: "IdleLoop"
+      description: "填入 Godot AnimationPlayer 中已定义的动画名"
+      hidden: false
+    ai_hint: "默认播放的动画名称，默认 IdleLoop。需与 Godot AnimationPlayer 中的动画片段名称完全一致。"
+    search_keywords:
+      - "默认动画"
+      - "动画名称"
+      - "待机动画"
+      - "AnimationPlayer"
+
+  - key: monoplayer.anim.default_duration
+    type: DURATION
+    default: "5s"
+    required: true
+    business_desc: "单次动画渲染的默认时长。控制每次渲染任务输出的视频/序列帧的长度，影响渲染总耗时和输出文件大小。"
+    impact_scope: ["渲染时长", "输出文件大小", "批处理调度"]
+    contract:
+      range: ["0.1s", "3600s"]
+      slo_impact: "渲染任务的执行时长和输出文件大小。过短导致输出无意义，过长可能导致渲染超时。"
+      approval_required: false
+    ui_meta:
+      label: "动画渲染时长"
+      order: 13
+      placeholder: "5s"
+      description: "格式：数字+单位（s/m/h），如 5s、2m、1h"
+      hidden: false
+    ai_hint: "单次动画渲染时长，默认 5s。格式支持 s（秒）/m（分）/h（时），最小 0.1s，最大 3600s（1小时）。"
+    search_keywords:
+      - "渲染时长"
+      - "动画时长"
+      - "输出时长"
+      - "渲染时间"
+
+  # ============================================================================
+  # 输出配置 (output)
+  # ============================================================================
+  - key: monoplayer.output.width
+    type: I32
+    default: "1920"
+    required: true
+    business_desc: "输出视频的宽度（像素），决定渲染画面的水平分辨率。与 height 共同决定输出宽高比和画面清晰度。"
+    impact_scope: ["画面清晰度", "输出文件大小", "渲染性能"]
+    contract:
+      range: [320, 7680]
+      dependencies:
+        - "monoplayer.output.width / monoplayer.output.height ≈ 目标宽高比"
+      slo_impact: "渲染性能（高分辨率降低帧率）和输出文件大小。"
+      approval_required: false
+    ui_meta:
+      label: "输出宽度"
+      order: 30
+      placeholder: "1920"
+      description: "输出视频宽度（像素），建议符合标准分辨率"
+      hidden: false
+    ai_hint: "输出视频宽度，默认 1920（1080p）。建议标准分辨率：1920×1080、1280×720、3840×2160。范围 320~7680。"
+    search_keywords:
+      - "输出分辨率"
+      - "视频宽度"
+      - "渲染尺寸"
+      - "画面清晰度"
+
+  - key: monoplayer.output.height
+    type: I32
+    default: "1080"
+    required: true
+    business_desc: "输出视频的高度（像素），决定渲染画面的垂直分辨率。与 width 共同决定输出宽高比和画面清晰度。"
+    impact_scope: ["画面清晰度", "输出文件大小", "渲染性能"]
+    contract:
+      range: [240, 4320]
+      dependencies:
+        - "monoplayer.output.width / monoplayer.output.height ≈ 目标宽高比"
+      slo_impact: "渲染性能（高分辨率降低帧率）和输出文件大小。"
+      approval_required: false
+    ui_meta:
+      label: "输出高度"
+      order: 31
+      placeholder: "1080"
+      description: "输出视频高度（像素），建议符合标准分辨率"
+      hidden: false
+    ai_hint: "输出视频高度，默认 1080（1080p）。建议标准分辨率：1920×1080、1280×720、3840×2160。范围 240~4320。"
+    search_keywords:
+      - "输出分辨率"
+      - "视频高度"
+      - "渲染尺寸"
+
+  - key: monoplayer.output.fps
+    type: I32
+    default: "60"
+    required: true
+    business_desc: "输出视频的帧率（帧/秒），决定动画的流畅度。高帧率更流畅但文件更大、渲染更慢。低帧率节省资源和时间。"
+    impact_scope: ["动画流畅度", "渲染性能", "输出文件大小"]
+    contract:
+      range: [1, 120]
+      slo_impact: "渲染吞吐量（帧/秒）和输出文件体积。高 FPS 显著增加渲染时间和磁盘占用。"
+      approval_required: false
+    ui_meta:
+      label: "输出帧率"
+      order: 32
+      placeholder: "60"
+      description: "帧/秒，越高越流畅但文件越大"
+      hidden: false
+    ai_hint: "输出帧率，默认 60fps。常用值：24（电影级）、30（标准视频）、60（高流畅）、120（超流畅）。范围 1~120。"
+    search_keywords:
+      - "帧率"
+      - "FPS"
+      - "动画流畅度"
+      - "渲染性能"
+      - "输出帧率"
+
+  - key: monoplayer.output.format
+    type: STR
+    default: "prores"
+    required: true
+    business_desc: "输出视频的封装格式。prores=ProRes 4444 .mov（带 Alpha 通道，AE/Premiere 直接导入，视觉无损），avi=Godot 原生 AVI（更快但不带透明通道）。"
+    impact_scope: ["输出格式", "文件大小", "编码方式"]
+    contract:
+      approval_required: false
+    ui_meta:
+      label: "输出格式"
+      order: 33
+      placeholder: "prores"
+      description: "prores（推荐，带 Alpha + .mov）或 avi（快速预览）"
+      hidden: false
+    ai_hint: "输出格式，默认 prores（推荐）。prores=ProRes 4444 .mov，带透明通道、视觉无损，可直接拖入 AE/Premiere。avi=Godot 原生编码，更快但不透明。"
+    search_keywords:
+      - "输出格式"
+      - "编码格式"
+      - "ProRes"
+      - "MOV"
+      - "AVI"
+      - "视频格式"
+
+  - key: monoplayer.output.prores_quality
+    type: STR
+    default: "4444"
+    required: true
+    business_desc: "ProRes 编码质量等级。4444=标准 ProRes 4444（RGBA+Alpha，视觉无损），4444XQ=更高码率的 4444（极致质量），422HQ=ProRes 422 HQ（无 Alpha，更小文件），422=ProRes 422（平衡质量与体积）。"
+    impact_scope: ["画质", "文件大小", "Alpha 支持"]
+    contract:
+      approval_required: false
+    ui_meta:
+      label: "ProRes 质量等级"
+      order: 34
+      placeholder: "4444"
+      description: "4444（推荐，带Alpha）、4444XQ（极致）、422HQ、422"
+      hidden: false
+    ai_hint: "ProRes 质量等级，默认 4444（推荐）。4444=标准 ProRes 4444（RGBA+Alpha 透明通道），4444XQ=极致质量（文件更大），422HQ=无 Alpha 的高质量（文件更小），422=平衡级。"
+    search_keywords:
+      - "ProRes"
+      - "4444"
+      - "ProRes 4444"
+      - "Alpha通道"
+      - "编码质量"
+      - "视频质量"
+
+  - key: monoplayer.output.prores_output_path
+    type: STR
+    default: "output.mov"
+    required: true
+    business_desc: "ProRes 输出文件的路径（仅 format=prores 时生效）。默认为 output.mov，输出到可执行文件同目录。"
+    impact_scope: ["输出文件位置", "工作流"]
+    contract:
+      approval_required: false
+    ui_meta:
+      label: "ProRes 输出路径"
+      order: 35
+      placeholder: "output.mov"
+      description: "输出 .mov 文件路径（仅 ProRes 模式生效）"
+      hidden: false
+    ai_hint: "ProRes 输出文件路径，默认 output.mov。支持相对路径和绝对路径。建议保留 .mov 扩展名。"
+    search_keywords:
+      - "输出路径"
+      - "MOV输出"
+      - "视频文件路径"
+      - "ProRes路径"
+
+  # ============================================================================
+  # Shader 视觉配置 (shader)
+  # ============================================================================
+  - key: monoplayer.shader.toon_steps
+    type: I32
+    default: "2"
+    required: true
+    business_desc: "Toon 赛璐璐 Shader 的阴影阶数。2=两阶阴影（亮面/暗面），3=三阶阴影（亮面/中间调/暗面）。阶数越多光影过渡越细腻，但性能开销增加。"
+    impact_scope: ["视觉风格", "渲染性能", "赛璐璐效果"]
+    contract:
+      range: [1, 10]
+      slo_impact: "渲染性能——高阶数增加 GPU 像素着色器计算量，可能降低渲染帧率。"
+      approval_required: false
+    ui_meta:
+      label: "Toon 阴影阶数"
+      order: 50
+      placeholder: "2"
+      description: "赛璐璐风格阴影分层数，2=两阶，3=三阶"
+      hidden: false
+    ai_hint: "Toon Shader 阴影阶数，默认 2（亮面+暗面）。2 为经典赛璐璐风格，3 及以上增加中间过渡色。建议范围 1~5。"
+    search_keywords:
+      - "Toon Shader"
+      - "赛璐璐"
+      - "阴影阶数"
+      - "卡通渲染"
+      - "Cel Shading"
+
+  - key: monoplayer.shader.outline_width
+    type: F64
+    default: "1.0"
+    required: true
+    business_desc: "角色轮廓描边的宽度（像素），用于模拟 Live2D 风格的黑色描边效果。0=无描边，值越大描边越粗越明显。"
+    impact_scope: ["视觉风格", "描边效果", "染色线"]
+    contract:
+      range: [0.0, 50.0]
+      slo_impact: "渲染性能——宽的描边增加边缘检测和额外 Pass 的像素处理开销。"
+      approval_required: false
+    ui_meta:
+      label: "轮廓描边宽度"
+      order: 51
+      placeholder: "1.0"
+      description: "角色边缘勾线宽度（像素），0=关闭描边"
+      hidden: false
+    ai_hint: "角色轮廓描边宽度（像素），默认 1.0。0 为关闭描边效果，1.0~3.0 为常用范围，用于模拟 Live2D 经典描边。"
+    search_keywords:
+      - "轮廓描边"
+      - "描边宽度"
+      - "Live2D描边"
+      - "边缘线"
+      - "勾线"
+
+  # ============================================================================
+  # 光照配置 (lighting)
+  # ============================================================================
+  - key: monoplayer.lighting.main_light_angle
+    type: F64
+    default: "45.0"
+    required: true
+    business_desc: "主光源在水平面上的角度（度），决定角色阴影的方向。0=正面光，90=左侧光，180=背光，270=右侧光。"
+    impact_scope: ["阴影方向", "角色立体感", "画面氛围"]
+    contract:
+      range: [0.0, 360.0]
+      slo_impact: "角色阴影方向和立体感表现。极端值可能导致阴影过度偏斜、观感异常。"
+      approval_required: false
+    ui_meta:
+      label: "主光源角度"
+      order: 60
+      placeholder: "45.0"
+      description: "0~360 度，控制阴影方向"
+      hidden: false
+    ai_hint: "主光源角度（度），默认 45°（左上前方）。0=正面平光（无阴影），90=左侧光，180=背光（剪影效果），270=右侧光。"
+    search_keywords:
+      - "主光源"
+      - "光照角度"
+      - "阴影方向"
+      - "打光"
+      - "灯光角度"
+
+  - key: monoplayer.lighting.main_light_intensity
+    type: F64
+    default: "1.0"
+    required: true
+    business_desc: "主光源的强度系数。1.0=正常强度，>1.0=过曝效果，<1.0=暗淡效果。影响角色亮面的亮度。"
+    impact_scope: ["画面亮度", "明暗对比", "角色立体感"]
+    contract:
+      range: [0.0, 5.0]
+      slo_impact: "画面整体亮度和明暗对比度。超过 5.0 可能导致像素值饱和、细节丢失。"
+      approval_required: false
+    ui_meta:
+      label: "主光源强度"
+      order: 61
+      placeholder: "1.0"
+      description: "0.0~5.0，控制主光源亮度"
+      hidden: false
+    ai_hint: "主光源强度，默认 1.0。0=完全黑暗，1.0=标准强度，>1.0=增强曝光，建议不超过 3.0 避免过曝。"
+    search_keywords:
+      - "光源强度"
+      - "亮度"
+      - "曝光"
+      - "打光强度"
+
+  - key: monoplayer.lighting.fill_light_intensity
+    type: F64
+    default: "0.3"
+    required: true
+    business_desc: "补光强度系数。补光从主光对侧补充照明，减少阴影区域的黑暗程度，使暗面细节可见。0=无补光。"
+    impact_scope: ["阴影深度", "暗面细节", "画面柔和度"]
+    contract:
+      range: [0.0, 5.0]
+      slo_impact: "阴影区域的可见细节和画面柔和度。补光过强会消除阴影、画面变平。"
+      approval_required: false
+    ui_meta:
+      label: "补光强度"
+      order: 62
+      placeholder: "0.3"
+      description: "0.0~5.0，0=无补光（硬阴影）"
+      hidden: false
+    ai_hint: "补光强度，默认 0.3（弱补光）。0=纯硬阴影（赛璐璐经典风格），0.3~0.5=柔和过渡，>1.0=几乎消除阴影。"
+    search_keywords:
+      - "补光"
+      - "填充光"
+      - "阴影柔和"
+      - "暗面亮度"
+      - "Fill Light"
+
+  - key: monoplayer.lighting.rim_light_intensity
+    type: F64
+    default: "0.0"
+    required: true
+    business_desc: "轮廓光（背光边缘光）强度。从角色背后打光，在角色边缘形成亮圈，增强角色与背景的分离感。0=关闭。"
+    impact_scope: ["角色轮廓", "背景分离", "立体感"]
+    contract:
+      range: [0.0, 5.0]
+      slo_impact: "角色边缘发光效果的感官强度。过高会导致角色边缘完全过曝、细节丢失。"
+      approval_required: false
+    ui_meta:
+      label: "轮廓光强度"
+      order: 63
+      placeholder: "0.0"
+      description: "0.0~5.0，0=关闭轮廓光"
+      hidden: false
+    ai_hint: "轮廓光（Rim Light）强度，默认 0（关闭）。0.5~2.0 为常用范围，增强角色与背景的分离感，适合突出主体。"
+    search_keywords:
+      - "轮廓光"
+      - "边缘光"
+      - "背光"
+      - "Rim Light"
+      - "背景分离"
+
+  # ============================================================================
+  # 后处理配置 (postprocess)
+  # ============================================================================
+  - key: monoplayer.postprocess.color_temperature
+    type: F64
+    default: "5500.0"
+    required: true
+    business_desc: "画面色温（开尔文 K）。5500K=中性白，<5500K=偏暖（橙红），>5500K=偏冷（蓝紫）。用于整体色彩基调调整。"
+    impact_scope: ["画面色调", "氛围感", "色彩风格"]
+    contract:
+      range: [1000.0, 10000.0]
+      slo_impact: "画面整体的色彩偏向和色调风格。极端值会导致画面严重偏色、角色肤色失真。"
+      approval_required: false
+    ui_meta:
+      label: "色温"
+      order: 70
+      placeholder: "5500"
+      description: "开尔文值，<5500=暖色，>5500=冷色"
+      hidden: false
+    ai_hint: "画面色温，默认 5500K（标准日光白）。暖色示例：3200K（钨丝灯暖黄），冷色示例：7500K（阴天冷蓝）。"
+    search_keywords:
+      - "色温"
+      - "白平衡"
+      - "色调"
+      - "色彩风格"
+      - "Color Temperature"
+
+  - key: monoplayer.postprocess.saturation
+    type: F64
+    default: "1.0"
+    required: true
+    business_desc: "色彩饱和度系数。1.0=原始饱和度，0=灰度（黑白），>1.0=过饱和（鲜艳）、<1.0=褪色（淡雅）。"
+    impact_scope: ["色彩鲜艳度", "画面风格", "视觉冲击力"]
+    contract:
+      range: [0.0, 3.0]
+      slo_impact: "画面的色彩表现力和视觉风格。过高饱和度导致颜色溢出、细节丢失；过低导致画面灰暗。"
+      approval_required: false
+    ui_meta:
+      label: "饱和度"
+      order: 71
+      placeholder: "1.0"
+      description: "0=黑白灰度，1.0=原始，>1.0=鲜艳"
+      hidden: false
+    ai_hint: "色彩饱和度，默认 1.0（原始）。0=完全去色（黑白），0.5=淡雅风格，1.5=高饱和鲜艳风格，2.0+≈过度饱和。"
+    search_keywords:
+      - "饱和度"
+      - "鲜艳度"
+      - "色彩浓度"
+      - "褪色"
+      - "Saturation"
+
+  - key: monoplayer.postprocess.contrast
+    type: F64
+    default: "1.0"
+    required: true
+    business_desc: "画面对比度系数。1.0=原始对比度，>1.0=增强明暗差异（更锐利），<1.0=减弱对比（更柔和/灰雾）。"
+    impact_scope: ["明暗对比", "画面锐利度", "视觉清晰度"]
+    contract:
+      range: [0.0, 3.0]
+      slo_impact: "画面的明暗层次感和视觉清晰度。过高对比度导致高光和阴影细节同时丢失。"
+      approval_required: false
+    ui_meta:
+      label: "对比度"
+      order: 72
+      placeholder: "1.0"
+      description: "0=无对比（纯灰），1.0=原始，>1.0=增强"
+      hidden: false
+    ai_hint: "画面对比度，默认 1.0（原始）。0.7=柔和电影感，1.2~1.5=高对比清晰风格，2.0+=极端对比（暗部/亮部细节丢失）。"
+    search_keywords:
+      - "对比度"
+      - "明暗对比"
+      - "锐利度"
+      - "Contrast"
+      - "画面清晰度"
+
+  - key: monoplayer.postprocess.bloom_intensity
+    type: F64
+    default: "0.0"
+    required: true
+    business_desc: "辉光（Bloom）效果强度。模拟亮部光线向周围扩散的视觉效果，增强梦幻/炫酷感。0=关闭辉光。"
+    impact_scope: ["亮部光晕", "视觉效果", "梦幻感"]
+    contract:
+      range: [0.0, 5.0]
+      slo_impact: "画面的视觉风格——高强度 Bloom 可营造梦幻效果，但过度会导致画面模糊、细节淹没。"
+      approval_required: false
+    ui_meta:
+      label: "辉光强度"
+      order: 73
+      placeholder: "0.0"
+      description: "0.0~5.0，0=关闭 Bloom"
+      hidden: false
+    ai_hint: "辉光（Bloom）强度，默认 0（关闭）。0.3~0.8=柔和辉光（适合梦幻风格），1.0~2.0=强烈辉光（赛博朋克风格）。"
+    search_keywords:
+      - "辉光"
+      - "Bloom"
+      - "光晕"
+      - "发光效果"
+      - "炫光"
+
+  # ============================================================================
+  # 合成器配置 (compositor)
+  # ============================================================================
+  # ============================================================================
+  # 表情控制配置 (expression) — BlessStar 充当表情通知器
+  # 设计思路：BlessStar 不驱动每帧动画参数，只告诉 ExpressionController
+  # "下一个表情是什么"。ExpressionController 将表情加入队列，在 GPU Shader
+  # 中通过 smoothstep 完成丝滑过渡。配置变更 → 通知 → 队列 → 插值渲染。
+  # ============================================================================
+  - key: monoplayer.expression.neutral
+    type: STR
+    default: '{"blush":0.0,"eye_openness":1.0,"mouth_blend":0.0,"brow_angle":0.0}'
+    required: true
+    business_desc: "中立表情预设（JSON）。定义角色的默认/无情绪状态的面部参数。blush=脸红强度，eye_openness=眼睛睁开程度，mouth_blend=嘴型混合，brow_angle=眉毛角度。"
+    impact_scope: ["角色表情", "面部参数", "默认情绪"]
+    contract:
+      slo_impact: "中立表情是其他表情过渡的基准态——预设值失真会导致所有表情基准偏移、角色面部表现异常。"
+      approval_required: false
+    ui_meta:
+      label: "中立表情"
+      order: 100
+      placeholder: '{"blush":0.0,"eye_openness":1.0,"mouth_blend":0.0,"brow_angle":0.0}'
+      description: "JSON 格式定义中立表情的面部参数"
+      hidden: false
+    ai_hint: "中立表情预设，默认 blush=0.0（无脸红）、eye_openness=1.0（全开）、mouth_blend=0.0（闭合）、brow_angle=0.0（平眉）。修改时需保持 JSON 格式完整。"
+    search_keywords:
+      - "中立表情"
+      - "默认表情"
+      - "neutral"
+      - "面部参数"
+      - "表情预设"
+
+  - key: monoplayer.expression.happy
+    type: STR
+    default: '{"blush":0.3,"eye_openness":1.0,"mouth_blend":0.0,"brow_angle":-0.2}'
+    required: true
+    business_desc: "开心表情预设（JSON）。blush=0.3 轻微脸红，eye_openness=1.0 双眼全开，mouth_blend=0.0 闭嘴微笑（通过口型 UV 映射），brow_angle=-0.2 眉梢上挑。"
+    impact_scope: ["角色表情", "开心情绪", "面部参数"]
+    contract:
+      slo_impact: "开心表情的可信度直接影响角色情绪表达的自然度——参数不匹配会导致假笑/皮笑肉不笑。"
+      approval_required: false
+    ui_meta:
+      label: "开心表情"
+      order: 101
+      placeholder: '{"blush":0.3,"eye_openness":1.0,"mouth_blend":0.0,"brow_angle":-0.2}'
+      description: "JSON 格式定义开心表情的面部参数"
+      hidden: false
+    ai_hint: "开心表情预设。典型特征：blush≈0.3 粉红面颊、brow_angle<0 眉梢上挑。修改时保持 JSON 格式。"
+    search_keywords:
+      - "开心表情"
+      - "微笑"
+      - "happy"
+      - "面部参数"
+      - "表情预设"
+
+  - key: monoplayer.expression.sad
+    type: STR
+    default: '{"blush":0.0,"eye_openness":0.8,"mouth_blend":0.7,"brow_angle":0.3}'
+    required: true
+    business_desc: "难过表情预设（JSON）。blush=0.0 无脸红，eye_openness=0.8 眼睛半闭（无神），mouth_blend=0.7 最大程度嘴型变化（撇嘴），brow_angle=0.3 眉毛下压。"
+    impact_scope: ["角色表情", "难过情绪", "面部参数"]
+    contract:
+      slo_impact: "难过表情的过渡速度和参数幅度影响角色情绪表达的感染力。"
+      approval_required: false
+    ui_meta:
+      label: "难过表情"
+      order: 102
+      placeholder: '{"blush":0.0,"eye_openness":0.8,"mouth_blend":0.7,"brow_angle":0.3}'
+      description: "JSON 格式定义难过表情的面部参数"
+      hidden: false
+    ai_hint: "难过表情预设。典型特征：eye_openness<1.0 眼神暗淡、mouth_blend≈0.7 撇嘴、brow_angle>0 眉毛下压。"
+    search_keywords:
+      - "难过表情"
+      - "悲伤"
+      - "sad"
+      - "面部参数"
+      - "表情预设"
+
+  - key: monoplayer.expression.angry
+    type: STR
+    default: '{"blush":0.1,"eye_openness":0.9,"mouth_blend":0.3,"brow_angle":0.6}'
+    required: true
+    business_desc: "生气表情预设（JSON）。blush=0.1 轻微脸红（愤怒涨红），eye_openness=0.9 眼睛睁大（怒目），mouth_blend=0.3 轻度嘴型变化（咬唇），brow_angle=0.6 眉毛大幅下压。"
+    impact_scope: ["角色表情", "生气情绪", "面部参数"]
+    contract:
+      slo_impact: "生气表情的眉毛角度和脸红强度是传达愤怒程度的关键 UI 信号。"
+      approval_required: false
+    ui_meta:
+      label: "生气表情"
+      order: 103
+      placeholder: '{"blush":0.1,"eye_openness":0.9,"mouth_blend":0.3,"brow_angle":0.6}'
+      description: "JSON 格式定义生气表情的面部参数"
+      hidden: false
+    ai_hint: "生气表情预设。典型特征：blush≈0.1 微红、brow_angle≈0.6 狠眉、eye_openness≈0.9 怒目圆睁。"
+    search_keywords:
+      - "生气表情"
+      - "愤怒"
+      - "angry"
+      - "面部参数"
+      - "表情预设"
+
+  - key: monoplayer.expression.surprised
+    type: STR
+    default: '{"blush":0.0,"eye_openness":1.0,"mouth_blend":0.9,"brow_angle":-0.5}'
+    required: true
+    business_desc: "惊讶表情预设（JSON）。blush=0.0 无脸红，eye_openness=1.0 眼睛最大程度睁开（瞪眼），mouth_blend=0.9 最大嘴型变化（O 型嘴），brow_angle=-0.5 眉毛大幅上挑。"
+    impact_scope: ["角色表情", "惊讶情绪", "面部参数"]
+    contract:
+      slo_impact: "惊讶表情的嘴型和眉毛幅度是传达惊讶程度的关键——过小显得无动于衷，过大显得浮夸。"
+      approval_required: false
+    ui_meta:
+      label: "惊讶表情"
+      order: 104
+      placeholder: '{"blush":0.0,"eye_openness":1.0,"mouth_blend":0.9,"brow_angle":-0.5}'
+      description: "JSON 格式定义惊讶表情的面部参数"
+      hidden: false
+    ai_hint: "惊讶表情预设。典型特征：eye_openness=1.0 瞪眼、mouth_blend≈0.9 O 型嘴、brow_angle=-0.5 眉毛高挑。"
+    search_keywords:
+      - "惊讶表情"
+      - "吃惊"
+      - "surprised"
+      - "面部参数"
+      - "表情预设"
+
+  - key: monoplayer.expression.queue
+    type: STR
+    default: "[]"
+    required: true
+    business_desc: "表情播放队列（JSON 字符串数组）。ExpressionController 按数组顺序依次播放下一个表情，当前表情过渡完成后自动消费队列下一个元素。支持运行时热追加——向队列尾部 push 表情名即可在不中断当前过渡的情况下排入下一个表情。"
+    impact_scope: ["表情编排", "动画队列", "运行时表情切换"]
+    contract:
+      approval_required: false
+    ui_meta:
+      label: "表情播放队列"
+      order: 105
+      placeholder: "[]"
+      description: "JSON 字符串数组，如 ['happy','surprised','neutral']，按顺序依次播放"
+      hidden: false
+    ai_hint: "表情播放队列，JSON 字符串数组格式。ExpressionController 会依次消费队列中的表情名。运行时修改即可热追加——如将 [] 改为 ['happy','surprised']，播放器会先过渡到 happy，完成后自动过渡到 surprised。"
+    search_keywords:
+      - "表情队列"
+      - "表情编排"
+      - "排队播放"
+      - "表情切换"
+      - "动画队列"
+
+  - key: monoplayer.expression.transition_duration
+    type: F64
+    default: "0.3"
+    required: true
+    business_desc: "表情过渡时长（秒）。控制从一个表情平滑过渡到下一个表情的持续时间。0.3=快速过渡（0.3 秒），1.0=缓慢过渡（1 秒）。过渡曲线为 smoothstep（ease-in-out），在 GPU 中插值，不消耗 CPU。"
+    impact_scope: ["表情过渡速度", "动画平滑度", "视觉效果"]
+    contract:
+      range: [0.05, 3.0]
+      slo_impact: "角色表情切换的视觉平滑度——过渡过短（<0.05s）≈ 突变（换脸），过长（>3.0s）则表情响应迟缓，情绪表达失去即时感。"
+      approval_required: false
+    ui_meta:
+      label: "表情过渡时长"
+      order: 106
+      placeholder: "0.3"
+      description: "秒，0.05~3.0，下一个表情的过渡渐变时长"
+      hidden: false
+    ai_hint: "表情过渡时长（秒），默认 0.3s（快速过渡）。0.1s=几乎瞬变（适合惊讶等爆发性情绪），0.5s=适中过渡（适合日常表情切换），1.0s=缓慢过渡（适合情绪渐变的场景）。"
+    search_keywords:
+      - "过渡时长"
+      - "过渡速度"
+      - "渐变时间"
+      - "表情过渡"
+      - "动画平滑度"
+
+  # ============================================================================
+  # 合成器配置 (compositor)
+  # ============================================================================
+  - key: monoplayer.compositor.enabled
+    type: BOOL
+    default: "false"
+    required: true
+    business_desc: "是否开启背景板合成模式。开启后，角色渲染时叠加一张棋盘格背景板 PNG，直接输出合成画面（快速预览/不需要后期合成的场景）。关闭则渲染纯透明背景，配合 ProRes 4444 .mov 输出（推荐，下游 AE/Premiere 直接使用透明素材）。"
+    impact_scope: ["输出方式", "渲染性能", "工作流选择"]
+    contract:
+      slo_impact: "输出工作流的切换——开启后角色叠加背景板，输出带棋盘格背景的画面（适合快速预览/直接发布）；关闭后输出纯透明场景到 ProRes 4444 .mov（适合后期合成工作流）。"
+      approval_required: false
+    ui_meta:
+      label: "启用背景板合成"
+      order: 80
+      placeholder: "false"
+      description: "false=ProRes 4444 .mov 透明输出（推荐），true=棋盘格背景快速渲染"
+      hidden: false
+    ai_hint: "背景板合成开关，默认关闭（推荐）。关闭时渲染纯透明场景，配合 output.format=prores 输出 ProRes 4444 .mov，下游 AE/Premiere 可直接用透明素材。开启时叠加棋盘格背景输出合成画面，适合快速预览或直接发布场景。"
+    search_keywords:
+      - "背景板"
+      - "合成模式"
+      - "AVI直出"
+      - "Compositor"
+      - "渲染模式"
+
+  - key: monoplayer.compositor.plate_path
+    type: STR
+    default: "res://assets/background_plate.png"
+    required: true
+    business_desc: "背景板 PNG 文件的路径。该图片将固定在相机底层作为透明示意背景。推荐使用棋盘格图案或带画布边缘阴影的设计。"
+    impact_scope: ["背景视觉效果", "输出画面"]
+    contract:
+      approval_required: false
+    ui_meta:
+      label: "背景板图片路径"
+      order: 81
+      placeholder: "res://assets/background_plate.png"
+      description: "指向一个 PNG 文件，渲染时叠加到角色底层作为背景"
+      hidden: false
+    ai_hint: "背景板图片路径，默认 res://assets/background_plate.png。建议使用 1920×1080 的棋盘格 PNG。"
+    search_keywords:
+      - "背景图片"
+      - "背景板"
+      - "plate"
+      - "背景图路径"
+      - "底板"
+
+  - key: monoplayer.compositor.plate_scale
+    type: F64
+    default: "1.0"
+    required: true
+    business_desc: "背景板的缩放比例。1.0=原始尺寸，>1.0=放大，<1.0=缩小。用于适配不同分辨率的输出。"
+    impact_scope: ["背景填充", "画面覆盖"]
+    contract:
+      range: [0.1, 10.0]
+      slo_impact: "背景板的画面覆盖范围——缩放不当可能导致背景板未填满画面或超出边界。"
+      approval_required: false
+    ui_meta:
+      label: "背景板缩放"
+      order: 82
+      placeholder: "1.0"
+      description: "0.1~10.0，缩放背景板以适配输出分辨率"
+      hidden: false
+    ai_hint: "背景板缩放比例，默认 1.0。推荐保持 1.0，如需适配非标准分辨率可适当调整。"
+    search_keywords:
+      - "背景缩放"
+      - "背景大小"
+      - "plate scale"
+      - "背景适配"
+
+  - key: monoplayer.compositor.plate_opacity
+    type: F64
+    default: "1.0"
+    required: true
+    business_desc: "背景板的不透明度。1.0=完全不透明（完全覆盖背景），<1.0=半透明效果。降低不透明度可产生隐约的背景示意效果。"
+    impact_scope: ["背景视觉效果", "画面氛围"]
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "背景在画面中的视觉权重——过低会导致背景几乎不可见，失去透明示意效果。"
+      approval_required: false
+    ui_meta:
+      label: "背景板不透明度"
+      order: 83
+      placeholder: "1.0"
+      description: "0.0~1.0，控制背景板的透明度"
+      hidden: false
+    ai_hint: "背景板不透明度，默认 1.0（完全不透明）。0.5=半透明背景示意，0.0=完全透明（等于关闭背景板）。"
+    search_keywords:
+      - "背景透明度"
+      - "不透明度"
+      - "opacity"
+      - "背景淡出"
+      - "透明度调节"

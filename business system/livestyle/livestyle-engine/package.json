@@ -1,0 +1,22 @@
+{
+  "name": "livestyle-engine",
+  "version": "0.1.0",
+  "description": "livestyle 组件运行时引擎 — 纯 TypeScript，无 UI 框架依赖",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0",
+    "jsdom": "^24.0.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0"
+  }
+}

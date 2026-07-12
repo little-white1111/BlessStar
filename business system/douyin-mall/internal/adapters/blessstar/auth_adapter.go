@@ -1,0 +1,77 @@
+// Package adapter_blessstar 自动生成于 BlessStar 配置端口-适配器
+// 业务系统: 抖音商城 (douyin-mall)
+// 领域: 认证鉴权
+// 请勿手动修改 — 由 blessstar-codegen 自动生成
+
+package adapter_blessstar
+
+import (
+	"context"
+	"sync"
+
+	"time"
+
+	"douyin-mall-go-template/ports"
+)
+
+// AuthConfigAdapter 认证鉴权 域配置的 BlessStar 适配器
+// 内置三阶段降级: ConfigReader实时查询 → LastKnownGood缓存 → 硬编码默认值
+type AuthConfigAdapter struct {
+	reader          ports.ConfigReader
+	lastKnownCache  sync.Map
+	hardcodedDefaults  map[string]interface{}
+}
+
+// NewAuthConfigAdapter 创建 AuthConfigAdapter 适配器实例
+// reader 参数是配置读取器，由业务方注入（可为 CachedReader、HTTPReader 等实现）
+func NewAuthConfigAdapter(reader ports.ConfigReader) ports.AuthConfig {
+	return &AuthConfigAdapter{
+		reader: reader,
+		hardcodedDefaults: map[string]interface{}{
+			"JwtTokenExpirySeconds": time.Duration(86400) * time.Second,
+			"PasswordBcryptCost": int32(10),
+		},
+	}
+}
+
+func (a *AuthConfigAdapter) JwtTokenExpirySeconds(ctx context.Context) (time.Duration, error) {
+	// 第1阶段: ConfigReader 实时查询（SHM / HTTP / 环境变量等）
+	val, err := a.reader.Get(ctx, "/config/douyin-mall/auth/jwt/token_expiry_seconds")
+	if err == nil {
+		if converted, ok := toDurationSeconds(val); ok {
+			a.lastKnownCache.Store("JwtTokenExpirySeconds", converted)
+			return converted, nil
+		}
+	}
+
+	// 第2阶段: 降级到 Last Known Good 缓存
+	if cached, ok := a.lastKnownCache.Load("JwtTokenExpirySeconds"); ok {
+		if converted, ok := toDurationSeconds(cached); ok {
+			return converted, nil
+		}
+	}
+
+	// 第3阶段: 极冷启动 — 返回硬编码默认值
+	return a.hardcodedDefaults["JwtTokenExpirySeconds"].(time.Duration), nil
+}
+
+func (a *AuthConfigAdapter) PasswordBcryptCost(ctx context.Context) (int32, error) {
+	// 第1阶段: ConfigReader 实时查询（SHM / HTTP / 环境变量等）
+	val, err := a.reader.Get(ctx, "/config/douyin-mall/auth/password/bcrypt_cost")
+	if err == nil {
+		if converted, ok := toInt32(val); ok {
+			a.lastKnownCache.Store("PasswordBcryptCost", converted)
+			return converted, nil
+		}
+	}
+
+	// 第2阶段: 降级到 Last Known Good 缓存
+	if cached, ok := a.lastKnownCache.Load("PasswordBcryptCost"); ok {
+		if converted, ok := toInt32(cached); ok {
+			return converted, nil
+		}
+	}
+
+	// 第3阶段: 极冷启动 — 返回硬编码默认值
+	return a.hardcodedDefaults["PasswordBcryptCost"].(int32), nil
+}

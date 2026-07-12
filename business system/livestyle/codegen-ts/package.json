@@ -1,0 +1,22 @@
+{
+  "name": "@blessstar/codegen-ts",
+  "version": "0.1.0",
+  "description": "BlessStar TypeScript Codegen — 从 config-schema.yaml 生成 TS 类型/Port/Adapter",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "codegen-ts": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "codegen": "node dist/cli.js --schema ../config-schema.yaml --output ./generated"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  }
+}

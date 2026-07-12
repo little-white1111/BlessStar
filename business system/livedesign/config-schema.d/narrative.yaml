@@ -1,0 +1,143 @@
+# config-schema.d/narrative.yaml — 用户叙事与动态画像系统
+# SSOT: 用户行为观察、量化计算、反思 Agent 配置
+# 参考 ADR: 🏛️ 架构方案选择记录 — 用户叙事与动态画像系统
+domain: livedesign
+version: v1.1.0
+x-version: v1.0.0
+x-domain: narrative
+x-extensions:
+  biz_id: "livedesign"
+  registration_phase: "P2"
+  generated_by: "configdesigner"
+fields:
+  # ─── Layer 2 量化指标 ───
+  - key: narrative.quantify.schedule
+    type: STR
+    default: "0 */6 * * *"
+    required: true
+    business_desc: "Layer 2 量化指标计算器的执行周期，使用 cron 表达式。控制情绪轨迹滑动平均、主题密度统计、互动模式分析的运行频率。频率越高数据越实时，但 CPU 开销也越大。"
+    contract:
+      range: []
+      slo_impact: "量化指标时效性"
+      approval_required: false
+    ui_meta:
+      label: "量化计算周期"
+      order: 1
+      placeholder: "0 */6 * * *"
+      description: "L2 量化指标计算的 cron 表达式，建议不低于每 1 小时一次"
+      hidden: false
+    search_keywords:
+      - "量化频率"
+      - "统计周期"
+      - "L2 定时"
+    pattern: "^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|((((\\d+,)+\\d+|(\\d+(/|-)\\d+)|\\d+|\\*) ?){5,7})$"
+
+  # ─── Layer 3 反思 Agent ───
+  - key: narrative.reflect.schedule
+    type: STR
+    default: "0 2 * * 0"
+    required: true
+    business_desc: "Layer 3 反思 Agent（LLM 批处理）的执行周期。控制 LLM 读取原始观察记录进行深度心理分析的时间间隔。推荐每周末凌晨运行，避免高峰时段消耗 LLM 配额。"
+    contract:
+      range: []
+      slo_impact: "画像更新频率、LLM 调用成本"
+      approval_required: false
+    ui_meta:
+      label: "反思 Agent 执行周期"
+      order: 2
+      placeholder: "0 2 * * 0"
+      description: "L3 LLM 反思的 cron 表达式，推荐每周一次，凌晨执行"
+      hidden: false
+    search_keywords:
+      - "反思频率"
+      - "LLM 分析周期"
+      - "用户画像更新"
+    pattern: "^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|((((\\d+,)+\\d+|(\\d+(/|-)\\d+)|\\d+|\\*) ?){5,7})$"
+
+  - key: narrative.reflect.min_observations
+    type: I32
+    default: 20
+    required: true
+    business_desc: "触发 LLM 反思所需的最小原始观察记录数量。如果过去周期内的观察记录少于该值，反思 Agent 跳过本轮分析，避免在数据不足时产生低质量假设。"
+    contract:
+      range: [5, 500]
+      slo_impact: "LLM 分析质量、画像可靠性"
+      approval_required: false
+    ui_meta:
+      label: "最小观察数"
+      order: 3
+      placeholder: "20"
+      description: "触发反思所需的最小观察记录条数，低于此值跳过分析"
+      hidden: false
+    search_keywords:
+      - "LLM 触发条件"
+      - "最小样本量"
+      - "数据门槛"
+
+  # ─── 重要节点标记 ───
+  - key: narrative.significant.threshold
+    type: F64
+    default: 0.7
+    required: true
+    business_desc: "标记原始观察为重要节点的情感强度阈值。当 Agent 检测到用户交互中的情感强度（如 VAD 偏离基线的幅度）超过该阈值时，将该条记录标记为 significant_mark=true，供后续 LLM 反思时重点关注。"
+    contract:
+      range: [0.3, 1.0]
+      slo_impact: "重要事件标记灵敏度"
+      approval_required: false
+    ui_meta:
+      label: "重要节点阈值"
+      order: 4
+      placeholder: "0.7"
+      description: "情感强度超过此值的观察被标记为'重要节点'，供 LLM 反思重点关注"
+      hidden: false
+    search_keywords:
+      - "重要事件"
+      - "阈值"
+      - "显著标记"
+      - "significant"
+
+  # ─── 成长轨迹 ───
+  - key: narrative.trajectory.attributes
+    type: ARR
+    default: ["self_efficacy", "emotional_expression", "self_acceptance"]
+    required: true
+    business_desc: "可追踪的成长轨迹属性列表。每个属性代表用户人格发展中可被长期观察和量化的一维特质。系统会持续追踪每个属性的变化趋势（上升/下降/波动），并在用户画像中呈现。"
+    contract:
+      range: []
+      slo_impact: "画像维度覆盖度"
+      approval_required: true
+    ui_meta:
+      label: "成长轨迹属性"
+      order: 5
+      placeholder: "self_efficacy, emotional_expression, self_acceptance"
+      description: "可追踪的用户成长维度列表，新增属性后需保证历史数据可映射"
+      hidden: false
+    search_keywords:
+      - "成长维度"
+      - "轨迹"
+      - "属性列表"
+      - "发展趋势"
+
+  # ─── 观察数据保留 ───
+  - key: narrative.observation.retention_days
+    type: I32
+    default: 365
+    required: true
+    business_desc: "原始观察记录的最长保留天数。超过此天数的记录将被自动清理，用于控制 SQLite 存储容量和隐私合规。同时影响量化指标的滑动窗口上限。"
+    contract:
+      range: [30, 730]
+      dependencies:
+        - "narrative.observation.retention_days >= narrative.reflect.min_observations * 7"
+      slo_impact: "存储容量、隐私合规、量化分析窗口"
+      approval_required: true
+    ui_meta:
+      label: "观察保留天数"
+      order: 6
+      placeholder: "365"
+      description: "原始观察记录的保留天数，超出自动清理。建议 90~365 天"
+      hidden: false
+    search_keywords:
+      - "数据保留"
+      - "隐私"
+      - "存储期限"
+      - "清理"

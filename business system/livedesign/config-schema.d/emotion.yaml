@@ -1,0 +1,55 @@
+# config-schema.d/emotion.yaml — 情绪与学习系统
+# SSOT: 情绪推断、模式识别、善意引擎策略
+domain: livedesign
+version: v1.1.0
+x-version: v1.0.0
+x-domain: emotion
+x-extensions:
+  biz_id: "livedesign"
+  registration_phase: "P2"
+  generated_by: "configdesigner"
+fields:
+  # ─── 模式识别 ───
+  - key: learning.pattern.sensitivity
+    type: F64
+    default: 0.3
+    required: true
+    business_desc: "量化模式识别的灵敏度阈值，控制 L2 量化指标计算器在检测用户行为模式变化时的灵敏度。值越低越敏感（更容易检测到变化，但可能误报），值越高越保守。"
+    contract:
+      range: [0.05, 0.8]
+      slo_impact: "模式检测精确率"
+      approval_required: false
+    ui_meta:
+      label: "模式识别灵敏度"
+      order: 7
+      placeholder: "0.3"
+      description: "值越低越敏感（易检出变化但也易误报），值越高越保守"
+      hidden: false
+    search_keywords:
+      - "灵敏度"
+      - "模式检测"
+      - "阈值"
+      - "灵敏度"
+
+  # ─── 善意引擎 ───
+  - key: benevolence.strategy_set
+    type: ARR
+    default: ["reframe", "validate", "guide", "deepen"]
+    required: true
+    business_desc: "内在善意引擎的响应策略集合，控制助手在检测到用户特定情感状态时可采用哪些引导策略。reframe=重新框架视角，validate=共情确认，guide=温和引导，deepen=深度探索。策略条目影响对话回应风格。"
+    contract:
+      range: []
+      slo_impact: "对话质量、用户满意度"
+      approval_required: true
+    ui_meta:
+      label: "善意响应策略集"
+      order: 8
+      placeholder: "reframe, validate, guide, deepen"
+      description: "可用的引导策略列表，影响助手对话回应风格"
+      hidden: false
+    search_keywords:
+      - "策略"
+      - "引导"
+      - "共情"
+      - "回应风格"
+      - "benevolence"

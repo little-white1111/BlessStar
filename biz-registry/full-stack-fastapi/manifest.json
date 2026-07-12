@@ -1,0 +1,101 @@
+{
+  "biz_id": "full-stack-fastapi",
+  "display_name": "Full Stack FastAPI",
+  "description": "基于 FastAPI + PostgreSQL + Docker 的全栈项目模板，提供用户认证（JWT）、邮箱服务、CORS 配置、Sentry 错误监控等能力，开箱即用的现代化 Web 后端项目骨架。",
+  "version": "1.0.0",
+  "sdk_version": ">=1.0.0 <2.0.0",
+  "fields": [
+    {"key": "API_V1_STR", "type": "STR", "default": "/api/v1", "description": "API 版本前缀路径", "required": false},
+    {"key": "ACCESS_TOKEN_EXPIRE_MINUTES", "type": "I32", "default": "11520", "description": "JWT 访问令牌过期时间（分钟），默认 8 天", "required": false},
+    {"key": "ENVIRONMENT", "type": "ENUM", "default": "local", "description": "部署环境标识：local/staging/production", "required": false},
+    {"key": "BACKEND_CORS_ORIGINS", "type": "ARR", "default": "[\"http://localhost\",\"http://localhost:5173\"]", "description": "CORS 跨域允许的前端来源域名列表", "required": false},
+    {"key": "FRONTEND_HOST", "type": "STR", "default": "http://localhost:5173", "description": "前端应用主机地址，用于邮件中生成链接", "required": false},
+    {"key": "PROJECT_NAME", "type": "STR", "default": "Full Stack FastAPI Project", "description": "项目名称，用于邮件发件人名称等展示", "required": false},
+    {"key": "POSTGRES_SERVER", "type": "STR", "default": "localhost", "description": "PostgreSQL 数据库主机地址", "required": true},
+    {"key": "POSTGRES_PORT", "type": "I32", "default": "5432", "description": "PostgreSQL 数据库端口", "required": false},
+    {"key": "POSTGRES_DB", "type": "STR", "default": "app", "description": "PostgreSQL 数据库名称", "required": false},
+    {"key": "POSTGRES_USER", "type": "STR", "default": "postgres", "description": "PostgreSQL 数据库用户名", "required": true},
+    {"key": "SENTRY_DSN", "type": "STR", "default": "", "description": "Sentry 错误监控 DSN，为空则不启用 Sentry", "required": false},
+    {"key": "SMTP_HOST", "type": "STR", "default": "", "description": "SMTP 邮件服务器主机地址", "required": false},
+    {"key": "SMTP_PORT", "type": "I32", "default": "587", "description": "SMTP 邮件服务器端口", "required": false},
+    {"key": "SMTP_TLS", "type": "BOOL", "default": "true", "description": "SMTP 是否启用 TLS 加密", "required": false},
+    {"key": "EMAILS_FROM_EMAIL", "type": "STR", "default": "info@example.com", "description": "邮件发送者地址", "required": false},
+    {"key": "EMAIL_RESET_TOKEN_EXPIRE_HOURS", "type": "I32", "default": "48", "description": "密码重置令牌过期时间（小时）", "required": false},
+    {"key": "FIRST_SUPERUSER", "type": "STR", "default": "admin@example.com", "description": "初始超级管理员邮箱地址，首次启动时自动创建", "required": true}
+  ],
+  "ai_data": {
+    "summary": "Full Stack FastAPI Project 是基于 FastAPI (Python) 的全栈 Web 项目模板，采用 PostgreSQL 数据库，支持 Docker Compose 一键部署。核心业务域包括：用户认证（JWT 令牌）、邮箱服务（密码重置/通知）、CORS 安全策略、Sentry 错误监控、多环境配置（local/staging/production）。该项目已完整实现用户注册登录、密码重置、邮箱服务等能力，并内置安全性检查（禁止使用默认密钥）。",
+    "business_capabilities": [
+      "用户认证与 JWT 令牌：支持 access_token 过期时间配置（默认 8 天），基于密文密钥签名",
+      "多环境管理：local/staging/production 三环境隔离，不同环境安全策略差异执行",
+      "邮箱服务：SMTP 协议发信，支持 TLS/SSL 加密，可配置密码重置令牌过期时间",
+      "CORS 安全策略：支持多域名来源配置，前端主机自动加入允许列表",
+      "错误监控：集成 Sentry，可选开启生产级错误追踪",
+      "PostgreSQL 数据库连接：支持完整的数据库连接参数配置，自动构建 SQLAlchemy DSN"
+    ],
+    "config_domains": {
+      "API": "API 配置域：版本前缀、访问令牌过期时间",
+      "environment": "环境配置域：部署环境标识、项目名称",
+      "security": "安全策略域：CORS 跨域、Secret Key、前端主机",
+      "database": "数据库配置域：PostgreSQL 连接参数",
+      "monitoring": "监控配置域：Sentry DSN 错误追踪",
+      "email": "邮件服务域：SMTP 连接参数、发件地址、重置令牌过期时间",
+      "user": "用户域：初始超级管理员账号"
+    },
+    "configLabels": {
+      "API_V1_STR": "API 前缀",
+      "ACCESS_TOKEN_EXPIRE_MINUTES": "Token 过期时间",
+      "ENVIRONMENT": "部署环境",
+      "BACKEND_CORS_ORIGINS": "跨域白名单",
+      "FRONTEND_HOST": "前端地址",
+      "PROJECT_NAME": "项目名称",
+      "POSTGRES_SERVER": "数据库主机",
+      "POSTGRES_PORT": "数据库端口",
+      "POSTGRES_DB": "数据库名",
+      "POSTGRES_USER": "数据库用户",
+      "SENTRY_DSN": "Sentry DSN",
+      "SMTP_HOST": "SMTP 主机",
+      "SMTP_PORT": "SMTP 端口",
+      "SMTP_TLS": "SMTP TLS",
+      "EMAILS_FROM_EMAIL": "发件地址",
+      "EMAIL_RESET_TOKEN_EXPIRE_HOURS": "重置令牌过期",
+      "FIRST_SUPERUSER": "初始管理员"
+    },
+    "invertedIndex": [
+      {"keyword": "API 前缀", "configKeys": ["API_V1_STR"]},
+      {"keyword": "JWT 令牌", "configKeys": ["ACCESS_TOKEN_EXPIRE_MINUTES"]},
+      {"keyword": "环境", "configKeys": ["ENVIRONMENT"]},
+      {"keyword": "跨域", "configKeys": ["BACKEND_CORS_ORIGINS", "FRONTEND_HOST"]},
+      {"keyword": "CORS", "configKeys": ["BACKEND_CORS_ORIGINS"]},
+      {"keyword": "项目名称", "configKeys": ["PROJECT_NAME"]},
+      {"keyword": "数据库", "configKeys": ["POSTGRES_SERVER", "POSTGRES_PORT", "POSTGRES_DB", "POSTGRES_USER"]},
+      {"keyword": "PostgreSQL", "configKeys": ["POSTGRES_SERVER", "POSTGRES_PORT", "POSTGRES_DB", "POSTGRES_USER"]},
+      {"keyword": "Sentry", "configKeys": ["SENTRY_DSN"]},
+      {"keyword": "错误监控", "configKeys": ["SENTRY_DSN"]},
+      {"keyword": "SMTP", "configKeys": ["SMTP_HOST", "SMTP_PORT", "SMTP_TLS"]},
+      {"keyword": "邮件", "configKeys": ["SMTP_HOST", "SMTP_PORT", "SMTP_TLS", "EMAILS_FROM_EMAIL", "EMAIL_RESET_TOKEN_EXPIRE_HOURS"]},
+      {"keyword": "密码重置", "configKeys": ["EMAIL_RESET_TOKEN_EXPIRE_HOURS"]},
+      {"keyword": "管理员", "configKeys": ["FIRST_SUPERUSER"]}
+    ],
+    "skillRoutes": [
+      {"prefix": "full-stack-fastapi", "description": "FastAPI 全栈项目综合配置管理：API、安全、数据库、邮件等全领域配置", "toolChain": ["read_config_value", "write_config_value", "validate_value"], "priority": 10},
+      {"prefix": "full-stack-fastapi-security", "description": "FastAPI 安全域：CORS 跨域、令牌过期等安全配置", "toolChain": ["read_config_value", "write_config_value"], "priority": 20},
+      {"prefix": "full-stack-fastapi-infra", "description": "FastAPI 基础设施域：数据库连接、SMTP 邮件、Sentry 监控等基础设施配置", "toolChain": ["read_config_value", "write_config_value"], "priority": 20}
+    ],
+    "dependency_hints": {
+      "FRONTEND_HOST": "用于邮件链接生成，变更后需确保前端实际可访问",
+      "BACKEND_CORS_ORIGINS": "FRONTEND_HOST 会自动加入跨域白名单，变更时无需重复添加",
+      "ACCESS_TOKEN_EXPIRE_MINUTES": "令牌过期后用户需重新登录，过短影响体验，过长有安全风险",
+      "EMAIL_RESET_TOKEN_EXPIRE_HOURS": "密码重置令牌的过期时间，建议 24~48 小时",
+      "SMTP_TLS 与 SMTP_SSL": "两者互斥，通常 SMTP_TLS=True 配合端口 587，SMTP_SSL=True 配合端口 465",
+      "ENVIRONMENT": "当为 production 时，检测到默认密钥（changethis）会抛出 ValueError"
+    },
+    "security_notes": [
+      "SECRET_KEY、POSTGRES_PASSWORD、FIRST_SUPERUSER_PASSWORD 等敏感凭证不应纳入配置管理，应通过环境变量注入",
+      "ENVIRONMENT=production 时强制禁止使用默认密码（changethis）",
+      "CORS 白名单生产环境应严格限制，避免使用过宽泛的域名匹配",
+      "SMTP 密码建议使用专用授权码而非邮箱登录密码",
+      "ACCESS_TOKEN_EXPIRE_MINUTES 生产建议 60~1440 分钟（1 小时~1 天），当前默认 11520 分钟（8 天）偏长"
+    ]
+  }
+}

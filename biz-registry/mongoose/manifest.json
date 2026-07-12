@@ -1,0 +1,99 @@
+{
+  "biz_id": "mongoose",
+  "display_name": "Mongoose IoT",
+  "description": "Mongoose 是一个嵌入式 C 语言网络库，专为 IoT/嵌入式设备设计。提供 TCP/UDP/HTTP/MQTT/WebSocket 等网络协议栈，支持 lwIP、FreeRTOS-TCP、内置 TCP/IP 栈等多种网络后端，可在 RTOS、Linux、MCU 等平台运行。",
+  "version": "1.0.0",
+  "sdk_version": ">=1.0.0 <2.0.0",
+  "fields": [
+    {"key": "MG_ENABLE_LOG", "type": "BOOL", "default": "1", "description": "启用 Mongoose 内置日志输出", "required": false},
+    {"key": "MG_ENABLE_TCPIP", "type": "BOOL", "default": "0", "description": "启用 Mongoose 内置 TCP/IP 网络栈（无外部栈时使用）", "required": false},
+    {"key": "MG_ENABLE_LWIP", "type": "BOOL", "default": "0", "description": "启用 lwIP 网络栈支持（常见于 MCU/RTOS 场景）", "required": false},
+    {"key": "MG_ENABLE_FREERTOS", "type": "BOOL", "default": "0", "description": "启用 FreeRTOS 实时操作系统支持", "required": false},
+    {"key": "MG_IO_SIZE", "type": "I32", "default": "512", "description": "发送/接收 IO 缓冲区的增长粒度（字节）", "required": false},
+    {"key": "MG_MAX_RECV_SIZE", "type": "I64", "default": "3145728", "description": "最大接收 IO 缓冲区大小（字节，默认 3MB）", "required": false},
+    {"key": "MG_MAX_HTTP_HEADERS", "type": "I32", "default": "30", "description": "HTTP 解析时支持的最大头部数量", "required": false},
+    {"key": "MG_ENABLE_IPV6", "type": "BOOL", "default": "0", "description": "启用 IPv6 协议栈支持", "required": false},
+    {"key": "MG_ENABLE_MD5", "type": "BOOL", "default": "1", "description": "启用 MD5 哈希算法支持", "required": false},
+    {"key": "MG_ENABLE_EPOLL", "type": "BOOL", "default": "0", "description": "启用 Linux epoll IO 多路复用", "required": false},
+    {"key": "MG_SOCK_LISTEN_BACKLOG_SIZE", "type": "I32", "default": "128", "description": "TCP listen 背压队列大小", "required": false},
+    {"key": "MG_ENABLE_DIRLIST", "type": "BOOL", "default": "0", "description": "启用 HTTP 目录列表功能", "required": false},
+    {"key": "MG_ENABLE_CHACHA20", "type": "BOOL", "default": "1", "description": "启用 ChaCha20 加密算法（为 0 时使用 GCM，基于 MG_TLS_BUILTIN）", "required": false},
+    {"key": "MG_ENABLE_FATFS", "type": "BOOL", "default": "0", "description": "启用 FATFS 文件系统支持", "required": false},
+    {"key": "MG_ENABLE_LFS", "type": "BOOL", "default": "0", "description": "启用 LittleFS 文件系统支持（轻量级嵌入式 FS）", "required": false}
+  ],
+  "ai_data": {
+    "summary": "Mongoose 是纯 C 语言实现的嵌入式网络库，广泛应用于 IoT/嵌入式设备。支持多种网络后端（BSD sockets、lwIP、FreeRTOS-TCP、内置 TCP/IP 栈），核心协议包括 HTTP(S)、MQTT、WebSocket、DNS 等。所有功能通过编译时宏（#define/#ifndef）启用/禁用，以适应不同嵌入式平台的资源限制。该库设计精巧，适合 MCU、RTOS、Linux 等各类嵌入式环境。",
+    "business_capabilities": [
+      "多网络栈支持：内置 TCP/IP 栈、BSD sockets、lwIP、FreeRTOS-TCP 等多种后端，可根据硬件平台选择",
+      "核心网络协议：HTTP(S) 服务器/客户端、MQTT 客户端、WebSocket、DNS 等完整协议实现",
+      "文件系统抽象：支持 FATFS、LittleFS 等嵌入式文件系统，以及 POSIX FS",
+      "TLS 加密通信：内置 TLS 支持，可选 ChaCha20 或 GCM 加密算法",
+      "事件驱动架构：基于 epoll/poll/select 的事件循环，适配 Linux/RTOS/MCU 各平台",
+      "嵌入式优化：IO 缓冲区大小、连接数据区大小等均可配置以适配不同 RAM 限制"
+    ],
+    "config_domains": {
+      "network_stack": "网络栈选择域：内置 TCP/IP、lwIP、FreeRTOS-TCP、BSD sockets 等网络后端开关",
+      "protocol": "协议功能域：MD5/ChaCha20 加密、IPV6、HTTP 目录列表等功能开关",
+      "system": "系统适配域：FreeRTOS 支持、epoll/poll IO 模型、日志开关",
+      "buffer": "缓冲区配置域：IO 粒度、接收缓冲上限、HTTP 头部数量限制",
+      "storage": "存储适配域：FATFS、LittleFS 等嵌入式文件系统支持",
+      "network_config": "网络参数域：监听背压队列、TCP/UDP 连接数据区大小"
+    },
+    "configLabels": {
+      "MG_ENABLE_LOG": "日志开关",
+      "MG_ENABLE_TCPIP": "内置 TCP/IP",
+      "MG_ENABLE_LWIP": "lwIP 支持",
+      "MG_ENABLE_FREERTOS": "FreeRTOS 支持",
+      "MG_IO_SIZE": "IO 缓冲粒度",
+      "MG_MAX_RECV_SIZE": "最大接收缓冲",
+      "MG_MAX_HTTP_HEADERS": "最大 HTTP 头数",
+      "MG_ENABLE_IPV6": "IPv6 支持",
+      "MG_ENABLE_MD5": "MD5 支持",
+      "MG_ENABLE_EPOLL": "epoll 支持",
+      "MG_SOCK_LISTEN_BACKLOG_SIZE": "监听背压队列",
+      "MG_ENABLE_DIRLIST": "HTTP 目录列表",
+      "MG_ENABLE_CHACHA20": "ChaCha20 加密",
+      "MG_ENABLE_FATFS": "FATFS 支持",
+      "MG_ENABLE_LFS": "LittleFS 支持"
+    },
+    "invertedIndex": [
+      {"keyword": "日志", "configKeys": ["MG_ENABLE_LOG"]},
+      {"keyword": "网络栈", "configKeys": ["MG_ENABLE_TCPIP", "MG_ENABLE_LWIP", "MG_ENABLE_FREERTOS_TCP"]},
+      {"keyword": "TCPIP", "configKeys": ["MG_ENABLE_TCPIP"]},
+      {"keyword": "lwIP", "configKeys": ["MG_ENABLE_LWIP"]},
+      {"keyword": "FreeRTOS", "configKeys": ["MG_ENABLE_FREERTOS"]},
+      {"keyword": "缓冲区", "configKeys": ["MG_IO_SIZE", "MG_MAX_RECV_SIZE"]},
+      {"keyword": "HTTP", "configKeys": ["MG_MAX_HTTP_HEADERS", "MG_ENABLE_DIRLIST"]},
+      {"keyword": "IPv6", "configKeys": ["MG_ENABLE_IPV6"]},
+      {"keyword": "MD5", "configKeys": ["MG_ENABLE_MD5"]},
+      {"keyword": "加密", "configKeys": ["MG_ENABLE_CHACHA20", "MG_ENABLE_MD5"]},
+      {"keyword": "ChaCha20", "configKeys": ["MG_ENABLE_CHACHA20"]},
+      {"keyword": "epoll", "configKeys": ["MG_ENABLE_EPOLL"]},
+      {"keyword": "监听队列", "configKeys": ["MG_SOCK_LISTEN_BACKLOG_SIZE"]},
+      {"keyword": "文件系统", "configKeys": ["MG_ENABLE_FATFS", "MG_ENABLE_LFS"]},
+      {"keyword": "FATFS", "configKeys": ["MG_ENABLE_FATFS"]},
+      {"keyword": "LittleFS", "configKeys": ["MG_ENABLE_LFS"]}
+    ],
+    "skillRoutes": [
+      {"prefix": "mongoose", "description": "Mongoose 嵌入式网络库综合配置管理：网络栈、协议功能、系统适配、缓冲参数等全领域配置", "toolChain": ["read_config_value", "write_config_value", "validate_value"], "priority": 10},
+      {"prefix": "mongoose-net", "description": "Mongoose 网络栈域：内置 TCP/IP、lwIP、FreeRTOS-TCP 等网络后端选择配置", "toolChain": ["read_config_value", "write_config_value"], "priority": 20},
+      {"prefix": "mongoose-mem", "description": "Mongoose 内存域：IO 缓冲区大小、接收缓冲上限等内存相关配置", "toolChain": ["read_config_value", "write_config_value"], "priority": 20}
+    ],
+    "dependency_hints": {
+      "MG_ENABLE_TCPIP": "设为 1 时自动禁用 BSD sockets（MG_ENABLE_SOCKET = !MG_ENABLE_TCPIP）",
+      "MG_ENABLE_EPOLL": "仅在 Linux 平台有效，MCU/RTOS 平台需设为 0",
+      "MG_ENABLE_IPV6": "启用后需额外配置 MG_TCPIP_GLOBAL/MG_TCPIP_IPV6_LINKLOCAL 等 IPv6 地址参数",
+      "MG_MAX_RECV_SIZE": "受平台可用 RAM 限制，MCU 场景建议缩减至 64KB 以下",
+      "MG_IO_SIZE": "在 RAM 受限的嵌入式设备上建议减小（如 256），降低内存碎片",
+      "MG_ENABLE_CHACHA20": "当 MG_TLS_BUILTIN=1 时有效，设为 0 则使用 GCM 模式",
+      "MG_ENABLE_FATFS 与 MG_ENABLE_LFS": "两者互斥二选一，取决于嵌入式平台使用的文件系统类型"
+    },
+    "security_notes": [
+      "MG_ENABLE_DIRLIST 生产环境应设为 0，启用目录列表可能泄漏服务器文件结构",
+      "MG_ENABLE_MD5 如非兼容遗留系统需要，建议禁用（MD5 已被证明不安全）",
+      "MG_ENABLE_CHACHA20 推荐保持启用，ChaCha20 在嵌入式平台性能优于 AES-GCM",
+      "MG_MAX_RECV_SIZE 设置过大可能导致 OOM（特别是在 MCU 平台），建议根据实际需要限制",
+      "MG_ENABLE_EPOLL 仅在 Linux 平台有安全意义，MCU 平台启用无效果"
+    ]
+  }
+}

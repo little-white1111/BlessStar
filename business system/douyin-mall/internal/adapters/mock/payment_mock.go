@@ -1,0 +1,38 @@
+﻿// Package adapter_mock 自动生成于 BlessStar 配置 Mock
+// 业务系统: 抖音商城 (douyin-mall)
+// 领域: 支付管理
+// 专为单元测试设计 — 固定返回值
+
+package adapter_mock
+
+import (
+	"context"
+	"douyin-mall-go-template/ports"
+)
+
+// PaymentConfigMock 支付管理 域配置的 Mock 实现（单元测试用）
+type PaymentConfigMock struct {
+	TypeValuesFunc func(ctx context.Context) (string, error)
+	RecordStatusValuesFunc func(ctx context.Context) (string, error)
+}
+
+// NewPaymentConfigMock 创建默认 Mock（返回值按 manifest 默认值设定）
+func NewPaymentConfigMock() ports.PaymentConfig {
+	return &PaymentConfigMock{
+		TypeValuesFunc: func(ctx context.Context) (string, error) {
+			return "{\"1\":\"alipay\",\"2\":\"wechat\",\"3\":\"credit_card\"}", nil
+		},
+		RecordStatusValuesFunc: func(ctx context.Context) (string, error) {
+			return "{\"0\":\"pending\",\"1\":\"success\",\"2\":\"failed\",\"3\":\"refunded\"}", nil
+		},
+	}
+}
+
+func (m *PaymentConfigMock) TypeValues(ctx context.Context) (string, error) {
+	return m.TypeValuesFunc(ctx)
+}
+
+func (m *PaymentConfigMock) RecordStatusValues(ctx context.Context) (string, error) {
+	return m.RecordStatusValuesFunc(ctx)
+}
+

@@ -1,0 +1,19 @@
+{
+  "name": "livestyle-obs-bridge",
+  "version": "0.1.0",
+  "description": "livestyle OBS 集成桥接层 — obs-websocket 通信",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "obs-websocket-js": "^5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0"
+  }
+}

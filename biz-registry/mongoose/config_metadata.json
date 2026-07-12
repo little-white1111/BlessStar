@@ -1,0 +1,512 @@
+[
+  {
+    "config_key": "MG_ENABLE_LOG",
+    "registry_path": "/config/mongoose/system/enable_log",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "1",
+    "biz_id": "mongoose",
+    "business_domain": "系统适配",
+    "business_description": "启用 Mongoose 内置日志输出功能。启用后库内部操作会通过标准日志接口输出，便于调试和问题排查。",
+    "impact_scope": ["日志输出", "调试排障", "生产性能"],
+    "contract_metrics": {
+      "slo": "日志对关键路径性能影响 <1%",
+      "risk_hint": "生产环境关闭日志（设为0）可略微提升性能，但会降低运行时排障能力。建议开发调试时启用，生产谨慎关闭。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "日志开关变更仅影响调试输出，生产环境建议关闭以节省资源",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（关闭）/ 1（启用）",
+    "ui_metadata": {
+      "ui_label": "日志功能开关",
+      "ui_description": "启用内置日志输出，便于调试排障",
+      "ui_placeholder": "选择是否启用日志",
+      "ui_order": 1,
+      "hidden": false
+    },
+    "ai_hint": "Mongoose 内置日志开关。1=启用（默认），0=关闭。生产环境可关闭以提升性能。",
+    "search_keywords": ["日志", "LOG", "调试日志", "日志开关", "MG_ENABLE_LOG"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_TCPIP",
+    "registry_path": "/config/mongoose/network/stack_tcpip",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "网络栈选择",
+    "business_description": "启用 Mongoose 内置 TCP/IP 网络协议栈。在没有外部网络栈（如 lwIP、BSD sockets）的平台上使用。适用于裸机 MCU 环境。",
+    "impact_scope": ["网络通信", "底层驱动", "平台兼容性"],
+    "contract_metrics": {
+      "slo": "网络吞吐量 ≥ 硬件线速 80%",
+      "risk_hint": "启用内置栈后自动禁用 BSD sockets 支持（MG_ENABLE_SOCKET = !MG_ENABLE_TCPIP）。需配合底层 MAC/PHY 驱动。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "网络栈切换是架构级变更，需硬件团队确认底层驱动兼容性",
+      "approval_required": true
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（禁用，使用外部栈）/ 1（启用内置栈）",
+    "ui_metadata": {
+      "ui_label": "内置 TCP/IP 栈",
+      "ui_description": "启用 Mongoose 内置 TCP/IP 栈（无外部栈时使用）",
+      "ui_placeholder": "选择是否启用内置 TCP/IP",
+      "ui_order": 2,
+      "hidden": false
+    },
+    "ai_hint": "Mongoose 内置 TCP/IP 网络栈开关。0=禁用（默认），1=启用。启用后自动禁用 BSD sockets。",
+    "search_keywords": ["TCP/IP", "内置栈", "网络栈", "MG_ENABLE_TCPIP", "TCPIP"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_LWIP",
+    "registry_path": "/config/mongoose/network/stack_lwip",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "网络栈选择",
+    "business_description": "启用 lwIP（lightweight IP）网络协议栈支持。lwIP 是广泛使用的嵌入式 TCP/IP 协议栈，常见于 MCU/RTOS 物联网场景。",
+    "impact_scope": ["网络通信", "平台兼容性", "RTOS 适配"],
+    "contract_metrics": {
+      "slo": "网络吞吐量 ≥ 硬件线速 80%",
+      "risk_hint": "启用 lwIP 需确保目标平台已移植 lwIP 且提供正确的 sockets 适配层。与内置 TCP/IP 栈互斥。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "lwIP 栈是平台级选择，需硬件团队确认 lwIP 移植状态和配置",
+      "approval_required": true
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（禁用）/ 1（启用）",
+    "ui_metadata": {
+      "ui_label": "lwIP 支持",
+      "ui_description": "启用 lwIP 网络栈支持（常见于 MCU/RTOS 场景）",
+      "ui_placeholder": "选择是否启用 lwIP",
+      "ui_order": 3,
+      "hidden": false
+    },
+    "ai_hint": "lwIP 网络栈开关。0=禁用（默认），1=启用。适用于 MCU/RTOS 场景，需目标平台已移植 lwIP。",
+    "search_keywords": ["lwIP", "LwIP", "嵌入式网络栈", "MG_ENABLE_LWIP"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_FREERTOS",
+    "registry_path": "/config/mongoose/system/freertos",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "系统适配",
+    "business_description": "启用 FreeRTOS 实时操作系统支持适配。在 FreeRTOS 平台上运行时需启用此选项以使用 FreeRTOS 的任务调度和同步原语。",
+    "impact_scope": ["平台适配", "任务调度", "内存管理"],
+    "contract_metrics": {
+      "slo": "RTOS 任务调度延迟 <1ms",
+      "risk_hint": "启用 FreeRTOS 支持后，Mongoose 的内部同步机制会切换为 FreeRTOS 的信号量和队列实现。非 FreeRTOS 平台不可启用。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "RTOS 选择是架构级决策，需嵌入式团队确认目标操作系统和版本",
+      "approval_required": true
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（禁用）/ 1（启用，仅 FreeRTOS 平台）",
+    "ui_metadata": {
+      "ui_label": "FreeRTOS 支持",
+      "ui_description": "启用 FreeRTOS 实时操作系统支持",
+      "ui_placeholder": "选择是否启用 FreeRTOS",
+      "ui_order": 4,
+      "hidden": false
+    },
+    "ai_hint": "FreeRTOS 支持开关。0=禁用（默认），1=启用。仅在 FreeRTOS 平台的 MCU 上使用。",
+    "search_keywords": ["FreeRTOS", "RTOS", "实时系统", "MG_ENABLE_FREERTOS"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_IO_SIZE",
+    "registry_path": "/config/mongoose/buffer/io_size",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "512",
+    "biz_id": "mongoose",
+    "business_domain": "缓冲区配置",
+    "business_description": "发送/接收 IO 缓冲区的增长粒度（字节）。数据收发时缓冲区按此大小动态增长，影响内存碎片和性能。",
+    "impact_scope": ["内存使用", "数据吞吐性能", "内存碎片"],
+    "contract_metrics": {
+      "slo": "内存碎片率 <5%",
+      "risk_hint": "值过小（<128）会导致频繁 realloc 增加 CPU 开销；值过大（>4096）在低流量场景浪费内存。MCU 平台建议 256~512。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "IO 粒度影响内存和性能，建议根据目标平台 RAM 和流量特征调整",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "128~4096（字节），推荐步长128。MCU 建议 256~512，Linux 建议 512~2048",
+    "ui_metadata": {
+      "ui_label": "IO 缓冲粒度（字节）",
+      "ui_description": "数据收发缓冲区的增长粒度，影响内存效率和性能",
+      "ui_placeholder": "输入缓冲区字节数",
+      "ui_order": 5,
+      "hidden": false
+    },
+    "ai_hint": "IO 缓冲区增长粒度（字节）。默认 512。MCU 建议 256~512，Linux 建议 512~2048。",
+    "search_keywords": ["IO缓冲区", "缓冲粒度", "内存分配", "MG_IO_SIZE", "缓冲区大小"],
+    "pattern": "^[0-9]+$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_MAX_RECV_SIZE",
+    "registry_path": "/config/mongoose/buffer/max_recv_size",
+    "data_type": "I64",
+    "required": false,
+    "default_value": "3145728",
+    "biz_id": "mongoose",
+    "business_domain": "缓冲区配置",
+    "business_description": "最大接收 IO 缓冲区大小上限（字节）。默认 3145728 字节（3MB）。超过此大小的接收数据将被截断或拒绝。",
+    "impact_scope": ["内存占用", "大数据接收", "OOM 防护"],
+    "contract_metrics": {
+      "slo": "接收缓冲区 OOM 发生次数 0",
+      "risk_hint": "MCU 平台必须大幅缩减此值（建议 8KB~64KB），否则极易触发 OOM。Linux 服务端可按需放宽至 16MB。此值还受 MG_IO_SIZE 粒度对齐影响。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "接收缓冲区上限影响内存占用，MCU 平台必须缩小，Linux 可适当放宽",
+      "approval_required": false
+    },
+    "dependencies": ["MG_IO_SIZE"],
+    "value_range_suggestion": "MCU 平台 8192~65536（8KB~64KB），Linux 平台 1048576~16777216（1MB~16MB）",
+    "ui_metadata": {
+      "ui_label": "最大接收缓冲（字节）",
+      "ui_description": "接收 IO 缓冲区的大小上限，默认 3MB",
+      "ui_placeholder": "输入缓冲区字节数，如 3145728",
+      "ui_order": 6,
+      "hidden": false
+    },
+    "ai_hint": "最大接收 IO 缓冲区大小（字节）。默认 3145728（3MB）。MCU 建议 8KB~64KB，Linux 建议 1MB~16MB。",
+    "search_keywords": ["接收缓冲", "最大缓冲", "OOM", "内存限制", "MG_MAX_RECV_SIZE"],
+    "pattern": "^[0-9]+$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_MAX_HTTP_HEADERS",
+    "registry_path": "/config/mongoose/protocol/max_http_headers",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "30",
+    "biz_id": "mongoose",
+    "business_domain": "协议功能",
+    "business_description": "HTTP 协议解析时支持的最大头部字段数量。超过此数量的头部会被忽略。影响 HTTP 请求/响应的解析完整性。",
+    "impact_scope": ["HTTP 解析", "请求头处理", "协议兼容性"],
+    "contract_metrics": {
+      "slo": "HTTP 请求解析成功率 ≥99.9%",
+      "risk_hint": "值过小（<20）可能导致合法 HTTP 请求因头部过多而被截断。值过大会占用额外内存用于头部存储。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "HTTP 头部数量限制影响协议兼容性，建议根据实际应用场景调整",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "10~100，推荐步长5。默认 30 适合大多数场景",
+    "ui_metadata": {
+      "ui_label": "最大 HTTP 头数",
+      "ui_description": "HTTP 解析时支持的最大头部数量",
+      "ui_placeholder": "输入头部数量，如 30",
+      "ui_order": 7,
+      "hidden": false
+    },
+    "ai_hint": "HTTP 最大头部数量限制。默认 30。值过小会导致头部被截断，建议 20~50。",
+    "search_keywords": ["HTTP头", "最大头部", "HTTP解析", "MG_MAX_HTTP_HEADERS"],
+    "pattern": "^[0-9]+$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_IPV6",
+    "registry_path": "/config/mongoose/protocol/ipv6",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "协议功能",
+    "business_description": "启用 IPv6 协议栈支持。启用后 Mongoose 可处理 IPv6 地址和连接。需平台支持 IPv6 协议族。",
+    "impact_scope": ["网络通信", "地址解析", "协议栈"],
+    "contract_metrics": {
+      "slo": "IPv6 连接成功率 ≥99%",
+      "risk_hint": "启用 IPv6 后需额外配置 MG_TCPIP_GLOBAL（全局地址）和 MG_TCPIP_IPV6_LINKLOCAL（链路本地地址）。仅当网络环境支持 IPv6 时启用。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "IPv6 启用需目标网络环境支持，建议在确认网络栈支持后开启",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（禁用）/ 1（启用，需网络环境支持）",
+    "ui_metadata": {
+      "ui_label": "IPv6 支持",
+      "ui_description": "启用 IPv6 协议栈支持",
+      "ui_placeholder": "选择是否启用 IPv6",
+      "ui_order": 8,
+      "hidden": false
+    },
+    "ai_hint": "IPv6 支持开关。0=禁用（默认），1=启用。启用后需配置 IPv6 地址参数。",
+    "search_keywords": ["IPv6", "IPV6", "IP协议", "MG_ENABLE_IPV6"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_MD5",
+    "registry_path": "/config/mongoose/protocol/md5",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "1",
+    "biz_id": "mongoose",
+    "business_domain": "协议功能",
+    "business_description": "启用 MD5 哈希算法支持。MD5 用于 HTTP Digest 认证等协议兼容性场景。",
+    "impact_scope": ["HTTP Digest 认证", "协议兼容性"],
+    "contract_metrics": {
+      "slo": "协议兼容性 100%",
+      "risk_hint": "MD5 已被证明在密码学上不安全，但 HTTP Digest 认证等协议仍需依赖它。如无兼容性需求，建议禁用。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "MD5 兼容性开关，如无 HTTP Digest 等需求可关闭",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（禁用）/ 1（启用）",
+    "ui_metadata": {
+      "ui_label": "MD5 支持",
+      "ui_description": "启用 MD5 哈希算法支持（HTTP Digest 认证等兼容场景）",
+      "ui_placeholder": "选择是否启用 MD5",
+      "ui_order": 9,
+      "hidden": false
+    },
+    "ai_hint": "MD5 哈希算法支持开关。1=启用（默认）。用于 HTTP Digest 认证，如无兼容性需求可禁用。",
+    "search_keywords": ["MD5", "哈希算法", "HTTP Digest", "MG_ENABLE_MD5"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_EPOLL",
+    "registry_path": "/config/mongoose/system/epoll",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "系统适配",
+    "business_description": "启用 Linux epoll IO 多路复用机制。epoll 是 Linux 下高性能的 IO 事件通知机制，适合高并发网络服务。仅 Linux 平台有效。",
+    "impact_scope": ["IO 模型", "并发性能", "平台兼容性"],
+    "contract_metrics": {
+      "slo": "事件循环延迟 <1ms",
+      "risk_hint": "epoll 仅 Linux 平台可用。MCU/RTOS 平台必须设为 0。非 Linux 平台启用此选项会被忽略。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "epoll 仅 Linux 平台有效，MCU/RTOS 平台不可启用",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（禁用）/ 1（启用，仅 Linux 平台）",
+    "ui_metadata": {
+      "ui_label": "epoll 支持",
+      "ui_description": "启用 Linux epoll IO 多路复用（仅 Linux 平台有效）",
+      "ui_placeholder": "选择是否启用 epoll",
+      "ui_order": 10,
+      "hidden": false
+    },
+    "ai_hint": "epoll IO 多路复用开关。0=禁用（默认），1=启用。仅 Linux 平台有效，MCU/RTOS 不可用。",
+    "search_keywords": ["epoll", "IO多路复用", "事件驱动", "MG_ENABLE_EPOLL", "Linux IO"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_SOCK_LISTEN_BACKLOG_SIZE",
+    "registry_path": "/config/mongoose/network/listen_backlog",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "128",
+    "biz_id": "mongoose",
+    "business_domain": "网络参数",
+    "business_description": "TCP 服务器 listen 套接字的背压队列大小。当服务器忙碌时，新连接在此队列中等待被 accept。",
+    "impact_scope": ["连接处理能力", "高并发场景", "新建连接成功率"],
+    "contract_metrics": {
+      "slo": "连接建立成功率 ≥99.9%",
+      "risk_hint": "值过小（<16）会导致高并发场景下新连接被拒绝（ECONNREFUSED）。值过大（>512）对内存消耗很小但效果有限，受系统 somaxconn 限制。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "背压队列大小影响高并发场景下的连接接收能力，建议 64~256",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "16~512，推荐步长16。默认 128 适合多数场景",
+    "ui_metadata": {
+      "ui_label": "监听背压队列",
+      "ui_description": "TCP 服务器 listen 的背压队列大小",
+      "ui_placeholder": "输入队列大小，如 128",
+      "ui_order": 11,
+      "hidden": false
+    },
+    "ai_hint": "TCP 监听背压队列大小。默认 128。受系统 somaxconn 限制。高并发场景建议 256。",
+    "search_keywords": ["监听队列", "backlog", "背压队列", "TCP参数", "MG_SOCK_LISTEN_BACKLOG_SIZE"],
+    "pattern": "^[0-9]+$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_DIRLIST",
+    "registry_path": "/config/mongoose/protocol/dirlist",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "协议功能",
+    "business_description": "启用 HTTP 服务器目录列表功能。启用后客户端通过 HTTP 访问目录时返回目录文件列表（类似 Apache Directory Listing）。",
+    "impact_scope": ["HTTP 服务", "文件泄露风险", "安全合规"],
+    "contract_metrics": {
+      "slo": "安全合规率 100%",
+      "risk_hint": "此功能在生产环境存在严重安全风险——会暴露服务器文件结构。除非明确需要（如文件下载服务器），生产环境必须设为 0。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "启用目录列表存在安全风险，生产环境必须禁用；变更需安全团队审批",
+      "approval_required": true
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（禁用）/ 1（启用，仅开发/内部使用）",
+    "ui_metadata": {
+      "ui_label": "HTTP 目录列表",
+      "ui_description": "启用 HTTP 目录文件列表展示（生产环境建议禁用）",
+      "ui_placeholder": "选择是否启用目录列表",
+      "ui_order": 12,
+      "hidden": false
+    },
+    "ai_hint": "HTTP 目录列表开关。0=禁用（默认）。生产环境必须禁用，否则会泄露服务器文件结构。",
+    "search_keywords": ["目录列表", "目录浏览", "HTTP展示", "MG_ENABLE_DIRLIST", "文件泄露"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_CHACHA20",
+    "registry_path": "/config/mongoose/protocol/chacha20",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "1",
+    "biz_id": "mongoose",
+    "business_domain": "协议功能",
+    "business_description": "启用 ChaCha20 流加密算法（用于内置 TLS 实现）。设为 0 时使用 AES-GCM 模式。仅当 MG_TLS_BUILTIN=1 时生效。",
+    "impact_scope": ["TLS 加密通信", "加密算法选择", "嵌入式性能"],
+    "contract_metrics": {
+      "slo": "TLS 握手成功率 ≥99%",
+      "risk_hint": "ChaCha20 在无 AES 硬件加速的嵌入式平台上性能优于 AES-GCM。如果平台有 AES-NI 指令集支持，GCM 可能更快。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "加密算法选择影响 TLS 性能，根据目标平台硬件特性选择",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "0（GCM 模式）/ 1（ChaCha20 模式，默认）",
+    "ui_metadata": {
+      "ui_label": "ChaCha20 加密",
+      "ui_description": "启用 ChaCha20 加密（否则 GCM，基于 MG_TLS_BUILTIN）",
+      "ui_placeholder": "选择加密算法",
+      "ui_order": 13,
+      "hidden": false
+    },
+    "ai_hint": "ChaCha20 加密算法开关。1=ChaCha20（默认），0=GCM。嵌入式平台推荐 ChaCha20（性能优）。",
+    "search_keywords": ["ChaCha20", "加密算法", "TLS", "GCM", "MG_ENABLE_CHACHA20"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_FATFS",
+    "registry_path": "/config/mongoose/storage/fatfs",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "存储适配",
+    "business_description": "启用 FATFS 文件系统支持。FATFS 是嵌入式系统中广泛使用的 FAT 文件系统实现，适用于 SD 卡、Flash 等存储介质。",
+    "impact_scope": ["文件读写", "嵌入式存储", "数据持久化"],
+    "contract_metrics": {
+      "slo": "文件读写成功率 ≥99%",
+      "risk_hint": "FATFS 与 LittleFS 互斥，两者只能启用其一。FATFS 适合大容量存储（SD 卡），LittleFS 适合 Flash。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "文件系统选择是平台级架构决策，需嵌入式团队确认硬件存储方案",
+      "approval_required": true
+    },
+    "dependencies": ["MG_ENABLE_LFS"],
+    "value_range_suggestion": "0（禁用）/ 1（启用，与 LFS 互斥）",
+    "ui_metadata": {
+      "ui_label": "FATFS 文件系统",
+      "ui_description": "启用 FATFS FAT 文件系统支持（嵌入式存储）",
+      "ui_placeholder": "选择是否启用 FATFS",
+      "ui_order": 14,
+      "hidden": false
+    },
+    "ai_hint": "FATFS 文件系统支持。0=禁用（默认）。与 MG_ENABLE_LFS 互斥。FATFS 适合 SD 卡等大容量存储。",
+    "search_keywords": ["FATFS", "文件系统", "FAT", "嵌入式存储", "MG_ENABLE_FATFS"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "MG_ENABLE_LFS",
+    "registry_path": "/config/mongoose/storage/lfs",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "0",
+    "biz_id": "mongoose",
+    "business_domain": "存储适配",
+    "business_description": "启用 LittleFS 轻量级文件系统支持。LittleFS 专为 Flash 介质设计的嵌入式文件系统，具有断电安全特性。",
+    "impact_scope": ["文件读写", "Flash 存储", "数据持久化"],
+    "contract_metrics": {
+      "slo": "文件读写成功率 ≥99%",
+      "risk_hint": "LittleFS 与 FATFS 互斥。LittleFS 适合 Flash/SPI Flash 等介质，具备磨损平衡和断电保护。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "文件系统选择是平台级架构决策，需嵌入式团队确认硬件存储方案",
+      "approval_required": true
+    },
+    "dependencies": ["MG_ENABLE_FATFS"],
+    "value_range_suggestion": "0（禁用）/ 1（启用，与 FATFS 互斥）",
+    "ui_metadata": {
+      "ui_label": "LittleFS 文件系统",
+      "ui_description": "启用 LittleFS 轻量级文件系统支持（嵌入式 Flash）",
+      "ui_placeholder": "选择是否启用 LittleFS",
+      "ui_order": 15,
+      "hidden": false
+    },
+    "ai_hint": "LittleFS 文件系统支持。0=禁用（默认）。与 MG_ENABLE_FATFS 互斥。LittleFS 适合 Flash 介质。",
+    "search_keywords": ["LittleFS", "LFS", "文件系统", "嵌入式Flash", "MG_ENABLE_LFS"],
+    "pattern": null,
+    "enum_values": [0, 1],
+    "registration_phase": "P1"
+  }
+]

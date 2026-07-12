@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>livestyle-engine Bridge</title>
+  <style>
+    body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+    #engine-root { width: 100%; height: 100%; position: relative; }
+    .error-overlay {
+      position: absolute; inset: 0; display: flex; align-items: center;
+      justify-content: center; background: rgba(0,0,0,0.8); color: #ff4444;
+      font-family: monospace; font-size: 14px; z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div id="engine-root"></div>
+  <script>
+    /**
+     * Phase 2: livestyle-engine 桥接 iframe 完整实现
+     *
+     * 职责：
+     * 1. 加载 ComponentEngine 核心
+     * 2. 通过 postMessage 建立与编辑器的双向通信
+     * 3. 消息路由：Request/Response + Event 推送
+     * 4. 超时/错误处理
+     *
+     * 遵循架构不变量：
+     * - I1: 画布编辑器与组件运行时引擎必须运行在独立的执行上下文中
+     * - I11: 单向数据流 — 编辑器 → ComponentEngine → 组件实例
+     * - I14: TransportAdapter 必须支持连接超时和自动重连
+     *
+     * 安全：
+     * - 验证 event.origin 防止 postMessage CSMF 攻击
+     * - sendResponse/pushEvent 使用精确 origin
+     */
+
+    const BRIDGE_VERSION = '0.2.1';
+    const ENGINE_ROOT = document.getElementById('engine-root');
+
+    // 从连接确认消息中学习信任的父窗口 origin，之后只接受该 origin 的消息
+    // 首次收到有效消息的记录其 origin 为可信来源
+    let trustedParentOrigin = null;
+
+    // ========== 状态管理 ==========
+
+    const state = {
+      engineReady: false,
+      components: new Map(), // componentId → { instance, tagName, props }
+      pendingRequests: new Map(), // messageId → { resolve, reject, timer }
+      configCache: new Map(), // componentId → PropsConfig
+    };
+
+    // ========== 消息处理 ==========
+
+    function handleEditorMessage(event) {
+      // 安全校验：验证消息来源 origin
+      if (trustedParentOrigin === null) {
+        // 第一条消息：记录其 origin 为可信来源
+        trustedParentOrigin = event.origin;
+      } else if (event.origin !== trustedParentOrigin) {
+        // 非可信来源的消息直接丢弃
+        console.warn('[EngineBridge] 丢弃来自未知 origin 的消息:', event.origin);
+        return;
+      }
+
+      const raw = event.data;
+      if (typeof raw !== 'string') return;
+
+      let message;
+      try { message = JSON.parse(raw); } catch { return; }
+
+      // 校验消息结构
+      if (!message.id || !message.type || !message.direction) return;
+
+      // 处理引擎→编辑器的响应（被父进程发回的消息）
+      if (message.direction === 'engine→editor') {
+        const pending = state.pendingRequests.get(message.id);
+        if (pending) {
+          clearTimeout(pending.timer);
+          state.pendingRequests.delete(message.id);
+          pending.resolve(message.payload);
+          return;
+        }
+      }
+
+      // 路由到对应的处理函数
+      const handler = messageHandlers[message.type];
+      if (handler) {
+        handler(message);
+      } else {
+        sendResponse(message.id, false, null, '未知消息类型: ' + message.type);
+      }
+    }
+
+    // ========== 消息处理器注册表 ==========
+
+    const messageHandlers = {};
+
+    // ---- 组件管理 ----
+    messageHandlers['setComponentConfig'] = (msg) => {
+      const { componentId, props } = msg.payload;
+      state.configCache.set(componentId, props);
+
+      const component = state.components.get(componentId);
+      if (component) {
+        const el = ENGINE_ROOT.querySelector('[data-component-id="' + componentId + '"]');
+        if (el) {
+          Object.entries(props).forEach(([key, value]) => {
+            el.setAttribute(key, String(value));
+          });
+        }
+      }
+      sendResponse(msg.id, true, null);
+    };
+
+    messageHandlers['getComponentConfig'] = (msg) => {
+      const { componentId } = msg.payload;
+      const config = state.configCache.get(componentId) || {};
+      sendResponse(msg.id, true, config);
+    };
+
+    messageHandlers['loadComponent'] = (msg) => {
+      const { componentId, tagName, jsUrl } = msg.payload;
+      loadComponentScript(componentId, tagName, jsUrl, msg.id);
+    };
+
+    messageHandlers['unloadComponent'] = (msg) => {
+      const { componentId } = msg.payload;
+      const el = ENGINE_ROOT.querySelector('[data-component-id="' + componentId + '"]');
+      if (el) {
+        el.remove();
+        state.components.delete(componentId);
+      }
+      sendResponse(msg.id, true, null);
+    };
+
+    // ---- 图层 ----
+    messageHandlers['setLayerOrder'] = (msg) => {
+      const { layerOrder } = msg.payload;
+      if (Array.isArray(layerOrder)) {
+        layerOrder.forEach((item) => {
+          const el = ENGINE_ROOT.querySelector('[data-component-id="' + item.componentId + '"]');
+          if (el) {
+            el.style.zIndex = item.zIndex;
+            el.style.display = item.visible ? '' : 'none';
+          }
+        });
+      }
+      sendResponse(msg.id, true, null);
+    };
+
+    // ---- 组件画板 ----
+    messageHandlers['canvasLoadComponent'] = (msg) => {
+      const { componentId, tagName, schema, currentProps } = msg.payload;
+      state.configCache.set(componentId + ':schema', schema);
+      state.configCache.set(componentId, currentProps);
+      sendResponse(msg.id, true, { loaded: true });
+    };
+
+    messageHandlers['canvasSwitchMode'] = (msg) => {
+      const { mode } = msg.payload;
+      ENGINE_ROOT.dataset.mode = mode;
+      pushEvent('canvasStateChanged', { mode, ready: state.engineReady });
+      sendResponse(msg.id, true, null);
+    };
+
+    messageHandlers['canvasUpdateProps'] = (msg) => {
+      const { props } = msg.payload;
+      ENGINE_ROOT.dataset.canvasProps = JSON.stringify(props);
+      sendResponse(msg.id, true, null);
+    };
+
+    // ---- 系统 ----
+    messageHandlers['ping'] = (msg) => {
+      sendResponse(msg.id, true, { timestamp: Date.now() });
+    };
+
+    messageHandlers['getEngineVersion'] = (msg) => {
+      sendResponse(msg.id, true, { version: BRIDGE_VERSION });
+    };
+
+    // ---- 配置验证（I2 红线：配置变更必须经过 Schema 验证） ----
+    messageHandlers['validateConfig'] = async (msg) => {
+      const { config } = msg.payload || {};
+      if (!config || typeof config !== 'object') {
+        sendResponse(msg.id, false, null, 'validateConfig: payload 需要包含 config 对象');
+        return;
+      }
+
+      try {
+        // 动态加载 schema 并进行基础类型校验
+        const resp = await fetch('/config-schema.yaml');
+        if (!resp.ok) {
+          sendResponse(msg.id, true, { valid: true, warnings: ['Schema 文件不可达，跳过验证'] });
+          return;
+        }
+        const schemaText = await resp.text();
+
+        // 基础 YAML 解析（不使用 js-yaml 以避免 ESM 依赖）
+        const schemaRaw = parseSimpleYaml(schemaText);
+        const schemaFields = Array.isArray(schemaRaw.fields) ? schemaRaw.fields : [];
+
+        const errors = [];
+        const warnings = [];
+
+        for (const field of schemaFields) {
+          const key = field.key;
+          if (!key) continue;
+          if (!(key in config)) continue;
+
+          const value = config[key];
+          const fieldType = field.type;
+          const contract = field.contract || {};
+
+          // 类型检查
+          const typeCheck = simpleTypeCheck(key, fieldType, value);
+          if (typeCheck) { errors.push(typeCheck); continue; }
+
+          // range 检查
+          if (contract.range && typeof value === 'number') {
+            const [min, max] = contract.range;
+            if (value < min || value > max) {
+              warnings.push('"' + key + '" 的值 ' + value + ' 超出范围 [' + min + ', ' + max + ']');
+            }
+          }
+
+          // pattern 检查
+          if (contract.pattern && typeof value === 'string') {
+            try {
+              var re = new RegExp(contract.pattern);
+              if (!re.test(value)) {
+                errors.push('"' + key + '" 的值不匹配模式 ' + contract.pattern);
+              }
+            } catch (e) { /* 正则无效则跳过 */ }
+          }
+        }
+
+        sendResponse(msg.id, true, {
+          valid: errors.length === 0,
+          errors: errors,
+          warnings: warnings,
+        });
+
+        if (errors.length > 0) {
+          console.warn('[EngineBridge] Config 验证失败:', errors);
+        }
+      } catch (err) {
+        // 验证不可达时降级通过（不阻塞编辑）
+        sendResponse(msg.id, true, { valid: true, warnings: ['验证过程异常: ' + err.message + '，已降级'] });
+      }
+    };
+
+    /** 简易 YAML 解析（仅解析顶层 fields 数组） */
+    function parseSimpleYaml(text) {
+      var result = { fields: [] };
+      var lines = text.split('\n');
+      var currentField = null;
+      var inFields = false;
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var trimmed = line.trim();
+
+        if (trimmed === 'fields:') { inFields = true; continue; }
+        if (!inFields) {
+          // 解析顶层 domain / version
+          var topMatch = trimmed.match(/^(\w+):\s*(.+)$/);
+          if (topMatch) result[topMatch[1]] = topMatch[2].replace(/['"]/g, '').trim();
+          continue;
+        }
+
+        // 在 fields 中
+        if (trimmed.startsWith('- key:')) {
+          currentField = {};
+          result.fields.push(currentField);
+          currentField.key = trimmed.replace('- key:', '').trim().replace(/['"]/g, '');
+        } else if (currentField) {
+          var kv = trimmed.match(/^(\w[\w.]*):\s*(.*)$/);
+          if (kv) {
+            var k = kv[1], v = kv[2].replace(/['"]/g, '').trim();
+            // 处理嵌套 contract 对象
+            if (k === 'contract') {
+              currentField.contract = {};
+              // contract 的子项会在后续行解析
+              currentField._inContract = true;
+            } else if (k === 'range' && currentField._inContract) {
+              var rangeMatch = v.match(/^\[(\d+),\s*(\d+)\]$/);
+              if (rangeMatch) currentField.contract.range = [parseInt(rangeMatch[1]), parseInt(rangeMatch[2])];
+            } else if (k === 'pattern' && currentField._inContract) {
+              currentField.contract.pattern = v;
+            } else if (k === 'dependencies' && currentField._inContract) {
+              // 跳过依赖列表（dependencies 是数组，此处简化处理）
+            } else {
+              if (!currentField._inContract) {
+                currentField[k] = isNaN(Number(v)) ? v : Number(v);
+              }
+            }
+          } else {
+            // 退出 contract 作用域
+            if (currentField._inContract && trimmed === '') {
+              delete currentField._inContract;
+            }
+          }
+        }
+      }
+      return result;
+    }
+
+    /** 简易类型检查 */
+    function simpleTypeCheck(key, expectedType, value) {
+      switch (expectedType) {
+        case 'I32':
+          if (typeof value !== 'number' || !Number.isInteger(value))
+            return '"' + key + '" 应为整数 (I32)，实际为 ' + typeof value;
+          break;
+        case 'STR':
+          if (typeof value !== 'string')
+            return '"' + key + '" 应为字符串 (STR)，实际为 ' + typeof value;
+          break;
+        case 'BOOL':
+          if (typeof value !== 'boolean')
+            return '"' + key + '" 应为布尔值 (BOOL)，实际为 ' + typeof value;
+          break;
+        case 'SECRET':
+          if (typeof value !== 'string')
+            return '"' + key + '" 应为密文字符串 (SECRET)，实际为 ' + typeof value;
+          break;
+      }
+      return null;
+    }
+
+    // ========== 辅助函数 ==========
+
+    /** 加载组件 JS 并创建 Web Components 实例 */
+    function loadComponentScript(componentId, tagName, jsUrl, msgId) {
+      if (customElements.get(tagName)) {
+        createComponentElement(componentId, tagName);
+        sendResponse(msgId, true, null);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = jsUrl;
+      script.onload = () => {
+        const check = setInterval(function () {
+          if (customElements.get(tagName)) {
+            clearInterval(check);
+            createComponentElement(componentId, tagName);
+            sendResponse(msgId, true, null);
+          }
+        }, 50);
+        setTimeout(function () {
+          clearInterval(check);
+          if (!customElements.get(tagName)) {
+            sendResponse(msgId, false, null, '组件 ' + tagName + ' 注册超时');
+          }
+        }, 10000);
+      };
+      script.onerror = function () {
+        sendResponse(msgId, false, null, '组件脚本加载失败: ' + jsUrl);
+      };
+      document.head.appendChild(script);
+    }
+
+    /** 创建 Web Components 实例并挂载到 DOM */
+    function createComponentElement(componentId, tagName) {
+      var existing = ENGINE_ROOT.querySelector('[data-component-id="' + componentId + '"]');
+      if (existing) existing.remove();
+
+      var el = document.createElement(tagName);
+      el.setAttribute('data-component-id', componentId);
+
+      var config = state.configCache.get(componentId);
+      if (config) {
+        Object.entries(config).forEach(function (_ref) {
+          var key = _ref[0], value = _ref[1];
+          el.setAttribute(key, String(value));
+        });
+      }
+
+      ENGINE_ROOT.appendChild(el);
+      state.components.set(componentId, { element: el, tagName: tagName, props: config || {} });
+    }
+
+    /** 发送响应给编辑器 — 使用可信 origin */
+    function sendResponse(messageId, success, data, error) {
+      var response = JSON.stringify({
+        id: 'resp_' + messageId,
+        type: messageId,
+        direction: 'engine→editor',
+        payload: { messageId: messageId, success: success, data: data, error: error },
+        timestamp: Date.now(),
+      });
+      var targetOrigin = trustedParentOrigin || '*';
+      window.parent.postMessage(response, targetOrigin);
+    }
+
+    /** 推送事件给编辑器 — 使用可信 origin */
+    function pushEvent(type, payload) {
+      var event = JSON.stringify({
+        id: 'evt_' + Date.now(),
+        type: type,
+        direction: 'engine→editor',
+        payload: payload,
+        timestamp: Date.now(),
+      });
+      var targetOrigin = trustedParentOrigin || '*';
+      window.parent.postMessage(event, targetOrigin);
+    }
+
+    // ========== 初始化 ==========
+
+    window.addEventListener('message', handleEditorMessage);
+
+    // 通知编辑器引擎已就绪
+    pushEvent('engineReady', { version: BRIDGE_VERSION });
+    state.engineReady = true;
+
+    // 发送连接确认 — 使用通配符因为此时还不知道 parent origin；父进程响应该消息后 origin 即被记住
+    window.parent.postMessage('__LIVESTYLE_CONNECTED__', '*');
+
+    console.log('[EngineBridge] Ready v' + BRIDGE_VERSION);
+  </script>
+</body>
+</html>

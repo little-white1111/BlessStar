@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.musicwebsite</groupId>
+    <artifactId>music-website-config</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>音乐网站 Config Adapters</name>
+    <description>自动生成的 BlessStar 配置适配器（music-website）
+请勿手动修改 — 由 blessstar-codegen 自动生成</description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!-- 零外部依赖 — ConfigReader 由业务方自行实现 -->
+    <!-- 无外部 SDK 依赖，生成的 adapter 代码仅依赖 JDK 标准库 -->
+</project>

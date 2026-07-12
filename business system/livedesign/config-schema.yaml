@@ -1,0 +1,35 @@
+# ============================================================================
+# config-schema.yaml — 配置宪法入口（标记为已弃用）
+# ============================================================================
+#
+# ⚠️ 此文件已迁移为 config-schema.d/ 目录化 SSOT 结构。
+# 请勿在此文件中编辑配置字段，修改请在 config-schema.d/ 目录下操作。
+#
+# 新结构:
+#   config-schema.d/                ← SSOT 目录（人类编辑 / Git 管理）
+#     ├── avatar.yaml               ← 悬浮球 & 虚拟角色配置（3 字段）
+#     ├── chat.yaml                 ← 对话系统配置（2 字段）
+#     ├── ui.yaml                   ← 界面主题 & 视觉配置（4 字段）
+#     ├── persona.yaml              ← 助手人格成长弧光系统（8 字段）
+#     ├── narrative.yaml            ← 用户叙事与动态画像系统（6 字段）
+#     ├── catchphrase.yaml          ← 助手口头禅系统（6 字段）
+#     └── emotion.yaml              ← 情绪与学习系统（2 字段）
+#
+#   config-schema.bundled.yaml      ← 编译期聚合缓存（自动生成，禁止手动编辑）
+#     domain: livedesign
+#     version: v1.1.0
+#     fields: 31 个（avatar 3 + chat 2 + ui 4 + persona 8 + narrative 6 + catchphrase 6 + emotion 2）
+#     contract: 含 range / slo_impact / dependencies / approval_required / immutable
+#
+# 生成命令（在项目根目录执行）:
+#   blessstar schema bundle --dir config-schema.d --output config-schema.bundled.yaml
+#
+# 参考 ADR:
+#   🏛️ 架构方案选择记录 — config-schema.yaml 多文件拆分（SSOT 目录化）
+#   方案B: config-schema.d/ 目录化 SSOT + 编译期聚合为 bundled.yaml
+#   确认日期: 2026-07-11
+# ============================================================================
+
+# domain: livedesign            ← 已迁移至 config-schema.d/*.yaml
+# version: v1.1.0              ← 已迁移至 config-schema.d/*.yaml
+# fields: (共 31 个字段)          ← 已迁移至 config-schema.d/ 下 7 个 SSOT 文件

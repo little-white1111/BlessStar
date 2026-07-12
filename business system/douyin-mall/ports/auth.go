@@ -1,0 +1,32 @@
+﻿// Package ports 自动生成于 BlessStar 配置端口-适配器
+// 业务系统: 抖音商城 (douyin-mall)
+// 领域: 认证鉴权
+// 请勿手动修改 — 由 blessstar-codegen 自动生成
+// Source: manifest.json
+
+package ports
+
+import (
+	"context"
+	"time"
+)
+
+// AuthConfig 认证鉴权 域配置接口
+// 对应 domain: "认证鉴权"
+// 禁止直接 import BlessStar SDK — 请通过此接口访问配置
+type AuthConfig interface {
+
+	// // JWT过期时间 (auth.jwt.token_expiry_seconds)
+// 描述: JWT登录令牌的有效期时长（秒），过期后用户需重新登录。
+// 建议值: 3600~604800（1小时~7天），推荐步长3600秒
+// 类型: I64
+	// Returns: int64
+	JwtTokenExpirySeconds(ctx context.Context) (time.Duration, error)
+
+	// // 密码加密强度 (auth.password.bcrypt_cost)
+// 描述: 密码哈希计算成本因子，控制密码加密强度。
+// 建议值: 4~14，推荐步长1。生产建议10~12
+// 类型: I32
+	// Returns: int32
+	PasswordBcryptCost(ctx context.Context) (int32, error)
+}

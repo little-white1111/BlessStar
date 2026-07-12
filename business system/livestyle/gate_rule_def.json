@@ -1,0 +1,222 @@
+[
+  {
+    "field_key": "canvas.grid.size",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 0, "max": 100 },
+    "scenario": "livestyle_canvas_grid_size_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:canvas:canvas.grid.size:0:threshold:range",
+    "error_hint": "画布网格对齐粒度必须在 0~100 像素之间"
+  },
+  {
+    "field_key": "canvas.grid.snap",
+    "field_type": "BOOL",
+    "gate_type": "DEPENDENCY",
+    "params": { "expr": "canvas.grid.size > 0" },
+    "scenario": "livestyle_canvas_grid_snap_dependency_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "dependency",
+    "stable_key": "livestyle:canvas:canvas.grid.snap:0:dependency:dependency",
+    "error_hint": "启用网格吸附需要先设置 canvas.grid.size > 0"
+  },
+  {
+    "field_key": "canvas.autosave_interval_ms",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 5000, "max": 300000 },
+    "scenario": "livestyle_canvas_autosave_interval_ms_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:canvas:canvas.autosave_interval_ms:0:threshold:range",
+    "error_hint": "自动保存间隔必须在 5000~300000 毫秒之间"
+  },
+  {
+    "field_key": "canvas.autosave_interval_ms",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "autosave_interval_ms", "threshold": 300000 },
+    "scenario": "livestyle_canvas_autosave_interval_ms_slo_warning_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "slo",
+    "stable_key": "livestyle:canvas:canvas.autosave_interval_ms:0:slo:slo_warning",
+    "error_hint": "自动保存间隔影响数据持久性的及时性，当前值接近上限阈值 300000ms"
+  },
+  {
+    "field_key": "engine.render.fps_limit",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 15, "max": 120 },
+    "scenario": "livestyle_engine_render_fps_limit_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:engine:engine.render.fps_limit:0:threshold:range",
+    "error_hint": "渲染帧率限制必须在 15~120 FPS 之间"
+  },
+  {
+    "field_key": "engine.render.fps_limit",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "fps_limit", "threshold": 120 },
+    "scenario": "livestyle_engine_render_fps_limit_slo_warning_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "slo",
+    "stable_key": "livestyle:engine:engine.render.fps_limit:0:slo:slo_warning",
+    "error_hint": "帧率限制直接影响渲染性能和动画流畅度，当前值接近上限阈值 120"
+  },
+  {
+    "field_key": "engine.render.dirty_rect_enabled",
+    "field_type": "BOOL",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "dirty_rect_enabled", "threshold": true },
+    "scenario": "livestyle_engine_render_dirty_rect_enabled_slo_warning_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "slo",
+    "stable_key": "livestyle:engine:engine.render.dirty_rect_enabled:0:slo:slo_warning",
+    "error_hint": "脏矩形渲染功能会影响渲染性能，请结合目标平台测试后启用"
+  },
+  {
+    "field_key": "obs.connection.port",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 1, "max": 65535 },
+    "scenario": "livestyle_obs_connection_port_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:obs:obs.connection.port:0:threshold:range",
+    "error_hint": "OBS 连接端口必须在 1~65535 范围内"
+  },
+  {
+    "field_key": "obs.connection.port",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "connection_port", "threshold": 65535 },
+    "scenario": "livestyle_obs_connection_port_slo_warning_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "slo",
+    "stable_key": "livestyle:obs:obs.connection.port:0:slo:slo_warning",
+    "error_hint": "端口配置错误将导致无法连接 OBS，请确认端口未被占用"
+  },
+  {
+    "field_key": "obs.connection.password",
+    "field_type": "STRING",
+    "gate_type": "APPROVAL",
+    "params": { "required": true, "description": "涉及 OBS 连接凭据，修改需要审批" },
+    "scenario": "livestyle_obs_connection_password_approval_config",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "livestyle:obs:obs.connection.password:1:approval:approval",
+    "error_hint": "OBS 连接密码属于敏感凭据，修改需要审批"
+  },
+  {
+    "field_key": "obs.connection.retry_interval_ms",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 1000, "max": 60000 },
+    "scenario": "livestyle_obs_connection_retry_interval_ms_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:obs:obs.connection.retry_interval_ms:0:threshold:range",
+    "error_hint": "OBS 重试间隔必须在 1000~60000 毫秒之间"
+  },
+  {
+    "field_key": "obs.connection.retry_interval_ms",
+    "field_type": "INT32",
+    "gate_type": "DEPENDENCY",
+    "params": { "expr": "obs.connection.auto_reconnect == true" },
+    "scenario": "livestyle_obs_connection_retry_interval_ms_dependency_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "dependency",
+    "stable_key": "livestyle:obs:obs.connection.retry_interval_ms:0:dependency:dependency",
+    "error_hint": "设置重试间隔需要先启用自动重连（obs.connection.auto_reconnect == true）"
+  },
+  {
+    "field_key": "obs.connection.retry_interval_ms",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "retry_interval_ms", "threshold": 60000 },
+    "scenario": "livestyle_obs_connection_retry_interval_ms_slo_warning_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "slo",
+    "stable_key": "livestyle:obs:obs.connection.retry_interval_ms:0:slo:slo_warning",
+    "error_hint": "重试间隔影响 OBS 断连恢复时间，当前值接近上限阈值 60000ms"
+  },
+  {
+    "field_key": "obs.sync.debounce_ms",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 50, "max": 5000 },
+    "scenario": "livestyle_obs_sync_debounce_ms_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:obs:obs.sync.debounce_ms:0:threshold:range",
+    "error_hint": "OBS 同步防抖间隔必须在 50~5000 毫秒之间"
+  },
+  {
+    "field_key": "obs.sync.debounce_ms",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "debounce_ms", "threshold": 5000 },
+    "scenario": "livestyle_obs_sync_debounce_ms_slo_warning_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "slo",
+    "stable_key": "livestyle:obs:obs.sync.debounce_ms:0:slo:slo_warning",
+    "error_hint": "防抖间隔影响 OBS 配置同步的实时性和频率，当前值接近上限阈值 5000ms"
+  },
+  {
+    "field_key": "component.task-list.backgroundColor",
+    "field_type": "STRING",
+    "gate_type": "PATTERN",
+    "params": { "pattern_regex": "^#[0-9a-fA-F]{6}$" },
+    "scenario": "livestyle_component_task-list_backgroundColor_pattern_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "livestyle:component:component.task-list.backgroundColor:0:format:pattern",
+    "error_hint": "背景颜色必须为有效的十六进制颜色值（如 #FF0000）"
+  },
+  {
+    "field_key": "component.task-list.fontSize",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 10, "max": 48 },
+    "scenario": "livestyle_component_task-list_fontSize_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:component:component.task-list.fontSize:0:threshold:range",
+    "error_hint": "任务列表字体大小必须在 10~48 像素之间"
+  },
+  {
+    "field_key": "component.task-list.fontSize",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "fontSize", "threshold": 48 },
+    "scenario": "livestyle_component_task-list_fontSize_slo_warning_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "slo",
+    "stable_key": "livestyle:component:component.task-list.fontSize:0:slo:slo_warning",
+    "error_hint": "字体大小设置影响直播画面可读性，当前值接近上限阈值 48px"
+  },
+  {
+    "field_key": "component.task-list.textColor",
+    "field_type": "STRING",
+    "gate_type": "PATTERN",
+    "params": { "pattern_regex": "^#[0-9a-fA-F]{6}$" },
+    "scenario": "livestyle_component_task-list_textColor_pattern_config_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "livestyle:component:component.task-list.textColor:0:format:pattern",
+    "error_hint": "文字颜色必须为有效的十六进制颜色值（如 #FF0000）"
+  },
+  {
+    "field_key": "component.task-list.borderRadius",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 0, "max": 20 },
+    "scenario": "livestyle_component_task-list_borderRadius_range_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "livestyle:component:component.task-list.borderRadius:0:threshold:range",
+    "error_hint": "任务列表圆角大小必须在 0~20 像素之间"
+  }
+]

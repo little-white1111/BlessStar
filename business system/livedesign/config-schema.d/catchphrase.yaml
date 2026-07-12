@@ -1,0 +1,143 @@
+# config-schema.d/catchphrase.yaml — 助手口头禅系统
+# SSOT: 核心口头禅、涌现口头禅、频率控制、情绪匹配
+# 参考 ADR: 🏛️ 架构方案选择记录 — 助手口头禅系统
+domain: livedesign
+version: v1.1.0
+x-version: v1.0.0
+x-domain: catchphrase
+x-extensions:
+  biz_id: "livedesign"
+  registration_phase: "P2"
+  generated_by: "configdesigner"
+fields:
+  # ─── 核心口头禅（immutable） ───
+  - key: catchphrase.core
+    type: ARR
+    default: '[{"emotion_type":"encouragement","variants":{"low":"加油","medium":"你一定可以的","high":"你一定可以做到的！"}},{"emotion_type":"calming","variants":{"low":"没事的","medium":"没关系的~","high":"别担心，我一直在这里"}}]'
+    required: true
+    business_desc: "助手核心口头禅的配置列表，按情绪类型分类（如 encouragement/calming），每种类型提供 low/medium/high 三档强度变体。定义了助手最本质的语言风格，不可在运行时修改。"
+    contract:
+      range: []
+      slo_impact: "核心语言风格"
+      approval_required: true
+      immutable: true
+    ui_meta:
+      label: "核心口头禅"
+      order: 20
+      placeholder: "[{\"emotion_type\":\"encouragement\",\"variants\":{...}}]"
+      description: "助手先天性核心口头禅，按情绪类型分类，提供三档强度变体"
+      hidden: false
+    search_keywords:
+      - "口头禅"
+      - "核心语言"
+      - "人格"
+      - "immutable"
+      - "语言风格"
+
+  # ─── 涌现口头禅（Relational） ───
+  - key: catchphrase.relational.min_usage
+    type: I32
+    default: 5
+    required: true
+    business_desc: "Relational 口头禅从候选晋升为活跃所需的最小使用次数。当用户在某条候选口头禅上累积使用次数达到此阈值，且平均反馈分达标时，触发用户确认流程。"
+    contract:
+      range: [3, 20]
+      slo_impact: "涌现灵敏度"
+      approval_required: false
+    ui_meta:
+      label: "涌现使用次数门槛"
+      order: 21
+      placeholder: "5"
+      description: "候选口头禅晋升所需的最小使用次数，低于 3 则涌现过快"
+      hidden: false
+    search_keywords:
+      - "口头禅涌现"
+      - "使用次数"
+      - "晋升"
+      - "relational"
+
+  - key: catchphrase.relational.min_feedback
+    type: F64
+    default: 0.7
+    required: true
+    business_desc: "Relational 口头禅晋升所需的最低平均用户反馈评分。用户在口头禅出现后可给予反馈（点赞/踩），系统维护每条口头禅的平均得分，低于此值的候选口头禅不会触发确认流程。"
+    contract:
+      range: [0.3, 1.0]
+      slo_impact: "涌现质量"
+      approval_required: false
+    ui_meta:
+      label: "涌现反馈分门槛"
+      order: 22
+      placeholder: "0.7"
+      description: "候选口头禅晋升所需的最低平均用户反馈分"
+      hidden: false
+    search_keywords:
+      - "反馈分"
+      - "涌现质量"
+      - "用户评价"
+      - "晋升门槛"
+
+  # ─── 频率控制 ───
+  - key: catchphrase.frequency.max_per_round
+    type: I32
+    default: 1
+    required: true
+    business_desc: "每轮对话中口头禅的最大触发次数。控制口头禅的出现频率，避免过度重复导致用户厌烦。值为 1 时每轮最多出现 1 次，值越高出现频率越高。"
+    contract:
+      range: [1, 3]
+      slo_impact: "对话自然度"
+      approval_required: false
+    ui_meta:
+      label: "每轮最大触发次数"
+      order: 23
+      placeholder: "1"
+      description: "每轮对话最多触发几次口头禅，建议保持为 1 以维持自然度"
+      hidden: false
+    search_keywords:
+      - "频率控制"
+      - "口头禅频率"
+      - "自然度"
+      - "重复控制"
+
+  # ─── 情绪匹配 ───
+  - key: catchphrase.emotion.trigger_threshold
+    type: F64
+    default: 0.3
+    required: true
+    business_desc: "情绪触发口头禅的 VAD 偏差幅度阈值。当用户当前 VAD 值偏离基线的幅度超过此阈值时，EmotionTriggerMatcher 尝试匹配对应的核心口头禅。值越低越容易触发，值越高越保守。"
+    contract:
+      range: [0.1, 0.8]
+      slo_impact: "情绪匹配精度"
+      approval_required: false
+    ui_meta:
+      label: "情绪触发阈值"
+      order: 24
+      placeholder: "0.3"
+      description: "VAD 偏差幅度阈值，低于 0.1 则过于敏感"
+      hidden: false
+    search_keywords:
+      - "情绪触发"
+      - "VAD阈值"
+      - "敏感度"
+      - "匹配精度"
+
+  - key: catchphrase.emotion.valence_weight
+    type: F64
+    default: 0.6
+    required: true
+    business_desc: "情绪口头禅匹配中 Valence（愉悦度）维度的权重。控制 VAD 匹配时各维度的加权比例，valence_weight 越高越侧重情绪正负向的判断，反之 arousal 和 dominance 的影响更大。"
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "情绪匹配精度"
+      approval_required: false
+    ui_meta:
+      label: "Valence 匹配权重"
+      order: 25
+      placeholder: "0.6"
+      description: "VAD匹配中Valence权重，值越高越侧重情绪正负向判断"
+      hidden: false
+    search_keywords:
+      - "valence"
+      - "权重"
+      - "匹配算法"
+      - "VAD权重"

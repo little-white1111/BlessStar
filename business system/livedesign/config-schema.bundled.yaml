@@ -1,0 +1,209 @@
+# config-schema.bundled.yaml — 编译期聚合缓存（自动生成，禁止手动编辑）
+# Generated at: 2026-07-11T07:01:18Z
+# From: avatar.yaml, catchphrase.yaml, chat.yaml, emotion.yaml, narrative.yaml, persona.yaml, ui.yaml
+
+domain: livedesign
+version: v1.1.0
+generated_at: "2026-07-11T07:01:18Z"
+generated_from:
+  - avatar.yaml
+  - catchphrase.yaml
+  - chat.yaml
+  - emotion.yaml
+  - narrative.yaml
+  - persona.yaml
+  - ui.yaml
+
+fields:
+  - key: assistant.tools
+    type: ARR
+    default: '[{"name":"code_editor","requires_approval":true},{"name":"fs_read","requires_approval":true},{"name":"web_search","requires_approval":true}]'
+    contract:
+      slo_impact: 用户数据安全与操作权限
+      approval_required: true
+  - key: avatar.position_x
+    type: I32
+    default: 0
+    contract:
+      range: [-1920, 3840]
+      slo_impact: UI 定位准确性
+  - key: avatar.position_y
+    type: I32
+    default: 0
+    contract:
+      range: [-1080, 2160]
+      slo_impact: UI 定位准确性
+  - key: avatar.scale
+    type: F64
+    default: 1.0
+    contract:
+      range: [0.5, 2]
+      slo_impact: 角色渲染视觉效果
+  - key: benevolence.strategy_set
+    type: ARR
+    default: ["reframe", "validate", "guide", "deepen"]
+    contract:
+      slo_impact: 对话质量、用户满意度
+      approval_required: true
+  - key: catchphrase.core
+    type: ARR
+    default: '[{"emotion_type":"encouragement","variants":{"low":"加油","medium":"你一定可以的","high":"你一定可以做到的！"}},{"emotion_type":"calming","variants":{"low":"没事的","medium":"没关系的~","high":"别担心，我一直在这里"}}]'
+    contract:
+      slo_impact: 核心语言风格
+      approval_required: true
+      immutable: true
+  - key: catchphrase.emotion.trigger_threshold
+    type: F64
+    default: 0.3
+    contract:
+      range: [0.1, 0.8]
+      slo_impact: 情绪匹配精度
+  - key: catchphrase.emotion.valence_weight
+    type: F64
+    default: 0.6
+    contract:
+      range: [0, 1]
+      slo_impact: 情绪匹配精度
+  - key: catchphrase.frequency.max_per_round
+    type: I32
+    default: 1
+    contract:
+      range: [1, 3]
+      slo_impact: 对话自然度
+  - key: catchphrase.relational.min_feedback
+    type: F64
+    default: 0.7
+    contract:
+      range: [0.3, 1]
+      slo_impact: 涌现质量
+  - key: catchphrase.relational.min_usage
+    type: I32
+    default: 5
+    contract:
+      range: [3, 20]
+      slo_impact: 涌现灵敏度
+  - key: chat.role_preset
+    type: STR
+    default: assistant
+    contract:
+      slo_impact: 对话角色一致性
+  - key: chat.temperature
+    type: F64
+    default: 0.8
+    contract:
+      range: [0.1, 2]
+      slo_impact: AI 回复质量与一致性
+  - key: learning.pattern.sensitivity
+    type: F64
+    default: 0.3
+    contract:
+      range: [0.05, 0.8]
+      slo_impact: 模式检测精确率
+  - key: narrative.observation.retention_days
+    type: I32
+    default: 365
+    contract:
+      range: [30, 730]
+      slo_impact: 存储容量、隐私合规、量化分析窗口
+      approval_required: true
+  - key: narrative.quantify.schedule
+    type: STR
+    default: "0 */6 * * *"
+    contract:
+      slo_impact: 量化指标时效性
+  - key: narrative.reflect.min_observations
+    type: I32
+    default: 20
+    contract:
+      range: [5, 500]
+      slo_impact: LLM 分析质量、画像可靠性
+  - key: narrative.reflect.schedule
+    type: STR
+    default: "0 2 * * 0"
+    contract:
+      slo_impact: 画像更新频率、LLM 调用成本
+  - key: narrative.significant.threshold
+    type: F64
+    default: 0.7
+    contract:
+      range: [0.3, 1]
+      slo_impact: 重要事件标记灵敏度
+  - key: narrative.trajectory.attributes
+    type: ARR
+    default: ["self_efficacy", "emotional_expression", "self_acceptance"]
+    contract:
+      slo_impact: 画像维度覆盖度
+      approval_required: true
+  - key: persona.adaptive.encouragement
+    type: F64
+    default: 0.5
+    contract:
+      range: [0.2, 0.9]
+      slo_impact: 用户被鼓励后的情绪改善幅度
+  - key: persona.adaptive.patience
+    type: F64
+    default: 0.6
+    contract:
+      range: [0.3, 0.95]
+      slo_impact: 用户倾听满意度
+  - key: persona.adaptive.proactive_curiosity
+    type: F64
+    default: 0.4
+    contract:
+      range: [0.1, 0.7]
+      slo_impact: 对话深度和用户参与度
+  - key: persona.core.curiosity
+    type: F64
+    default: 0.6
+    contract:
+      range: [0.3, 1]
+      slo_impact: 对话深度和探索性
+      approval_required: true
+      immutable: true
+  - key: persona.core.rationality
+    type: F64
+    default: 0.9
+    contract:
+      range: [0.5, 1]
+      slo_impact: 回复逻辑性
+      approval_required: true
+      immutable: true
+  - key: persona.core.warmth
+    type: F64
+    default: 0.8
+    contract:
+      range: [0.5, 1]
+      slo_impact: 对话情感基调
+      approval_required: true
+      immutable: true
+  - key: persona.evolution.change_rate_per_1k
+    type: F64
+    default: 0.05
+    contract:
+      range: [0.01, 0.2]
+      slo_impact: 人格稳定性
+      approval_required: true
+  - key: persona.evolution.positive_bias
+    type: F64
+    default: 0.1
+    contract:
+      range: [0, 0.3]
+      slo_impact: 人格演进方向健康度
+      approval_required: true
+  - key: plugin.enabled
+    type: ARR
+    default: "[]"
+    contract:
+      slo_impact: 系统安全与功能扩展
+      approval_required: true
+  - key: ui.theme
+    type: STR
+    default: system
+    contract:
+      slo_impact: 用户视觉体验
+  - key: ui.transparency
+    type: F64
+    default: 1.0
+    contract:
+      range: [0.1, 1]
+      slo_impact: 悬浮球视觉效果

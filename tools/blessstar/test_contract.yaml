@@ -1,0 +1,46 @@
+biz_id: "livedesign.danmaku"
+display_name: "弹幕业务系统"
+version: "1.2.0"
+sdk_version: ">=1.0.0"
+description: "弹幕渲染与交互配置"
+
+fields:
+  - key: "livedesign.danmaku.font_size"
+    type: int32
+    default: "14"
+    description: "弹幕字号(像素)"
+    required: true
+
+  - key: "livedesign.danmaku.opacity"
+    type: double
+    default: "0.8"
+    description: "弹幕透明度(0.0~1.0)"
+    required: false
+
+dependencies:
+  - "livedesign.room.layout"
+  - "livedesign.room.theme_color"
+
+gates:
+  - id: "font_size_range"
+    description: "字号必须在 12-72 之间"
+    field: "livedesign.danmaku.font_size"
+    rule: "value in [12, 72]"
+    layer: "default"
+    sub_category: "threshold"
+
+  - id: "opacity_range"
+    description: "透明度必须在 0.0-1.0 之间"
+    field: "livedesign.danmaku.opacity"
+    rule: "value in [0.0, 1.0]"
+    layer: "default"
+    sub_category: "threshold"
+
+effects:
+  - trigger: "livedesign.danmaku.font_size"
+    action: "renderer.updateFontSize"
+    async: false
+
+  - trigger: "livedesign.danmaku.opacity"
+    action: "renderer.updateOpacity"
+    async: true

@@ -1,0 +1,47 @@
+# TaskList 组件配置
+# 遵循架构不变量 I4：组件配置以独立文件存储
+# 遵循架构不变量 I10：配置格式必须版本化
+component:
+  name: 任务列表
+  tagName: task-list
+  version: 1.0.0
+  description: 显示任务事项列表，支持标题、背景色、字体等自定义
+
+schema:
+  props:
+    - key: title
+      label: 标题
+      type: string
+      default: 任务列表
+    - key: backgroundColor
+      label: 背景色
+      type: color
+      default: '#1a1a2e'
+    - key: fontSize
+      label: 字体大小
+      type: number
+      default: 14
+      min: 10
+      max: 48
+    - key: textColor
+      label: 文字颜色
+      type: color
+      default: '#ffffff'
+    - key: items
+      label: 任务列表
+      type: string
+      default: 任务1,任务2,任务3
+    - key: showHeader
+      label: 显示标题
+      type: boolean
+      default: true
+    - key: borderRadius
+      label: 边框圆角
+      type: number
+      default: 8
+      min: 0
+      max: 20
+
+entry: ./dist/task-list.js
+assets:
+  - ./dist/task-list.js

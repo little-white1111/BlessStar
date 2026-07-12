@@ -1,0 +1,214 @@
+# 落地建议：{{biz_id}} / {{display_name}}
+
+> 本指南由 `blessstar spec` 根据 `contract.yaml` 自动生成（`--lang={{lang}}`）。
+> 将其喂给 LLM，由 LLM 生成 `{{lang}}` 代码 + 测试。
+> 人工 review gate 核心逻辑后合并。
+
+---
+
+## 一、项目上下文（供 LLM 参考）
+
+### 1.1 项目路径
+```
+{{project_root}}
+```
+
+### 1.2 业务系统配置
+| 字段 | 值 |
+|------|-----|
+| biz_id | `{{biz_id}}` |
+| version | `{{version}}` |
+| sdk_version | `{{sdk_version}}` |
+
+### 1.3 可复用的 Java 包
+```java
+// JNI 绑定
+import com.blessstar.sdk.*;
+import com.blessstar.sdk.config.*;
+import com.blessstar.sdk.registry.*;
+
+// 本地方法声明
+public class NativeBridge {
+    static {
+        System.loadLibrary("blessstar_core");
+    }
+    
+    public static native int bsConfigDeclare(FieldDecl[] fields);
+    public static native int bsBizRegistryRegister(Manifest manifest);
+    public static native String bsConfigRead(String key);
+}
+```
+
+### 1.4 可复用的辅助类
+```java
+// 字段声明构建器
+public class FieldBuilder {
+    public static FieldDecl of(String key, FieldType type,
+                                String defaultVal, String desc, boolean required);
+}
+
+// 测试断言
+public class Assert {
+    public static void eq(Object a, Object b) { ... }
+    public static void ne(Object a, Object b) { ... }
+    public static void True(boolean cond) { ... }
+    public static void False(boolean cond) { ... }
+}
+```
+
+---
+
+## 二、待实现的 Java 代码
+
+### 2.1 字段声明数组
+
+生成文件：`biz_{{biz_id}}/src/main/java/com/blessstar/biz/{{biz_id}}/Fields.java`
+
+```java
+package com.blessstar.biz.{{biz_id}};
+
+import com.blessstar.sdk.config.*;
+
+public class Fields {
+    public static final FieldDecl[] FIELDS = {
+        {{#fields}}
+        // {{description}}
+        {{#required}}FieldBuilder.of{{/required}}{{^required}}FieldBuilder.of{{/required}}(
+            "{{key}}", FieldType.{{type_upper}}, "{{default}}", "{{description}}", {{#required}}true{{/required}}{{^required}}false{{/required}}
+        ),
+        {{/fields}}
+    };
+    
+    public static final int FIELDS_COUNT = FIELDS.length;
+}
+```
+
+### 2.2 Gate 函数
+
+生成文件：`biz_{{biz_id}}/src/main/java/com/blessstar/biz/{{biz_id}}/Gates.java`
+
+{{#gates}}
+**gate[{{id}}]** — `{{description}}`
+- **规则**：`{{rule}}`
+- **层**：`{{layer}}`
+- **子分类**：`{{sub_category}}`
+- **函数签名**：
+```java
+@ReloadGate(id = "{{id}}")
+public static int gate{{id}}(
+    Object userCtx, String uri,
+    IoReadResult readResult,
+    ReloadGateDetail detailOut
+) {
+    // --- 实现要点 ---
+    // 1. 从 readResult 中提取 {{field}} 的值
+    // 2. 判断值是否满足规则 {{rule}}
+    // 3. 通过 → return BS_RELOAD_GATE_OK
+    // 4. 拒绝 → 填充 detailOut.buf 为错误描述
+    //         → return BS_RELOAD_GATE_IR_REJECT
+}
+```
+{{#dependencies}}
+- **前置依赖**：{{.}}（需检查注册表中是否存在）
+{{/dependencies}}
+
+---
+
+{{/gates}}
+
+### 2.3 副作用函数
+
+生成文件：`biz_{{biz_id}}/src/main/java/com/blessstar/biz/{{biz_id}}/Effects.java`
+
+{{#effects}}
+**effect[{{trigger}}]** → `{{action}}`
+- **同步/异步**：{{#async}}异步{{/async}}{{^async}}同步{{/async}}
+- **函数签名**：
+```java
+@ConfigEffect(trigger = "{{trigger}}")
+public static int effect{{trigger_dot_to_underscore}}(
+    Object ctx, String key,
+    byte[] data, long length,
+    long epoch
+) {
+    // --- 实现要点 ---
+    // 1. {{trigger}} 变化时通知 {{action}}
+    // 2. data 是变更后的值（UTF-8 JSON 片段）
+    // 3. epoch 是当前版本号，可用于排序
+    // 4. 返回 0 表示成功
+    return 0;
+}
+```
+
+{{/effects}}
+
+### 2.4 注册入口
+
+生成文件：`biz_{{biz_id}}/src/main/java/com/blessstar/biz/{{biz_id}}/ModuleInit.java`
+
+```java
+package com.blessstar.biz.{{biz_id}};
+
+import com.blessstar.sdk.config.*;
+import com.blessstar.sdk.registry.*;
+
+public class ModuleInit {
+    public static int moduleInit(Object adapterCtx) {
+        NativeBridge.bsConfigDeclare(Fields.FIELDS);
+        
+        Manifest manifest = new Manifest();
+        manifest.setBizId("{{biz_id}}");
+        manifest.setDisplayName("{{display_name}}");
+        manifest.setSdkVersion("{{sdk_version}}");
+        NativeBridge.bsBizRegistryRegister(manifest);
+        
+        return 0;
+    }
+}
+```
+
+---
+
+## 三、待实现的测试
+
+### 3.1 字段声明测试
+
+| 用例 | 断言 |
+|------|------|
+| 读取 `{{fields.[0].key}}` 返回默认值 `{{fields.[0].default}}` | `Assert.eq(val, "{{fields.[0].default}}")` |
+
+### 3.2 Gate 测试
+
+{{#gates}}
+**gate[{{id}}]** — `{{description}}`
+
+| 输入 | 期望结果 |
+|------|---------|
+| {{rule}} → 合法边界值 | pass |
+| {{rule}} → 非法值 | reject |
+{{#dependencies}}| 依赖 {{.}} 不存在 → | reject |
+{{/dependencies}}
+
+{{/gates}}
+
+---
+
+## 四、编译与验证
+
+```bash
+cd {{project_root}}/biz_{{biz_id}}
+mvn package
+mvn test
+```
+
+---
+
+## 五、LLM 输出约束（`--lang={{lang}}` 变体）
+
+1. 生成的 `.java` 文件放在 `biz_{{biz_id}}/src/main/java/com/blessstar/biz/{{biz_id}}/`
+2. 测试文件放在 `biz_{{biz_id}}/src/test/java/com/blessstar/biz/{{biz_id}}/`
+3. 使用 JNI 调用底层 C 库，通过 `NativeBridge` 封装
+4. Gate 函数返回 `BS_RELOAD_GATE_OK` / `BS_RELOAD_GATE_IR_REJECT`（JNI 常量）
+5. 字符串比较使用 `.equals()`
+6. 测试使用 JUnit 5，通过 `@Test` 注解标注
+7. `pom.xml` 中使用 `maven-jni-plugin` 生成 JNI 头文件

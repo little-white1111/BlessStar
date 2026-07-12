@@ -1,5 +1,7 @@
 package types
 
+import "fmt"
+
 // ConfigField represents a single configuration field from manifest.json or config_metadata.json
 type ConfigField struct {
 	Key             string            `json:"key"`
@@ -17,6 +19,82 @@ type ConfigField struct {
 	SearchKeywords  []string          `json:"search_keywords,omitempty"`
 	AIHint          string            `json:"ai_hint,omitempty"`
 	ImpactScope     []string          `json:"impact_scope,omitempty"`
+}
+
+// ─── Schema-First 数据模型 ───
+
+// ConfigSchemaField 表示 config-schema.yaml 中的单个配置字段
+type ConfigSchemaField struct {
+	Key            string                   `yaml:"key"`
+	Type           string                   `yaml:"type"`
+	Default        string                   `yaml:"default"`
+	BusinessDesc   string                   `yaml:"business_desc"`
+	ImpactScope    []string                 `yaml:"impact_scope"`
+	Contract       *ContractDef             `yaml:"contract"`
+	EnvOverrides   map[string]EnvOverride   `yaml:"env_overrides"`
+	UIMeta         *UIMetaDef               `yaml:"ui_meta"`
+	SearchKeywords []string                 `yaml:"search_keywords"`
+	AIHint         string                   `yaml:"ai_hint"`
+	EnumValues     []string                 `yaml:"enum_values"`
+}
+
+// ContractDef 定义配置字段的契约（约束、依赖、SLO）
+type ContractDef struct {
+	Range            []int64  `yaml:"range"`
+	Dependencies     []string `yaml:"dependencies"`
+	SLOImpact        string   `yaml:"slo_impact"`
+	ApprovalRequired bool     `yaml:"approval_required"`
+}
+
+// EnvOverride 定义特定环境的覆盖配置
+type EnvOverride struct {
+	Range []int64 `yaml:"range"`
+}
+
+// UIMetaDef 定义 UI 元数据
+type UIMetaDef struct {
+	Label string `yaml:"label"`
+	Order int    `yaml:"order"`
+}
+
+// ConfigSchema 是 config-schema.yaml 的顶层结构
+type ConfigSchema struct {
+	Domain  string             `yaml:"domain"`
+	Version string             `yaml:"version"`
+	Fields  []ConfigSchemaField `yaml:"fields"`
+}
+
+// GateConfig 表示从 contract 段推导的门禁配置
+type GateConfig struct {
+	FieldKey string `json:"field_key"`
+	GateType string `json:"gate_type"`   // "RANGE", "DEPENDENCY", "APPROVAL", "SLO_WARNING"
+	ParamKey string `json:"param_key"`
+	ParamVal string `json:"param_val"`
+}
+
+// SchemaToConfigField 将 ConfigSchemaField 转换为 ConfigField
+func SchemaToConfigField(sf ConfigSchemaField) ConfigField {
+	cf := ConfigField{
+		Key:            sf.Key,
+		Type:           sf.Type,
+		Default:        sf.Default,
+		SearchKeywords: sf.SearchKeywords,
+		AIHint:         sf.AIHint,
+		ImpactScope:    sf.ImpactScope,
+		EnumValues:     sf.EnumValues,
+	}
+	if sf.Contract != nil && len(sf.Contract.Range) == 2 {
+		cf.ValueRange = formatRange(sf.Contract.Range[0], sf.Contract.Range[1])
+	}
+	if sf.UIMeta != nil {
+		cf.UIOrder = sf.UIMeta.Order
+	}
+	return cf
+}
+
+// formatRange 将范围格式化为字符串
+func formatRange(min, max int64) string {
+	return fmt.Sprintf("%d~%d", min, max)
 }
 
 // DomainShard represents a business domain shard

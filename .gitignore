@@ -23,6 +23,10 @@
 !/biz-registry/
 !/biz-adapters/
 
+# ── Business system projects (3rd-party repos for adapter integration) ──
+!/business system/
+!/business system/**
+
 # ── Root-level files ────────────────────────────────────────────────
 !/.clang-format
 !/.gitattributes
@@ -55,6 +59,15 @@ Desktop.ini
 
 # ── Architecture documentation ─────────────────────────────────────
 !/docs/
+
+# ── Trae AI Skills ─────────────────────────────────────────────
+!/.trae/
+!/.trae/skills/
+!/.trae/skills/**
+
+# ── Prompt / Contract markdown files (root level) ───────────────
+!/config_extraction_prompt_v2.md
+!/contract_cdd_prompt.md
 
 # ── Build artifacts (anywhere) ──────────────────────────────────────
 CMakeFiles/

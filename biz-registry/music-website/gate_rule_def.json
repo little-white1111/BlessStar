@@ -1,0 +1,167 @@
+[
+  {
+    "field_key": "server.port",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[1024,65535]",
+    "scenario": "server_port_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:server:server.port:0:threshold:range",
+    "error_hint": "服务器端口必须在 1024~65535 之间"
+  },
+  {
+    "field_key": "spring.datasource.url",
+    "field_type": "STRING",
+    "op": "match",
+    "value": "^jdbc:mysql://",
+    "scenario": "datasource_url_format",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "music-website:datasource:spring.datasource.url:0:format:match",
+    "error_hint": "数据库连接 URL 必须以 jdbc:mysql:// 开头"
+  },
+  {
+    "field_key": "spring.datasource.url",
+    "field_type": "STRING",
+    "op": "in",
+    "value": "",
+    "scenario": "datasource_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "music-website:datasource:spring.datasource.url:1:approval:in",
+    "error_hint": "数据库连接是核心基础设施，变更需 DBA 审批；需确认目标库的 schema 版本兼容和数据迁移方案"
+  },
+  {
+    "field_key": "spring.redis.host",
+    "field_type": "STRING",
+    "op": "match",
+    "value": "^[a-zA-Z0-9.-]+$",
+    "scenario": "redis_host_format",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "music-website:redis:spring.redis.host:0:format:match",
+    "error_hint": "Redis 主机地址必须是合法的 IP 地址或域名"
+  },
+  {
+    "field_key": "spring.redis.port",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[1024,65535]",
+    "scenario": "redis_port_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:redis:spring.redis.port:0:threshold:range",
+    "error_hint": "Redis 端口必须在 1024~65535 之间"
+  },
+  {
+    "field_key": "spring.redis.timeout",
+    "field_type": "INT64",
+    "op": "range",
+    "value": "[1000,300000]",
+    "scenario": "redis_timeout_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:redis:spring.redis.timeout:0:threshold:range",
+    "error_hint": "Redis 超时时间必须在 1000~300000 毫秒之间"
+  },
+  {
+    "field_key": "minio.endpoint",
+    "field_type": "STRING",
+    "op": "match",
+    "value": "^https?://",
+    "scenario": "minio_endpoint_format",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "music-website:minio:minio.endpoint:0:format:match",
+    "error_hint": "MinIO 端点必须以 http:// 或 https:// 开头"
+  },
+  {
+    "field_key": "login.max-failed-attempts",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[3,20]",
+    "scenario": "login_lock_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:login:login.max-failed-attempts:0:threshold:range",
+    "error_hint": "登录失败次数阈值必须在 3~20 之间"
+  },
+  {
+    "field_key": "login.lock-minutes",
+    "field_type": "INT32",
+    "op": "gte",
+    "value": "${login.max-failed-attempts}",
+    "scenario": "lock_minutes_vs_max_attempts_check_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:login:login.lock-minutes:0:threshold:gte",
+    "error_hint": "锁定分钟数（${login.lock-minutes}）应大于等于失败次数阈值（${login.max-failed-attempts}）的 1 倍以上才有保护意义"
+  },
+  {
+    "field_key": "login.lock-minutes",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[1,60]",
+    "scenario": "login_lock_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:login:login.lock-minutes:0:threshold:range:2",
+    "error_hint": "锁定时间必须在 1~60 分钟之间"
+  },
+  {
+    "field_key": "password-reset.code-ttl-minutes",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[3,30]",
+    "scenario": "password_reset_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:password-reset:password-reset.code-ttl-minutes:0:threshold:range",
+    "error_hint": "验证码有效期必须在 3~30 分钟之间"
+  },
+  {
+    "field_key": "password-reset.code-ttl-minutes",
+    "field_type": "INT32",
+    "op": "gt",
+    "value": "${password-reset.send-cooldown-seconds}",
+    "scenario": "code_ttl_vs_cooldown_check_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:password-reset:password-reset.code-ttl-minutes:0:threshold:gt",
+    "error_hint": "验证码有效期（${password-reset.code-ttl-minutes}）必须大于发送冷却间隔（${password-reset.send-cooldown-seconds}），否则用户无法在冷却期内收到有效验证码"
+  },
+  {
+    "field_key": "password-reset.send-cooldown-seconds",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[5,60]",
+    "scenario": "password_reset_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "music-website:password-reset:password-reset.send-cooldown-seconds:0:threshold:range",
+    "error_hint": "发送冷却时间必须在 5~60 秒之间"
+  },
+  {
+    "field_key": "password-reset.mock-without-mail",
+    "field_type": "BOOL",
+    "op": "in",
+    "value": "",
+    "scenario": "mock_mode_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "music-website:password-reset:password-reset.mock-without-mail:1:approval:in",
+    "error_hint": "涉及安全风险（泄露验证码），生产环境必须为 false；变更需安全团队审批"
+  },
+  {
+    "field_key": "password-reset.mock-without-mail",
+    "field_type": "BOOL",
+    "op": "in",
+    "value": "false",
+    "scenario": "mock_mode_slo_alert_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "alert",
+    "stable_key": "music-website:password-reset:password-reset.mock-without-mail:0:alert:in",
+    "error_hint": "Mock 模式设为 true 时验证码会明文暴露在 API 响应中，密码重置成功率可能受影响"
+  }
+]

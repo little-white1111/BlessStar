@@ -1,0 +1,60 @@
+{
+  "name": "livedesign",
+  "version": "0.1.0",
+  "description": "Personal AI Assistant with Live2D Virtual Character",
+  "main": "dist/main/main/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:renderer": "vite --config vite.renderer.config.ts",
+    "build": "npm run build:main && npm run build:renderer && npm run build:llm-service && npm run build:plugin-host",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build --config vite.renderer.config.ts",
+    "build:llm-service": "tsc -p tsconfig.service.json",
+    "build:plugin-host": "tsc -p tsconfig.service.json",
+    "start": "electron dist/main/index.js",
+    "lint": "eslint src/ --ext .ts,.vue",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test tests/e2e",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0",
+    "better-sqlite3": "^11.3.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vue": "^3.4.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0",
+    "@playwright/test": "^1.40.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.56.0",
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/uuid": "^9.0.0"
+  },
+  "build": {
+    "appId": "com.livedesign.app",
+    "productName": "LiveDesign",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "resources/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/",
+        "to": "resources/"
+      }
+    ]
+  }
+}

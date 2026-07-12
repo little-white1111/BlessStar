@@ -36,7 +36,93 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def compile_plan(repo: Path, index_path: Path, gate_path: Path) -> CompileResult:
+def _compile_gate_rule_def(
+    gate_rule_def_path: Path,
+    repo: Path,
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Compile gate_rule_def.json into lock plan contract entries.
+
+    Only rules with scenario ending in _COMPILE_TIME are included.
+    Returns (contracts, errors).
+    """
+    from contract_schema import (
+        COMPILE_TIME_SUFFIX,
+        validate_gate_rule_def,
+    )
+
+    errors: list[str] = []
+    if not gate_rule_def_path.is_file():
+        return [], errors
+
+    try:
+        rules: list[dict[str, Any]] = json.loads(
+            gate_rule_def_path.read_text(encoding="utf-8")
+        )
+    except json.JSONDecodeError as e:
+        errors.append(f"gate_rule_def.json: invalid JSON: {e}")
+        return [], errors
+
+    if not isinstance(rules, list):
+        errors.append("gate_rule_def.json: root must be a JSON array")
+        return [], errors
+
+    # Validate schema
+    schema_errors = validate_gate_rule_def(rules)
+    errors.extend(schema_errors)
+    if schema_errors:
+        return [], errors
+
+    # Filter _COMPILE_TIME rules and create lock plan entries
+    contracts: list[dict[str, Any]] = []
+    for rule in rules:
+        scenario = rule.get("scenario", "")
+        if not scenario.endswith(COMPILE_TIME_SUFFIX):
+            continue
+
+        field_key = rule.get("field_key", "")
+        op = rule.get("op", "")
+        val = rule.get("value", "")
+        error_hint = rule.get("error_hint", "")
+        stable_key = rule.get("stable_key", "")
+
+        cid = f"{field_key}_COMPILE"
+        contract = {
+            "id": cid,
+            "type": "gate_rule_def",
+            "version": "1.0",
+            "status": "active",
+            "priority": "must",
+            "stage": "compile_time",
+            "blocking": True,
+            "gate_refs": ["compile_time_scanner"],
+            "implementations": [
+                {
+                    "gate_id": "compile_time_scanner",
+                    "runner": "python",
+                    "entry": "tools/scripts/contracts/compile_time_scanner.py",
+                    "entry_kind": "script",
+                }
+            ],
+            "rule": {
+                "field_key": field_key,
+                "op": op,
+                "value": val,
+                "error_hint": error_hint,
+                "stable_key": stable_key,
+            },
+            "_stable_key": stable_key,
+        }
+        contracts.append(contract)
+
+    return contracts, errors
+
+
+def compile_plan(
+    repo: Path,
+    index_path: Path,
+    gate_path: Path,
+    gate_rule_def_path: Path | None = None,
+) -> CompileResult:
     _lib = Path(__file__).resolve().parents[1] / "lib"
     if str(_lib) not in sys.path:
         sys.path.insert(0, str(_lib))
@@ -66,6 +152,16 @@ def compile_plan(repo: Path, index_path: Path, gate_path: Path) -> CompileResult
             data["_type_dir"] = ctype
             contracts.append(data)
             file_hashes[data["_path"]] = _sha256(path)
+
+    # Compile gate_rule_def.json entries (new contract type for CI scanning)
+    gate_rule_def_contracts, grd_errors = _compile_gate_rule_def(
+        gate_rule_def_path, repo
+    ) if gate_rule_def_path else ([], [])
+    errors.extend(grd_errors)
+    contracts.extend(gate_rule_def_contracts)
+    for c in gate_rule_def_contracts:
+        cpath = c.get("id", "") + "(gate_rule_def)"
+        file_hashes[cpath] = _sha256(gate_rule_def_path) if gate_rule_def_path else ""
 
     gates = gate_registry.get("gates", [])
     gate_by_id = {g.get("gate_id"): g for g in gates if g.get("gate_id")}
@@ -114,6 +210,16 @@ def compile_plan(repo: Path, index_path: Path, gate_path: Path) -> CompileResult
         if st not in idx.get("stage_order", []):
             errors.append(f"{c.get('id')}: invalid stage {st}")
 
+    # Ensure stage_order contains compile_time if gate_rule_def contracts exist
+    stage_order = list(idx.get("stage_order", []))
+    if gate_rule_def_contracts and "compile_time" not in stage_order:
+        # Insert compile_time after 'ci' or at the beginning
+        if "ci" in stage_order:
+            ci_idx = stage_order.index("ci")
+            stage_order.insert(ci_idx + 1, "compile_time")
+        else:
+            stage_order.append("compile_time")
+
     plan = {
         "version": "v1",
         "index_file": str(index_path.relative_to(repo)).replace("\\", "/"),
@@ -123,7 +229,7 @@ def compile_plan(repo: Path, index_path: Path, gate_path: Path) -> CompileResult
         "add_gate_workflow": idx.get("add_gate_workflow", []),
         "policy": idx.get("global_policy", {}),
         "priority_order": idx.get("priority_order", []),
-        "stage_order": idx.get("stage_order", []),
+        "stage_order": stage_order,
         "contracts": [
             {
                 "id": c.get("id"),
@@ -163,6 +269,11 @@ def main() -> int:
         help="Path to gate registry",
     )
     parser.add_argument(
+        "--gate-rule-def",
+        default=None,
+        help="Path to gate_rule_def.json (CDD Skill output, optional)",
+    )
+    parser.add_argument(
         "--output",
         default="docs/reports/contract_plan.lock.json",
         help="Output lock plan",
@@ -178,8 +289,9 @@ def main() -> int:
     index_path = repo / args.index
     gate_path = repo / args.gate_registry
     out_path = repo / args.output
+    gate_rule_def_path = repo / args.gate_rule_def if args.gate_rule_def else None
 
-    result = compile_plan(repo, index_path, gate_path)
+    result = compile_plan(repo, index_path, gate_path, gate_rule_def_path)
     if result.errors:
         for e in result.errors:
             print(f"[FAIL] {e}")

@@ -1,0 +1,574 @@
+[
+  {
+    "config_key": "API_V1_STR",
+    "registry_path": "/config/full-stack-fastapi/api/v1_str",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "/api/v1",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "API 配置",
+    "business_description": "API 版本前缀路径，所有 RESTful 接口均挂载此前缀下。例如 /api/v1/users、/api/v1/login 等。",
+    "impact_scope": ["API 路由注册", "前端请求路径", "API 文档生成"],
+    "contract_metrics": {
+      "slo": "API 路由注册正确率 100%",
+      "risk_hint": "变更前缀路径会破坏所有前端和第三方客户端的 API 调用，需同步更新前端请求基地址和 API 文档。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "API 路径前缀变更影响所有客户端请求，需前后端团队同步协调后变更"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "推荐格式：/api/v{数字}，如 /api/v1、/api/v2",
+    "ui_metadata": {
+      "ui_label": "API 前缀路径",
+      "ui_description": "所有 API 接口的版本前缀路径",
+      "ui_placeholder": "如 /api/v1",
+      "ui_order": 1,
+      "hidden": false
+    },
+    "ai_hint": "API 版本前缀路径。默认 /api/v1。变更需前后端同步更新。",
+    "search_keywords": ["API前缀", "API版本", "路由前缀", "接口路径"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "ACCESS_TOKEN_EXPIRE_MINUTES",
+    "registry_path": "/config/full-stack-fastapi/auth/access_token_expire_minutes",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "11520",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "认证鉴权",
+    "business_description": "JWT 访问令牌（access_token）的有效期时长（分钟）。默认 11520 分钟=8天，到期后用户需重新登录。",
+    "impact_scope": ["用户登录", "会话管理", "接口鉴权", "安全策略"],
+    "contract_metrics": {
+      "slo": "用户连续登录成功率 ≥99.9%",
+      "risk_hint": "当前默认值 8 天偏长，增加 token 泄露风险。缩短过期时间会增加用户重新登录频率。生产建议 60~1440 分钟（1小时~1天）。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "涉及用户登录安全策略，需安全团队审批；变更后需通知前端团队调整 token 刷新逻辑"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "60~43200（1小时~30天），推荐步长60分钟。生产建议 60~1440 分钟",
+    "ui_metadata": {
+      "ui_label": "Token 过期时间（分钟）",
+      "ui_description": "JWT 访问令牌的有效期，到期后用户需重新登录",
+      "ui_placeholder": "输入过期分钟数，如 11520",
+      "ui_order": 2,
+      "hidden": false
+    },
+    "ai_hint": "JWT 访问令牌过期时间（分钟）。默认 11520（8天）偏长，生产建议 60~1440 分钟。缩短可提高安全性但增加重新登录频率。",
+    "search_keywords": ["Token过期", "JWT过期", "访问令牌", "登录有效期", "认证过期"],
+    "pattern": "^[0-9]+$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "ENVIRONMENT",
+    "registry_path": "/config/full-stack-fastapi/environment/env",
+    "data_type": "ENUM",
+    "required": false,
+    "default_value": "local",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "环境配置",
+    "business_description": "当前部署环境标识，可选值：local（本地开发）、staging（预发布）、production（生产）。不同环境执行不同的安全策略和日志级别。",
+    "impact_scope": ["安全策略", "日志级别", "调试模式", "默认密钥检查"],
+    "contract_metrics": {
+      "slo": "环境切换零故障",
+      "risk_hint": "切换为 production 时会触发默认密钥检查（changethis），若存在默认密码会直接抛出 ValueError 阻止启动。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "环境切换影响应用安全策略和运行模式，变更需运维或架构师审批"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "local / staging / production",
+    "ui_metadata": {
+      "ui_label": "部署环境",
+      "ui_description": "当前运行环境标识，决定安全策略和调试模式",
+      "ui_placeholder": "选择环境",
+      "ui_order": 3,
+      "hidden": false
+    },
+    "ai_hint": "部署环境标识。local（开发）/staging（预发）/production（生产）。production 环境下禁止使用默认密码。",
+    "search_keywords": ["部署环境", "运行环境", "环境配置", "环境切换", "environment"],
+    "pattern": null,
+    "enum_values": ["local", "staging", "production"],
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "BACKEND_CORS_ORIGINS",
+    "registry_path": "/config/full-stack-fastapi/cors/allowed_origins",
+    "data_type": "ARR",
+    "required": false,
+    "default_value": "[\"http://localhost\",\"http://localhost:5173\",\"https://localhost\",\"https://localhost:5173\",\"http://localhost.tiangolo.com\"]",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "安全策略",
+    "business_description": "CORS 跨域资源共享允许的前端来源域名列表。前端应用运行时所在域名需在此列表中。FRONTEND_HOST 会自动追加。",
+    "impact_scope": ["前端 API 调用", "跨域访问安全", "前端开发调试"],
+    "contract_metrics": {
+      "slo": "前端 API 调用成功率 ≥99.9%",
+      "risk_hint": "生产环境应严格限制为已知前端域名。FRONTEND_HOST 会自动加入此列表，无需重复添加。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "CORS 配置涉及安全策略，需安全团队审批；生产环境禁止使用过宽泛的域名匹配"
+    },
+    "dependencies": ["FRONTEND_HOST"],
+    "value_range_suggestion": "生产环境配置具体域名，格式：[\"https://dashboard.example.com\"]",
+    "ui_metadata": {
+      "ui_label": "CORS 跨域白名单",
+      "ui_description": "允许访问后端 API 的前端域名列表，FRONTEND_HOST 会自动加入",
+      "ui_placeholder": "输入前端域名列表",
+      "ui_order": 4,
+      "hidden": false
+    },
+    "ai_hint": "CORS 跨域允许域名列表。FRONTEND_HOST 会自动追加。生产环境应限制为具体域名。",
+    "search_keywords": ["跨域", "CORS", "跨域白名单", "允许域名", "前端访问"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "FRONTEND_HOST",
+    "registry_path": "/config/full-stack-fastapi/cors/frontend_host",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "http://localhost:5173",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "安全策略",
+    "business_description": "前端应用的主机地址。用于两个场景：1）生成邮件中可点击的链接；2）自动追加到 CORS 白名单中。",
+    "impact_scope": ["邮件链接生成", "CORS 跨域", "前端访问"],
+    "contract_metrics": {
+      "slo": "前端 API 调用成功率 ≥99.9%",
+      "risk_hint": "此地址会自动加入 CORS 白名单。修改后需确保新地址实际可用且前端已部署。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "前端地址变更影响邮件链接和跨域配置，需确保新地址可正常访问",
+      "approval_required": false
+    },
+    "dependencies": ["BACKEND_CORS_ORIGINS"],
+    "value_range_suggestion": "合法的 URL 地址，如 http://localhost:5173 或 https://dashboard.example.com",
+    "ui_metadata": {
+      "ui_label": "前端主机地址",
+      "ui_description": "前端应用的完整 URL，用于邮件链接和 CORS 白名单",
+      "ui_placeholder": "输入前端地址，如 http://localhost:5173",
+      "ui_order": 5,
+      "hidden": false
+    },
+    "ai_hint": "前端应用主机地址。用于邮件链接生成和自动加入 CORS 白名单。生产环境使用完整域名如 https://dashboard.example.com。",
+    "search_keywords": ["前端地址", "前端域名", "邮件链接", "前端主机"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "PROJECT_NAME",
+    "registry_path": "/config/full-stack-fastapi/general/project_name",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "Full Stack FastAPI Project",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "通用配置",
+    "business_description": "项目名称标识，用于邮件发件人名称（EMAILS_FROM_NAME）等展示用途。",
+    "impact_scope": ["邮件展示", "项目标识"],
+    "contract_metrics": {
+      "slo": "N/A（展示性配置）",
+      "risk_hint": "变更仅影响展示层面，无功能风险。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "项目名称变更仅影响展示，可由项目团队自行决定"
+    },
+    "dependencies": [],
+    "value_range_suggestion": "描述性的项目名称字符串",
+    "ui_metadata": {
+      "ui_label": "项目名称",
+      "ui_description": "项目标识名称，用于邮件发件人展示",
+      "ui_placeholder": "输入项目名称",
+      "ui_order": 6,
+      "hidden": false
+    },
+    "ai_hint": "项目展示名称。默认 'Full Stack FastAPI Project'。用于邮件发件人名称等展示用途。",
+    "search_keywords": ["项目名称", "项目名", "展示名称"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "POSTGRES_SERVER",
+    "registry_path": "/config/full-stack-fastapi/database/server",
+    "data_type": "STR",
+    "required": true,
+    "default_value": "localhost",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "数据库配置",
+    "business_description": "PostgreSQL 数据库服务器的主机地址或 IP，应用通过此地址连接数据库。",
+    "impact_scope": ["数据库连接", "应用启动", "数据读写"],
+    "contract_metrics": {
+      "slo": "数据库连接成功率 ≥99.9%",
+      "risk_hint": "变更数据库地址可能导致应用无法启动。需确保目标数据库已运行且 schema 已迁移。"
+    },
+    "gate_chain": {
+      "approval_required": true,
+      "description": "数据库连接是核心基础设施，变更需 DBA 审批；需确认数据迁移方案",
+      "approval_required": true
+    },
+    "dependencies": ["POSTGRES_PORT", "POSTGRES_DB"],
+    "value_range_suggestion": "合法的 IP 地址或域名",
+    "ui_metadata": {
+      "ui_label": "数据库主机",
+      "ui_description": "PostgreSQL 数据库服务器地址",
+      "ui_placeholder": "输入数据库主机地址",
+      "ui_order": 7,
+      "hidden": false
+    },
+    "ai_hint": "PostgreSQL 数据库主机地址。与 POSTGRES_PORT/POSTGRES_DB/POSTGRES_USER 配合构成完整连接配置。",
+    "search_keywords": ["数据库主机", "PostgreSQL", "数据库地址", "PG连接"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "POSTGRES_PORT",
+    "registry_path": "/config/full-stack-fastapi/database/port",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "5432",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "数据库配置",
+    "business_description": "PostgreSQL 数据库服务器监听端口号，默认 5432。",
+    "impact_scope": ["数据库连接", "应用启动"],
+    "contract_metrics": {
+      "slo": "数据库连接成功率 ≥99.9%",
+      "risk_hint": "PostgreSQL 默认端口 5432，如修改需同步更新防火墙规则。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "数据库端口变更需同步更新部署配置和防火墙规则"
+    },
+    "dependencies": ["POSTGRES_SERVER"],
+    "value_range_suggestion": "1024~65535。PostgreSQL 默认 5432",
+    "ui_metadata": {
+      "ui_label": "数据库端口",
+      "ui_description": "PostgreSQL 服务器端口号",
+      "ui_placeholder": "输入端口号，如 5432",
+      "ui_order": 8,
+      "hidden": false
+    },
+    "ai_hint": "PostgreSQL 数据库端口。默认 5432。与 POSTGRES_SERVER 配合使用。",
+    "search_keywords": ["数据库端口", "PostgreSQL端口", "PG端口", "5432"],
+    "pattern": "^[1-9][0-9]{3,4}$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "POSTGRES_DB",
+    "registry_path": "/config/full-stack-fastapi/database/dbname",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "app",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "数据库配置",
+    "business_description": "PostgreSQL 数据库名称，应用连接后读写此数据库中的数据。",
+    "impact_scope": ["数据库连接", "数据表操作", "数据迁移"],
+    "contract_metrics": {
+      "slo": "数据库连接成功率 ≥99.9%",
+      "risk_hint": "变更数据库名需确保目标库已创建且包含完整的 schema 和数据。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "数据库名变更需确保目标库已就绪且包含完整 schema",
+      "approval_required": false
+    },
+    "dependencies": ["POSTGRES_SERVER"],
+    "value_range_suggestion": "合法的 PostgreSQL 数据库名称",
+    "ui_metadata": {
+      "ui_label": "数据库名",
+      "ui_description": "PostgreSQL 数据库名称",
+      "ui_placeholder": "输入数据库名",
+      "ui_order": 9,
+      "hidden": false
+    },
+    "ai_hint": "PostgreSQL 数据库名称。默认 'app'。与 POSTGRES_SERVER/POSTGRES_PORT 配合构成完整连接。",
+    "search_keywords": ["数据库名", "数据库名称", "PG数据库"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "POSTGRES_USER",
+    "registry_path": "/config/full-stack-fastapi/database/user",
+    "data_type": "STR",
+    "required": true,
+    "default_value": "postgres",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "数据库配置",
+    "business_description": "连接 PostgreSQL 数据库所用的用户名。",
+    "impact_scope": ["数据库连接", "数据库权限"],
+    "contract_metrics": {
+      "slo": "数据库连接成功率 ≥99.9%",
+      "risk_hint": "用户权限变更可能影响应用的数据读写能力。需确保用户有对应数据库的完整读写权限。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "数据库用户变更需确保新用户有完整的数据表读写权限",
+      "approval_required": false
+    },
+    "dependencies": ["POSTGRES_SERVER"],
+    "value_range_suggestion": "PostgreSQL 数据库用户名",
+    "ui_metadata": {
+      "ui_label": "数据库用户",
+      "ui_description": "连接 PostgreSQL 的数据库用户名",
+      "ui_placeholder": "输入数据库用户名",
+      "ui_order": 10,
+      "hidden": false
+    },
+    "ai_hint": "PostgreSQL 数据库用户名。默认 'postgres'。密码通过环境变量注入，不纳入配置管理。",
+    "search_keywords": ["数据库用户", "数据库账号", "PG用户", "数据库连接用户"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "SENTRY_DSN",
+    "registry_path": "/config/full-stack-fastapi/monitoring/sentry_dsn",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "监控配置",
+    "business_description": "Sentry 错误监控服务的 DSN（Data Source Name）。为空字符串时不启用 Sentry 错误追踪。",
+    "impact_scope": ["错误监控", "应用排障", "生产运维"],
+    "contract_metrics": {
+      "slo": "错误上报成功率 ≥99%",
+      "risk_hint": "DSN 变更后旧项目中的错误仍会发送到旧 DSN 指向的项目。Sentry DSN 非敏感信息，但建议通过环境变量注入。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "Sentry DSN 变更仅影响错误上报目标地址，可由开发团队自行决定",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "https://<key>@<org>.ingest.sentry.io/<project_id> 或空字符串",
+    "ui_metadata": {
+      "ui_label": "Sentry DSN",
+      "ui_description": "Sentry 错误监控的 DSN 地址，留空则不启用",
+      "ui_placeholder": "输入 Sentry DSN 或留空",
+      "ui_order": 11,
+      "hidden": false
+    },
+    "ai_hint": "Sentry 错误监控 DSN。空字符串表示不启用。生产建议配置以捕获运行时错误。",
+    "search_keywords": ["Sentry", "错误监控", "DSN", "异常追踪", "错误上报"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "SMTP_HOST",
+    "registry_path": "/config/full-stack-fastapi/email/smtp_host",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "邮件服务",
+    "business_description": "SMTP 邮件服务器的主机地址。配置后应用可发送密码重置邮件和通知邮件。为空则不启用邮件功能。",
+    "impact_scope": ["邮件发送", "密码重置", "用户通知"],
+    "contract_metrics": {
+      "slo": "邮件发送成功率 ≥99%",
+      "risk_hint": "SMTP 服务器不可用会导致密码重置功能完全失效。生产建议使用可靠的邮件服务商（SendGrid、Mailgun 等）。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "SMTP 主机变更需同步更新 SMTP 用户密码，建议由运维团队执行",
+      "approval_required": false
+    },
+    "dependencies": ["SMTP_PORT", "SMTP_TLS"],
+    "value_range_suggestion": "合法的 SMTP 服务器地址，如 smtp.gmail.com",
+    "ui_metadata": {
+      "ui_label": "SMTP 主机",
+      "ui_description": "邮件发送服务器地址，留空则不启用邮件功能",
+      "ui_placeholder": "输入 SMTP 服务器地址",
+      "ui_order": 12,
+      "hidden": false
+    },
+    "ai_hint": "SMTP 邮件服务器主机地址。与 SMTP_PORT/SMTP_TLS 配合。为空则邮件功能不可用。",
+    "search_keywords": ["SMTP", "邮件服务器", "发件服务器", "邮件配置"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "SMTP_PORT",
+    "registry_path": "/config/full-stack-fastapi/email/smtp_port",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "587",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "邮件服务",
+    "business_description": "SMTP 邮件服务器的连接端口号。默认 587（TLS 端口），配合 SMTP_TLS=True 使用。",
+    "impact_scope": ["邮件发送", "SMTP 连接"],
+    "contract_metrics": {
+      "slo": "邮件发送成功率 ≥99%",
+      "risk_hint": "端口 587 配合 TLS，端口 465 配合 SSL。必须与 SMTP_TLS/SMTP_SSL 配置一致。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "SMTP 端口变更需与 SMTP_TLS/SMTP_SSL 配置保持一致，建议由运维确认",
+      "approval_required": false
+    },
+    "dependencies": ["SMTP_HOST", "SMTP_TLS"],
+    "value_range_suggestion": "587（TLS）、465（SSL）、25（明文，不推荐）",
+    "ui_metadata": {
+      "ui_label": "SMTP 端口",
+      "ui_description": "SMTP 服务器连接端口，587 配合 TLS，465 配合 SSL",
+      "ui_placeholder": "输入端口号，如 587",
+      "ui_order": 13,
+      "hidden": false
+    },
+    "ai_hint": "SMTP 端口号。默认 587（TLS）。465 配合 SMTP_SSL=True 使用。",
+    "search_keywords": ["SMTP端口", "邮件端口", "587", "465"],
+    "pattern": "^[1-9][0-9]{1,4}$",
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "SMTP_TLS",
+    "registry_path": "/config/full-stack-fastapi/email/smtp_tls",
+    "data_type": "BOOL",
+    "required": false,
+    "default_value": "true",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "邮件服务",
+    "business_description": "SMTP 连接是否启用 TLS 加密。默认启用，配合端口 587。与 SMTP_SSL 互斥。",
+    "impact_scope": ["邮件发送安全", "SMTP 连接"],
+    "contract_metrics": {
+      "slo": "邮件发送成功率 ≥99%",
+      "risk_hint": "SMTP_TLS 与 SMTP_SSL 互斥。TLS=True 配合端口 587，SSL=True 配合端口 465。不可同时启用。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "SMTP 加密方式变更需与端口配置一致",
+      "approval_required": false
+    },
+    "dependencies": ["SMTP_PORT"],
+    "value_range_suggestion": "true（TLS）/ false（非 TLS 或不使用）",
+    "ui_metadata": {
+      "ui_label": "SMTP TLS 加密",
+      "ui_description": "启用 TLS 加密连接 SMTP 服务器（端口 587）",
+      "ui_placeholder": "选择是否启用 TLS",
+      "ui_order": 14,
+      "hidden": false
+    },
+    "ai_hint": "SMTP TLS 加密开关。默认 true（端口 587）。与 SMTP_SSL 互斥，TLS 和 SSL 只能启用其一。",
+    "search_keywords": ["SMTP TLS", "邮件加密", "TLS", "STARTTLS"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "EMAILS_FROM_EMAIL",
+    "registry_path": "/config/full-stack-fastapi/email/from_email",
+    "data_type": "STR",
+    "required": false,
+    "default_value": "info@example.com",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "邮件服务",
+    "business_description": "系统发送邮件时使用的发件人邮箱地址。用户收到的密码重置邮件和通知邮件均显示此地址。",
+    "impact_scope": ["邮件发送", "用户信任", "邮件送达率"],
+    "contract_metrics": {
+      "slo": "邮件送达率 ≥99%",
+      "risk_hint": "发件地址需与 SMTP 账号一致或经过授权，否则可能被收件方标记为垃圾邮件。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "发件地址变更需确认 SMTP 账号有权限以此地址发信",
+      "approval_required": false
+    },
+    "dependencies": ["SMTP_HOST", "PROJECT_NAME"],
+    "value_range_suggestion": "合法的邮箱地址，如 noreply@example.com",
+    "ui_metadata": {
+      "ui_label": "发件邮箱地址",
+      "ui_description": "系统邮件的发件人地址",
+      "ui_placeholder": "输入发件邮箱",
+      "ui_order": 15,
+      "hidden": false
+    },
+    "ai_hint": "系统邮件发件人地址。默认 info@example.com。需与 SMTP 发信账号匹配或授权。",
+    "search_keywords": ["发件地址", "发件邮箱", "邮件发件人", "发信地址"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P1"
+  },
+  {
+    "config_key": "EMAIL_RESET_TOKEN_EXPIRE_HOURS",
+    "registry_path": "/config/full-stack-fastapi/email/reset_token_expire_hours",
+    "data_type": "I32",
+    "required": false,
+    "default_value": "48",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "邮件服务",
+    "business_description": "密码重置邮件中令牌的有效期（小时）。用户收到重置邮件后需在有效期内完成密码重置。",
+    "impact_scope": ["密码重置", "用户体验", "安全策略"],
+    "contract_metrics": {
+      "slo": "密码重置成功率 ≥95%",
+      "risk_hint": "有效期过长（>72小时）增加令牌泄露风险；过短（<1小时）可能导致用户来不及操作。建议 24~48 小时。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "密码重置令牌有效期影响安全性和用户体验，建议 24~48 小时",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "1~72（小时），推荐步长1。建议 24~48 小时",
+    "ui_metadata": {
+      "ui_label": "重置令牌过期（小时）",
+      "ui_description": "密码重置邮件中链接的有效期",
+      "ui_placeholder": "输入过期小时数，如 48",
+      "ui_order": 16,
+      "hidden": false
+    },
+    "ai_hint": "密码重置令牌有效期（小时）。默认 48 小时。建议 24~48 小时。过期后用户需重新申请重置。",
+    "search_keywords": ["密码重置", "重置令牌", "重置链接过期", "密码找回"],
+    "pattern": "^[1-9][0-9]*$",
+    "enum_values": null,
+    "registration_phase": "P2"
+  },
+  {
+    "config_key": "FIRST_SUPERUSER",
+    "registry_path": "/config/full-stack-fastapi/user/first_superuser",
+    "data_type": "STR",
+    "required": true,
+    "default_value": "admin@example.com",
+    "biz_id": "full-stack-fastapi",
+    "business_domain": "用户管理",
+    "business_description": "首次启动时自动创建的超级管理员邮箱地址。用于初始系统登录和管理后台访问。",
+    "impact_scope": ["初始管理员创建", "系统首次启动", "后台权限"],
+    "contract_metrics": {
+      "slo": "首次启动管理员创建成功率 100%",
+      "risk_hint": "首次启动后此配置不再生效（管理员已存在）。密码通过 FIRST_SUPERUSER_PASSWORD 环境变量设置。生产务必修改默认密码。"
+    },
+    "gate_chain": {
+      "approval_required": false,
+      "description": "初始管理员配置仅在首次启动时生效，建议部署前确认",
+      "approval_required": false
+    },
+    "dependencies": [],
+    "value_range_suggestion": "合法的邮箱地址",
+    "ui_metadata": {
+      "ui_label": "初始超级管理员",
+      "ui_description": "首次启动时自动创建的超级管理员邮箱",
+      "ui_placeholder": "输入管理员邮箱",
+      "ui_order": 17,
+      "hidden": false
+    },
+    "ai_hint": "初始超级管理员邮箱地址。仅在首次启动时自动创建。密码通过环境变量 FIRST_SUPERUSER_PASSWORD 设置。",
+    "search_keywords": ["管理员", "超级管理员", "初始账号", "管理员邮箱", "首次启动"],
+    "pattern": null,
+    "enum_values": null,
+    "registration_phase": "P2"
+  }
+]

@@ -1,0 +1,221 @@
+# 落地建议：{{biz_id}} / {{display_name}}
+
+> 本指南由 `blessstar spec` 根据 `contract.yaml` 自动生成（`--lang={{lang}}`）。
+> 将其喂给 LLM，由 LLM 生成 `{{lang}}` 代码 + 测试。
+> 人工 review gate 核心逻辑后合并。
+
+---
+
+## 一、项目上下文（供 LLM 参考）
+
+### 1.1 项目路径
+```
+{{project_root}}
+```
+
+### 1.2 业务系统配置
+| 字段 | 值 |
+|------|-----|
+| biz_id | `{{biz_id}}` |
+| version | `{{version}}` |
+| sdk_version | `{{sdk_version}}` |
+
+### 1.3 可复用的 crate 和模块
+```rust
+use std::ffi::{CStr, CString};
+use std::os::raw::{c_char, c_int, c_void, c_uchar, c_ulonglong};
+
+// FFI 声明（由 blessstar-sdk 提供）
+extern "C" {
+    pub fn bs_config_declare(fields: *const FieldDecl, count: usize);
+    pub fn bs_biz_registry_register(manifest: *const Manifest);
+    pub fn bs_config_read(key: *const c_char) -> *mut c_char;
+}
+
+// 辅助宏
+macro_rules! bs_field {
+    ($key:expr, $ty:expr, $default:expr, $desc:expr) => { ... };
+}
+macro_rules! bs_field_req {
+    ($key:expr, $ty:expr, $default:expr, $desc:expr) => { ... };
+}
+
+#[macro_use]
+mod test_macros;
+```
+
+### 1.4 可复用的宏和辅助
+```rust
+bs_field!(key, ty, default, desc)
+bs_field_req!(key, ty, default, desc)
+assert_eq!(a, b)
+assert_ne!(a, b)
+assert!(cond)
+assert!(!cond)
+mock_config_read(key, value)
+```
+
+---
+
+## 二、待实现的 Rust 代码
+
+### 2.1 字段声明数组
+
+生成文件：`biz_{{biz_id}}/src/fields.rs`
+
+```rust
+// 字段声明数组
+pub static FIELDS: &[FieldDecl] = &[
+    {{#fields}}
+    FieldDecl {
+        key: "{{key}}\0".as_ptr() as *const c_char,
+        field_type: FieldType::{{type_upper}},
+        default: "{{default}}\0".as_ptr() as *const c_char,
+        description: "{{description}}\0".as_ptr() as *const c_char,
+        required: {{#required}}true{{/required}}{{^required}}false{{/required}},
+    },
+    {{/fields}}
+];
+pub static FIELDS_COUNT: usize = FIELDS.len();
+```
+
+### 2.2 Gate 函数
+
+生成文件：`biz_{{biz_id}}/src/gates.rs`
+
+{{#gates}}
+**gate[{{id}}]** — `{{description}}`
+- **规则**：`{{rule}}`
+- **层**：`{{layer}}`
+- **子分类**：`{{sub_category}}`
+- **函数签名**：
+```rust
+#[no_mangle]
+pub extern "C" fn gate_{{id}}(
+    user_ctx: *mut c_void,
+    uri: *const c_char,
+    read_result: *const IoReadResult,
+    detail_out: *mut ReloadGateDetail,
+) -> c_int {
+    // --- 实现要点 ---
+    // 1. 从 read_result 中提取 {{field}} 的值
+    // 2. 判断值是否满足规则 {{rule}}
+    // 3. 通过 → return BS_RELOAD_GATE_OK
+    // 4. 拒绝 → 填充 detail_out.buf 为错误描述
+    //         → return BS_RELOAD_GATE_IR_REJECT
+}
+```
+{{#dependencies}}
+- **前置依赖**：{{.}}（需检查注册表中是否存在）
+{{/dependencies}}
+
+---
+
+{{/gates}}
+
+### 2.3 副作用函数
+
+生成文件：`biz_{{biz_id}}/src/effects.rs`
+
+{{#effects}}
+**effect[{{trigger}}]** → `{{action}}`
+- **同步/异步**：{{#async}}异步{{/async}}{{^async}}同步{{/async}}
+- **函数签名**：
+```rust
+#[no_mangle]
+pub extern "C" fn effect_{{trigger_dot_to_underscore}}(
+    ctx: *mut c_void,
+    key: *const c_char,
+    data: *const u8,
+    len: usize,
+    epoch: u64,
+) -> c_int {
+    // --- 实现要点 ---
+    // 1. {{trigger}} 变化时通知 {{action}}
+    // 2. data/len 是变更后的值（UTF-8 JSON 片段）
+    // 3. epoch 是当前版本号，可用于排序
+    // 4. 返回 0 表示成功
+    0
+}
+```
+
+{{/effects}}
+
+### 2.4 注册入口
+
+生成文件：`biz_{{biz_id}}/src/lib.rs`
+
+```rust
+#![no_std]
+extern crate alloc;
+
+mod fields;
+mod gates;
+mod effects;
+
+use core::ffi::CStr;
+
+#[no_mangle]
+pub extern "C" fn {{biz_id_underscore}}_module_init(adapter_ctx: *mut c_void) -> c_int {
+    unsafe {
+        bs_config_declare(
+            fields::FIELDS.as_ptr() as *const FieldDecl,
+            fields::FIELDS_COUNT,
+        );
+
+        let manifest = Manifest {
+            biz_id: c"{{biz_id}}".as_ptr(),
+            display_name: c"{{display_name}}".as_ptr(),
+            sdk_version: c"{{sdk_version}}".as_ptr(),
+        };
+        bs_biz_registry_register(&manifest as *const Manifest);
+    }
+    0
+}
+```
+
+---
+
+## 三、待实现的测试
+
+### 3.1 字段声明测试
+
+| 用例 | 断言 |
+|------|------|
+| 读取 `{{fields.[0].key}}` 返回默认值 `{{fields.[0].default}}` | `assert_eq!(val, "{{fields.[0].default}}")` |
+
+### 3.2 Gate 测试
+
+{{#gates}}
+**gate[{{id}}]** — `{{description}}`
+
+| 输入 | 期望结果 |
+|------|---------|
+| {{rule}} → 合法边界值 | pass |
+| {{rule}} → 非法值 | reject |
+{{#dependencies}}| 依赖 {{.}} 不存在 → | reject |
+{{/dependencies}}
+
+{{/gates}}
+
+---
+
+## 四、编译与验证
+
+```bash
+cd {{project_root}}/biz_{{biz_id}}
+cargo build
+cargo test
+```
+
+---
+
+## 五、LLM 输出约束（`--lang={{lang}}` 变体）
+
+1. 生成的 `.rs` 文件放在 `biz_{{biz_id}}/src/`
+2. 使用 `extern "C"` 和 `#[no_mangle]` 导出 FFI 接口
+3. 所有字符串比较使用 `CStr::from_ptr` 和 `str::eq`
+4. Gate 函数返回 `BS_RELOAD_GATE_OK` / `BS_RELOAD_GATE_IR_REJECT`（由 SDK crate 提供）
+5. 使用 `unsafe` 块调用外部 C 函数
+6. 测试使用 `#[cfg(test)] mod tests { ... }` 内联编写
+7. `Cargo.toml` 的 `[lib]` 配置为 `crate-type = ["cdylib", "staticlib"]`

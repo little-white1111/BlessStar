@@ -353,8 +353,8 @@ func TestFormatGoDefault(t *testing.T) {
 		val    string
 		want   string
 	}{
-		{"int64", "86400", "86400"},
-		{"int32", "10", "10"},
+		{"int64", "86400", "int64(86400)"},
+		{"int32", "10", "int32(10)"},
 		{"bool", "true", "true"},
 		{"bool", "false", "false"},
 		{"string", "user", "\"user\""},
@@ -404,6 +404,193 @@ func TestGenerateBlessStarAdapterNoBlessStarSDK(t *testing.T) {
 	// Verify constructor takes ports.ConfigReader
 	if !strings.Contains(content, "NewUserConfigAdapter(reader ports.ConfigReader)") {
 		t.Error("Constructor must accept ports.ConfigReader")
+	}
+}
+
+func TestGenerateGateConfigs(t *testing.T) {
+	gen := New()
+	biz := &types.BizSystem{
+		BizID:       "douyin-mall",
+		DisplayName: "抖音商城",
+	}
+
+	gateConfigs := []types.GateConfig{
+		{FieldKey: "auth.jwt.token_expiry_seconds", GateType: "RANGE", ParamKey: "min", ParamVal: "60"},
+		{FieldKey: "auth.jwt.token_expiry_seconds", GateType: "RANGE", ParamKey: "max", ParamVal: "43200"},
+		{FieldKey: "auth.jwt.token_expiry_seconds", GateType: "APPROVAL", ParamKey: "required", ParamVal: "true"},
+		{FieldKey: "auth.jwt.token_expiry_seconds", GateType: "SLO_WARNING", ParamKey: "slo_impact", ParamVal: "用户连续登录成功率 ≥99.9%"},
+		{FieldKey: "payment.timeout", GateType: "DEPENDENCY", ParamKey: "expression", ParamVal: "payment.timeout > payment.max_retry * 2"},
+	}
+
+	file, err := gen.GenerateGateConfigs(biz, gateConfigs)
+	if err != nil {
+		t.Fatalf("GenerateGateConfigs failed: %v", err)
+	}
+	if file == nil {
+		t.Fatal("GenerateGateConfigs returned nil file")
+	}
+
+	content := file.Content
+	checks := []string{
+		"GATE_CONFIGS_H",
+		"AUTH_JWT_TOKEN_EXPIRY_SECONDS_MIN",
+		"AUTH_JWT_TOKEN_EXPIRY_SECONDS_MAX",
+		"AUTH_JWT_TOKEN_EXPIRY_SECONDS_APPROVAL_REQUIRED",
+		"AUTH_JWT_TOKEN_EXPIRY_SECONDS_SLO",
+		"GATE_PAYMENT_TIMEOUT_DEP",
+	}
+	for _, c := range checks {
+		if !contains(content, c) {
+			t.Errorf("Gate config missing: %s", c)
+		}
+	}
+}
+
+func TestGenerateTestCases(t *testing.T) {
+	gen := New()
+	biz := &types.BizSystem{
+		BizID:       "douyin-mall",
+		DisplayName: "抖音商城",
+	}
+
+	testCases := []string{
+		`func TestConfig_AuthJwtTokenExpirySeconds_Boundary(t *testing.T) {
+	t.Run("within_range", func(t *testing.T) {
+		val := int64(60)
+		if val < 60 || val > 43200 {
+			t.Errorf("value out of range")
+		}
+	})
+}`,
+	}
+
+	file, err := gen.GenerateTestCases(biz, testCases)
+	if err != nil {
+		t.Fatalf("GenerateTestCases failed: %v", err)
+	}
+	if file == nil {
+		t.Fatal("GenerateTestCases returned nil file")
+	}
+
+	content := file.Content
+	checks := []string{
+		"config_boundary_test.go",
+		"package douyin_mall",
+		"testing",
+	}
+	for _, c := range checks {
+		if !contains(content, c) {
+			t.Errorf("Test cases missing: %s", c)
+		}
+	}
+}
+
+func TestGenerateObservability(t *testing.T) {
+	gen := New()
+	biz := &types.BizSystem{
+		BizID:       "douyin-mall",
+		DisplayName: "抖音商城",
+	}
+
+	rules := []string{
+		`  - alert: AUTH_JWT_TOKEN_EXPIRY_SECONDS_SLO
+    expr: rate(blessstar_config_read_total{config_key="auth.jwt.token_expiry_seconds"}[5m]) < 0.999
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "auth.jwt.token_expiry_seconds: 用户连续登录成功率 ≥99.9%"`,
+	}
+
+	file, err := gen.GenerateObservability(biz, rules)
+	if err != nil {
+		t.Fatalf("GenerateObservability failed: %v", err)
+	}
+	if file == nil {
+		t.Fatal("GenerateObservability returned nil file")
+	}
+
+	content := file.Content
+	checks := []string{
+		"config_alerts.yml",
+		"douyin-mall_config_slo",
+		"alert: AUTH_JWT_TOKEN_EXPIRY_SECONDS_SLO",
+	}
+	for _, c := range checks {
+		if !contains(content, c) {
+			t.Errorf("Observability rules missing: %s", c)
+		}
+	}
+}
+
+func TestSchemaToBizSystem(t *testing.T) {
+	// Test SchemaToBizSystem conversion
+	schema := &types.ConfigSchema{
+		Domain:  "douyin-mall",
+		Version: "v1.0.0",
+		Fields: []types.ConfigSchemaField{
+			{
+				Key:          "auth.jwt.token_expiry_seconds",
+				Type:         "I64",
+				Default:      "11520",
+				BusinessDesc: "JWT 访问令牌的有效期时长（分钟）",
+				ImpactScope:  []string{"用户登录", "会话管理"},
+				Contract: &types.ContractDef{
+					Range:            []int64{60, 43200},
+					Dependencies:     []string{"auth.jwt.token_expiry_seconds > auth.password.bcrypt_cost * 10"},
+					SLOImpact:        "用户连续登录成功率 ≥99.9%",
+					ApprovalRequired: true,
+				},
+				UIMeta: &types.UIMetaDef{
+					Label: "Token 过期时间（分钟）",
+					Order: 1,
+				},
+				SearchKeywords: []string{"Token过期", "JWT"},
+				AIHint:         "JWT 访问令牌过期时间（分钟）",
+			},
+		},
+	}
+
+	// Test SchemaToConfigField
+	field := types.SchemaToConfigField(schema.Fields[0])
+	if field.Key != "auth.jwt.token_expiry_seconds" {
+		t.Errorf("Key = %q, want %q", field.Key, "auth.jwt.token_expiry_seconds")
+	}
+	if field.Type != "I64" {
+		t.Errorf("Type = %q, want %q", field.Type, "I64")
+	}
+	if field.Default != "11520" {
+		t.Errorf("Default = %q, want %q", field.Default, "11520")
+	}
+	if field.ValueRange != "60~43200" {
+		t.Errorf("ValueRange = %q, want %q", field.ValueRange, "60~43200")
+	}
+	if field.UIOrder != 1 {
+		t.Errorf("UIOrder = %d, want %d", field.UIOrder, 1)
+	}
+}
+
+func TestExtractGateConfigs(t *testing.T) {
+	// Simulate what parser.ExtractGateConfigs would produce
+	schema := &types.ConfigSchema{
+		Domain: "test",
+		Fields: []types.ConfigSchemaField{
+			{
+				Key: "test.field",
+				Contract: &types.ContractDef{
+					Range:            []int64{1, 100},
+					Dependencies:     []string{"test.field > test.other"},
+					SLOImpact:        "SLO: 99.9%",
+					ApprovalRequired: true,
+				},
+			},
+		},
+	}
+
+	// This test validates the SchemaToConfigField conversion preserves contract info
+	field := types.SchemaToConfigField(schema.Fields[0])
+	if field.ValueRange != "1~100" {
+		t.Errorf("Expected ValueRange '1~100', got %q", field.ValueRange)
 	}
 }
 

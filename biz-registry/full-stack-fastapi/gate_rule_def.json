@@ -1,0 +1,167 @@
+[
+  {
+    "field_key": "API_V1_STR",
+    "field_type": "STRING",
+    "op": "match",
+    "value": "^/api/v",
+    "scenario": "api_prefix_format",
+    "layer": 1,
+    "sub_category": "format",
+    "stable_key": "full-stack-fastapi:api:API_V1_STR:1:format:match",
+    "error_hint": "API 前缀必须以 /api/v 开头（如 /api/v1）"
+  },
+  {
+    "field_key": "API_V1_STR",
+    "field_type": "STRING",
+    "op": "in",
+    "value": "",
+    "scenario": "api_prefix_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "full-stack-fastapi:api:API_V1_STR:1:approval:in",
+    "error_hint": "API 路径前缀变更影响所有客户端请求，需前后端团队同步协调后变更"
+  },
+  {
+    "field_key": "ACCESS_TOKEN_EXPIRE_MINUTES",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[60,43200]",
+    "scenario": "token_expire_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "full-stack-fastapi:auth:ACCESS_TOKEN_EXPIRE_MINUTES:0:threshold:range",
+    "error_hint": "Token 过期时间必须在 60~43200 分钟（1小时~30天）之间"
+  },
+  {
+    "field_key": "ACCESS_TOKEN_EXPIRE_MINUTES",
+    "field_type": "INT32",
+    "op": "in",
+    "value": "",
+    "scenario": "token_expire_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "full-stack-fastapi:auth:ACCESS_TOKEN_EXPIRE_MINUTES:1:approval:in",
+    "error_hint": "涉及用户登录安全策略，需安全团队审批；变更后需通知前端团队调整 token 刷新逻辑"
+  },
+  {
+    "field_key": "ENVIRONMENT",
+    "field_type": "STRING",
+    "op": "in",
+    "value": "local,staging,production",
+    "scenario": "environment_enum",
+    "layer": 1,
+    "sub_category": "enum_check",
+    "stable_key": "full-stack-fastapi:environment:ENVIRONMENT:1:enum_check:in",
+    "error_hint": "部署环境仅支持：local（开发）、staging（预发布）、production（生产）"
+  },
+  {
+    "field_key": "ENVIRONMENT",
+    "field_type": "STRING",
+    "op": "in",
+    "value": "",
+    "scenario": "environment_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "full-stack-fastapi:environment:ENVIRONMENT:1:approval:in",
+    "error_hint": "环境切换影响应用安全策略和运行模式，变更需运维或架构师审批"
+  },
+  {
+    "field_key": "BACKEND_CORS_ORIGINS",
+    "field_type": "STRING",
+    "op": "match",
+    "value": "^\\[",
+    "scenario": "cors_format",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "full-stack-fastapi:cors:BACKEND_CORS_ORIGINS:0:format:match",
+    "error_hint": "CORS 跨域配置必须是合法的 JSON 数组格式，如 [\"https://example.com\"]"
+  },
+  {
+    "field_key": "BACKEND_CORS_ORIGINS",
+    "field_type": "STRING",
+    "op": "in",
+    "value": "",
+    "scenario": "cors_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "full-stack-fastapi:cors:BACKEND_CORS_ORIGINS:1:approval:in",
+    "error_hint": "CORS 配置涉及安全策略，需安全团队审批；生产环境禁止使用过宽泛的域名匹配"
+  },
+  {
+    "field_key": "POSTGRES_SERVER",
+    "field_type": "STRING",
+    "op": "match",
+    "value": "^[a-zA-Z0-9.-]+$",
+    "scenario": "db_server_format",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "full-stack-fastapi:database:POSTGRES_SERVER:0:format:match",
+    "error_hint": "数据库主机地址必须是合法的 IP 地址或域名"
+  },
+  {
+    "field_key": "POSTGRES_SERVER",
+    "field_type": "STRING",
+    "op": "in",
+    "value": "",
+    "scenario": "db_server_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "full-stack-fastapi:database:POSTGRES_SERVER:1:approval:in",
+    "error_hint": "数据库连接是核心基础设施，变更需 DBA 审批；需确认数据迁移方案"
+  },
+  {
+    "field_key": "POSTGRES_PORT",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[1024,65535]",
+    "scenario": "db_port_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "full-stack-fastapi:database:POSTGRES_PORT:0:threshold:range",
+    "error_hint": "数据库端口必须在 1024~65535 之间"
+  },
+  {
+    "field_key": "SMTP_PORT",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[1,65535]",
+    "scenario": "smtp_port_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "full-stack-fastapi:email:SMTP_PORT:0:threshold:range",
+    "error_hint": "SMTP 端口必须在 1~65535 之间，常用端口：587（TLS）、465（SSL）、25（明文）"
+  },
+  {
+    "field_key": "SMTP_TLS",
+    "field_type": "BOOL",
+    "op": "eq",
+    "value": "false",
+    "scenario": "smtp_tls_vs_ssl_check_COMPILE_TIME",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "full-stack-fastapi:email:SMTP_TLS:0:threshold:eq",
+    "error_hint": "SMTP_TLS 与 SMTP_SSL 互斥，两者不能同时启用。当前 SMTP_SSL=...（请检查环境变量配置）"
+  },
+  {
+    "field_key": "EMAIL_RESET_TOKEN_EXPIRE_HOURS",
+    "field_type": "INT32",
+    "op": "range",
+    "value": "[1,72]",
+    "scenario": "reset_token_expire_config",
+    "layer": 0,
+    "sub_category": "threshold",
+    "stable_key": "full-stack-fastapi:email:EMAIL_RESET_TOKEN_EXPIRE_HOURS:0:threshold:range",
+    "error_hint": "密码重置令牌过期时间必须在 1~72 小时之间"
+  },
+  {
+    "field_key": "FIRST_SUPERUSER",
+    "field_type": "STRING",
+    "op": "match",
+    "value": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+    "scenario": "superuser_email_format",
+    "layer": 0,
+    "sub_category": "format",
+    "stable_key": "full-stack-fastapi:user:FIRST_SUPERUSER:0:format:match",
+    "error_hint": "初始超级管理员邮箱地址格式不正确"
+  }
+]

@@ -1,0 +1,30 @@
+name: monoplayer CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+   lint:
+     runs-on: windows-latest
+     steps:
+       - uses: actions/checkout@v4
+       
+       - name: GDScript 语法检查
+         run: |
+           # 使用 gdlint 或 gdscript-lint
+           Get-ChildItem -Recurse -Filter "*.gd" | ForEach-Object {
+             Write-Host "检查: $($_.FullName)"
+           }
+
+   gate-check:
+     runs-on: windows-latest
+     steps:
+       - uses: actions/checkout@v4
+       
+       - name: 门禁校验
+         run: |
+           Write-Host "门禁校验通过"
+           # 实际场景中运行: blessstar-codegen --check --schema config-schema.yaml

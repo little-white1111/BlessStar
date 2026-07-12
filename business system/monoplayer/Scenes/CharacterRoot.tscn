@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://character_root"]
+
+[node name="CharacterRoot" type="Node3D"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="MeshPlaceholder" type="MeshInstance3D" parent="."]

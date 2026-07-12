@@ -1,0 +1,53 @@
+// Package adapter_blessstar 自动生成于 BlessStar 配置端口-适配器
+// 业务系统: 抖音商城 (douyin-mall)
+// 领域: 商品管理
+// 请勿手动修改 — 由 blessstar-codegen 自动生成
+
+package adapter_blessstar
+
+import (
+	"context"
+	"sync"
+
+	"douyin-mall-go-template/ports"
+)
+
+// ProductConfigAdapter 商品管理 域配置的 BlessStar 适配器
+// 内置三阶段降级: ConfigReader实时查询 → LastKnownGood缓存 → 硬编码默认值
+type ProductConfigAdapter struct {
+	reader          ports.ConfigReader
+	lastKnownCache  sync.Map
+	hardcodedDefaults  map[string]interface{}
+}
+
+// NewProductConfigAdapter 创建 ProductConfigAdapter 适配器实例
+// reader 参数是配置读取器，由业务方注入（可为 CachedReader、HTTPReader 等实现）
+func NewProductConfigAdapter(reader ports.ConfigReader) ports.ProductConfig {
+	return &ProductConfigAdapter{
+		reader: reader,
+		hardcodedDefaults: map[string]interface{}{
+			"StatusValues": "{\"1\":\"on_sale\",\"0\":\"off_sale\",\"-1\":\"deleted\"}",
+		},
+	}
+}
+
+func (a *ProductConfigAdapter) StatusValues(ctx context.Context) (string, error) {
+	// 第1阶段: ConfigReader 实时查询（SHM / HTTP / 环境变量等）
+	val, err := a.reader.Get(ctx, "/config/douyin-mall/product/status/values")
+	if err == nil {
+		if converted, ok := toString(val); ok {
+			a.lastKnownCache.Store("StatusValues", converted)
+			return converted, nil
+		}
+	}
+
+	// 第2阶段: 降级到 Last Known Good 缓存
+	if cached, ok := a.lastKnownCache.Load("StatusValues"); ok {
+		if converted, ok := toString(cached); ok {
+			return converted, nil
+		}
+	}
+
+	// 第3阶段: 极冷启动 — 返回硬编码默认值
+	return a.hardcodedDefaults["StatusValues"].(string), nil
+}

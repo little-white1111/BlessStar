@@ -1,0 +1,503 @@
+[
+  {
+    "field_key": "narrative.reflect.min_observations",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 5, "max": 500 },
+    "scenario": "narrative_reflect_min_observations_range_config",
+    "sub_category": "threshold",
+    "stable_key": "user-narrative:narrative:narrative.reflect.min_observations:0:threshold:range",
+    "error_hint": "触发反思的最小观察数必须在 5~500 条之间"
+  },
+  {
+    "field_key": "narrative.significant.threshold",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.3, "max": 1.0 },
+    "scenario": "narrative_significant_threshold_range_config",
+    "sub_category": "threshold",
+    "stable_key": "user-narrative:narrative:narrative.significant.threshold:0:threshold:range",
+    "error_hint": "重要节点阈值必须在 0.3~1.0 之间"
+  },
+  {
+    "field_key": "narrative.observation.retention_days",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 30, "max": 730 },
+    "scenario": "narrative_observation_retention_days_range_config",
+    "sub_category": "threshold",
+    "stable_key": "user-narrative:narrative:narrative.observation.retention_days:0:threshold:range",
+    "error_hint": "观察保留天数必须在 30~730 天之间"
+  },
+  {
+    "field_key": "narrative.observation.retention_days",
+    "field_type": "INT32",
+    "gate_type": "DEPENDENCY",
+    "params": { "expr": "narrative.observation.retention_days >= narrative.reflect.min_observations * 7" },
+    "scenario": "narrative_observation_retention_days_dependency_check_COMPILE_TIME",
+    "sub_category": "threshold",
+    "stable_key": "user-narrative:narrative:narrative.observation.retention_days:0:threshold:dep_narrative.reflect.min_observations",
+    "error_hint": "观察保留天数必须大于等于最小观察数的 7 倍（当前保留天数不足，无法支撑最小样本量的长期追踪）"
+  },
+  {
+    "field_key": "learning.pattern.sensitivity",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.05, "max": 0.8 },
+    "scenario": "learning_pattern_sensitivity_range_config",
+    "sub_category": "threshold",
+    "stable_key": "user-narrative:learning:learning.pattern.sensitivity:0:threshold:range",
+    "error_hint": "模式识别灵敏度必须在 0.05~0.8 之间"
+  },
+  {
+    "field_key": "narrative.trajectory.attributes",
+    "field_type": "ARR",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改成长轨迹属性将影响用户画像的维度覆盖度，新增属性后需保证历史数据可映射"
+    },
+    "scenario": "narrative_trajectory_attributes_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "user-narrative:narrative:narrative.trajectory.attributes:1:approval:eq",
+    "error_hint": "修改成长轨迹属性需要审批"
+  },
+  {
+    "field_key": "narrative.observation.retention_days",
+    "field_type": "INT32",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改观察保留天数涉及存储容量和隐私合规，需确认合规要求"
+    },
+    "scenario": "narrative_observation_retention_days_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "user-narrative:narrative:narrative.observation.retention_days:1:approval:eq",
+    "error_hint": "修改观察保留天数需要审批"
+  },
+  {
+    "field_key": "benevolence.strategy_set",
+    "field_type": "ARR",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改善意响应策略集将影响助手的对话回应风格，需确认对话质量影响"
+    },
+    "scenario": "benevolence_strategy_set_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "user-narrative:benevolence:benevolence.strategy_set:1:approval:eq",
+    "error_hint": "修改善意响应策略集需要审批"
+  },
+  {
+    "field_key": "narrative.reflect.min_observations",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "llm_analysis_quality",
+      "threshold": 5
+    },
+    "scenario": "narrative_reflect_min_observations_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "user-narrative:narrative:narrative.reflect.min_observations:0:alert:gte",
+    "error_hint": "最小观察数接近下限（5），LLM 分析质量可能下降"
+  },
+  {
+    "field_key": "narrative.significant.threshold",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "significant_event_sensitivity",
+      "threshold": 0.3
+    },
+    "scenario": "narrative_significant_threshold_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "user-narrative:narrative:narrative.significant.threshold:0:alert:lte",
+    "error_hint": "重要节点阈值接近下限（0.3），大量普通事件将被标记为重要，可能稀释关键分析"
+  },
+  {
+    "field_key": "narrative.observation.retention_days",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "storage_capacity",
+      "threshold": 30
+    },
+    "scenario": "narrative_observation_retention_days_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "user-narrative:narrative:narrative.observation.retention_days:0:alert:lte",
+    "error_hint": "观察保留天数接近下限（30），可能导致量化分析窗口不足，趋势数据不稳定"
+  },
+  {
+    "field_key": "learning.pattern.sensitivity",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "pattern_detection_precision",
+      "threshold": 0.05
+    },
+    "scenario": "learning_pattern_sensitivity_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "user-narrative:learning:learning.pattern.sensitivity:0:alert:gte",
+    "error_hint": "模式识别灵敏度接近下限（0.05），可能产生大量误报"
+  },
+  {
+    "field_key": "benevolence.strategy_set",
+    "field_type": "ARR",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "dialogue_quality",
+      "threshold": 1
+    },
+    "scenario": "benevolence_strategy_set_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "user-narrative:benevolence:benevolence.strategy_set:0:alert:lte",
+    "error_hint": "善意响应策略集条目过少可能影响对话丰富度，建议至少保留 2 个策略"
+  },
+
+  {
+    "field_key": "persona.core.warmth",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.5, "max": 1.0 },
+    "scenario": "persona_core_warmth_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:core:persona.core.warmth:0:threshold:range",
+    "error_hint": "核心温暖度必须在 0.5~1.0 之间"
+  },
+  {
+    "field_key": "persona.core.rationality",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.5, "max": 1.0 },
+    "scenario": "persona_core_rationality_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:core:persona.core.rationality:0:threshold:range",
+    "error_hint": "核心理性度必须在 0.5~1.0 之间"
+  },
+  {
+    "field_key": "persona.core.curiosity",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.3, "max": 1.0 },
+    "scenario": "persona_core_curiosity_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:core:persona.core.curiosity:0:threshold:range",
+    "error_hint": "核心好奇心必须在 0.3~1.0 之间"
+  },
+  {
+    "field_key": "persona.adaptive.encouragement",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.2, "max": 0.9 },
+    "scenario": "persona_adaptive_encouragement_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:adaptive:persona.adaptive.encouragement:0:threshold:range",
+    "error_hint": "鼓励倾向必须在 0.2~0.9 之间"
+  },
+  {
+    "field_key": "persona.adaptive.patience",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.3, "max": 0.95 },
+    "scenario": "persona_adaptive_patience_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:adaptive:persona.adaptive.patience:0:threshold:range",
+    "error_hint": "耐心度必须在 0.3~0.95 之间"
+  },
+  {
+    "field_key": "persona.adaptive.proactive_curiosity",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.1, "max": 0.7 },
+    "scenario": "persona_adaptive_proactive_curiosity_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:adaptive:persona.adaptive.proactive_curiosity:0:threshold:range",
+    "error_hint": "主动探询倾向必须在 0.1~0.7 之间"
+  },
+  {
+    "field_key": "persona.evolution.positive_bias",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.0, "max": 0.3 },
+    "scenario": "persona_evolution_positive_bias_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:evolution:persona.evolution.positive_bias:0:threshold:range",
+    "error_hint": "正向演进偏向必须在 0.0~0.3 之间"
+  },
+  {
+    "field_key": "persona.evolution.change_rate_per_1k",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.01, "max": 0.2 },
+    "scenario": "persona_evolution_change_rate_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-persona:evolution:persona.evolution.change_rate_per_1k:0:threshold:range",
+    "error_hint": "演进速度必须在 0.01~0.2 之间"
+  },
+  {
+    "field_key": "persona.core.warmth",
+    "field_type": "FLOAT64",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改核心温暖度将影响助手的对话情感基调，需确认人格设计"
+    },
+    "scenario": "persona_core_warmth_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "assistant-persona:core:persona.core.warmth:1:approval:eq",
+    "error_hint": "修改核心温暖度需要审批"
+  },
+  {
+    "field_key": "persona.core.rationality",
+    "field_type": "FLOAT64",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改核心理性度将影响回复逻辑性，需确认人格设计"
+    },
+    "scenario": "persona_core_rationality_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "assistant-persona:core:persona.core.rationality:1:approval:eq",
+    "error_hint": "修改核心理性度需要审批"
+  },
+  {
+    "field_key": "persona.core.curiosity",
+    "field_type": "FLOAT64",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改核心好奇心将影响对话深度和探索性，需确认人格设计"
+    },
+    "scenario": "persona_core_curiosity_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "assistant-persona:core:persona.core.curiosity:1:approval:eq",
+    "error_hint": "修改核心好奇心需要审批"
+  },
+  {
+    "field_key": "persona.evolution.positive_bias",
+    "field_type": "FLOAT64",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改正向演进偏向将影响人格演进的健康度，需确认伦理合规"
+    },
+    "scenario": "persona_evolution_positive_bias_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "assistant-persona:evolution:persona.evolution.positive_bias:1:approval:eq",
+    "error_hint": "修改正向演进偏向需要审批"
+  },
+  {
+    "field_key": "persona.evolution.change_rate_per_1k",
+    "field_type": "FLOAT64",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改演进速度将影响人格稳定性，需确认人格设计"
+    },
+    "scenario": "persona_evolution_change_rate_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "assistant-persona:evolution:persona.evolution.change_rate_per_1k:1:approval:eq",
+    "error_hint": "修改演进速度需要审批"
+  },
+  {
+    "field_key": "persona.core.warmth",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "dialogue_emotional_tone", "threshold": 0.5 },
+    "scenario": "persona_core_warmth_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-persona:core:persona.core.warmth:0:alert:lte",
+    "error_hint": "核心温暖度接近下限（0.5），对话可能显得冷漠"
+  },
+  {
+    "field_key": "persona.core.rationality",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "response_logic_consistency", "threshold": 0.5 },
+    "scenario": "persona_core_rationality_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-persona:core:persona.core.rationality:0:alert:lte",
+    "error_hint": "核心理性度接近下限（0.5），回复的条理性可能下降"
+  },
+  {
+    "field_key": "persona.adaptive.encouragement",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "user_encouragement_effectiveness", "threshold": 0.2 },
+    "scenario": "persona_adaptive_encouragement_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-persona:adaptive:persona.adaptive.encouragement:0:alert:lte",
+    "error_hint": "鼓励倾向接近下限（0.2），用户情绪改善幅度可能不足"
+  },
+  {
+    "field_key": "persona.evolution.positive_bias",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": { "metric": "evolution_direction_health", "threshold": 0.0 },
+    "scenario": "persona_evolution_positive_bias_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-persona:evolution:persona.evolution.positive_bias:0:alert:lte",
+    "error_hint": "正向演进偏向为 0，自适应人格可能被消极用户反馈带偏"
+  },
+
+  {
+    "field_key": "catchphrase.core",
+    "field_type": "ARR",
+    "gate_type": "APPROVAL",
+    "params": {
+      "required": true,
+      "description": "修改核心口头禅将影响助手的核心语言风格，需确认人格设计"
+    },
+    "scenario": "catchphrase_core_approval",
+    "layer": 1,
+    "sub_category": "approval",
+    "stable_key": "assistant-catchphrase:core:catchphrase.core:1:approval:eq",
+    "error_hint": "修改核心口头禅需要审批"
+  },
+  {
+    "field_key": "catchphrase.core",
+    "field_type": "ARR",
+    "gate_type": "IMMUTABLE",
+    "params": {},
+    "scenario": "catchphrase_core_immutable_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-catchphrase:core:catchphrase.core:0:threshold:immutable",
+    "error_hint": "核心口头禅不可在运行时修改"
+  },
+  {
+    "field_key": "catchphrase.core",
+    "field_type": "ARR",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "core_language_style",
+      "threshold": 1
+    },
+    "scenario": "catchphrase_core_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-catchphrase:core:catchphrase.core:0:alert:lte",
+    "error_hint": "核心口头禅列表为空，助手将失去核心语言风格"
+  },
+  {
+    "field_key": "catchphrase.relational.min_usage",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 3, "max": 20 },
+    "scenario": "catchphrase_relational_min_usage_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-catchphrase:relational:catchphrase.relational.min_usage:0:threshold:range",
+    "error_hint": "Relational 口头禅涌现使用次数门槛必须在 3~20 之间"
+  },
+  {
+    "field_key": "catchphrase.relational.min_usage",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "emergence_sensitivity",
+      "threshold": 3
+    },
+    "scenario": "catchphrase_relational_min_usage_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-catchphrase:relational:catchphrase.relational.min_usage:0:alert:gte",
+    "error_hint": "涌现使用次数门槛接近下限（3），口头禅涌现可能过快"
+  },
+  {
+    "field_key": "catchphrase.relational.min_feedback",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.3, "max": 1.0 },
+    "scenario": "catchphrase_relational_min_feedback_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-catchphrase:relational:catchphrase.relational.min_feedback:0:threshold:range",
+    "error_hint": "Relational 口头禅涌现反馈分门槛必须在 0.3~1.0 之间"
+  },
+  {
+    "field_key": "catchphrase.relational.min_feedback",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "emergence_quality",
+      "threshold": 0.3
+    },
+    "scenario": "catchphrase_relational_min_feedback_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-catchphrase:relational:catchphrase.relational.min_feedback:0:alert:lte",
+    "error_hint": "涌现反馈分门槛接近下限（0.3），低质量口头禅可能被误晋升"
+  },
+  {
+    "field_key": "catchphrase.frequency.max_per_round",
+    "field_type": "INT32",
+    "gate_type": "RANGE",
+    "params": { "min": 1, "max": 3 },
+    "scenario": "catchphrase_frequency_max_per_round_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-catchphrase:frequency:catchphrase.frequency.max_per_round:0:threshold:range",
+    "error_hint": "每轮最大口头禅触发次数必须在 1~3 之间"
+  },
+  {
+    "field_key": "catchphrase.frequency.max_per_round",
+    "field_type": "INT32",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "dialogue_naturalness",
+      "threshold": 3
+    },
+    "scenario": "catchphrase_frequency_max_per_round_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-catchphrase:frequency:catchphrase.frequency.max_per_round:0:alert:gte",
+    "error_hint": "每轮最大触发次数为 3，对话中口头禅可能过于频繁"
+  },
+  {
+    "field_key": "catchphrase.emotion.trigger_threshold",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.1, "max": 0.8 },
+    "scenario": "catchphrase_emotion_trigger_threshold_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-catchphrase:emotion:catchphrase.emotion.trigger_threshold:0:threshold:range",
+    "error_hint": "情绪触发阈值必须在 0.1~0.8 之间"
+  },
+  {
+    "field_key": "catchphrase.emotion.trigger_threshold",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "emotion_matching_precision",
+      "threshold": 0.1
+    },
+    "scenario": "catchphrase_emotion_trigger_threshold_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-catchphrase:emotion:catchphrase.emotion.trigger_threshold:0:alert:lte",
+    "error_hint": "情绪触发阈值接近下限（0.1），口头禅触发可能过于敏感"
+  },
+  {
+    "field_key": "catchphrase.emotion.valence_weight",
+    "field_type": "FLOAT64",
+    "gate_type": "RANGE",
+    "params": { "min": 0.0, "max": 1.0 },
+    "scenario": "catchphrase_emotion_valence_weight_range_config",
+    "sub_category": "threshold",
+    "stable_key": "assistant-catchphrase:emotion:catchphrase.emotion.valence_weight:0:threshold:range",
+    "error_hint": "Valence 权重必须在 0.0~1.0 之间"
+  },
+  {
+    "field_key": "catchphrase.emotion.valence_weight",
+    "field_type": "FLOAT64",
+    "gate_type": "SLO_WARNING",
+    "params": {
+      "metric": "emotion_matching_precision",
+      "threshold": 0.0
+    },
+    "scenario": "catchphrase_emotion_valence_weight_slo_alert_COMPILE_TIME",
+    "sub_category": "alert",
+    "stable_key": "assistant-catchphrase:emotion:catchphrase.emotion.valence_weight:0:alert:lte",
+    "error_hint": "Valence 权重为 0，情绪正负向判断将被忽略，可能影响口头禅匹配精度"
+  }
+]

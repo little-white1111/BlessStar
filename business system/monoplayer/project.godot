@@ -1,0 +1,16 @@
+[application]
+config/name="monoplayer"
+config/description="3D to 2D animation video renderer - Live2D style batch renderer"
+run/main_scene="res://Scenes/Main.tscn"
+boot_splash/bg_color=Color(0, 0, 0, 1)
+config/icon="res://icon.svg"
+
+[autoload]
+BlessStarLoader="*res://internal/config/adapters/BlessStarLoader.gd"
+
+[rendering]
+renderer/rendering_method="forward_plus"
+environment/defaults/default_clear_color=Color(0, 0, 0, 0)
+transparent_background=true
+
+[input]

@@ -594,5 +594,19 @@ func formatPyDefault(pyType, defaultVal string) string {
 	}
 }
 
+// ─── Schema-First 扩展方法（stub — Python 后端暂不支持） ───
+
+func (p *PythonBackend) GenerateGateConfigs(biz *types.BizSystem, gateConfigs []types.GateConfig) (*backend.File, error) {
+	return nil, nil
+}
+
+func (p *PythonBackend) GenerateTestCases(biz *types.BizSystem, testCases []string) (*backend.File, error) {
+	return nil, nil
+}
+
+func (p *PythonBackend) GenerateObservability(biz *types.BizSystem, rules []string) (*backend.File, error) {
+	return nil, nil
+}
+
 // Ensure all interfaces are satisfied
 var _ backend.LanguageBackend = (*PythonBackend)(nil)

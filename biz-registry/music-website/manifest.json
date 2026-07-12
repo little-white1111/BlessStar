@@ -1,0 +1,94 @@
+{
+  "biz_id": "music-website",
+  "display_name": "音乐网站",
+  "description": "基于 Spring Boot + Vue 的在线音乐播放平台，提供用户登录注册、歌曲搜索、歌单管理、密码重置等核心功能，使用 MySQL 存储数据、Redis 缓存会话和验证码、MinIO 存储音频文件。",
+  "version": "1.0.0",
+  "sdk_version": ">=1.0.0 <2.0.0",
+  "fields": [
+    {"key": "server.port", "type": "I32", "default": "8888", "description": "应用 HTTP 服务监听端口", "required": false},
+    {"key": "spring.datasource.url", "type": "STR", "default": "jdbc:mysql://localhost:3306/yin_music?serverTimezone=Asia/Shanghai&useSSL=false&characterEncoding=utf8", "description": "MySQL 数据库 JDBC 连接 URL", "required": true},
+    {"key": "spring.redis.host", "type": "STR", "default": "127.0.0.1", "description": "Redis 缓存服务器主机地址", "required": true},
+    {"key": "spring.redis.port", "type": "I32", "default": "6379", "description": "Redis 服务器端口", "required": false},
+    {"key": "spring.redis.timeout", "type": "I64", "default": "1800000", "description": "Redis 连接超时时间（毫秒）", "required": false},
+    {"key": "minio.endpoint", "type": "STR", "default": "http://localhost:9000", "description": "MinIO 对象存储服务端点地址", "required": true},
+    {"key": "minio.bucket-name", "type": "STR", "default": "user01", "description": "MinIO 存储音频文件的桶名称", "required": false},
+    {"key": "upload.max-file-size", "type": "STR", "default": "50MB", "description": "文件上传最大尺寸限制", "required": false},
+    {"key": "cors.allowed-origins", "type": "ARR", "default": "[\"http://localhost:3000\",\"http://127.0.0.1:3000\"]", "description": "CORS 跨域允许的前端域名来源列表", "required": false},
+    {"key": "login.max-failed-attempts", "type": "I32", "default": "5", "description": "登录连续失败最大次数，超过后账号临时锁定", "required": false},
+    {"key": "login.lock-minutes", "type": "I32", "default": "10", "description": "登录失败超出阈值后的账号锁定时间（分钟）", "required": false},
+    {"key": "password-reset.code-ttl-minutes", "type": "I32", "default": "10", "description": "密码重置验证码的有效期（分钟）", "required": false},
+    {"key": "password-reset.send-cooldown-seconds", "type": "I32", "default": "15", "description": "密码重置验证码的发送冷却间隔（秒）", "required": false},
+    {"key": "password-reset.mock-without-mail", "type": "BOOL", "default": "true", "description": "开发环境是否开启无邮件 Mock 模式，开启后 debugCode 直接在接口返回中显示", "required": false}
+  ],
+  "ai_data": {
+    "summary": "音乐网站（music-website）是基于 Spring Boot 框架的 Java 后端服务，采用 MySQL 存储用户/歌曲/歌单数据，Redis 缓存会话和验证码，MinIO 存储音频文件。核心业务域包括：用户登录认证（含登录失败锁定机制）、密码重置（邮箱验证码+Redis 存证）、歌曲管理、歌单收藏、评论互动。该模块已完整实现用户注册登录、密码重置、文件上传等能力。",
+    "business_capabilities": [
+      "用户认证与登录安全：支持登录失败次数限制和账号临时锁定机制，防止暴力破解",
+      "密码重置流程：通过邮箱验证码实现密码找回，支持 Mock 模式便于开发调试",
+      "文件上传与管理：基于 MinIO 对象存储的音频文件上传，支持大文件（最大 50MB）",
+      "歌曲与歌单管理：歌曲搜索、歌单创建/收藏/评论等基础音乐社交功能",
+      "Redis 会话缓存：用户登录状态和验证码缓存在 Redis，支持分布式部署"
+    ],
+    "config_domains": {
+      "server": "服务器配置域：HTTP 监听端口",
+      "spring.datasource": "数据库配置域：MySQL 连接字符串",
+      "spring.redis": "缓存配置域：Redis 连接参数和连接池",
+      "minio": "对象存储配置域：MinIO 端点和桶配置",
+      "upload": "文件上传配置域：上传大小限制",
+      "cors": "安全策略域：跨域域名白名单",
+      "login": "登录安全域：登录失败阈值和锁定策略",
+      "password-reset": "密码重置域：验证码有效期和发送频率"
+    },
+    "configLabels": {
+      "server.port": "服务器端口",
+      "spring.datasource.url": "数据库连接",
+      "spring.redis.host": "Redis 主机",
+      "spring.redis.port": "Redis 端口",
+      "spring.redis.timeout": "Redis 超时",
+      "minio.endpoint": "MinIO 端点",
+      "minio.bucket-name": "MinIO 桶名",
+      "upload.max-file-size": "上传大小限制",
+      "cors.allowed-origins": "跨域白名单",
+      "login.max-failed-attempts": "登录失败阈值",
+      "login.lock-minutes": "锁定时间",
+      "password-reset.code-ttl-minutes": "验证码有效期",
+      "password-reset.send-cooldown-seconds": "发送冷却",
+      "password-reset.mock-without-mail": "Mock 模式"
+    },
+    "invertedIndex": [
+      {"keyword": "端口", "configKeys": ["server.port"]},
+      {"keyword": "数据库", "configKeys": ["spring.datasource.url"]},
+      {"keyword": "MySQL", "configKeys": ["spring.datasource.url"]},
+      {"keyword": "Redis", "configKeys": ["spring.redis.host", "spring.redis.port", "spring.redis.timeout"]},
+      {"keyword": "缓存", "configKeys": ["spring.redis.host", "spring.redis.timeout"]},
+      {"keyword": "MinIO", "configKeys": ["minio.endpoint", "minio.bucket-name"]},
+      {"keyword": "文件上传", "configKeys": ["upload.max-file-size"]},
+      {"keyword": "跨域", "configKeys": ["cors.allowed-origins"]},
+      {"keyword": "CORS", "configKeys": ["cors.allowed-origins"]},
+      {"keyword": "登录安全", "configKeys": ["login.max-failed-attempts", "login.lock-minutes"]},
+      {"keyword": "密码重置", "configKeys": ["password-reset.code-ttl-minutes", "password-reset.send-cooldown-seconds", "password-reset.mock-without-mail"]},
+      {"keyword": "验证码", "configKeys": ["password-reset.code-ttl-minutes", "password-reset.send-cooldown-seconds"]}
+    ],
+    "skillRoutes": [
+      {"prefix": "music-website", "description": "音乐网站综合配置管理：服务器、数据库、缓存、对象存储、文件上传、安全策略等全领域配置", "toolChain": ["read_config_value", "write_config_value", "validate_value"], "priority": 10},
+      {"prefix": "music-website-security", "description": "音乐网站安全域：CORS 跨域、登录失败锁定阈值、锁定时间等安全配置", "toolChain": ["read_config_value", "write_config_value"], "priority": 20},
+      {"prefix": "music-website-storage", "description": "音乐网站存储域：数据库连接、缓存连接、对象存储连接等基础设施配置", "toolChain": ["read_config_value", "write_config_value"], "priority": 20}
+    ],
+    "dependency_hints": {
+      "login.max-failed-attempts": "与 login.lock-minutes 配合使用形成登录保护策略",
+      "login.lock-minutes": "与 login.max-failed-attempts 配合使用，锁定期间所有登录尝试均被拒绝",
+      "password-reset.code-ttl-minutes": "验证码过期时间需大于发送冷却时间，否则用户无法在冷却期内收到有效验证码",
+      "password-reset.send-cooldown-seconds": "与 code-ttl-minutes 配合，防止验证码接口被滥用",
+      "password-reset.mock-without-mail": "仅用于开发/测试环境，生产环境应设为 false",
+      "upload.max-file-size": "不应超过 MinIO 桶的配置上限和反向代理的请求体大小限制",
+      "cors.allowed-origins": "生产环境应配置具体前端域名，避免使用通配符"
+    },
+    "security_notes": [
+      "spring.datasource.password 和 minio.access-key/secret-key 等敏感凭证不应纳入配置管理，应通过环境变量或密钥管理系统注入",
+      "password-reset.mock-without-mail 生产环境必须设为 false，否则验证码会泄露在接口返回中",
+      "cors.allowed-origins 生产环境应限制为具体的前端域名",
+      "login.max-failed-attempts 建议 5~10 次，过低会影响正常用户体验",
+      "password-reset.code-ttl-minutes 建议 5~15 分钟，过长会增加验证码泄露风险"
+    ]
+  }
+}

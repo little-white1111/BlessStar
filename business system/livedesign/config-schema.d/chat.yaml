@@ -1,0 +1,50 @@
+# config-schema.d/chat.yaml — 对话系统配置
+# SSOT: 角色预设 / 随机性参数
+domain: livedesign
+version: v1.1.0
+x-version: v1.0.0
+x-domain: chat
+x-extensions:
+  biz_id: "livedesign"
+  registration_phase: "P1"
+  generated_by: "configdesigner"
+fields:
+  - key: chat.role_preset
+    type: STR
+    default: assistant
+    required: false
+    business_desc: "当前激活的角色设定标识，对应角色卡文件的 ID。切换角色时 LLM Service 会清空对话上下文并重载角色卡"
+    contract:
+      slo_impact: "对话角色一致性"
+    ui_meta:
+      label: "角色预设"
+      order: 4
+      placeholder: "assistant"
+      description: "指定当前对话使用的角色预设。切换角色时系统会自动清空对话历史并加载对应角色卡"
+      hidden: false
+    search_keywords:
+      - "角色预设"
+      - "角色卡"
+      - "角色扮演"
+    ai_hint: "指定当前对话使用的角色预设。切换角色时系统会自动清空对话历史并加载对应角色卡（人格、说话风格、Live2D 模型等）。默认 assistant 为标准助手模式，其他值为角色扮演模式。"
+
+  - key: chat.temperature
+    type: F64
+    default: 0.8
+    required: false
+    business_desc: "AI 回复的随机性/创造性参数。值越高回复越随机多样，值越低回复越确定保守"
+    contract:
+      range: [0.1, 2.0]
+      slo_impact: "AI 回复质量与一致性"
+    ui_meta:
+      label: "回复随机性"
+      order: 5
+      placeholder: "0.8"
+      description: "控制 AI 回复的随机性。0.1~0.5 适合事实性问答，0.6~1.0 适合创意对话"
+      hidden: false
+    search_keywords:
+      - "温度"
+      - "随机性"
+      - "创造性"
+      - "temperature"
+    ai_hint: "控制 AI 回复的随机性。0.1~0.5 适合事实性问答（稳定准确），0.6~1.0 适合创意对话（丰富多样），1.1~2.0 适合头脑风暴（高度随机）。角色扮演推荐 0.7~0.9。"

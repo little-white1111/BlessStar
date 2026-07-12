@@ -1,0 +1,29 @@
+{
+  "biz_id": "{{biz_id}}",
+  "display_name": "{{display_name}}",
+  "sdk_version": "{{sdk_version}}",
+  "normalizer_lib_path": "",
+  "fields": [
+    {{#fields}}
+    {
+      "key": "{{key}}",
+      "type": "{{type_upper}}",
+      "default": "{{default}}",
+      "description": "{{description}}",
+      "required": {{#required}}true{{/required}}{{^required}}false{{/required}}
+    }{{^last}},{{/last}}
+    {{/fields}}
+  ],
+  "ai_data": {
+    "config_labels": {},
+    "inverted_index": [],
+    "domain_shards": [
+      {
+        "domain_name": "{{biz_id}}",
+        "domain_description": "{{description}}",
+        "keywords": []
+      }
+    ],
+    "skill_routes": []
+  }
+}
