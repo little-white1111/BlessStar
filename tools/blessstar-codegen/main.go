@@ -37,6 +37,7 @@ func main() {
 	genTests := flag.Bool("gen-tests", false, "Generate boundary test cases to test_cases/ directory")
 	genObs := flag.Bool("gen-obs", false, "Generate observability rules to observability/ directory")
 	bundledMode := flag.Bool("bundled", false, "Input is a config-schema.bundled.yaml (bundled cache format)")
+	bizRepoPath := flag.String("biz-repo-path", "", "Business system repository local path, used for go.mod replace directive")
 	flag.Parse()
 
 	// ─── Schema-First 模式 vs 传统模式 ───
@@ -83,6 +84,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to build biz system from schema: %v", err)
 		}
+		biz.BizRepoPath = *bizRepoPath
 
 		// Parse target languages
 		languages := parseLanguages(*lang)
@@ -150,6 +152,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to build business system model: %v", err)
 	}
+	biz.BizRepoPath = *bizRepoPath
 
 	fmt.Printf("📋 已加载业务系统: %s (%s)\n", biz.DisplayName, biz.BizID)
 	fmt.Printf("   配置项总数: %d\n", len(biz.AllConfigs))
@@ -307,16 +310,10 @@ func generateForBackend(gen backend.LanguageBackend, biz *types.BizSystem, outpu
 			continue
 		}
 
-		// Port interface
-		portFile, err := gen.GeneratePortInterface(biz, domain, configs)
-		if err != nil {
-			log.Printf("⚠️  [%s] Failed to generate port for domain %s: %v", gen.Name(), domain, err)
-			continue
-		}
-		if portFile != nil {
-			portFile.Content = prependHeader(portFile.Path, portFile.Content, biz)
-			files = append(files, portFile)
-		}
+		// ★ Port 接口不再由 codegen 输出 — 由 architect-pro 管理到业务系统 pkg/ports/
+		// 保留 forBizID 变量以备后用
+		bizID := biz.BizID
+		_ = bizID
 
 		// BlessStar adapter
 		adapterFile, err := gen.GenerateBlessStarAdapter(biz, domain, configs)
@@ -359,16 +356,8 @@ func generateForBackend(gen backend.LanguageBackend, biz *types.BizSystem, outpu
 		files = append(files, gomodFile)
 	}
 
-	// Generate ConfigReader interface + CachedReader decorator
-	readerFiles, err := gen.GenerateConfigReaderFile(biz)
-	if err != nil {
-		log.Printf("⚠️  [%s] Failed to generate ConfigReader files: %v", gen.Name(), err)
-	} else {
-		for _, f := range readerFiles {
-			f.Content = prependHeader(f.Path, f.Content, biz)
-			files = append(files, f)
-		}
-	}
+	// ★ ConfigReader 接口不再由 codegen 输出 — 由 architect-pro 管理到业务系统 pkg/ports/
+	// CachedReader 装饰器也不再由 codegen 输出（业务方可手写或引用 biz-adapters/go/readers/）
 
 	// Generate language-specific init files (e.g. Python __init__.py)
 	initFiles, err := gen.GenerateInitFiles(biz)
@@ -395,18 +384,9 @@ func generateForBackendSchema(gen backend.LanguageBackend, biz *types.BizSystem,
 			continue
 		}
 
-		// Port interface
-		portFile, err := gen.GeneratePortInterface(biz, domain, configs)
-		if err != nil {
-			log.Printf("⚠️  [%s] Failed to generate port for domain %s: %v", gen.Name(), domain, err)
-			continue
-		}
-		if portFile != nil {
-			portFile.Content = prependHeaderSchema(portFile.Path, portFile.Content, biz, true)
-			// Replace hardcoded "Source: manifest.json" in port file headers
-			portFile.Content = strings.ReplaceAll(portFile.Content, "Source: manifest.json", "Source: config-schema.yaml")
-			files = append(files, portFile)
-		}
+		// ★ Port 接口不再由 codegen 输出 — 由 architect-pro 管理到业务系统 pkg/ports/
+		bizID := biz.BizID
+		_ = bizID
 
 		// BlessStar adapter
 		adapterFile, err := gen.GenerateBlessStarAdapter(biz, domain, configs)
@@ -451,17 +431,7 @@ func generateForBackendSchema(gen backend.LanguageBackend, biz *types.BizSystem,
 		files = append(files, gomodFile)
 	}
 
-	// Generate ConfigReader interface + CachedReader decorator
-	readerFiles, err := gen.GenerateConfigReaderFile(biz)
-	if err != nil {
-		log.Printf("⚠️  [%s] Failed to generate ConfigReader files: %v", gen.Name(), err)
-	} else {
-		for _, f := range readerFiles {
-			f.Content = prependHeaderSchema(f.Path, f.Content, biz, true)
-			f.Content = strings.ReplaceAll(f.Content, "Source: manifest.json", "Source: config-schema.yaml")
-			files = append(files, f)
-		}
-	}
+	// ★ ConfigReader 接口不再由 codegen 输出 — 由 architect-pro 管理到业务系统 pkg/ports/
 
 	// Generate language-specific init files (e.g. Python __init__.py)
 	initFiles, err := gen.GenerateInitFiles(biz)

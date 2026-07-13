@@ -97,6 +97,8 @@ export interface EmotionUpdatePayload {
   valence?: number;   // 效价: 0.0=负面, 0.5=中性, 1.0=正面
   arousal?: number;   // 唤醒度: 0.0=平静, 0.5=中性, 1.0=兴奋
   dominance?: number; // 支配度: 0.0=顺从, 0.5=中性, 1.0=支配
+  /** 混合情绪 Top-3 概率（架构不变量 A9），供 Live2D 混合表情驱动 */
+  mixedEmotions?: Array<{ emotion: string; probability: number }>;
 }
 
 /** 统一输入事件（架构不变量 A7 — 多模态输入归一化） */

@@ -9,6 +9,9 @@
  * Dominance (支配度): 0.0 (顺从) ~ 0.5 (中性) ~ 1.0 (支配)
  */
 
+import { ProbabilityDensityMatcher } from '../matching/probability-matcher';
+import type { MatchResult } from '../matching/types';
+
 /** VAD 三轴情感状态 */
 export interface AffectiveState {
   /** 效价: 0.0=负面, 0.5=中性, 1.0=正面 */
@@ -60,7 +63,7 @@ export function emotionToVAD(emotion: string): AffectiveState {
   return { ...BASELINE_STATE };
 }
 
-/** 将 VAD 状态映射到最接近的情绪名称 */
+/** 将 VAD 状态映射到最接近的情绪名称（向后兼容的最近邻匹配） */
 export function vadToEmotion(state: AffectiveState): string {
   let closest = 'neutral';
   let minDistance = Infinity;
@@ -78,4 +81,36 @@ export function vadToEmotion(state: AffectiveState): string {
   }
 
   return closest;
+}
+
+/**
+ * 使用高斯 PDF 将 VAD 状态映射到 Top-3 概率情绪标签。
+ * 架构不变量 A9: 情感标签映射必须输出 Top-3 概率。
+ *
+ * 这是一种便捷函数，内部创建临时 ProbabilityDensityMatcher 实例。
+ * 如需高性能重复匹配，请直接使用 ProbabilityDensityMatcher 类。
+ */
+let _defaultMatcher: ProbabilityDensityMatcher | null = null;
+
+function getDefaultMatcher(): ProbabilityDensityMatcher {
+  if (!_defaultMatcher) {
+    _defaultMatcher = new ProbabilityDensityMatcher();
+  }
+  return _defaultMatcher;
+}
+
+/** 重置默认匹配器（用于测试或配置更新） */
+export function resetDefaultMatcher(): void {
+  _defaultMatcher = null;
+}
+
+/**
+ * 将 VAD 状态映射到 Top-3 概率情绪标签。
+ * 架构不变量 A9: 返回数组长度 ≥ 1 且 ≤ 3，概率和 ≈ 1.0。
+ *
+ * @param state 当前 VAD 状态
+ * @returns MatchResult[] — Top-3 概率结果
+ */
+export function vadToEmotionProbabilities(state: AffectiveState): MatchResult[] {
+  return getDefaultMatcher().match(state);
 }

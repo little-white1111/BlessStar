@@ -48,8 +48,52 @@ fields:
       description: "可用的引导策略列表，影响助手对话回应风格"
       hidden: false
     search_keywords:
-      - "策略"
-      - "引导"
-      - "共情"
-      - "回应风格"
-      - "benevolence"
+    - "策略"
+    - "引导"
+    - "共情"
+    - "回应风格"
+    - "benevolence"
+
+  # ─── VAD 情感平滑（架构不变量 A8） ───
+  - key: personality.smoothing.factor
+    type: F64
+    default: 0.3
+    required: true
+    business_desc: "VAD 情感 EMA 平滑因子。控制情感状态从当前值向目标值的靠近速度。值越小平滑度越高（情感变化越柔和），值越大响应越快（情感变化越直接）。范围 [0.05, 1.0]。"
+    contract:
+      range: [0.05, 1.0]
+      slo_impact: "情感响应平滑度"
+      approval_required: false
+    ui_meta:
+      label: "情感平滑因子"
+      order: 20
+      placeholder: "0.3"
+      description: "值越小情感变化越柔和，值越大情感响应越快"
+      hidden: false
+    search_keywords:
+      - "平滑"
+      - "EMA"
+      - "情感响应"
+      - "smoothing"
+
+  # ─── VAD 情感衰减噪声（架构不变量 A2） ───
+  - key: personality.noise.amplitude
+    type: F64
+    default: 0.02
+    required: true
+    business_desc: "情感衰减中随机漫步噪声的幅度。控制情感自然微小波动的程度。值越大情感越有"活人感"的自然微起伏；值 0 为纯确定性衰减。范围 [0.0, 0.1]。"
+    contract:
+      range: [0.0, 0.1]
+      slo_impact: "情感自然微起伏"
+      approval_required: false
+    ui_meta:
+      label: "情感噪声幅度"
+      order: 21
+      placeholder: "0.02"
+      description: "值越大情感越有自然微起伏感，0 为纯确定性衰减"
+      hidden: false
+    search_keywords:
+      - "噪声"
+      - "随机漫步"
+      - "自然起伏"
+      - "noise"

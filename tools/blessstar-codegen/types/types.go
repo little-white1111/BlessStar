@@ -157,6 +157,7 @@ type BizSystem struct {
 	DomainShards         []DomainShard
 	ConfigLabels         map[string]string
 	AllConfigs           []ConfigField
+	BizRepoPath          string // 业务系统仓库本地路径，用于 go.mod replace 指向
 }
 
 // GoBlessStarType maps BlessStar config types to Go types

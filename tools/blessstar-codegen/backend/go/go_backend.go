@@ -220,6 +220,9 @@ func (g *GoBackend) GenerateBlessStarAdapter(biz *types.BizSystem, domain string
 	adapterName := AdapterTypeName(domain)
 	packageName := "adapter_blessstar"
 
+	// Import path 指向业务系统的 pkg/ports 包（由 architect-pro 管理在业务系统仓库中）
+	portsPkg := biz.BizID + "/pkg/ports"
+
 	// Determine if any config in this domain uses time.Duration return type
 	needsTime := false
 	for _, c := range configs {
@@ -242,7 +245,7 @@ func (g *GoBackend) GenerateBlessStarAdapter(biz *types.BizSystem, domain string
 	if needsTime {
 		b.WriteString("\t\"time\"\n\n")
 	}
-	b.WriteString(fmt.Sprintf("\t\"%s/ports\"\n", biz.BizID))
+	b.WriteString(fmt.Sprintf("\t\"%s\"\n", portsPkg))
 	b.WriteString(")\n\n")
 
 	// Struct definition with 3-stage fallback using ConfigReader
@@ -360,9 +363,9 @@ func (g *GoBackend) GenerateMockAdapter(biz *types.BizSystem, domain string, con
 	b.WriteString(fmt.Sprintf("// 专为单元测试设计 — 固定返回值\n\n"))
 	b.WriteString(fmt.Sprintf("package %s\n\n", packageName))
 	if needsTime {
-		b.WriteString(fmt.Sprintf("import (\n\t\"context\"\n\t\"time\"\n\t\"%s/ports\"\n)\n\n", biz.BizID))
+		b.WriteString(fmt.Sprintf("import (\n\t\"context\"\n\t\"time\"\n\t\"%s/pkg/ports\"\n)\n\n", biz.BizID))
 	} else {
-		b.WriteString(fmt.Sprintf("import (\n\t\"context\"\n\t\"%s/ports\"\n)\n\n", biz.BizID))
+		b.WriteString(fmt.Sprintf("import (\n\t\"context\"\n\t\"%s/pkg/ports\"\n)\n\n", biz.BizID))
 	}
 	b.WriteString(fmt.Sprintf("// %s %s 域配置的 Mock 实现（单元测试用）\n", mockName, domain))
 	b.WriteString(fmt.Sprintf("type %s struct {\n", mockName))
@@ -438,7 +441,7 @@ func (g *GoBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, error
 	b.WriteString(fmt.Sprintf("// 请勿手动修改 — 由 blessstar-codegen 自动生成\n\n"))
 	b.WriteString(fmt.Sprintf("package %s\n\n", packageName))
 	b.WriteString(fmt.Sprintf("import (\n"))
-	b.WriteString(fmt.Sprintf("\t\"%s/ports\"\n", biz.BizID))
+	b.WriteString(fmt.Sprintf("\t\"%s/pkg/ports\"\n", biz.BizID))
 	b.WriteString(fmt.Sprintf("\t\"%s/adapters/blessstar\"\n", biz.BizID))
 	b.WriteString(")\n\n")
 
@@ -481,13 +484,27 @@ func (g *GoBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, error
 }
 
 func (g *GoBackend) GenerateGoMod(biz *types.BizSystem) (*backend.File, error) {
-	content := fmt.Sprintf(`module %s
+	moduleName := fmt.Sprintf("biz-adapters/go/%s", biz.BizID)
 
-go 1.21
+	var content string
+	if biz.BizRepoPath != "" {
+		content = fmt.Sprintf(`module %s
+
+go 1.22
+
+require %s v0.0.0
+
+replace %s => %s
+`, moduleName, biz.BizID, biz.BizID, biz.BizRepoPath)
+	} else {
+		content = fmt.Sprintf(`module %s
+
+go 1.22
 
 // 零外部依赖 — ConfigReader 由业务方自行实现
-// 无外部 SDK 依赖，生成的 adapter 代码仅依赖 Go 标准库和本 module
-`, biz.BizID)
+// 使用 --biz-repo-path 参数设置业务系统仓库路径以便编译
+`, moduleName)
+	}
 
 	return &backend.File{
 		Path:    "go.mod",
@@ -496,114 +513,9 @@ go 1.21
 }
 
 func (g *GoBackend) GenerateConfigReaderFile(biz *types.BizSystem) ([]*backend.File, error) {
-	pkgName := PackageNameFromBiz(biz.BizID)
-
-	// Generate ports/config_reader.go — the ConfigReader interface
-	configReaderContent := fmt.Sprintf(`// Package ports 提供业务系统的配置读取接口。
-// 所有 Port 接口定义在此包中，业务代码仅依赖此包。
-// 请勿手动修改 — 由 blessstar-codegen 自动生成
-package ports
-
-import "context"
-
-// ConfigReader 是配置读取接口，业务方自行选择实现方式。
-// 内置实现包括：CachedReader（秒级轮询缓存）、EnvReader（环境变量）、FileReader（本地文件）等。
-//
-// 实现类通过环境变量 BLESSSTAR_ENDPOINT 获取 Electron 地址（HTTPReader 场景）。
-// 初始化失败时不得阻塞进程，由 adapter 的三阶段降级兜底。
-//
-// Get 返回 interface{} 以便 adapter 进行类型断言（与三阶段降级兼容）。
-// 常见返回类型：int64, bool, string, []string, time.Duration。
-// 业务方也可选择返回 JSON string 并在 adapter 外部自行解析。
-type ConfigReader interface {
-	// Get 读取一个配置值。path 是配置的完整注册路径（如 "/config/%[1]s/auth/jwt/token_expiry_seconds"）。
-	// 返回配置值（可直接类型断言）或 error。
-	Get(ctx context.Context, path string) (interface{}, error)
-}
-`, biz.BizID)
-
-	// Generate provider/cached_reader.go — optional CachedReader decorator
-	cachedReaderContent := fmt.Sprintf(`// Package %[1]s 提供 BlessStar 配置的依赖注入和可选装饰器。
-// 请勿手动修改 — 由 blessstar-codegen 自动生成
-package %[1]s
-
-import (
-	"context"
-	"sync"
-	"time"
-
-	"%[2]s/ports"
-)
-
-// CachedReader 是对 ConfigReader 的缓存包装器（可选装饰器）。
-// 后台协程使用 time.Ticker 定时刷新缓存，实现秒级准实时热更新。
-// 不依赖任何外部库，仅使用 Go 标准库。
-//
-// 使用方式（由 main.go 注入）：
-//
-//	rawReader := httpreader.New()                       // 从环境变量 BLESSSTAR_ENDPOINT 读取地址
-//	cachedReader := provider.NewCachedReader(rawReader, 30*time.Second)
-//	adapters := provider.ProvideBlessStarAdapters(cachedReader)
-type CachedReader struct {
-	inner       ports.ConfigReader
-	cache       sync.Map
-	ticker      *time.Ticker
-	refreshFunc func(ctx context.Context) error
-}
-
-// NewCachedReader 创建 CachedReader 实例。
-// interval 控制缓存的刷新周期（如 30 秒）。
-// 业务方可设置 RefreshFunc 自定义全量刷新逻辑。
-func NewCachedReader(inner ports.ConfigReader, interval time.Duration) *CachedReader {
-	cr := &CachedReader{
-		inner:       inner,
-		ticker:      time.NewTicker(interval),
-		refreshFunc: func(ctx context.Context) error { return nil }, // 默认空操作
-	}
-	go cr.refreshLoop(context.Background())
-	return cr
-}
-
-// RefreshFunc 设置全量刷新回调函数，由业务方自定义需要缓存的配置路径。
-func (c *CachedReader) RefreshFunc(fn func(ctx context.Context) error) *CachedReader {
-	c.refreshFunc = fn
-	return c
-}
-
-// Get 从缓存中读取配置值。若缓存命中直接返回，否则穿透到 inner.ConfigReader。
-func (c *CachedReader) Get(ctx context.Context, path string) (interface{}, error) {
-	if val, ok := c.cache.Load(path); ok {
-		return val, nil
-	}
-	return c.inner.Get(ctx, path)
-}
-
-// refreshLoop 后台协程，定时执行全量刷新。
-func (c *CachedReader) refreshLoop(ctx context.Context) {
-	for range c.ticker.C {
-		if err := c.refreshFunc(ctx); err != nil {
-			// 刷新失败不影响现有缓存，仅跳过本轮
-			continue
-		}
-	}
-}
-
-// Close 停止后台刷新协程。
-func (c *CachedReader) Close() {
-	c.ticker.Stop()
-}
-`, pkgName, biz.BizID)
-
-	return []*backend.File{
-		{
-			Path:    "ports/config_reader.go",
-			Content: configReaderContent,
-		},
-		{
-			Path:    "provider/cached_reader.go",
-			Content: cachedReaderContent,
-		},
-	}, nil
+	// ★ ConfigReader 接口不再由 codegen 生成 — 由 architect-pro 管理到业务系统 pkg/ports/
+	// CachedReader 装饰器也不再由 codegen 生成（业务方手写或引用 biz-adapters/go/readers/）
+	return nil, nil
 }
 
 // sortBizDomains returns sorted domain names from BizSystem

@@ -79,6 +79,7 @@ export class Expresser {
         valence: filteredVAD.valence,
         arousal: filteredVAD.arousal,
         dominance: filteredVAD.dominance,
+        mixedEmotions: inference.emotionUpdate.mixedEmotions,
       },
       catchphrase,
     };
@@ -129,7 +130,7 @@ export class Expresser {
   /**
    * 构建 VAD 同步心跳（架构不变量 A6 — 每秒同步）
    */
-  buildHeartbeat(vad: AffectiveState): EmotionUpdatePayload {
+  buildHeartbeat(vad: AffectiveState, mixedEmotions?: Array<{ emotion: string; probability: number }>): EmotionUpdatePayload {
     return {
       emotion: 'neutral',
       action: 'idle',
@@ -137,6 +138,7 @@ export class Expresser {
       valence: vad.valence,
       arousal: vad.arousal,
       dominance: vad.dominance,
+      mixedEmotions,
     };
   }
 }

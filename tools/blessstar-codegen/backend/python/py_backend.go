@@ -180,8 +180,8 @@ func (p *PythonBackend) GenerateBlessStarAdapter(biz *types.BizSystem, domain st
 	b.WriteString(fmt.Sprintf("# 请勿手动修改 — 由 blessstar-codegen 自动生成\n\n"))
 	b.WriteString("from typing import Any, Dict\n")
 	b.WriteString("from contextlib import AbstractContextManager\n")
-	b.WriteString("from ports.config_reader import ConfigReader\n")
-	b.WriteString(fmt.Sprintf("from ports.%s import %s\n\n\n", PortModuleName(domain), interfaceName))
+	b.WriteString(fmt.Sprintf("from %s.pkg.ports.config_reader import ConfigReader\n", biz.BizID))
+	b.WriteString(fmt.Sprintf("from %s.pkg.ports.%s import %s\n\n\n", biz.BizID, PortModuleName(domain), interfaceName))
 	b.WriteString(fmt.Sprintf("class %s(%s):\n", adapterName, interfaceName))
 	b.WriteString(fmt.Sprintf("    \"\"\"%s域配置的 BlessStar 适配器\n", domain))
 	b.WriteString("    内置三阶段降级: ConfigReader实时查询 → 缓存 → 硬编码默认值\n")
@@ -248,7 +248,7 @@ func (p *PythonBackend) GenerateMockAdapter(biz *types.BizSystem, domain string,
 	b.WriteString(fmt.Sprintf("# 专为单元测试设计 — 固定返回值\n\n"))
 	b.WriteString("from typing import Callable\n")
 	b.WriteString("from contextlib import AbstractContextManager\n")
-	b.WriteString(fmt.Sprintf("from ports.%s import %s\n\n\n", PortModuleName(domain), interfaceName))
+	b.WriteString(fmt.Sprintf("from %s.pkg.ports.%s import %s\n\n\n", biz.BizID, PortModuleName(domain), interfaceName))
 	b.WriteString(fmt.Sprintf("class %s(%s):\n", mockName, interfaceName))
 	b.WriteString(fmt.Sprintf("    \"\"\"%s域配置的 Mock 实现（单元测试用）\"\"\"\n\n", domain))
 	b.WriteString("    def __init__(self) -> None:\n")
@@ -292,7 +292,7 @@ func (p *PythonBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, e
 	b.WriteString(fmt.Sprintf("# 业务系统: %s (%s)\n", biz.DisplayName, biz.BizID))
 	b.WriteString(fmt.Sprintf("# 请勿手动修改 — 由 blessstar-codegen 自动生成\n\n"))
 	b.WriteString("from dataclasses import dataclass\n")
-	b.WriteString("from ports.config_reader import ConfigReader\n")
+	b.WriteString(fmt.Sprintf("from %s.pkg.ports.config_reader import ConfigReader\n", biz.BizID))
 	b.WriteString("from adapters import blessstar as adapter_blessstar\n")
 	sortedDomains := sortBizDomains(biz)
 	for _, d := range sortedDomains {
@@ -302,7 +302,7 @@ func (p *PythonBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, e
 		}
 		portFile := PortModuleName(d)
 		interfaceName := PortInterfaceName(d)
-		b.WriteString(fmt.Sprintf("from ports.%s import %s\n", portFile, interfaceName))
+		b.WriteString(fmt.Sprintf("from %s.pkg.ports.%s import %s\n", biz.BizID, portFile, interfaceName))
 	}
 	b.WriteString("\n\n")
 

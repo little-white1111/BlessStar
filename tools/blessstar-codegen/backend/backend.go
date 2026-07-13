@@ -23,9 +23,6 @@ type LanguageBackend interface {
 	// CommentPrefix returns the single-line comment prefix for the language (e.g., "//", "#")
 	CommentPrefix() string
 
-	// GeneratePortInterface generates the port interface file for a domain
-	GeneratePortInterface(biz *types.BizSystem, domain string, configs []types.ConfigField) (*File, error)
-
 	// GenerateBlessStarAdapter generates the BlessStar adapter implementation for a domain
 	GenerateBlessStarAdapter(biz *types.BizSystem, domain string, configs []types.ConfigField) (*File, error)
 

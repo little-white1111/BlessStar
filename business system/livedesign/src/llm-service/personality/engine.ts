@@ -16,12 +16,15 @@
  */
 
 import { AffectiveState, BASELINE_STATE, emotionToVAD } from './affective';
-import { PersonalityTraits, DEFAULT_TRAITS, constrainDelta } from './traits';
+import { PersonalityTraits, DEFAULT_TRAITS, DEFAULT_BIG_FIVE, constrainDelta, modulateFull } from './traits';
+import type { BigFiveTraits } from './traits';
 import { EmotionDecay } from './decay';
 
 export type { AffectiveState } from './affective';
-export type { PersonalityTraits } from './traits';
-export { BASELINE_STATE, DEFAULT_TRAITS } from './affective';
+export type { PersonalityTraits, BigFiveTraits } from './traits';
+export { DEFAULT_BIG_FIVE } from './traits';
+export { BASELINE_STATE } from './affective';
+export { DEFAULT_TRAITS } from './traits';
 
 /** 情感变更事件类型 */
 export type AffectiveEventType = 'user_sad' | 'user_happy' | 'user_angry' | 'user_anxious' | 'tool_success' | 'tool_failure' | 'llm_response';
@@ -43,6 +46,8 @@ export interface PersonalityConfig {
   decayRate: number;
   /** VAD 平滑因子 (0.05~1.0)，默认 0.3。值越小平滑度越高。架构不变量 A8 */
   smoothingFactor: number;
+  /** 大五人格特质（可选字段，架构不变量 A10） */
+  bigFive?: BigFiveTraits;
 }
 
 /** 默认配置 */
@@ -77,6 +82,8 @@ export class PersonalityEngine {
   /** EMA 平滑因子 */
   private smoothingFactor: number;
   private traits: PersonalityTraits;
+  /** 大五人格特质（架构不变量 A10） */
+  private bigFive: BigFiveTraits;
   private decay: EmotionDecay;
   private listeners: Set<AffectiveListener> = new Set();
   /** 平滑定时器（每 100ms 执行一次 smoothTick） */
@@ -91,6 +98,7 @@ export class PersonalityEngine {
       playfulness: cfg.playfulness,
       empathy: cfg.empathy,
     };
+    this.bigFive = { ...DEFAULT_BIG_FIVE, ...cfg.bigFive };
     this.decay = new EmotionDecay(cfg.decayIntervalMs, cfg.decayRate);
 
     // 架构不变量 A2: 情感衰减不可跳过 — 启动定时衰减
@@ -140,7 +148,7 @@ export class PersonalityEngine {
         arousal: (emoVAD.arousal - BASELINE_STATE.arousal) * event.intensity,
         dominance: (emoVAD.dominance - BASELINE_STATE.dominance) * event.intensity,
       };
-      const delta = constrainDelta(rawDelta, this.traits);
+      const delta = modulateFull(rawDelta, this.traits, this.bigFive);
       this.target = this.applyDeltaToTarget(delta);
     } else {
       // 基于事件类型映射
@@ -152,7 +160,7 @@ export class PersonalityEngine {
           arousal: rawDelta.arousal * event.intensity,
           dominance: rawDelta.dominance * event.intensity,
         };
-        const delta = constrainDelta(scaled, this.traits);
+        const delta = modulateFull(scaled, this.traits, this.bigFive);
         this.target = this.applyDeltaToTarget(delta);
       }
     }

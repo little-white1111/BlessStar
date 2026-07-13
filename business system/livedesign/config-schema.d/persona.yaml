@@ -183,3 +183,109 @@ fields:
       - "变化率"
       - "速度"
       - "稳定性"
+
+  # ─── 大五人格特质（VAD 调制，架构不变量 A10） ───
+  - key: personality.traits.extraversion
+    type: F64
+    default: 0.5
+    required: true
+    business_desc: "大五人格外向性。控制 V（效价）基线偏移和正方向增益。值越高助手情感倾向越积极正向。范围 [0.0, 1.0]。"
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "角色性格一致性"
+      approval_required: false
+    ui_meta:
+      label: "外向性"
+      order: 22
+      placeholder: "0.5"
+      description: "值越高情感倾向越积极正向"
+      hidden: false
+    search_keywords:
+      - "大五人格"
+      - "外向性"
+      - "V基线"
+      - "extraversion"
+
+  - key: personality.traits.neuroticism
+    type: F64
+    default: 0.3
+    required: true
+    business_desc: "大五人格神经质。控制情感波动幅度放大。值越高助手情感波动越剧烈，对刺激的反应越敏感。范围 [0.0, 1.0]。"
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "角色性格一致性"
+      approval_required: false
+    ui_meta:
+      label: "神经质"
+      order: 23
+      placeholder: "0.3"
+      description: "值越高情感波动越剧烈"
+      hidden: false
+    search_keywords:
+      - "大五人格"
+      - "神经质"
+      - "敏感度"
+      - "neuroticism"
+
+  - key: personality.traits.agreeableness
+    type: F64
+    default: 0.7
+    required: true
+    business_desc: "大五人格宜人性。控制负面情感 delta 的衰减程度。值越高助手越不容易被负面情绪影响（负面 delta 衰减越多）。范围 [0.0, 1.0]。"
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "角色性格一致性"
+      approval_required: false
+    ui_meta:
+      label: "宜人性"
+      order: 24
+      placeholder: "0.7"
+      description: "值越高越不容易被负面情绪影响"
+      hidden: false
+    search_keywords:
+      - "大五人格"
+      - "宜人性"
+      - "负面衰减"
+      - "agreeableness"
+
+  - key: personality.traits.openness
+    type: F64
+    default: 0.5
+    required: true
+    business_desc: "大五人格开放性。控制 A（唤醒度）基线偏移和变化增强。值越高助手情感唤醒度越活跃，对新鲜刺激的情绪反应越强。范围 [0.0, 1.0]。"
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "角色性格一致性"
+      approval_required: false
+    ui_meta:
+      label: "开放性"
+      order: 25
+      placeholder: "0.5"
+      description: "值越高情感唤醒度越活跃"
+      hidden: false
+    search_keywords:
+      - "大五人格"
+      - "开放性"
+      - "A基线"
+      - "openness"
+
+  - key: personality.traits.conscientiousness
+    type: F64
+    default: 0.6
+    required: true
+    business_desc: "大五人格尽责性。控制 D（支配度）变化的抑制程度。值越高助手情感支配度越稳定不易波动。范围 [0.0, 1.0]。"
+    contract:
+      range: [0.0, 1.0]
+      slo_impact: "角色性格一致性"
+      approval_required: false
+    ui_meta:
+      label: "尽责性"
+      order: 26
+      placeholder: "0.6"
+      description: "值越高情感支配度越稳定"
+      hidden: false
+    search_keywords:
+      - "大五人格"
+      - "尽责性"
+      - "D稳定性"
+      - "conscientiousness"

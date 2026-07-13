@@ -255,8 +255,8 @@ func (j *JavaBackend) GenerateBlessStarAdapter(biz *types.BizSystem, domain stri
 	// Imports
 	b.WriteString("import java.util.Map;\n")
 	b.WriteString("import java.util.concurrent.ConcurrentHashMap;\n")
-	b.WriteString(fmt.Sprintf("import %s.ports.ConfigReader;\n", pkg))
-	b.WriteString(fmt.Sprintf("import %s.ports.%s;\n", pkg, interfaceName))
+	b.WriteString(fmt.Sprintf("import %s.pkg.ports.ConfigReader;\n", pkg))
+	b.WriteString(fmt.Sprintf("import %s.pkg.ports.%s;\n", pkg, interfaceName))
 	b.WriteString("\n")
 
 	// Class Javadoc
@@ -383,8 +383,7 @@ func (j *JavaBackend) GenerateMockAdapter(biz *types.BizSystem, domain string, c
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("package %s.adapter.mock;\n\n", pkg))
 
-	b.WriteString(fmt.Sprintf("import %s.ports.%s;\n", pkg, interfaceName))
-	b.WriteString("\n")
+	b.WriteString(fmt.Sprintf("import %s.pkg.ports.%s;\n", pkg, interfaceName))
 
 	// Class Javadoc
 	b.WriteString("/**\n")
@@ -467,7 +466,7 @@ func (j *JavaBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, err
 	b.WriteString(fmt.Sprintf("package %s.provider;\n\n", pkg))
 
 	// Imports
-	b.WriteString(fmt.Sprintf("import %s.ports.ConfigReader;\n", pkg))
+	b.WriteString(fmt.Sprintf("import %s.pkg.ports.ConfigReader;\n", pkg))
 	sortedDomains := sortBizDomains(biz)
 	for _, d := range sortedDomains {
 		configs := biz.ConfigsByDomain[d]
@@ -475,7 +474,7 @@ func (j *JavaBackend) GenerateProvider(biz *types.BizSystem) (*backend.File, err
 			continue
 		}
 		portName := PortInterfaceName(d)
-		b.WriteString(fmt.Sprintf("import %s.ports.%s;\n", pkg, portName))
+		b.WriteString(fmt.Sprintf("import %s.pkg.ports.%s;\n", pkg, portName))
 	}
 	b.WriteString("\n")
 
@@ -614,120 +613,9 @@ func (j *JavaBackend) GenerateGoMod(biz *types.BizSystem) (*backend.File, error)
 	}, nil
 }
 
-// GenerateConfigReaderFile generates ConfigReader interface and CachedReader class
+// GenerateConfigReaderFile — 不再由 codegen 生成，由 architect-pro 管理到业务系统 pkg/ports/
 func (j *JavaBackend) GenerateConfigReaderFile(biz *types.BizSystem) ([]*backend.File, error) {
-	pkg := JavaPackageFromBiz(biz.BizID)
-
-	// Generate ports/ConfigReader.java
-	configReaderContent := fmt.Sprintf(`package %s.ports;
-
-/**
- * 配置读取接口，业务方自行选择实现方式。
- * 内置实现包括：CachedReader（秒级轮询缓存）、EnvReader（环境变量）、FileReader（本地文件）等。
- *
- * 实现类通过环境变量 BLESSSTAR_ENDPOINT 获取 Electron 地址（HTTPReader 场景）。
- * 初始化失败时不得阻塞进程，由 adapter 的三阶段降级兜底。
- *
- * get 返回 Object 以便 adapter 进行类型断言（与三阶段降级兼容）。
- * 常见返回类型：Long, Boolean, String, java.util.List&lt;String&gt;。
- * 业务方也可选择返回 JSON string 并在 adapter 外部自行解析。
- * 请勿手动修改 — 由 blessstar-codegen 自动生成
- */
-public interface ConfigReader {
-    /**
-     * 读取一个配置值。
-     * @param path 配置的完整注册路径（如 "/config/%s/auth/jwt/token_expiry_seconds"）
-     * @return 配置值（可直接类型断言）或 null
-     */
-    Object get(String path);
-}
-`, pkg, biz.BizID)
-
-	// Generate provider/CachedReader.java
-	cachedReaderContent := fmt.Sprintf(`package %s.provider;
-
-import java.util.Map;
-import java.util.concurrent.*;
-import java.util.function.Function;
-
-import %s.ports.ConfigReader;
-
-/**
- * 对 ConfigReader 的缓存包装器（可选装饰器）。
- * 后台线程使用 ScheduledExecutorService 定时刷新缓存，实现秒级准实时热更新。
- * 不依赖任何外部库，仅使用 JDK 标准库。
- *
- * 使用方式（由 main 注入）：
- * <pre>
- *     ConfigReader rawReader = new HttpReader();  // 从环境变量 BLESSSTAR_ENDPOINT 读取地址
- *     CachedReader cachedReader = new CachedReader(rawReader, 30, TimeUnit.SECONDS);
- *     Adapters adapters = BlessstarProvider.provideAdapters(cachedReader);
- * </pre>
- */
-public class CachedReader implements ConfigReader {
-    private final ConfigReader inner;
-    private final Map<String, Object> cache = new ConcurrentHashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private Runnable refreshFunc = () -> {};
-
-    /**
-     * 创建 CachedReader 实例。
-     * @param inner     底层 ConfigReader 实现
-     * @param interval  缓存刷新周期
-     * @param unit      时间单位
-     */
-    public CachedReader(ConfigReader inner, long interval, TimeUnit unit) {
-        this.inner = inner;
-        scheduler.scheduleAtFixedRate(this::refreshLoop, interval, interval, unit);
-    }
-
-    /**
-     * 设置全量刷新回调函数，由业务方自定义需要缓存的配置路径。
-     * @param fn 刷新回调
-     * @return 当前 CachedReader 实例
-     */
-    public CachedReader withRefreshFunc(Runnable fn) {
-        this.refreshFunc = fn;
-        return this;
-    }
-
-    @Override
-    public Object get(String path) {
-        Object val = cache.get(path);
-        if (val != null) {
-            return val;
-        }
-        return inner.get(path);
-    }
-
-    private void refreshLoop() {
-        try {
-            refreshFunc.run();
-        } catch (Exception e) {
-            // 刷新失败不影响现有缓存，仅跳过本轮
-        }
-    }
-
-    /**
-     * 停止后台刷新线程。
-     */
-    public void shutdown() {
-        scheduler.shutdown();
-    }
-}
-`, pkg, pkg)
-
-	dir := javaSourcePath(biz.BizID)
-	return []*backend.File{
-		{
-			Path:    fmt.Sprintf("%s/ports/ConfigReader.java", dir),
-			Content: configReaderContent,
-		},
-		{
-			Path:    fmt.Sprintf("%s/provider/CachedReader.java", dir),
-			Content: cachedReaderContent,
-		},
-	}, nil
+	return nil, nil
 }
 
 // sortBizDomains returns sorted domain names from BizSystem
