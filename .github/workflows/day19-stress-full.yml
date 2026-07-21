@@ -76,7 +76,18 @@ jobs:
           BUILD_DIR: ${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_full') }}
           BS_DAY19_PROFILE: ${{ github.event_name == 'workflow_call' && inputs.profile || (github.event.inputs.profile || 'full') }}
           BS_DAY19_STRESS_OUT: docs/day19_stress_full_latest.csv
-        run: bash tools/scripts/perf/run_day19_stress_full_linux.sh
+        run: |
+          BINARY="${BUILD_DIR}/tests/adapter/bs_test_day19_stress_reload_loop"
+          if [ ! -f "$BINARY" ]; then
+            BINARY=$(find "${BUILD_DIR}" -name "bs_test_day19_stress_reload_loop" -type f 2>/dev/null | head -1)
+          fi
+          if [ -z "$BINARY" ]; then
+            echo "ERROR: bs_test_day19_stress_reload_loop not found in ${BUILD_DIR}"
+            exit 1
+          fi
+          mkdir -p docs
+          echo "Running: $BINARY --profile=${BS_DAY19_PROFILE}"
+          "$BINARY" --profile="${BS_DAY19_PROFILE}"
 
       - name: Upload full run artifacts
         uses: actions/upload-artifact@v4

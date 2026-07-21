@@ -53,8 +53,15 @@ jobs:
           BS_DAY19_PROFILE: ${{ github.event_name == 'workflow_call' && inputs.profile || (github.event.inputs.profile || 'smoke_fail') }}
           BS_BUILD_DIR: ${{ github.event_name == 'workflow_call' && inputs.build_dir || (github.event.inputs.build_dir || 'build_day19_stress_fail') }}
         run: |
-          powershell -ExecutionPolicy Bypass -File tools/scripts/perf/run_day19_stress_smoke_fail.ps1 `
-            -BuildDir $env:BS_BUILD_DIR -Config Release -Profile $env:BS_DAY19_PROFILE
+          $binary = Join-Path $env:BS_BUILD_DIR "tests\adapter\Release\bs_test_day19_stress_reload_loop.exe"
+          if (-not (Test-Path $binary)) {
+            $binary = Get-ChildItem -Path $env:BS_BUILD_DIR -Recurse -Filter "bs_test_day19_stress_reload_loop.exe" | Select-Object -First 1 -ExpandProperty FullName
+          }
+          if (-not $binary) { throw "Test binary not found in $env:BS_BUILD_DIR" }
+          mkdir -Force docs > $null
+          Write-Host "Running: $binary --profile $env:BS_DAY19_PROFILE"
+          & $binary --profile $env:BS_DAY19_PROFILE
+          if ($LASTEXITCODE -ne 0) { throw "Stress test failed with exit code $LASTEXITCODE" }
 
       - name: Upload smoke_fail artifacts
         uses: actions/upload-artifact@v4

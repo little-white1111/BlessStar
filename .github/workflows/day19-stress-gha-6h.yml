@@ -55,7 +55,18 @@ jobs:
           BS_DAY19_PROFILE: ${{ github.event_name == 'workflow_call' && inputs.profile || (github.event.inputs.profile || 'gha_6h') }}
           BS_DAY19_STRESS_OUT: docs/day19_stress_gha_6h_latest.csv
           BS_DAY19_STRESS_JSON: docs/day19_stress_gha_6h_latest.json
-        run: bash tools/scripts/perf/run_day19_stress_gha_6h_linux.sh
+        run: |
+          BINARY="${BUILD_DIR}/tests/adapter/bs_test_day19_stress_reload_loop"
+          if [ ! -f "$BINARY" ]; then
+            BINARY=$(find "${BUILD_DIR}" -name "bs_test_day19_stress_reload_loop" -type f 2>/dev/null | head -1)
+          fi
+          if [ -z "$BINARY" ]; then
+            echo "ERROR: bs_test_day19_stress_reload_loop not found in ${BUILD_DIR}"
+            exit 1
+          fi
+          mkdir -p docs
+          echo "Running: $BINARY --profile=${BS_DAY19_PROFILE}"
+          "$BINARY" --profile="${BS_DAY19_PROFILE}"
 
       - name: Upload gha_6h artifacts
         uses: actions/upload-artifact@v4
