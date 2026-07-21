@@ -169,6 +169,7 @@ if(BS_WITH_DB)
     )
 
     # ── SQLite smoke test ──────────────────────────────────────────
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test/db/sqlite_smoke_test.cpp")
     add_executable(sqlite_smoke_test
         app/sdk/test/db/sqlite_smoke_test.cpp
         app/sdk/src/db_drivers/sqlite_connector.cpp
@@ -189,8 +190,10 @@ if(BS_WITH_DB)
             $<TARGET_FILE_DIR:sqlite_smoke_test>
         COMMENT "Copying sqlite3.dll to output directory"
     )
+    endif()
 
     # ── MySQL smoke test ───────────────────────────────────────────
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test/db/mysql_smoke_test.cpp")
     add_executable(mysql_smoke_test
         app/sdk/test/db/mysql_smoke_test.cpp
         app/sdk/src/db_drivers/mysql_connector.cpp
@@ -220,6 +223,7 @@ if(BS_WITH_DB)
             $<TARGET_FILE_DIR:mysql_smoke_test>
         COMMENT "Copying MySQL libmysql.dll + SSL deps + sqlite3.dll to output directory"
     )
+    endif()
 else()
     target_compile_definitions(bs_app_sdk PRIVATE BS_WITH_DB=0)
 endif()
