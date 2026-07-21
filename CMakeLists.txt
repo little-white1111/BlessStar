@@ -43,16 +43,20 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/src/agent_indexer/includ
 option(BS_WITH_DB "Enable database integration features" ON)
 
 # ── Imported libraries ──────────────────────────────────────────────
-add_library(sqlite3_lib STATIC IMPORTED)
-set_target_properties(sqlite3_lib PROPERTIES
-    IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.lib"
-)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.lib")
+  add_library(sqlite3_lib STATIC IMPORTED)
+  set_target_properties(sqlite3_lib PROPERTIES
+      IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.lib"
+  )
+endif()
 
-add_library(mysql_dll SHARED IMPORTED)
-set_target_properties(mysql_dll PROPERTIES
-    IMPORTED_LOCATION "C:/Program Files/MySQL/MySQL Server 9.7/lib/libmysql.dll"
-    IMPORTED_IMPLIB   "C:/Program Files/MySQL/MySQL Server 9.7/lib/libmysql.lib"
-)
+if(EXISTS "C:/Program Files/MySQL/MySQL Server 9.7/lib/libmysql.dll")
+  add_library(mysql_dll SHARED IMPORTED)
+  set_target_properties(mysql_dll PROPERTIES
+      IMPORTED_LOCATION "C:/Program Files/MySQL/MySQL Server 9.7/lib/libmysql.dll"
+      IMPORTED_IMPLIB   "C:/Program Files/MySQL/MySQL Server 9.7/lib/libmysql.lib"
+  )
+endif()
 
 set(SQLITE3_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/sqlite3")
 set(MYSQL_INCLUDE_DIR    "C:/Program Files/MySQL/MySQL Server 9.7/include")
@@ -161,7 +165,13 @@ if(BS_WITH_DB)
         ${MYSQL_INCLUDE_DIR}
     )
 
-    target_link_libraries(bs_app_sdk PRIVATE bs_db_core bs_db_mgmt sqlite3_lib mysql_dll)
+    target_link_libraries(bs_app_sdk PRIVATE bs_db_core bs_db_mgmt)
+    if(TARGET sqlite3_lib)
+      target_link_libraries(bs_app_sdk PRIVATE sqlite3_lib)
+    endif()
+    if(TARGET mysql_dll)
+      target_link_libraries(bs_app_sdk PRIVATE mysql_dll)
+    endif()
 
     target_sources(bs_app_sdk PRIVATE
         app/sdk/src/db_drivers/sqlite_connector.cpp

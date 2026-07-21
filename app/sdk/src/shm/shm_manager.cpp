@@ -185,7 +185,7 @@ void shm_manager::detach() {
         if (!CloseHandle(reinterpret_cast<HANDLE>(backing_fd_))) set_error("CloseHandle failed");
 #else
         munmap(layout_, total_size_);
-        close(reinterpret_cast<int>(backing_fd_));
+        close(static_cast<int>(reinterpret_cast<intptr_t>(backing_fd_)));
 #endif
         layout_ = nullptr;
         backing_fd_ = nullptr;

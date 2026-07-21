@@ -330,7 +330,9 @@ target_include_directories(bs_test_query_executor
   ${CMAKE_SOURCE_DIR}/app/bs_db_core/include
   ${CMAKE_SOURCE_DIR}/app/bs_db_mgmt/include
 )
-target_link_libraries(bs_test_query_executor PRIVATE sqlite3_lib)
+if(TARGET sqlite3_lib)
+  target_link_libraries(bs_test_query_executor PRIVATE sqlite3_lib)
+endif()
 set_tests_properties(bs_test_query_executor
   PROPERTIES LABELS "unit;app;day38;regression" TIMEOUT 120
                    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -847,9 +849,11 @@ set_tests_properties(bs_test_day19_stress_reload_loop
                    RESOURCE_LOCK "attach_integration"
 )
 if(WIN32)
-  target_sources(bs_test_day19_stress_reload_loop PRIVATE
-    ${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp
-  )
+  if(EXISTS "${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp")
+    target_sources(bs_test_day19_stress_reload_loop PRIVATE
+      ${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp
+    )
+  endif()
 endif()
 
 # smoke_fail_ci (~25s); 900s negative run uses day19-stress-smoke-fail workflow.
