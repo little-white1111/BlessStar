@@ -6,10 +6,14 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#else
+#elif defined(__linux__)
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/eventfd.h>
+#else
+/* macOS and other Unix: eventfd not available */
+#include <unistd.h>
+#include <fcntl.h>
 #endif
 
 namespace bs {
@@ -18,14 +22,16 @@ namespace sdk {
 namespace shm {
 
 eventfd_notifier::eventfd_notifier() {
-#ifdef _WIN32
-    // Windows: eventfd not available, stub with -1
+#if defined(_WIN32) || defined(__APPLE__)
+    // Windows / macOS: eventfd not available, stub with -1
     efd_ = -1;
-#else
+#elif defined(__linux__)
     efd_ = eventfd(0, EFD_SEMAPHORE | EFD_CLOEXEC);
     if (efd_ == -1) {
         throw std::system_error(errno, std::generic_category(), "eventfd");
     }
+#else
+    efd_ = -1;
 #endif
 }
 

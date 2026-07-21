@@ -97,6 +97,9 @@ jobs:
           exit "${failed}"
 
       # AGENTS gate 1: CTest (below). Gate 4: warnings as errors via CMake option.
+      - name: Install CMake >= 4.3
+        if: runner.os != 'Windows'
+        run: pip install cmake
       - name: Configure (Unix - via build.py)
         if: runner.os != 'Windows'
         run: |

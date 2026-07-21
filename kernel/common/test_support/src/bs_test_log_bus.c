@@ -13,7 +13,7 @@ typedef struct TestLogMemCtx
 #ifdef _WIN32
 static __declspec(thread) TestLogMemCtx g_test_log_mem;
 #else
-static _Thread_local TestLogMemCtx g_test_log_mem;
+static __thread TestLogMemCtx g_test_log_mem;
 #endif
 
 static void test_memory_emit(uint16_t domain_id, BsLogLevel level, const char* fmt, va_list ap)

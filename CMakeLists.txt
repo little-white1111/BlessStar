@@ -173,10 +173,12 @@ if(BS_WITH_DB)
       target_link_libraries(bs_app_sdk PRIVATE mysql_dll)
     endif()
 
-    target_sources(bs_app_sdk PRIVATE
-        app/sdk/src/db_drivers/sqlite_connector.cpp
-        app/sdk/src/db_drivers/mysql_connector.cpp
-    )
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/src/db_drivers/sqlite_connector.cpp")
+      target_sources(bs_app_sdk PRIVATE app/sdk/src/db_drivers/sqlite_connector.cpp)
+    endif()
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/src/db_drivers/mysql_connector.cpp")
+      target_sources(bs_app_sdk PRIVATE app/sdk/src/db_drivers/mysql_connector.cpp)
+    endif()
 
     # ── SQLite smoke test ──────────────────────────────────────────
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test/db/sqlite_smoke_test.cpp")

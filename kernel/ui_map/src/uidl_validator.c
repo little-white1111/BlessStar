@@ -427,7 +427,7 @@ int bs_uidl_validate(const char* json, size_t len,
     jdict_destroy(&root);
     free(p.str_val);
 
-finish:
+finish:;
     /* Convert error list to output */
     if (errs.count == 0)
     {
