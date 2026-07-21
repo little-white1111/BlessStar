@@ -1,7 +1,8 @@
 #include "bs/adapter/business/registry.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -21,37 +22,50 @@
 
 /* ─── 全局注册表 ───────────────────────────────────────────────────── */
 
-typedef struct biz_entry {
+typedef struct biz_entry
+{
     char           biz_id[64];
-    bs_manifest_t  manifest;          /* copy of original manifest */
+    bs_manifest_t  manifest; /* copy of original manifest */
     BsNormalizerFn normalizer_fn;
-    int            has_gate;          /* C++ side only; placeholder */
+    int            has_gate; /* C++ side only; placeholder */
 } biz_entry_t;
 
 #define MAX_BIZ 64
 
-static biz_entry_t  g_entries[MAX_BIZ];
-static size_t       g_count = 0;
-static MUTEX_TYPE   g_mutex;
-static int          g_mutex_inited = 0;
+static biz_entry_t g_entries[MAX_BIZ];
+static size_t      g_count = 0;
+static MUTEX_TYPE  g_mutex;
+static int         g_mutex_inited = 0;
 
 /* ─── 内部锁辅助 ────────────────────────────────────────────────────── */
 
-static void ensure_lock(void) {
-    if (!g_mutex_inited) {
+static void ensure_lock(void)
+{
+    if (!g_mutex_inited)
+    {
         MUTEX_INIT(g_mutex);
         g_mutex_inited = 1;
     }
 }
 
-static void lock(void) { ensure_lock(); MUTEX_LOCK(g_mutex); }
-static void unlock(void) { MUTEX_UNLOCK(g_mutex); }
+static void lock(void)
+{
+    ensure_lock();
+    MUTEX_LOCK(g_mutex);
+}
+static void unlock(void)
+{
+    MUTEX_UNLOCK(g_mutex);
+}
 
 /* ─── 查找辅助 ─────────────────────────────────────────────────────── */
 
-static biz_entry_t* find_entry_locked(const char* biz_id) {
-    if (!biz_id) return NULL;
-    for (size_t i = 0; i < g_count; i++) {
+static biz_entry_t* find_entry_locked(const char* biz_id)
+{
+    if (!biz_id)
+        return NULL;
+    for (size_t i = 0; i < g_count; i++)
+    {
         if (strcmp(g_entries[i].biz_id, biz_id) == 0)
             return &g_entries[i];
     }
@@ -60,12 +74,22 @@ static biz_entry_t* find_entry_locked(const char* biz_id) {
 
 /* ─── 公有 API ─────────────────────────────────────────────────────── */
 
-int bs_biz_registry_register(const bs_manifest_t* manifest) {
-    if (!manifest || !manifest->biz_id[0]) return -2;
+int bs_biz_registry_register(const bs_manifest_t* manifest)
+{
+    if (!manifest || !manifest->biz_id[0])
+        return -2;
 
     lock();
-    if (find_entry_locked(manifest->biz_id)) { unlock(); return -1; }
-    if (g_count >= MAX_BIZ) { unlock(); return -2; }
+    if (find_entry_locked(manifest->biz_id))
+    {
+        unlock();
+        return -1;
+    }
+    if (g_count >= MAX_BIZ)
+    {
+        unlock();
+        return -2;
+    }
 
     biz_entry_t* entry = &g_entries[g_count];
     memset(entry, 0, sizeof(biz_entry_t));
@@ -73,35 +97,48 @@ int bs_biz_registry_register(const bs_manifest_t* manifest) {
     memcpy(&entry->manifest, manifest, sizeof(bs_manifest_t));
     strncpy(entry->biz_id, manifest->biz_id, sizeof(entry->biz_id) - 1);
     entry->biz_id[sizeof(entry->biz_id) - 1] = '\0';
-    entry->normalizer_fn = NULL;
-    entry->has_gate = 0;
+    entry->normalizer_fn                     = NULL;
+    entry->has_gate                          = 0;
 
     g_count++;
     unlock();
     return 0;
 }
 
-const bs_manifest_t* bs_biz_registry_lookup(const char* biz_id) {
+const bs_manifest_t* bs_biz_registry_lookup(const char* biz_id)
+{
     lock();
-    biz_entry_t* entry = find_entry_locked(biz_id);
+    biz_entry_t*         entry  = find_entry_locked(biz_id);
     const bs_manifest_t* result = entry ? &entry->manifest : NULL;
     unlock();
     return result;
 }
 
-size_t bs_biz_registry_list(char*** out_ids) {
+size_t bs_biz_registry_list(char*** out_ids)
+{
     lock();
     size_t count = g_count;
-    if (!out_ids) { unlock(); return count; }
+    if (!out_ids)
+    {
+        unlock();
+        return count;
+    }
 
     *out_ids = (char**)calloc(count, sizeof(char*));
-    if (!*out_ids) { unlock(); return 0; }
+    if (!*out_ids)
+    {
+        unlock();
+        return 0;
+    }
 
     size_t i;
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < count; i++)
+    {
         (*out_ids)[i] = strdup(g_entries[i].biz_id);
-        if (!(*out_ids)[i]) {
-            for (size_t j = 0; j < i; j++) free((*out_ids)[j]);
+        if (!(*out_ids)[i])
+        {
+            for (size_t j = 0; j < i; j++)
+                free((*out_ids)[j]);
             free(*out_ids);
             *out_ids = NULL;
             unlock();
@@ -112,43 +149,57 @@ size_t bs_biz_registry_list(char*** out_ids) {
     return count;
 }
 
-void bs_biz_registry_free_list(char** ids, size_t count) {
-    if (!ids) return;
-    for (size_t i = 0; i < count; i++) free(ids[i]);
+void bs_biz_registry_free_list(char** ids, size_t count)
+{
+    if (!ids)
+        return;
+    for (size_t i = 0; i < count; i++)
+        free(ids[i]);
     free(ids);
 }
 
-int bs_biz_registry_register_normalizer(const char* biz_id, BsNormalizerFn fn) {
+int bs_biz_registry_register_normalizer(const char* biz_id, BsNormalizerFn fn)
+{
     lock();
     biz_entry_t* entry = find_entry_locked(biz_id);
-    if (!entry) { unlock(); return -1; }
+    if (!entry)
+    {
+        unlock();
+        return -1;
+    }
     entry->normalizer_fn = fn;
     unlock();
     return 0;
 }
 
 #ifdef __cplusplus
-int bs_biz_registry_register_gate(const char* biz_id,
-                                   const struct CustomGateEntry* gate) {
+int bs_biz_registry_register_gate(const char* biz_id, const struct CustomGateEntry* gate)
+{
     (void)gate;
     lock();
     biz_entry_t* entry = find_entry_locked(biz_id);
-    if (!entry) { unlock(); return -1; }
+    if (!entry)
+    {
+        unlock();
+        return -1;
+    }
     entry->has_gate = 1;
     unlock();
     return 0;
 }
 #endif
 
-BsNormalizerFn bs_biz_get_normalizer(const char* biz_id) {
+BsNormalizerFn bs_biz_get_normalizer(const char* biz_id)
+{
     lock();
-    biz_entry_t* entry = find_entry_locked(biz_id);
-    BsNormalizerFn fn = entry ? entry->normalizer_fn : NULL;
+    biz_entry_t*   entry = find_entry_locked(biz_id);
+    BsNormalizerFn fn    = entry ? entry->normalizer_fn : NULL;
     unlock();
     return fn;
 }
 
-size_t bs_biz_registry_count(void) {
+size_t bs_biz_registry_count(void)
+{
     lock();
     size_t count = g_count;
     unlock();

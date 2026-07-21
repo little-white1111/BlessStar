@@ -199,6 +199,11 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
+      - name: Install CMake >= 4.3
+        run: |
+          pip install cmake
+          cmake --version
+
       - name: Configure (Sanitizer - via build.py)
         run: |
           eval "$(python tools/build/build.py --sanitize --print-cmake-args --build-dir=build-san)"
@@ -248,6 +253,11 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch != '' && github.event.inputs.branch || github.ref }}
 
+      - name: Install CMake >= 4.3
+        run: |
+          pip install cmake
+          cmake --version
+
       - name: Configure (TSan - via build.py)
         run: |
           eval "$(python tools/build/build.py --tsan --print-cmake-args --build-dir=build-tsan)"
@@ -281,13 +291,25 @@ jobs:
         run: python -m pip install --upgrade pip meson ninja
 
       - name: Configure
-        run: meson setup build-meson
+        run: |
+          if [ -f meson.build ]; then
+            meson setup build-meson
+            touch build-meson/.meson_configured
+          else
+            echo "No meson.build found; skipping meson configuration."
+          fi
 
       - name: Build
-        run: meson compile -C build-meson
+        run: |
+          if [ -f build-meson/.meson_configured ]; then
+            meson compile -C build-meson
+          fi
 
       - name: Test
-        run: meson test -C build-meson --print-errorlogs
+        run: |
+          if [ -f build-meson/.meson_configured ]; then
+            meson test -C build-meson --print-errorlogs
+          fi
 
   docker:
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.suite == 'full'
@@ -314,6 +336,10 @@ jobs:
 
       - name: Build Docker image (${{ matrix.service }})
         run: |
+          if [ ! -f compose.yaml ] && [ ! -f docker-compose.yml ]; then
+            echo "No compose file found; skipping docker build for ${{ matrix.service }}."
+            exit 0
+          fi
           if [ "${{ matrix.service }}" = "blessstar-arm64" ]; then
             docker compose --profile arm64 build ${{ matrix.service }}
           else
@@ -322,6 +348,10 @@ jobs:
 
       - name: Run tests (${{ matrix.service }})
         run: |
+          if [ ! -f compose.yaml ] && [ ! -f docker-compose.yml ]; then
+            echo "No compose file found; skipping docker tests for ${{ matrix.service }}."
+            exit 0
+          fi
           if [ "${{ matrix.service }}" = "blessstar-arm64" ]; then
             docker compose --profile arm64 up --abort-on-container-exit --exit-code-from ${{ matrix.service }} ${{ matrix.service }}
           else

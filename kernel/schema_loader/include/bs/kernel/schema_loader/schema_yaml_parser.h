@@ -16,15 +16,13 @@ extern "C"
 {
 #endif
 
-/* ── Parse a YAML schema file ──────────────────────────────────────── */
-    int bs_schema_yaml_parse(const char* yaml_path,
-                             struct bs_schema** out);
+    /* ── Parse a YAML schema file ──────────────────────────────────────── */
+    int bs_schema_yaml_parse(const char* yaml_path, struct bs_schema** out);
 
-/* ── Parse a bundled YAML cache file (config-schema.bundled.yaml) ──── */
-/* 与标准解析器相同，但额外跳过 generated_at / generated_from 等顶层键。
- * 适用于编译期聚合后的精简缓存格式。 */
-    int bs_schema_yaml_parse_bundled(const char* yaml_path,
-                                    struct bs_schema** out);
+    /* ── Parse a bundled YAML cache file (config-schema.bundled.yaml) ──── */
+    /* 与标准解析器相同，但额外跳过 generated_at / generated_from 等顶层键。
+     * 适用于编译期聚合后的精简缓存格式。 */
+    int bs_schema_yaml_parse_bundled(const char* yaml_path, struct bs_schema** out);
 
 #ifdef __cplusplus
 }

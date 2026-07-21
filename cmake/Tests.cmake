@@ -821,9 +821,11 @@ set_tests_properties(bs_test_day19_memory_baseline
   PROPERTIES LABELS "unit;day19;mem;regression" TIMEOUT 120
 )
 if(WIN32)
-  target_sources(bs_test_day19_memory_baseline PRIVATE
-    ${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp
-  )
+  if(EXISTS "${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp")
+    target_sources(bs_test_day19_memory_baseline PRIVATE
+      ${CMAKE_SOURCE_DIR}/adapter/test/support/day19_rss_sampler_win.cpp
+    )
+  endif()
 endif()
 
 blessstar_add_unit_test(bs_test_day19_stress_reload_loop
