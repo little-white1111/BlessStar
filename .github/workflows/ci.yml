@@ -164,19 +164,28 @@ jobs:
               json.dump(rules, f, indent=2)
           print("[OK] gate_rule_def.json generated (2 compile-time + 1 runtime rule)")
 
-          # Also create a minimal index.json for contract_compile.py
+          # Also create index.json for contract_compile.py
           index = {
-              "allowed_entry_prefixes": [],
+              "allowed_entry_prefixes": ["tools/scripts/contracts/"],
               "contract_roots": {},
+              "priority_order": ["must"],
+              "stage_order": ["ci", "compile_time"],
           }
           with open("docs/contracts/index.json", "w") as f:
               json.dump(index, f, indent=2)
           print("[OK] docs/contracts/index.json generated")
 
-          # Also create a minimal gate_registry.json for contract_compile.py
+          # Also create a gate_registry.json for contract_compile.py
           os.makedirs("docs/gates", exist_ok=True)
           registry = {
-              "gates": [],
+              "gates": [
+                  {
+                      "gate_id": "compile_time_scanner",
+                      "runner": "python",
+                      "command": "python tools/scripts/contracts/compile_time_scanner.py --gate-rule-def docs/contracts/gate_rule_def.json",
+                      "covers": ["payment.fee.rate_COMPILE", "timeout_COMPILE"],
+                  }
+              ],
               "version": "1.0"
           }
           with open("docs/gates/gate_registry.json", "w") as f:
@@ -236,6 +245,11 @@ jobs:
 
       - name: Build (Sanitizer)
         run: cmake --build build-san -j 4
+
+      - name: Install Node.js deps (editor vitest)
+        run: |
+          cd app/editor
+          npm ci --ignore-scripts 2>/dev/null || true
 
       - name: Test / CTest (Sanitizer)
         env:
