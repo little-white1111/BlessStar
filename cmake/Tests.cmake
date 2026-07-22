@@ -85,9 +85,11 @@ function(blessstar_add_unit_test name)
       endif()
     endif()
     if(_bs_test_libs_joined MATCHES "bs_adapter_")
-      target_sources(${name} PRIVATE
-        ${CMAKE_SOURCE_DIR}/adapter/test/support/test_temp_dir.cpp
-      )
+      if(EXISTS "${CMAKE_SOURCE_DIR}/adapter/test/support/test_temp_dir.cpp")
+        target_sources(${name} PRIVATE
+          ${CMAKE_SOURCE_DIR}/adapter/test/support/test_temp_dir.cpp
+        )
+      endif()
       target_include_directories(${name} PRIVATE ${CMAKE_SOURCE_DIR}/adapter/test)
     endif()
     if(BLESSSTAR_SANITIZER_CI)

@@ -160,10 +160,12 @@ include(cmake/Tests.cmake)
 if(BS_WITH_DB)
     target_compile_definitions(bs_app_sdk PRIVATE BS_WITH_DB=1)
 
-    target_include_directories(bs_app_sdk PRIVATE
-        ${SQLITE3_INCLUDE_DIR}
-        ${MYSQL_INCLUDE_DIR}
-    )
+    if(EXISTS "${SQLITE3_INCLUDE_DIR}")
+      target_include_directories(bs_app_sdk PRIVATE ${SQLITE3_INCLUDE_DIR})
+    endif()
+    if(EXISTS "${MYSQL_INCLUDE_DIR}")
+      target_include_directories(bs_app_sdk PRIVATE ${MYSQL_INCLUDE_DIR})
+    endif()
 
     target_link_libraries(bs_app_sdk PRIVATE bs_db_core bs_db_mgmt)
     if(TARGET sqlite3_lib)
@@ -173,15 +175,18 @@ if(BS_WITH_DB)
       target_link_libraries(bs_app_sdk PRIVATE mysql_dll)
     endif()
 
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/src/db_drivers/sqlite_connector.cpp")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/src/db_drivers/sqlite_connector.cpp" AND
+       EXISTS "${SQLITE3_INCLUDE_DIR}/sqlite3.h")
       target_sources(bs_app_sdk PRIVATE app/sdk/src/db_drivers/sqlite_connector.cpp)
     endif()
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/src/db_drivers/mysql_connector.cpp")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/src/db_drivers/mysql_connector.cpp" AND
+       EXISTS "${MYSQL_INCLUDE_DIR}/mysql.h")
       target_sources(bs_app_sdk PRIVATE app/sdk/src/db_drivers/mysql_connector.cpp)
     endif()
 
     # ── SQLite smoke test ──────────────────────────────────────────
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test/db/sqlite_smoke_test.cpp")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test/db/sqlite_smoke_test.cpp" AND
+       EXISTS "${SQLITE3_INCLUDE_DIR}/sqlite3.h")
     add_executable(sqlite_smoke_test
         app/sdk/test/db/sqlite_smoke_test.cpp
         app/sdk/src/db_drivers/sqlite_connector.cpp
@@ -205,7 +210,8 @@ if(BS_WITH_DB)
     endif()
 
     # ── MySQL smoke test ───────────────────────────────────────────
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test/db/mysql_smoke_test.cpp")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/app/sdk/test/db/mysql_smoke_test.cpp" AND
+       EXISTS "${MYSQL_INCLUDE_DIR}/mysql.h")
     add_executable(mysql_smoke_test
         app/sdk/test/db/mysql_smoke_test.cpp
         app/sdk/src/db_drivers/mysql_connector.cpp
