@@ -11,6 +11,8 @@
 #ifdef _WIN32
 #include <io.h>      /* for _popen, _pclose on Windows */
 #include <process.h> /* for _popen, _pclose on Windows */
+#define popen  _popen
+#define pclose _pclose
 #endif
 
 /* ── 简单的 C 源码扫描 ────────────────────────────────────────────── */
@@ -84,7 +86,7 @@ int lang_c_scan(const char* src_dir, char** out_json, size_t* out_len)
     snprintf(cmd, sizeof(cmd),
              "dir /b \"%s\\*.c\" \"%s\\*.h\" 2>nul", src_dir, src_dir);
 
-    FILE* pipe = _popen(cmd, "r");
+    FILE* pipe = popen(cmd, "r");
     if (pipe) {
         char filename[256];
         while (fgets(filename, sizeof(filename), pipe)) {
@@ -98,7 +100,7 @@ int lang_c_scan(const char* src_dir, char** out_json, size_t* out_len)
             snprintf(fullpath, sizeof(fullpath), "%s/%s", src_dir, filename);
             scan_c_file(fullpath, &json);
         }
-        _pclose(pipe);
+        pclose(pipe);
     } else {
         /* fallback: 尝试直接打开一个已知文件 */
         /* 在非 Windows 环境使用 popen + find */

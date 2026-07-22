@@ -7,8 +7,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
 #include <io.h>
 #include <process.h>
+#define popen  _popen
+#define pclose _pclose
+#endif
 
 int lang_java_scan(const char* src_dir, char** out_json, size_t* out_len)
 {
@@ -23,7 +27,7 @@ int lang_java_scan(const char* src_dir, char** out_json, size_t* out_len)
     snprintf(cmd, sizeof(cmd), "dir /s /b \"%s\\*.java\" 2>nul", src_dir);
 
     int first = 1;
-    FILE* pipe = _popen(cmd, "r");
+    FILE* pipe = popen(cmd, "r");
     if (pipe) {
         char filename[512];
         while (fgets(filename, sizeof(filename), pipe)) {
@@ -72,7 +76,7 @@ int lang_java_scan(const char* src_dir, char** out_json, size_t* out_len)
             }
             free(content);
         }
-        _pclose(pipe);
+        pclose(pipe);
     }
 
     if (first) {

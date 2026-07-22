@@ -8,8 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef _WIN32
 #include <io.h>
 #include <process.h>
+#define popen  _popen
+#define pclose _pclose
+#endif
 
 int lang_go_scan(const char* src_dir, char** out_json, size_t* out_len)
 {
@@ -24,7 +28,7 @@ int lang_go_scan(const char* src_dir, char** out_json, size_t* out_len)
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "dir /b \"%s\\*.go\" 2>nul", src_dir);
 
-    FILE* pipe = _popen(cmd, "r");
+    FILE* pipe = popen(cmd, "r");
     if (pipe) {
         char filename[256];
         while (fgets(filename, sizeof(filename), pipe)) {
@@ -73,7 +77,7 @@ int lang_go_scan(const char* src_dir, char** out_json, size_t* out_len)
             }
             free(content);
         }
-        _pclose(pipe);
+        pclose(pipe);
     }
 
     lang_json_append(&json, "\n  ]\n}\n");

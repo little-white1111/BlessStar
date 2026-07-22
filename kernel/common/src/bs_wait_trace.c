@@ -4,9 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(__clang__) && !defined(__STDC_NO_ATOMICS__)
-#include <stdatomic.h>
-#elif !defined(_WIN32)
+#ifndef _WIN32
 #include <stdatomic.h>
 #endif
 

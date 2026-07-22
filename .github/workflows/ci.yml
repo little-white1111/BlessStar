@@ -173,6 +173,16 @@ jobs:
               json.dump(index, f, indent=2)
           print("[OK] docs/contracts/index.json generated")
 
+          # Also create a minimal gate_registry.json for contract_compile.py
+          os.makedirs("docs/gates", exist_ok=True)
+          registry = {
+              "gates": [],
+              "version": "1.0"
+          }
+          with open("docs/gates/gate_registry.json", "w") as f:
+              json.dump(registry, f, indent=2)
+          print("[OK] docs/gates/gate_registry.json generated")
+
       - name: Contract compile (D-scheme + gate_rule_def)
         run: python tools/scripts/contracts/contract_compile.py --gate-rule-def docs/contracts/gate_rule_def.json
 
