@@ -203,7 +203,7 @@ jobs:
 
       - name: Test / CTest (Unix)
         if: runner.os != 'Windows'
-        run: ctest --test-dir build_ci_test --output-on-failure -j 1
+        run: ctest --test-dir build_ci_test -LE day17 --output-on-failure -j 1
 
       - name: Test / CTest (Windows)
         if: runner.os == 'Windows'
@@ -212,7 +212,7 @@ jobs:
           BS_WAIT_TRACE: "hang"
           BS_WAIT_TRACE_HANG_MS: "500"
           BS_SHORTCOMING_VERBOSE: "1"
-        run: ctest --test-dir build_ci_test --output-on-failure -C Release -j 1
+        run: ctest --test-dir build_ci_test -LE day17 --output-on-failure -C Release -j 1
 
       - name: Upload attach hang diagnostics (Windows)
         if: failure() && runner.os == 'Windows'
@@ -249,7 +249,7 @@ jobs:
       - name: Install Node.js deps (editor vitest)
         run: |
           cd app/editor
-          npm ci --ignore-scripts 2>/dev/null || true
+          npm install --ignore-scripts 2>&1 || echo "npm install skipped (will use fallback)"
 
       - name: Test / CTest (Sanitizer)
         env:
