@@ -6,6 +6,7 @@
  */
 
 #include "bs/adapter/attach_context.h"
+#include "bs/adapter/attach_runtime.h"
 #include "bs/adapter/log/log_bus.h"
 
 int bs_adapter_log_bind_spdlog_bus(void)

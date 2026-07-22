@@ -9,6 +9,77 @@ from typing import Any
 
 COMPILE_TIME_SUFFIX = "_COMPILE_TIME"
 
+# ── gate_rule_def schema validation ──────────────────────────────────
+
+VALID_OPS = {"eq", "neq", "gt", "gte", "lt", "lte", "range", "in", "nin", "match", "exists"}
+
+LAYER_SUB_CATEGORY_MAP: dict[int, set[str]] = {
+    0: {"threshold", "format", "consistency"},
+    1: {"approval", "policy"},
+    2: {"approval", "policy"},
+}
+
+
+def is_compile_time_rule(rule: dict[str, Any]) -> bool:
+    """Check if a rule scenario ends with the compile-time suffix."""
+    scenario = rule.get("scenario", "")
+    return scenario.endswith(COMPILE_TIME_SUFFIX)
+
+
+def validate_gate_rule_def(rules: list[dict[str, Any]]) -> list[str]:
+    """Validate a list of gate_rule_def entries.
+
+    Returns a list of error strings (empty = valid).
+    """
+    errors: list[str] = []
+    seen_keys: set[str] = set()
+
+    REQUIRED_FIELDS = [
+        "field_key", "field_type", "op", "value",
+        "scenario", "layer", "sub_category", "stable_key",
+    ]
+
+    for i, rule in enumerate(rules):
+        prefix = f"rule[{i}]"
+
+        # Required fields
+        for field in REQUIRED_FIELDS:
+            if field not in rule:
+                errors.append(f"{prefix}: missing required field '{field}'")
+                continue
+
+        layer = rule.get("layer")
+        sub_cat = rule.get("sub_category", "")
+        op = rule.get("op", "")
+
+        # Layer/sub_category compatibility
+        if isinstance(layer, int) and sub_cat:
+            allowed = LAYER_SUB_CATEGORY_MAP.get(layer, set())
+            if allowed and sub_cat not in allowed:
+                errors.append(
+                    f"{prefix}: layer={layer} sub_category={sub_cat!r} not in allowed set {allowed}; "
+                    "layer>=1 should use approval/policy"
+                )
+
+        # Valid operator
+        if op and op not in VALID_OPS:
+            errors.append(f"{prefix}: invalid op={op!r}, valid ops: {sorted(VALID_OPS)}")
+
+        # Compile-time restrictions
+        if is_compile_time_rule(rule):
+            if op in {"match", "exists"}:
+                errors.append(f"{prefix}: op={op!r} is not supported at compile time")
+
+        # Duplicate stable_key check
+        stable_key = rule.get("stable_key", "")
+        if stable_key:
+            if stable_key in seen_keys:
+                errors.append(f"{prefix}: duplicate stable_key={stable_key!r}")
+            seen_keys.add(stable_key)
+
+    return errors
+
+
 PYTHON_SCRIPT_RE = re.compile(
     r"(?:^|[\s\"'])((?:tools/(?:scripts|purity)|ops/(?:acceptance|smoke))[^\s\"']+\.py)"
 )
