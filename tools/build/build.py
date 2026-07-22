@@ -27,6 +27,8 @@ def cmake_args(args: argparse.Namespace) -> list[str]:
         cmd.append("-DCMAKE_BUILD_TYPE=Release")
     elif args.sanitize:
         cmd.append("-DCMAKE_BUILD_TYPE=Debug")
+        cmd.append("-DCMAKE_C_STANDARD=11")
+        cmd.append("-DCMAKE_C_STANDARD_REQUIRED=ON")
         cmd.append("-DSANITIZE_ADDRESS=ON")
         cmd.append("-DSANITIZE_UNDEFINED=ON")
     elif args.tsan:

@@ -1,6 +1,7 @@
 /* lang_plugin.c — 多语言内省插件注册表实现 */
 #include "bs/biz_introspector/lang_plugin.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 

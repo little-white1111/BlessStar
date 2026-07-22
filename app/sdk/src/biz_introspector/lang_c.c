@@ -8,8 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef _WIN32
 #include <io.h>      /* for _popen, _pclose on Windows */
 #include <process.h> /* for _popen, _pclose on Windows */
+#endif
 
 /* ── 简单的 C 源码扫描 ────────────────────────────────────────────── */
 
