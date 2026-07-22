@@ -13,6 +13,7 @@
 #include <cstring>
 #include <ctime>
 #include <cstdarg>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -251,7 +252,7 @@ static size_t build_trie_from_fields(
         size_t node_off = trie_off;
         trie_node node;
         memset(&node, 0, sizeof(node));
-        node.name_len = static_cast<uint8_t>(min(it->first.size(), (size_t)31));
+        node.name_len = static_cast<uint8_t>((std::min)(it->first.size(), (size_t)31));
         memcpy(node.name, it->first.c_str(), node.name_len);
         node.first_child_off = 0;
         node.next_sibling_off = 0;
@@ -276,7 +277,7 @@ static size_t build_trie_from_fields(
                 if (sizeof(trie_node) <= 41) {
                     trie_node fn;
                     memset(&fn, 0, sizeof(fn));
-                    fn.name_len = static_cast<uint8_t>(min(subname.size(), (size_t)31));
+                    fn.name_len = static_cast<uint8_t>((std::min)(subname.size(), (size_t)31));
                     memcpy(fn.name, subname.c_str(), fn.name_len);
                     fn.first_child_off = 0;
                     fn.next_sibling_off = 0;
@@ -402,7 +403,7 @@ static int write_schema_to_shm_fields(
     for (size_t p = 0; p < num_pages; p++) {
         page_entry entry;
         size_t first = p * FIELDS_PER_PAGE;
-        size_t last = min((p + 1) * FIELDS_PER_PAGE, total_fields);
+        size_t last = (std::min)((p + 1) * FIELDS_PER_PAGE, total_fields);
 
         /* 计算本页字段在字段数据区的起始偏移 */
         size_t page_start = field_region_start; /* 简化：所有字段数据从 field_data_offset 连续 */

@@ -124,42 +124,47 @@ jobs:
 
       - name: Generate gate_rule_def.json (CDD Skill mock)
         run: |
-          cat > docs/contracts/gate_rule_def.json << 'GRDEOF'
-          [
-            {
-              "field_key": "payment.fee.rate",
-              "field_type": "FLOAT64",
-              "op": "range",
-              "value": "[0.001,0.006]",
-              "scenario": "payment_fee_rate_config_COMPILE_TIME",
-              "layer": 0,
-              "sub_category": "threshold",
-              "stable_key": "pay:fee:rate:0:threshold:range",
-              "error_hint": "Rate must be between 0.1%-0.6%"
-            },
-            {
-              "field_key": "timeout",
-              "field_type": "INT32",
-              "op": "gte",
-              "value": "10",
-              "scenario": "timeout_check_COMPILE_TIME",
-              "layer": 0,
-              "sub_category": "threshold",
-              "stable_key": "sys:timeout:0:threshold:gte"
-            },
-            {
-              "field_key": "max_retry",
-              "field_type": "INT32",
-              "op": "range",
-              "value": "[0,5]",
-              "scenario": "runtime_check",
-              "layer": 0,
-              "sub_category": "threshold",
-              "stable_key": "sys:retry:0:threshold:range"
-            }
-          ]
-          GRDEOF
-          echo "[OK] gate_rule_def.json generated (2 compile-time + 1 runtime rule)"
+          python -c "
+import json
+rules = [
+    {
+        'field_key': 'payment.fee.rate',
+        'field_type': 'FLOAT64',
+        'op': 'range',
+        'value': '[0.001,0.006]',
+        'scenario': 'payment_fee_rate_config_COMPILE_TIME',
+        'layer': 0,
+        'sub_category': 'threshold',
+        'stable_key': 'pay:fee:rate:0:threshold:range',
+        'error_hint': 'Rate must be between 0.1%-0.6%'
+    },
+    {
+        'field_key': 'timeout',
+        'field_type': 'INT32',
+        'op': 'gte',
+        'value': '10',
+        'scenario': 'timeout_check_COMPILE_TIME',
+        'layer': 0,
+        'sub_category': 'threshold',
+        'stable_key': 'sys:timeout:0:threshold:gte'
+    },
+    {
+        'field_key': 'max_retry',
+        'field_type': 'INT32',
+        'op': 'range',
+        'value': '[0,5]',
+        'scenario': 'runtime_check',
+        'layer': 0,
+        'sub_category': 'threshold',
+        'stable_key': 'sys:retry:0:threshold:range'
+    }
+]
+import os
+os.makedirs('docs/contracts', exist_ok=True)
+with open('docs/contracts/gate_rule_def.json', 'w') as f:
+    json.dump(rules, f, indent=2)
+print('[OK] gate_rule_def.json generated (2 compile-time + 1 runtime rule)')
+"
 
       - name: Contract compile (D-scheme + gate_rule_def)
         run: python tools/scripts/contracts/contract_compile.py --gate-rule-def docs/contracts/gate_rule_def.json

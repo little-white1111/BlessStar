@@ -364,67 +364,71 @@ int bs_uidl_validate(const char* json, size_t len,
         goto finish;
     }
 
-    jdict_t root;
-    jdict_init(&root);
-    parse_dict(&p, &root);
-
-    /* Check uidl_version */
-    const char* uv = jdict_get(&root, "uidl_version");
-    if (!uv)
-        errs_add(&errs, "missing 'uidl_version'");
-    else if (*uv < '0' || *uv > '9')
-        errs_add(&errs, "'uidl_version' not a number");
-
-    /* Check schema_ref */
-    const char* sr = jdict_get(&root, "schema_ref");
-    if (!sr)
-        errs_add(&errs, "missing 'schema_ref'");
-    else if (sr[0] != '"')
-        errs_add(&errs, "'schema_ref' not a string");
-
-    /* Check controls */
-    const char* ct = jdict_get(&root, "controls");
-    if (!ct)
-        errs_add(&errs, "missing 'controls'");
-    else if (ct[0] != '[')
-        errs_add(&errs, "'controls' not an array");
-    else
+    /* Validate root object — wrapped in block to avoid
+       -Wjump-misses-init from goto finish above */
     {
-        /* Parse controls array */
-        size_t cl = strlen(ct);
-        tok_t cp;
-        tok_init(&cp, ct, cl);
-        tok_advance(&cp);
-        if (cp.kind == TOK_LBRACK)
+        jdict_t root;
+        jdict_init(&root);
+        parse_dict(&p, &root);
+
+        /* Check uidl_version */
+        const char* uv = jdict_get(&root, "uidl_version");
+        if (!uv)
+            errs_add(&errs, "missing 'uidl_version'");
+        else if (*uv < '0' || *uv > '9')
+            errs_add(&errs, "'uidl_version' not a number");
+
+        /* Check schema_ref */
+        const char* sr = jdict_get(&root, "schema_ref");
+        if (!sr)
+            errs_add(&errs, "missing 'schema_ref'");
+        else if (sr[0] != '"')
+            errs_add(&errs, "'schema_ref' not a string");
+
+        /* Check controls */
+        const char* ct = jdict_get(&root, "controls");
+        if (!ct)
+            errs_add(&errs, "missing 'controls'");
+        else if (ct[0] != '[')
+            errs_add(&errs, "'controls' not an array");
+        else
         {
+            /* Parse controls array */
+            size_t cl = strlen(ct);
+            tok_t cp;
+            tok_init(&cp, ct, cl);
             tok_advance(&cp);
-            int idx = 0;
-            while (cp.kind == TOK_LBRACE)
+            if (cp.kind == TOK_LBRACK)
             {
-                const char* cstart = cp.tok_start;
-                int cdepth = 1;
-                while (cdepth > 0 && cp.kind != TOK_EOF && cp.kind != TOK_ERROR)
+                tok_advance(&cp);
+                int idx = 0;
+                while (cp.kind == TOK_LBRACE)
                 {
-                    tok_advance(&cp);
-                    if (cp.kind == TOK_LBRACE) cdepth++;
-                    if (cp.kind == TOK_RBRACE) cdepth--;
+                    const char* cstart = cp.tok_start;
+                    int cdepth = 1;
+                    while (cdepth > 0 && cp.kind != TOK_EOF && cp.kind != TOK_ERROR)
+                    {
+                        tok_advance(&cp);
+                        if (cp.kind == TOK_LBRACE) cdepth++;
+                        if (cp.kind == TOK_RBRACE) cdepth--;
+                    }
+                    size_t clen = (size_t)(cp.pos - cstart);
+                    char* ctrl_json = (char*)malloc(clen + 1);
+                    if (ctrl_json)
+                    {
+                        memcpy(ctrl_json, cstart, clen);
+                        ctrl_json[clen] = '\0';
+                        validate_control_json(ctrl_json, &errs, 0);
+                        free(ctrl_json);
+                    }
+                    idx++;
+                    if (cp.kind == TOK_COMMA) tok_advance(&cp);
                 }
-                size_t clen = (size_t)(cp.pos - cstart);
-                char* ctrl_json = (char*)malloc(clen + 1);
-                if (ctrl_json)
-                {
-                    memcpy(ctrl_json, cstart, clen);
-                    ctrl_json[clen] = '\0';
-                    validate_control_json(ctrl_json, &errs, 0);
-                    free(ctrl_json);
-                }
-                idx++;
-                if (cp.kind == TOK_COMMA) tok_advance(&cp);
             }
         }
-    }
 
-    jdict_destroy(&root);
+        jdict_destroy(&root);
+    }
     free(p.str_val);
 
 finish:;
