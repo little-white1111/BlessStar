@@ -1,0 +1,16 @@
+{
+    "version": "1.0",
+    "type": "integration",
+    "contracts": [
+        {
+            "id": "int-001",
+            "name": "smoke_test",
+            "scope": "integration",
+            "priority": "must",
+            "rule": "core build and smoke tests pass on all platforms",
+            "verify": ["ci:smoke_test"],
+            "deprecate": "",
+            "status": "active"
+        }
+    ]
+}

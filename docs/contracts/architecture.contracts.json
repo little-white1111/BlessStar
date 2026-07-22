@@ -1,0 +1,16 @@
+{
+    "version": "1.0",
+    "type": "architecture",
+    "contracts": [
+        {
+            "id": "arc-001",
+            "name": "compile_time_scanner",
+            "scope": "architecture",
+            "priority": "must",
+            "rule": "gate_rule_def entries must pass compile-time validation",
+            "verify": ["ci:compile_time_scanner"],
+            "deprecate": "",
+            "status": "active"
+        }
+    ]
+}
