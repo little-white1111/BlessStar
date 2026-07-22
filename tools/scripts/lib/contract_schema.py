@@ -7,6 +7,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+COMPILE_TIME_SUFFIX = "_COMPILE_TIME"
+
 PYTHON_SCRIPT_RE = re.compile(
     r"(?:^|[\s\"'])((?:tools/(?:scripts|purity)|ops/(?:acceptance|smoke))[^\s\"']+\.py)"
 )

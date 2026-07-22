@@ -4,21 +4,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef _WIN32
-#include <stdatomic.h>
-#endif
-
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
 #else
+#include <atomic>
+#include <pthread.h>
+#include <time.h>
 #if defined(__linux__) || defined(__APPLE__)
 #include <execinfo.h>
 #endif
-#include <pthread.h>
-#include <time.h>
 #endif
 
 enum BsWaitTraceMode
@@ -53,22 +50,22 @@ static BOOL CALLBACK init_wait_trace_once(PINIT_ONCE once, PVOID param, PVOID* c
     return TRUE;
 }
 #else
-static _Atomic int    g_wait_trace_mode   = BS_WAIT_TRACE_OFF;
-static _Atomic int    g_hang_threshold_ms = 3000;
+static std::atomic<int> g_wait_trace_mode(BS_WAIT_TRACE_OFF);
+static std::atomic<int> g_hang_threshold_ms(3000);
 static pthread_once_t g_wait_trace_once   = PTHREAD_ONCE_INIT;
 
 static void init_wait_trace_once(void)
 {
     const char* env = getenv("BS_WAIT_TRACE");
     if (env && env[0] == '1' && env[1] == '\0')
-        atomic_store_explicit(&g_wait_trace_mode, BS_WAIT_TRACE_FULL, memory_order_release);
+        g_wait_trace_mode.store(BS_WAIT_TRACE_FULL, std::memory_order_release);
     else if (env && strcmp(env, "hang") == 0)
-        atomic_store_explicit(&g_wait_trace_mode, BS_WAIT_TRACE_HANG, memory_order_release);
+        g_wait_trace_mode.store(BS_WAIT_TRACE_HANG, std::memory_order_release);
     env    = getenv("BS_WAIT_TRACE_HANG_MS");
     int ms = (env && env[0]) ? atoi(env) : 3000;
     if (ms < 100)
         ms = 100;
-    atomic_store_explicit(&g_hang_threshold_ms, ms, memory_order_release);
+    g_hang_threshold_ms.store(ms, std::memory_order_release);
 }
 #endif
 
@@ -79,7 +76,7 @@ static int wait_trace_mode(void)
     return (int)InterlockedCompareExchange(&g_wait_trace_mode, 0, 0);
 #else
     (void)pthread_once(&g_wait_trace_once, init_wait_trace_once);
-    return atomic_load_explicit(&g_wait_trace_mode, memory_order_acquire);
+    return g_wait_trace_mode.load(std::memory_order_acquire);
 #endif
 }
 
@@ -89,7 +86,7 @@ static int hang_threshold_ms(void)
 #ifdef _WIN32
     return (int)InterlockedCompareExchange(&g_hang_threshold_ms, 0, 0);
 #else
-    return atomic_load_explicit(&g_hang_threshold_ms, memory_order_acquire);
+    return g_hang_threshold_ms.load(std::memory_order_acquire);
 #endif
 }
 

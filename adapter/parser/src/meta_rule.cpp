@@ -1,5 +1,6 @@
 #include "bs/adapter/parser/meta_rule.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
